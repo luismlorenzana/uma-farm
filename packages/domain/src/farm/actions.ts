@@ -67,7 +67,7 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('invite', 'The Umas', 'Invite her to work', 1),
   rule('hangout', 'The Umas', 'A hangout or a date', 2),
   rule('event', 'The Umas', 'Her event, when it’s ready, or an occasion scene with her', 1),
-  rule('festival', 'A festival', 'Join it; it opens its own events', 3, 'the festivals’ contests'),
+  rule('festival', 'A festival', 'Enter the Cooking Contest, at the Kitchen on its day: the day’s event actions first (the other festivals’ contests come later)', 3),
   rule('batch', 'The kitchen', 'Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove', 1),
   rule('kitchen', 'The Kitchen', 'Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day', 1),
   rule('cook', 'The household', 'Cook a meal for the household: breakfast or dinner (it cooks a batch too)', 1),

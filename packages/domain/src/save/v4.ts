@@ -191,8 +191,9 @@ export type ToolTier = 1 | 2 | 3 | 4 | 5
 
 export const WORKSHOP_IDS = ['kitchen', 'restaurant', 'forge'] as const
 export type WorkshopId = typeof WORKSHOP_IDS[number]
-/** What's cooking at the stove: a batch at the farmhouse stove, or the Kitchen's play (`kitchen/kitchen.ts`). */
-export const STOVE_PLAYS = ['batch', 'kitchen'] as const
+/** What's cooking at the stove: a batch at the farmhouse stove, the Kitchen's play (`kitchen/kitchen.ts`), or the
+ * Cooking Contest's dish (`kitchen/contest.ts`). */
+export const STOVE_PLAYS = ['batch', 'kitchen', 'contest'] as const
 export type StovePlay = typeof STOVE_PLAYS[number]
 /** One recipe on the Kitchen's menu: its dish, its share of the base, and its ingredients at one good and one star each
  * (stock keys): two of its main a dish, one of its side. */
@@ -208,8 +209,9 @@ export const MAX_KITCHEN_BASE = 15
 /** The most recipes on a menu. */
 export const MENU_RECIPES = 3
 /** A play at the stove under way, from its Start (the action spent and the inputs taken) to its end: what it is, the day
- * it started, its seed (four digits) and length in seconds, the Kitchen's assistant (optional), and the inputs taken: a
- * batch's two goods (stock keys) or the Kitchen's menu. Settled from its taps, or as Rough when it's left unfinished. */
+ * it started, its seed (four digits) and length in seconds, the Kitchen's assistant or the Contest's cook (optional), and
+ * the inputs taken: a batch's two goods (stock keys), the Kitchen's menu, or the Contest's one dish (a menu of one line,
+ * one dish). Settled from its taps, or as Rough when it's left unfinished. */
 export interface PlayInProgress {
   workshop: WorkshopId
   play: StovePlay
@@ -470,6 +472,9 @@ export interface TodayV4 {
   /** The Kitchen's assistant today: one of her actions tonight is the play's. Absent with none (the save grows it in
    * place). */
   assistant?: CharacterId
+  /** The Cooking Contest's cook today: one of her actions tonight is the Contest's. Absent with none (the save grows it
+   * in place). */
+  cook?: CharacterId
 }
 
 /** The household's meals: one of each a day, once anyone is married. */

@@ -5,7 +5,7 @@
 // someone can spend it (or anyone is married: the night's companion), and the night is a fade to dusk and back up on the
 // morning (`night-fade.ts`), where the night's companion greets you (`?life=morning:<id>`).
 import {
-  daySetState, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, tonightOpens,
+  daySetState, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, FESTIVAL_PLACE_POINTS, farmRankOf, farmRankOpens, GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, tonightOpens,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
@@ -129,6 +129,7 @@ function RankSheet() {
     ['Shipping', `1 per ${GOLD_PER_POINT}g`, parts.shipped],
     ['Diary entries', `${ENTRY_POINTS} each`, parts.entries],
     ['Milestones', `${MILESTONE_POINTS} each`, parts.milestones],
+    ['Festivals', `${FESTIVAL_PLACE_POINTS[1]} · ${FESTIVAL_PLACE_POINTS[2]} · ${FESTIVAL_PLACE_POINTS[3]} a place`, parts.festivals],
   ]
   return (
     <Sheet open onClose={close} title={`Farm Rank ${rank}`} label="Farm Rank">
@@ -137,7 +138,7 @@ function RankSheet() {
           <div className="flex items-baseline justify-between gap-2">
             <p className="font-display text-[20px] font-bold" data-points>{save.farm.points.toLocaleString('en-US')} points</p>
             <HelpButton title="The Farm Rank" label="About the Farm Rank">
-              <p>The farm’s own rank, from what you earn and grow. Points come from shipping and the Diary (each good shipped once, and milestones); festivals and decorations add more later.</p>
+              <p>The farm’s own rank, from what you earn and grow. Points come from shipping, the Diary (each good shipped once, and milestones) and the festivals’ places: 150 for 1st, 75 for 2nd, 25 for 3rd. Decorations add more later.</p>
               <p>Points are counted each night. A new rank offers places to build, with gold and the farm’s goods, and more land, beds and seeds.</p>
             </HelpButton>
           </div>

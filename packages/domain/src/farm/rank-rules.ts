@@ -139,7 +139,8 @@ export type ChallengeEvent =
   | { kind: 'forged'; tool: 'upgrade' | 'mythril' }
   /** Expeditions: a return home, its result and its region's level. */
   | { kind: 'expedition'; result: ExpeditionResult; level: number; region: RegionId }
-  /** 1st at a festival: the Flower Show, the Fishing Derby, the Cooking Contest, the Animal Show. */
+  /** 1st at a festival: the Flower Show, the Fishing Derby, the Cooking Contest (its judging, for its cook:
+   * `kitchen/contest.ts`), the Animal Show. */
   | { kind: 'won'; festival: FestivalId }
 
 type Counter = (event: ChallengeEvent) => number
@@ -170,14 +171,14 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(2, 40, '40 crops of ★3+ she tended', 'at harvest, for the tender', on('harvest', (e) => e.stars.filter((s) => s >= 3).length)),
     row(3, 1, 'Tend a crop of level 4+ to harvest', 'at harvest, for the tender', on('harvest', (e) => yes(e.level >= 4 && e.stars.length > 0))),
     row(4, 30, '30 crops of ★5', 'at harvest, for the tender', on('harvest', (e) => e.stars.filter((s) => s === 5).length)),
-    row(5, 1, '1st at a Flower Show with a crop she tended', 'a festival win (festivals aren’t built yet)', won('flower-show')),
+    row(5, 1, '1st at a Flower Show with a crop she tended', 'a festival win (its contest isn’t built yet)', won('flower-show')),
   ],
   ranch: [
     row(1, 10, 'Care for animals 10 days', 'a farmhand’s night at the Coop or the Barn', on('care', () => 1)),
     row(2, 1, 'An animal in her care reaches 4 hearts', 'a farmhand’s care for an animal', on('hearts', (e) => yes(e.hearts >= 4))),
     row(3, 1, 'An animal in her care reaches 7 hearts', 'a farmhand’s care for an animal', on('hearts', (e) => yes(e.hearts >= 7))),
     row(4, 1, 'An animal in her care reaches 10 hearts', 'a farmhand’s care for an animal', on('hearts', (e) => yes(e.hearts >= 10))),
-    row(5, 1, '1st at an Animal Show with an animal in her care', 'a festival win (festivals aren’t built yet)', won('animal-show')),
+    row(5, 1, '1st at an Animal Show with an animal in her care', 'a festival win (its contest isn’t built yet)', won('animal-show')),
   ],
   mining: [
     row(1, 40, 'Dig 40 ores or stones', 'a farmhand’s faces at the Mine or the Quarry', on('dig', (e) => e.items)),
@@ -191,7 +192,7 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(2, 10, 'Catch 10 fish at the River', 'the night’s catches (night step 4)', on('catch', (e) => (e.spot === 'river' ? e.fish : 0))),
     row(3, 10, 'Catch 10 fish at the Lake', 'the night’s catches (night step 4)', on('catch', (e) => (e.spot === 'lake' ? e.fish : 0))),
     row(4, 10, 'Catch 10 fish at the Falls', 'the night’s catches (night step 4)', on('catch', (e) => (e.spot === 'falls' ? e.fish : 0))),
-    row(5, 1, '1st at a Fishing Derby, on the team', 'a festival win (festivals aren’t built yet)', won('fishing-derby')),
+    row(5, 1, '1st at a Fishing Derby, on the team', 'a festival win (its contest isn’t built yet)', won('fishing-derby')),
   ],
   foraging: [
     row(1, 50, 'Gather 50 items', 'the night’s hauls (night step 4)', on('gather', (e) => e.items)),
@@ -205,7 +206,7 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(2, 1, 'Assist a Fine play', 'the Kitchen’s play, its assistant', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
     row(3, 10, 'Make 10 dishes of ★4+', 'the Kitchen’s play, its assistant', on('dishes', (e) => e.stars.filter((s) => s >= 4).length)),
     row(4, 1, 'Assist a Masterwork', 'the Kitchen’s play, its assistant', on('play', (e) => yes(e.grade === 'masterwork'))),
-    row(5, 1, '1st at a Cooking Contest as the cook', 'a festival win (festivals aren’t built yet)', won('cooking-contest')),
+    row(5, 1, '1st at a Cooking Contest as the cook', 'the Cooking Contest’s judging, its cook', won('cooking-contest')),
   ],
   serving: [
     row(1, 5, 'Assist 5 shifts', 'the Restaurant (not built yet)', on('play', () => 1)),

@@ -6,7 +6,7 @@
 //   Gift      loved 60 · liked 30 · neutral 10 · disliked 0, × (1 + 0.1 a star above ★1)   one action, one a day each
 //   Praise    +20                                   once a day, when she's earned it (`praise.ts`)
 //   Her line  +10                                   night step 6, a day at one of her line's places
-//   Festival  +50                                   once a festival a year, on its team or entry (festivals call it)
+//   Festival  +50                                   once a festival a year, on its team or entry (the Cooking Contest's cook)
 //
 // Loaded with the romance's screens and the night.
 import { spend } from '../farm/actions'
@@ -177,8 +177,8 @@ export function payLines(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
 /** A festival's key in `love.festivals`. */
 export const festivalKey = (festival: FestivalId, year: number): string => `${festival}:${year}`
 
-/** A festival together: +50 to each Uma on its team or entry, once a festival a year each. Written and tested
- * here; the festivals call it once a festival has a team or an entry. */
+/** A festival together: +50 to each Uma on its team or entry, once a festival a year each: the Cooking Contest's cook
+ * at its judging (`kitchen/contest.ts`); the other festivals call it once they have a team or an entry. */
 export function festivalTogether(save: SaveV4, ids: readonly string[], festival: FestivalId, year: number): { save: SaveV4; paid: Paid[] } {
   const key = festivalKey(festival, year)
   let next = save

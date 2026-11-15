@@ -15,7 +15,7 @@
 // season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
 // name where she's met in town.
 import {
-  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
+  ACTIVITY_NAMES, bedsAt, CONTEST_ID, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
   SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
   type SummarySection,
 } from '@farm/domain'
@@ -57,6 +57,8 @@ export function daysNews(ids: readonly string[], when: 'today' | 'tomorrow', wor
   return { key: `days:${when}`, to: CALENDAR, text: `${names.length > 1 ? `${first} +${names.length - 1} more` : first} ${when}` }
 }
 const CALENDAR = '/?sheet=calendar'
+/** The Kitchen's sheet: the staff meal's line and the Cooking Contest's. */
+const KITCHEN = '/?sheet=kitchen'
 
 /** §5's Town notes in words: the first's title, "+2 more" after it, each a tap to the Diary's Town notes. */
 export function notesNews(ids: readonly string[], world: WorldWords): SummaryLine {
@@ -270,7 +272,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
     case 'money':
       // The loans' shares, the staff meal, the pantry and the takeout, the upkeep, a short night (a warning) or the owed
       // paid: each a tap to the Book; the staff meal's, to the Kitchen.
-      return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: line.key === 'staff' ? '/?sheet=kitchen' : BOOK }))
+      return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: line.key === 'staff' ? KITCHEN : BOOK }))
     case 'work':
       // The farmhands' days, which open the work board; the stations' loads, which open the station; the field's growth
       // and what withered, which open the farm.
@@ -305,10 +307,12 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
             const quote = world.seasonLine(line.season)
             return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar', ...(quote ? { quote } : {}) }
           }
-          // New Year's and a festival: today's with its event actions; each a tap to the calendar, where its scenes are.
+          // New Year's and a festival: today's with its event actions; each a tap to the calendar, where its scenes are,
+          // but the Cooking Contest's to the Kitchen, where it's entered (a game festival keeps its id wherever it falls).
           case 'new-year': return { key: `new-year:${line.when}`, text: `${NEW_YEAR_NAME} ${line.when}${line.when === 'today' ? ` · +${NEW_YEAR_ACTIONS} for events` : ''}`, to: CALENDAR }
           case 'festival': return {
-            key: `festival:${line.when}`, text: `${world.festival(line.festival)} ${line.when}${line.when === 'today' ? ` · +${FESTIVAL_ACTIONS} for events` : ''}`, to: CALENDAR,
+            key: `festival:${line.when}`, text: `${world.festival(line.festival)} ${line.when}${line.when === 'today' ? ` · +${FESTIVAL_ACTIONS} for events` : ''}`,
+            to: line.festival === CONTEST_ID ? KITCHEN : CALENDAR,
           }
           case 'days': return daysNews(line.ids, line.when, world)
           case 'notes': return notesNews(line.ids, world)

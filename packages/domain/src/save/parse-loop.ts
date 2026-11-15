@@ -251,10 +251,10 @@ export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet
 /** A stove's stock key: a good or a dish the Warehouse holds, at its stars. */
 const stoveKey = (value: unknown, path: string): string => (typeof value === 'string' && parseStockKey(value) !== null ? value : fail(path, 'expected <good>@<stars>'))
 
-/** A play at the stove under way: a batch's two goods, or the Kitchen's menu (one to three recipes, each once, a share of
- * 1–15, its main and side at one good and star) with an assistant on the roster or none; its seed four digits, its length
- * 1–600 seconds. The shape from before the stove (a workshop, an assistant and a day, never written by any build) reads
- * as no play. */
+/** A play at the stove under way: a batch's two goods, the Kitchen's menu (one to three recipes, each once, a share of
+ * 1–15, its main and side at one good and star) with an assistant on the roster or none, or the Cooking Contest's one
+ * dish (a menu of one line, one dish) with a cook on the roster or none; its seed four digits, its length 1–600 seconds.
+ * The shape from before the stove (a workshop, an assistant and a day, never written by any build) reads as no play. */
 function parsePlay(value: unknown, path: string, roster: ReadonlySet<string>): PlayInProgress | null {
   const c = object(value, path, ['workshop', 'play', 'day', 'seed', 'length', 'assistant', 'goods', 'menu'])
   if (c.play === undefined) return null
@@ -276,6 +276,7 @@ function parsePlay(value: unknown, path: string, roster: ReadonlySet<string>): P
     return { dish: typeof m.dish === 'string' && isDishId(m.dish) ? m.dish : fail(`${at}.dish`, 'unknown dish'), count: int(m.count, `${at}.count`, 1, MAX_KITCHEN_BASE),
       main: stoveKey(m.main, `${at}.main`), side: stoveKey(m.side, `${at}.side`) }
   }), `${path}.menu`, (m) => m.dish)
+  if (play === 'contest' && (out.menu.length !== 1 || out.menu[0]!.count !== 1)) fail(`${path}.menu`, 'the Contest cooks one dish')
   return out
 }
 

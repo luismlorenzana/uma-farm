@@ -45,7 +45,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **The ranch and the mine** | **Deployed** | The Coop and the Barn, with seven kinds of animal bought at the rancher's in town, fed from the silo and cared for, their goods starred by their hearts; the Mine and the Quarry, thirty floors each, a face at a time; the Smelter and the Cutter ([the ranch](game-mechanics.md#the-ranch), [the Mine and the Quarry](game-mechanics.md#the-mine-and-the-quarry)) |
 | **Upkeep and loans** | **Deployed** | Each night's upkeep for what's built, who lives on the farm and who works it; short of it, a warning, then half pace for the farmhands until it's paid. The mayor's office lends toward a build, repaid from each night's income ([upkeep and loans](game-mechanics.md#upkeep-and-loans)) |
 | **Food** | **Built** (F90, F92) | Everyone who eats on the farm eats twice a night, from the pantry first; what it's short is takeout, 15g a meal, charged with the upkeep from the first night. The farmer cooks a batch in the farmhouse kitchen (six meals from two goods, 90g of takeout saved), plain or **at the stove**, a 30-second cooking game (6, 8, 9 or 12 meals by its tier); a household meal cooks one too, and a farmhand on Cook cooks for everyone, 6 to 12 meals a batch by her Cooking; a ★2+ meal leaves an Uma well fed ([food](game-mechanics.md#food), [the stove](game-mechanics.md#the-stove-the-cooking-game)) |
-| **The Kitchen** | **Built** (F92) | From Farm Rank 3 (3,000g · 40 logs · 20 vegetables), levels 1–5 (6 to 15 dishes a play): once a day, a menu of up to three known recipes cooked at the stove for 60 s, with a farmhand as its assistant; 80 recipes (three known when it stands, the rest at the shop's Recipes shelf); dishes don't ship, they feed **the staff meal**: a dish for every three mouths, eaten in place of their meals, everyone well fed by its stars ([the Kitchen](game-mechanics.md#the-kitchen)) |
+| **The Kitchen** | **Built** (F92, F93) | From Farm Rank 3 (3,000g · 40 logs · 20 vegetables), levels 1–5 (6 to 15 dishes a play): once a day, a menu of up to three known recipes cooked at the stove for 60 s, with a farmhand as its assistant; 80 recipes (three known when it stands, the rest at the shop's Recipes shelf); dishes don't ship, they feed **the staff meal**: a dish for every three mouths, eaten in place of their meals, everyone well fed by its stars ([the Kitchen](game-mechanics.md#the-kitchen)). **The Cooking Contest** on Autumn 10 is the first festival you play: three actions, one dish cooked live, judged against the orchard and the ranch, the places paying gold and Farm Rank points ([the Cooking Contest](game-mechanics.md#the-cooking-contest)) |
 | **The calendar** | **Deployed** | The bar's date opens the year on one screen: its festivals, the story's days, birthdays, anniversaries and the faces of the Umas with an event each day. Special days add actions for events, and the occasion scenes play on their days ([the calendar](game-mechanics.md#the-calendar-screen)) |
 | **The town** | **Deployed** | A map you walk around: who's at each place now (each Uma's fixed schedule: the story's home, job and routine, else her favourite spot every third day), the town's people at their posts, and her menu. You meet her by introducing yourself; there's no welcome week ([the town](game-mechanics.md#the-town), [meeting her](game-mechanics.md#meeting-her)) |
 | **The Uma loop** | **Deployed** | Acquaintance, friend, farmhand, sweetheart, engaged, married: talks and gifts, hangouts and dates at two actions, Dinner in town and A night in, the ring and the wedding, the wedding night and moving in, then married life's meals and the night's companion, who greets you in the morning. Her whole romance plays in her own chapters: hearts, heart events and plays, perks, houses and bonds ([the Uma loop](game-mechanics.md#the-uma-loop), [her chapters](game-mechanics.md#her-chapters)) |
@@ -57,7 +57,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **The story** | **Being written** | By the story session, read in the Farm Story Sandbox and shipped with one command at the end of each session. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack](story-pack.md) says how it reaches the game and lists what the game reads |
 | **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's. The Umas' faces and busts on cards and lists are master data's, and so are three Umas' dialogue portraits and the first Uma's nine illustrations, from Uma Character Art's Farm Life. Every other Uma plays scenes on the blank bust. [The art brief](design/her-look.md#the-art-brief) says what's drawn next |
 | **The HD-2D farm** | **Retired** | The tile farm is Home. The portrait preview, its stage and its kit are gone; an HD-2D look may come back when uma-platform's look path is ready |
-| **The workshops still to build** | **Not built** | The Cooking Contest (F93), expeditions, and the Restaurant's and the Forge's games: Phase 2 |
+| **The workshops still to build** | **Not built** | Expeditions, and the Restaurant's and the Forge's games; the other festivals' contests: Phase 2 |
 | **Sound** | **None** | No music and no sound effects |
 | **Safety nets** | **Partial** | The save syncs with rescues and backups; there's no error reporting and no end-to-end test |
 | **Parcels to the other games** | **Parked** | The farm sending items to uma-quest, uma-rpg and uma-racer comes after the farm's own game |
@@ -96,8 +96,8 @@ Phase 3  Feel and polish                   ── sound, animation, settings, ba
 Phase 4  Steady                            ── error reports, save safety, a tested playthrough, releases
 ```
 
-Phase 2 is under way, one workshop at a time: the Kitchen first (your go, 2026-11-15; F92 and F93). Phase 3 can start
-once the first workshop plays.
+Phase 2 is under way, one workshop at a time: the Kitchen is in, with the Cooking Contest (your go, 2026-11-15; F92
+and F93), and the sea and expeditions (2.4) are next. Phase 3 can start now that the first workshop plays.
 Phase 4's error reports and save safety are small and can come any time.
 
 ### Phase 0: Clean slate (done)
@@ -136,13 +136,13 @@ town, each with her own story.
 food from day one with cooking in batches (F90), and work at scale (F91): up to eight plots, the stations' levels, thin
 hauls past four a place a day, and a market that feels a flood. A simulation at 10, 20 and 50 Umas shows 10 and 20 fully
 in real jobs and 50 running past the farm's jobs by about ten Umas, the work the workshops below bring
-([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)). The workshops are next, the Kitchen
-first (the owner's go, 2026-11-15): its stove, recipes, dishes and staff meal are in (F92), and the Cooking Contest is
-next (F93).
+([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)). The workshops came next, the Kitchen
+first (the owner's go, 2026-11-15): **2.3 is done:** its stove, recipes, dishes and staff meal (F92), and the Cooking
+Contest on Autumn 10, the first festival you play (F93) ([the Kitchen](game-mechanics.md#the-kitchen),
+[the Cooking Contest](game-mechanics.md#the-cooking-contest)). The sea and expeditions are next.
 
 | Step | What |
 |---|---|
-| 2.3 **The Kitchen** (building: [F93](handoff/tasks/F93-cooking-contest.md)) | **Built (F92):** the stove, a cooking game played whenever you cook, from the farmhouse kitchen on day one; the Kitchen from Farm Rank 3: recipes, dishes and the staff meal ([the Kitchen](game-mechanics.md#the-kitchen)). **Still to come (F93):** the Cooking Contest on Autumn 10 as the first played festival |
 | 2.4 **The sea and expeditions** | The dock and the boat's spots; regions, parties and their power, results and loot, the log |
 | 2.5 **The Restaurant's and the Forge's games** | The serving game and the merge game |
 | 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |

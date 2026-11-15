@@ -16,6 +16,10 @@ import { NIGHT_STEPS } from '../night/end-day'
 import { ARRIVALS, BURNERS, GREEN_MS, MOST_A_PART, PERFECT_FROM_MS, PERFECT_TO_MS, PLAY_TIERS, SMOKE_MS, STOVE_POINTS, STOVE_SECONDS, TICKET_SHAPES, tierCount } from '../kitchen/stove'
 import { KITCHEN_LEVELS } from '../kitchen/levels'
 import { MOUTHS_A_DISH } from '../kitchen/kitchen'
+import {
+  CONTEST_ACTIONS, CONTEST_PLAY_SHARE, CONTEST_RECORD, CONTEST_STAR_POINTS, contestPrize, contestScore, FIRST_PRIZE, PRIZE_SHARE, RIVAL_CAP, RIVALS, rivalScore, type ContestPlace,
+} from '../kitchen/contest'
+import { CONTEST_SCENE_LINES } from '../story/contest'
 import { RECIPE_KINDS, RECIPE_SIDE, RECIPES, RECIPES_GOLD, recipeWords, SIDE_WORDS, START_RECIPES } from '../kitchen/recipes'
 import { BATCH_GOODS, BATCH_MEALS, COOK_BATCH, FOOD_FAMILIES, MEALS_A_DAY, TAKEOUT_PRICE, WELL_FED_STARS } from '../farm/food'
 import { MEAL_KEEPS } from '../save/v4'
@@ -50,7 +54,7 @@ import {
 import { FACE_FINDS, floorFinds, floorRank, floorTopGrade, FLOORS_A_GRADE, gradeAt, stairsAfter } from '../gathering/digs'
 import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
-import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
+import { DIARY_ROWS, ENTRY_POINTS, FESTIVAL_PLACE_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
 import { GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
@@ -635,6 +639,7 @@ function farmRankPoints(): string {
     ['Gold shipped at the bin', `1 per ${GOLD_PER_POINT}g`, '`farm.counts[\'gold-shipped\']`'],
     ['A Diary entry: a good shipped once', ENTRY_POINTS, '`diary.shipped`'],
     ['A milestone', MILESTONE_POINTS, '`diary.milestones`'],
+    ['A festival’s place: 1st, 2nd, 3rd', `${FESTIVAL_PLACE_POINTS[1]}, ${FESTIVAL_PLACE_POINTS[2]}, ${FESTIVAL_PLACE_POINTS[3]}`, '`farm.festivals`'],
   ])
 }
 /** Each Farm Rank's threshold and what it opens in the game as built, from the rules that gate on it. */
@@ -771,7 +776,7 @@ function lovePoints(): string {
     ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One action; one a day each, where you meet her; ×3 on her birthday', '`giftV4`'],
     ['Praise (a ★3+ day’s work, a rank-up, a Fine play)', `+${LOVE_POINTS.praise}`, 'Once a day, when earned', '`praiseV4`'],
     ['Her line (she worked it today)', `+${LOVE_POINTS.line}`, 'Paid at night, step 6', '`payLines`'],
-    ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether` (festivals aren’t built yet)'],
+    ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether`: the Cooking Contest’s cook (the other festivals’ when they’re built)'],
     ['Her arrival scene', `+${ARRIVAL_POINTS}, and its choice (+${CHOICE_OTHER} or +${CHOICE_BEST})`, 'Once', '`finishArrival`'],
     ['A heart event', '+50, its choices and its play’s grade', 'One action (a special day’s event actions first); one of hers a day', '`playEvent`'],
     [`The evening (a hangout from F${HANGOUT_FROM}, a date from R${DATE_FROM}; 2 actions)`, `Fine +${EVENING_GRADE_POINTS.fine}, Great +${EVENING_GRADE_POINTS.great}, Perfect +${EVENING_GRADE_POINTS.perfect}; ×${EVENING_FACTOR} in her favourite kind, on her birthday and on her anniversary, each once`, `One evening a day across all the Umas; two on some days from ${TWO_EVENINGS_MARRIED} married`, '`spendEvening`'],
@@ -1289,7 +1294,7 @@ function stoveRules(): string {
     ['Served', `A ticket whose parts are all on the pass: **+${STOVE_POINTS.served} a part**. A ticket whose wait runs out leaves: **late ${STOVE_POINTS.late}**. A part pulled for a ticket that left goes to the oldest open ticket of its shape still needing it`],
     ['The score', `Points ÷ the seed’s most (${MOST_A_PART} a part) × 100, rounded, held to 0–100`],
     ['The seed', 'Four digits, `draw(uid, day, \'stove\', plays)`: the account, the day and the farm’s count of plays (`farm.counts.plays`), so every play differs and a replay is the same'],
-    ['Its length', `A batch ${STOVE_SECONDS.batch} s; the Kitchen’s play ${STOVE_SECONDS.kitchen} s`],
+    ['Its length', `A batch ${STOVE_SECONDS.batch} s; the Kitchen’s play ${STOVE_SECONDS.kitchen} s; the Cooking Contest’s dish ${STOVE_SECONDS.contest} s`],
   ])
 }
 /** The tiers: their scores, what they give a batch and the Kitchen's base. */
@@ -1326,6 +1331,54 @@ function staffMealBlock(): string {
   ])
 }
 
+// --- The Cooking Contest -------------------------------------------------------------------------------------------------
+
+const PLACES: readonly ContestPlace[] = [1, 2, 3]
+const ordinal = (place: ContestPlace): string => ['1st', '2nd', '3rd'][place - 1]!
+/** The Contest's rules: its entry, its play, its score, the rivals, the places and the record. */
+function contestRules(): string {
+  const [orchard, ranch] = RIVALS
+  const share = (p: ContestPlace) => (PRIZE_SHARE[p] === 1 ? `${g(FIRST_PRIZE)} × the season’s number (Spring 1, Summer 2, Autumn 3, Winter 4) × the year` : PRIZE_SHARE[p] === 0.5 ? 'Half of 1st’s' : 'A fifth of 1st’s')
+  return table(['Rule', ''], [
+    ['Its day', 'The festival whose rule is the Cooking Contest: the game’s Autumn 10, or wherever the story moves it (under the story’s name)'],
+    ['The entry', `**Enter the Cooking Contest · ${CONTEST_ACTIONS}**, at the Kitchen: ${CONTEST_ACTIONS} actions, the festival day’s event actions first, then the day’s own. The Kitchen built (“Build the Kitchen to enter.”); one entry a Contest; no play under way`],
+    ['The dish', 'One known recipe, two of its main and one side at one good and one star each, out of the Warehouse at the entry; an optional cook, a farmhand with an action tonight (one of her actions tonight is the Contest’s)'],
+    ['The play', `${STOVE_SECONDS.contest} s at the stove on the play’s seed: one dish, its stars the Kitchen’s (its ingredients’ average, rounded down, + the tier’s lift, held to ★5), into the Warehouse after the judging`],
+    ['The score', `${CONTEST_STAR_POINTS} × the dish’s ★ + ${CONTEST_PLAY_SHARE} × the play’s score, rounded half up, 0–100. A ★2 dish and a play of 76: ${contestScore(2, 76)}`],
+    ['The rivals', `${orchard!.farm[0]!.toUpperCase()}${orchard!.farm.slice(1)} (\`${orchard!.id}\`, cooking its specialty): ${orchard!.base} + ${orchard!.per} × the Farm Rank. ${ranch!.farm[0]!.toUpperCase()}${ranch!.farm.slice(1)} (\`${ranch!.id}\`): ${ranch!.base} + ${ranch!.per} × the Farm Rank. Each held to ${RIVAL_CAP}; the Farm Rank as last night left it. **Ties go to you**`],
+    ...PLACES.map((p) => [`${ordinal(p)}’s prize, paid at once`, `${share(p)}; ${FESTIVAL_PLACE_POINTS[p]} Farm Rank points`]),
+    ['The record', `\`farm.festivals\` gets \`{ id: 'cooking-contest', day, score, place }\`; \`diary.records['${CONTEST_RECORD}']\` keeps the best score`],
+    ['The cook', 'A point of Cooking practice; a 1st counts `won` toward her cooking challenge (the Legend’s); a festival together’s +50, once a festival a year'],
+    ['Left unfinished', 'Judged as Rough (its play’s score 0) at the next open or the night’s start, its prize paid'],
+  ])
+}
+/** The rivals' scores at each Farm Rank, and what you need for 1st. */
+function contestRivals(): string {
+  const [orchard, ranch] = RIVALS
+  return table(['Farm Rank', ...FARM_RANK_POINTS.map((_, i) => String(i + 1))], [
+    [`${orchard!.farm[0]!.toUpperCase()}${orchard!.farm.slice(1)}`, ...FARM_RANK_POINTS.map((_, i) => String(rivalScore(orchard!, i + 1)))],
+    [`${ranch!.farm[0]!.toUpperCase()}${ranch!.farm.slice(1)}`, ...FARM_RANK_POINTS.map((_, i) => String(rivalScore(ranch!, i + 1)))],
+    ['1st from', ...FARM_RANK_POINTS.map((_, i) => String(Math.max(...RIVALS.map((r) => rivalScore(r, i + 1)))))],
+  ])
+}
+/** Each place's gold, the Contest on Autumn 10, years 1 to 3, and its Farm Rank points. */
+function contestPrizes(): string {
+  const autumn10 = (year: number) => farmDay({ year, season: 'autumn', day: 10 })
+  return table(['Place', 'Year 1', 'Year 2', 'Year 3', 'Farm Rank points'], PLACES.map((p) => [
+    `**${ordinal(p)}**`, ...[1, 2, 3].map((y) => g(contestPrize(autumn10(y), p))), String(FESTIVAL_PLACE_POINTS[p]),
+  ])) + '\n\nOn Autumn 10, the game’s day. A Contest the story moves takes its new season’s number: Spring 1, Summer 2, Autumn 3, Winter 4.'
+}
+/** The judging's lines: the plates, her words by your place, the board. */
+function contestScene(): string {
+  const rows = (beats: readonly Beat[]) => beats.map((b) => [speakerWords(b), b.line])
+  const L = CONTEST_SCENE_LINES
+  return `**${L.title}** (at the play’s end)\n\n${table(['When', 'Who', 'Line'], [
+    ...rows(L.opening).map((r) => ['Always', ...r]),
+    ...PLACES.flatMap((p) => rows(L.byPlace[p]).map((r) => [ordinal(p), ...r])),
+    ...rows(L.closing).map((r) => ['Always', ...r]),
+  ])}`
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
     'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
@@ -1350,6 +1403,7 @@ export function renderBlock(key: string): string | null {
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock,
-    'stove-rules': stoveRules, 'play-tiers': playTiers, 'kitchen-levels': kitchenLevels, 'recipe-kinds': recipeKinds, recipes: recipesBlock, 'staff-meal': staffMealBlock }
+    'stove-rules': stoveRules, 'play-tiers': playTiers, 'kitchen-levels': kitchenLevels, 'recipe-kinds': recipeKinds, recipes: recipesBlock, 'staff-meal': staffMealBlock,
+    'contest-rules': contestRules, 'contest-rivals': contestRivals, 'contest-prizes': contestPrizes, 'contest-scene': contestScene }
   return blocks_[key]?.() ?? null
 }

@@ -77,7 +77,8 @@ export interface HandDay {
   half: boolean
   /** All of them, at the farm's pace. */
   actions: number
-  /** Of them, the Kitchen's play's: 1 when she's its assistant today (`today.assistant`), else 0. */
+  /** Of them, the Kitchen's: 1 when she's its play's assistant today (`today.assistant`), 1 more when she's the Cooking
+   * Contest's cook (`today.cook`), never more than she has. */
   kitchen: number
 }
 
@@ -90,7 +91,8 @@ export function handDay(save: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 't
   const fed = save.today.fed?.includes(id) ? FED_ACTIONS : 0
   const all = HAND_ACTIONS + settled + spouse + fed
   const actions = atPace(all, save)
-  return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions, kitchen: save.today.assistant === id && actions > 0 ? 1 : 0 }
+  const kitchen = Math.min(actions, (save.today.assistant === id ? 1 : 0) + (save.today.cook === id ? 1 : 0))
+  return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions, kitchen }
 }
 
 /** The farmhands in the order they work: by the day you invited them, then by id. */

@@ -5,18 +5,20 @@
 // `pointerdown`. It draws the game from the rules' own functions (`@farm/domain`'s `kitchen/stove.ts`), and its end hands
 // the taps to the rules, which replay them against the seed: the result card says what they made. ✕ asks once ("Stop?
 // It counts as Rough.") and settles it Rough; leaving mid-play leaves it for the shell to settle Rough. A 3-2-1 count
-// comes before the clock, which then runs without pause. Its own lazy chunk.
+// comes before the clock, which then runs without pause. The Cooking Contest's dish plays here too, under the festival's
+// name, and its end opens the judging (`ContestJudging.tsx`): the town's cook's scene, then the board. Its own lazy chunk.
 import {
-  BURNERS, burnerView, dishName, GREEN_MS, itemNameOf, newStove, PERFECT_FROM_MS, PERFECT_TO_MS, PLAY_TIERS, stoveAt, stoveScore, stoveTap, tierOf,
+  BURNERS, burnerView, contestOn, dishName, FESTIVALS, GREEN_MS, itemNameOf, newStove, PERFECT_FROM_MS, PERFECT_TO_MS, PLAY_TIERS, stoveAt, stoveScore, stoveTap, tierOf,
   type PlayInProgress, type PlayResult, type Stove, type StoveEvent, type StoveTap, type StoveTicket,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
+import { useStoryYear } from '../story/story'
 import { finishTheStove } from './kitchen-actions'
 import { holdPlay, playHeld, releasePlay } from './stove-session'
 import { plural } from './words'
@@ -26,6 +28,7 @@ const clock = (): number => (typeof performance !== 'undefined' ? performance.no
 const COUNT_MS = 2400
 /** A pop shows this long. */
 const POP_MS = 900
+const ContestJudging = lazy(() => import('./ContestJudging'))
 
 /** A ticket's dressing: what's cooking and its parts' ingredients. A batch is "Meal" of its two goods (the first good,
  * the first, the second; or the first and the second); a Kitchen ticket is the menu's recipes in turn (its main, its
@@ -72,6 +75,9 @@ export default function StovePlayer() {
 type Phase = 'count' | 'play' | 'ask' | 'settling' | 'done'
 
 function StoveScreen({ play, onClose }: { play: PlayInProgress; onClose: () => void }) {
+  const year = useStoryYear() ?? FESTIVALS
+  // The festival's name for the Contest's dish (the story's, when it renames or moves it).
+  const title = play.play === 'batch' ? 'At the stove' : play.play === 'contest' ? contestOn(play.day, year)?.name ?? 'Cooking Contest' : 'The Kitchen'
   const length = play.length * 1000
   const [phase, setPhase] = useState<Phase>('count')
   const [result, setResult] = useState<PlayResult | null>(null)
@@ -153,7 +159,7 @@ function StoveScreen({ play, onClose }: { play: PlayInProgress; onClose: () => v
         <button type="button" className="flex size-11 items-center justify-center rounded-full text-[20px] text-ink-soft" aria-label="Stop"
           disabled={phase !== 'play' && phase !== 'count'} onClick={() => setPhase('ask')} data-action="stop">✕</button>
         <div className="min-w-0">
-          <p className="text-[14px] font-semibold leading-tight">{play.play === 'batch' ? 'At the stove' : 'The Kitchen'}</p>
+          <p className="text-[14px] font-semibold leading-tight">{title}</p>
           <p className="text-[11px] text-ink-faint tabular-nums" data-stove-seed>Seed {play.seed}</p>
         </div>
         <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-sunken" aria-label={`${Math.ceil((length - now) / 1000)} seconds left`} data-time>
@@ -201,7 +207,8 @@ function StoveScreen({ play, onClose }: { play: PlayInProgress; onClose: () => v
         </Overlay>
       )}
       {phase === 'settling' && <Overlay><p className="text-[16px] font-semibold">Plating up…</p></Overlay>}
-      {phase === 'done' && (
+      {phase === 'done' && result?.contest && <Suspense fallback={<Overlay><p className="text-[16px] font-semibold">The judging…</p></Overlay>}><ContestJudging result={result} name={title} onDone={onClose} /></Suspense>}
+      {phase === 'done' && !result?.contest && (
         <Overlay>
           {result ? <ResultCard result={result} /> : <p className="text-[14px] text-danger">{error}</p>}
           <Button className="min-w-40" onClick={onClose} data-action="stove-done">Done</Button>
