@@ -55,9 +55,28 @@ http://127.0.0.1:4321). It reads the pack with the game's own reader:
 
 ### Shipping it
 
-**At the end of every writing session, ship:** `pnpm story:ship --note "what's new, in one line"`, run in this repo's
-checkout where the story is written (macOS or Windows; Node 22.18 or later). **Ship partial work freely:** a pack only
-ever adds to what the game already plays. The owner can ask for a ship at any time ("ship it").
+**The routine, at the end of every writing session,** in this repo's checkout where the story is written (macOS or
+Windows; Node 22.18 or later):
+
+| Step | Command | What it says when it worked |
+|---|---|---|
+| 1. Status | `pnpm story:status --tier 1` | Each Uma's pieces, hers · default · missing; "10 of 10 complete" once Tier 1 is whole |
+| 2. Ship | `pnpm story:ship --note "what's new, in one line"` | Its last line: **"Release *n* shipped, *date*: *note*"** |
+| 3. Confirm | `pnpm story:ship --dry-run` | **"The bucket already plays this pack as release *n*: nothing to publish"** |
+| 4. Say | Tell the owner "Release *n* is out" | On their phone, Account shows **Story: Release *n*, *date***, and the next morning opens with **"New story arrived"** |
+
+- **The ship is the publish.** The live game's API reads the bucket's `story.json` on every request, so a release is
+  live the moment step 2 ends: no deploy, no commit and no pull request. The story never goes into git.
+- **"Nothing new shipped"** means the bucket already plays this pack: there's nothing to publish.
+- **Ship partial work freely:** a pack only ever adds to what the game already plays. The owner can ask for a ship at any
+  time ("ship it").
+- **Ship from one machine,** the one where the story is written. A ship publishes the folder it reads, so a ship from an
+  older copy publishes the older pack as a new release and backs its drafts up over the newer ones. On any other
+  machine, bring the shipped drafts first: `pnpm story:pull farm --drafts --force` in `../uma-platform`, which replaces
+  this machine's copy with the last ship's. The tell: on a machine that's current, step 3 says "already plays" before
+  anything's written there.
+
+**What the ship does,** step by step:
 
 | Step | What happens |
 |---|---|

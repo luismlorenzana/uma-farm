@@ -18,6 +18,8 @@ in place or migrates it, never a start-over, and the game has no testing tools: 
 reads for each of the Ranker's Tier 1, filled from the default story and marked `"draft": "default"`, and
 `pnpm story:status` shows each Uma's pieces, hers, the default and missing; `story:ship`'s check and the Farm Story
 Sandbox show the same. [A complete Uma](../story-pack.md#a-complete-uma) is the story session's routine.
+**Tier 1 is written whole and live** (2026-11-15): release 8 plays all ten, every piece hers, nothing skipped. Each
+writing session ends with [the ship's routine](../story-pack.md#shipping-it): status, ship, confirm, say.
 
 **The real game's fixes are in** (F86): no route dead-ends on a setup, scene links play only what's earned, and
 [a route to marriage](../game-mechanics.md#a-route-to-marriage) is simulated.
@@ -102,6 +104,7 @@ Not packets: each has a standing guide that changes as the game does.
 | **Cook at the stove on your phone:** on the Farmhouse's sheet tap **At the stove · 1** and play the 30 seconds held sideways (tell me if the burners and the tickets are big enough for your thumb, and the timing feels fair); once the Farm Rank offers it, build the Kitchen, play its menu, serve the staff meal, and read the next morning's "Staff meal" line | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Enter the Cooking Contest on your phone,** on Autumn 10 with the Kitchen built: pick a dish and a cook, play the 60 seconds held sideways, read the cook's judging and the board, and the next morning see the Farm Rank's points; tell me if the rivals feel fair at your Farm Rank | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Meet Tier 1's story on your phone:** open the game and see Account's **Story: Release 8, Nov 15, 2026**; the next morning opens with **New story arrived**. Then play, and meet them as they come | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
 
