@@ -19,11 +19,20 @@ reads for each of the Ranker's Tier 1, filled from the default story and marked 
 `pnpm story:status` shows each Uma's pieces, hers, the default and missing; `story:ship`'s check and the Farm Story
 Sandbox show the same. [A complete Uma](../story-pack.md#a-complete-uma) is the story session's routine.
 
-**Next:** the queue below, then Phase 2's workshops, one at a time on your go, the Kitchen first.
+**The real game's fixes are in** (F86): no route dead-ends on a setup, scene links play only what's earned, and
+[a route to marriage](../game-mechanics.md#a-route-to-marriage) is simulated.
+
+**She's where you can find her** (F88): only your cast lives in town, with the town's people at their posts. Every Uma
+keeps a fixed schedule, hers from the story or the default (her favourite spot every third day), shown on her profile
+("Where to find her") and on the calendar's days; nobody appears at random. A farmhand is on the farm by day, you can
+ask an Uma you meet in town out for an evening, and every default gift can be had in the first Spring. Faces are
+rounded squares cut from her portraits in the season's outfit ([her picture](../game-mechanics.md#her-picture)).
+
+**Next:** Phase 2's workshops, one at a time on your go, the Kitchen first.
 
 | Piece | Who | State |
 |---|---|---|
-| **F86 The real game's fixes:** no route dead-ends on a setup, scene links play only what's earned, [a route to marriage](../game-mechanics.md#a-route-to-marriage) simulated | Claude | In: its pull request, for review |
+| Nothing open: Phase 2's workshops wait on your go | — | — |
 
 ## Open packets
 
