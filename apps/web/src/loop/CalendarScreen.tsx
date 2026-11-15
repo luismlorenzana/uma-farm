@@ -197,11 +197,11 @@ function InTown({ rows, nameOf }: { rows: readonly TownRow[]; nameOf: (id: strin
               <span className="w-[42%] shrink-0 truncate text-[12px] font-semibold">{r.name}</span>
               <span className="flex min-w-0 flex-1 items-center -space-x-1.5">
                 {shown.map((id) => (
-                  <span key={id} className="block size-[22px] shrink-0 rounded-full ring-1 ring-panel" data-town-face={id}>
-                    <FaceTile outfitId={id} size={22} label={nameOf(id)} round />
+                  <span key={id} className="rounded-avatar block size-[22px] shrink-0 ring-1 ring-panel" data-town-face={id}>
+                    <Avatar id={id} size={22} label={nameOf(id)} />
                   </span>
                 ))}
-                {more > 0 && <span className="grid size-[22px] shrink-0 place-items-center rounded-full bg-sunken text-[10px] font-bold text-ink ring-1 ring-panel">+{more}</span>}
+                {more > 0 && <span className="rounded-avatar grid size-[22px] shrink-0 place-items-center bg-sunken text-[10px] font-bold text-ink ring-1 ring-panel">+{more}</span>}
               </span>
             </li>
           )
