@@ -77,13 +77,22 @@ says "Cooking Contest tomorrow" and "Cooking Contest today · +3 for events", ea
 counts the festivals' places, and a 1st counts toward the cook's cooking Legend
 ([the Cooking Contest](../game-mechanics.md#the-cooking-contest)).
 
+**Now: the whole story plays** ([F94](tasks/F94-the-whole-story-plays.md), your go 2026-11-15): every scene the story writes for a
+moment the game has plays on it (her birthday, her anniversary, each festival's day and night, the story's small days),
+her chats open with a greeting for the place, the season and the hour, small talk plays, and a gift gets her own words;
+all read by id from the pack, so a later release plays without a change to the game.
+
 **Next: the sea and expeditions** (Phase 2.4): the Dock's and the Boat's spots; regions, parties and their power,
 results and loot, and the log ([the roadmap](../roadmap.md#phase-2-the-whole-farm)). Its packet is written when it starts,
-numbered from F94.
+numbered from F95.
 
 ## Open packets
 
-None. A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
+| Packet | What | Status |
+|---|---|---|
+| [F94 — The whole story plays](tasks/F94-the-whole-story-plays.md) | Every occasion, the story's days, and talk that knows the day | Building |
+
+A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
 ## Standing work
 
