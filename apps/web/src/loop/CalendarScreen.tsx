@@ -13,12 +13,12 @@ import {
   actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, nextFestival, NO_BIRTHDAYS, noPack, SEASON_NAMES, SEASONS, seasonDays,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays,
 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
@@ -120,11 +120,11 @@ function Cell({ day, chosen, nameOf, onPick }: { day: CalendarDay; chosen: boole
         {marks.eventActions > 0 && day.when !== 'past' && <span className={`text-[10px] leading-tight font-semibold ${today ? '' : 'text-[#c2385e]'}`} data-cell-events>♥+{marks.eventActions}</span>}
         <span className="mt-auto flex items-center -space-x-2" data-cell-faces>
           {shown.map((f) => (
-            <span key={f.id} className={`block size-[22px] shrink-0 rounded-full ring-1 ring-panel ${faintFace(f, day) ? 'opacity-45' : ''}`} data-cell-face={f.id} data-faint={faintFace(f, day) || undefined}>
-              <FaceTile outfitId={f.id} size={22} label={nameOf(f.id)} round />
+            <span key={f.id} className={`rounded-avatar block size-[22px] shrink-0 ring-1 ring-panel ${faintFace(f, day) ? 'opacity-45' : ''}`} data-cell-face={f.id} data-faint={faintFace(f, day) || undefined}>
+              <Avatar id={f.id} size={22} label={nameOf(f.id)} />
             </span>
           ))}
-          {more > 0 && <span className="grid size-[22px] shrink-0 place-items-center rounded-full bg-sunken text-[11px] font-bold text-ink ring-1 ring-panel" data-more>+{more}</span>}
+          {more > 0 && <span className="rounded-avatar grid size-[22px] shrink-0 place-items-center bg-sunken text-[11px] font-bold text-ink ring-1 ring-panel" data-more>+{more}</span>}
         </span>
       </button>
     </li>
@@ -183,7 +183,7 @@ function FaceRow({ face, day, save, days, name }: { face: DayFace; day: Calendar
   const can = actionsLeft(save) + eventActionsLeft(save, days) > 0
   return (
     <li className="flex min-h-12 items-center gap-2 py-1" data-face={face.id} data-reasons={face.reasons.join(' ')}>
-      <span className="block size-9 shrink-0"><FaceTile outfitId={face.id} size={36} label={name} round /></span>
+      <span className="block size-9 shrink-0"><Avatar id={face.id} size={36} label={name} /></span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14px] font-semibold">{name}</span>
         <span className="block truncate text-[12px] text-ink-soft">{why}</span>

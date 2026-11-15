@@ -140,6 +140,12 @@ Sheets and scenes are query parameters on the page under them:
   client, verified and cached by hash. `Bust.tsx` composes them: the outfit by context and the face by the expressions'
   fallbacks (the domain's `story/look.ts`), the face drawn over the base at that base's position by the browser; without
   her portraits, her master-data bust. Tests set a synthetic source (`setPortraitSource`).
+- **Her picture** (`src/dialogue/Avatar.tsx` and `picture.ts`, loaded with the lists and the players): the one avatar
+  every list draws an Uma's small face with, a rounded square (`rounded-avatar`). Inside it, her season's portrait
+  base, placed in CSS so a head-and-shoulders square around its `face` fills the box, else her blank profile
+  (`blank-profile.tsx`) in the season's colours. `pictureSource` is the single seam where the picture's source is
+  chosen: the base today, uma-platform's small crops once `dialogue-portraits` carries them. uma-kit's own face tiles
+  (the pickers) get no face URL from the album's art (`master/album-art.tsx`), so their fallback draws the same picture.
 - **The story pack** (`src/story/story.ts`): loaded once, by boot, with master data's placeholders (the domain's
   `storyOf`: each character's default outfit, and each outfit's line from its stats); the boot waits for both.
   `outfitFor` resolves a roster key (a character id) to her outfit: the cast's, else her default. As a save comes in, an

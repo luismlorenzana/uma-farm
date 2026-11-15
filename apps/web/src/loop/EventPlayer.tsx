@@ -33,12 +33,12 @@ import {
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useSearchParams } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { ArtCue, ArtHost, useArtHeader } from '../dialogue/Illustration'
 import { lastSay, Line, nextSay } from '../dialogue/Line'
@@ -453,7 +453,7 @@ function PlaceBackdrop({ card, guests, nameOf }: { card: PlaceCard; guests: read
     <span aria-hidden className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 70%)` }}>
       {guests.length > 0 && (
         <span className="absolute top-2 left-2 z-10 flex -space-x-1.5" data-guests={guests.join(',')}>
-          {guests.map((g) => <FaceTile key={g} outfitId={g} size={32} label={nameOf(g)} round />)}
+          {guests.map((g) => <Avatar key={g} id={g} size={32} label={nameOf(g)} />)}
         </span>
       )}
       <span className="absolute bottom-6 left-4"><BuildingArt frame={card.frame} scale={3} /></span>

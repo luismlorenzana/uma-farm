@@ -7,11 +7,11 @@
 // through tomorrow and +10 each, then one spouse's line as you sit down, `?life=<meal>:<id>`); and the furniture set from
 // 5 married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand.
 import { houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -138,7 +138,7 @@ function HouseLine({ row, nameOf, picked, busy, onRoom, onExtend }: {
               aria-label={id === null ? `A free room in ${row.name}` : `${nameOf(id)}, in ${row.name}`} aria-pressed={on}
               className={`grid size-11 place-items-center rounded-md border ${on ? 'border-[#c2385e] ring-2 ring-[#c2385e]' : id === null ? `border-dashed ${target ? 'border-[#c2385e]' : 'border-hairline-strong'}` : 'border-hairline'}`}
               data-room={id ?? 'free'}>
-              {id === null ? <span aria-hidden className="text-[18px] text-ink-faint">▢</span> : <FaceTile outfitId={id} size={36} label={nameOf(id)} round />}
+              {id === null ? <span aria-hidden className="text-[18px] text-ink-faint">▢</span> : <Avatar id={id} size={36} label={nameOf(id)} />}
             </button>
           )
         })}

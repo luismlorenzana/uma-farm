@@ -9,11 +9,12 @@
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand.
 import { festivalOn, festivalsOf, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
-import { FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
+import type { FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, HelpButton, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import { useMaster, type MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -173,7 +174,7 @@ function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
     <div className="flex min-h-[72px] w-full items-center gap-2" data-heart-row={row.id} data-row-ready={row.state.ready || undefined}>
     <button type="button" onClick={onOpen} className="flex min-h-[72px] min-w-0 flex-1 items-center gap-3 py-2 text-left" data-open-row
       aria-label={`${row.name}, ${row.level}${row.state.ready ? ', Ready' : ''}${row.home ? '' : ', in town'}`}>
-      <FaceTile outfitId={row.id} size={56} label={row.name} className={row.home ? '' : 'opacity-60'} />
+      <Avatar id={row.id} size={56} label={row.name} className={row.home ? '' : 'opacity-60'} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-center gap-1.5">
           <span className="min-w-0 max-w-[60%] shrink-0 truncate text-[15px] font-semibold text-ink">{row.name}</span>

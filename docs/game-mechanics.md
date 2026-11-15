@@ -3437,8 +3437,8 @@ so it needs no release and is replaced the moment her portraits are published.
 
 - **The fallback order on a stage:** her portraits, else the blank bust, else (a role no one plays) the role's lettered
   disc. The blank bust comes before her master-data bust because a scene's point is her face changing line by line,
-  and the master-data bust has no faces. Her master-data face and bust stay where they always were: cards, lists, the
-  town's sheets and her profile.
+  and the master-data bust has no faces. Her master-data bust stays where it always was, on cards and sheets; her small
+  face everywhere else is [her picture](#her-picture).
 - **The base:** a soft silhouette of an Uma (her ears, her long hair, her shoulders) at a portrait's size (525 × 700),
   in the scene's outfit by [outfits by context](#outfits-by-context): each of the 12 has its colours and its mark (the
   kimono's crossed collar and gold obi, the wedding dress's veil and gold flowers, the wedding night outfit's soft robe
@@ -3475,9 +3475,58 @@ so it needs no release and is replaced the moment her portraits are published.
   | `dreamy` | Half-lidded, looking up | A smile | Sparkles, a light blush |
 
 - **Her place holds while her portraits load,** so a pilot's bust never flashes blank before her portrait.
-- **The blank profile:** where master data has no face for her (a stand-in, or one it doesn't hold), lists and cards
-  show the same head and shoulders on her colour, with her letters ("S1"). Where master data has her face and name,
-  those show, as before.
+- **The blank profile** is the same head and shoulders, small: [her picture](#her-picture) while she has no portraits.
+
+#### Her picture
+
+Wherever an Uma's face shows small, as an avatar, it's **her picture**: a square cut from her own portrait, in today's
+season's outfit. One avatar shows it everywhere: the town's map, who's here and its keepers, People in town, the
+calendar's cells and its day, the Hearts list, her profile's heading and its ties, the roster's cards, the work board,
+the Dorm and its pickers, Tonight, the evenings, the household, the farm map's houses, a scene's guests, the pair talks
+and the memories.
+
+```
+╭──────────────────╮
+│◆    ╱╲    ╱╲     │  a badge in a corner sits over her hair, her ears,
+│    ╭────────╮    │  her shoulders or the backdrop, never her face
+│    │  her   │    │
+│    │  face  │    │  her face centred across, its middle 46% down,
+│    ╰────────╯    │  1.6 faces to the square's side
+│   ╱ shoulders ╲ B│
+╰──────────────────╯  a rounded square: its corners 18% of its side
+```
+
+- **The avatar:** a rounded square at the sizes the lists had (20 to 72 pt), its corners 18% of its side at any size,
+  never a circle, with a hairline edge. The badges and counts a list puts on her face (her favourite line's mark, her
+  best talent, her level, a ♥ or a ✓) keep their corners, 4 pt in, over the picture's edge and never clipped by it.
+- **Her picture:** her head and shoulders cut from her portrait base for **today's season**: spring, summer, autumn
+  (`fall`) or winter, and spring when that one isn't drawn. Her face is her calm one, the base's own, with no face laid
+  over it. The square is 1.6 faces wide (358 px of a 525 × 700 base), centred across her face with her face's middle 46%
+  down it, kept inside the base: her face reads at 22 pt, and the corners hold her hair, her ears, her shoulders or the
+  backdrop. On the next season's first morning every picture changes outfit.
+- **Cut in place:** the game shows the base it already loads for her scenes, placed and scaled so its square fills the
+  avatar: no new file, no canvas. A base loads once, checked against the release and cached on the device by its hash,
+  as a scene's are. A list loads nothing for an Uma without portraits (the art index says so before anything is
+  fetched); only the three with portraits have bases.
+- **uma-platform's crops, when they come:** uma-platform is asked for small square crops (about 192 px a base), made
+  from the bases. Master data's `dialogue-portraits` has none yet (uma-data 1.8.0). One function picks her picture's
+  source (`pictureSource`, in `dialogue/picture.ts`): today her season's base, cut in place; once the crops are
+  published, it returns her season's crop, shown whole, and every avatar reads those.
+- **While her portraits are read,** her square stays empty, so a pilot's picture never flashes blank first.
+- **Without portraits** she shows **the blank profile**, drawn in code: the blank bust's head and shoulders in the
+  season's outfit, on the season's colour (the date chip's) washed light, her hair her theme colour's (else a tone by
+  her id), and her letters ("A", "S1") over her shoulders in ink, or white on winter's navy. Her letters come from her
+  name.
+
+  | Season | Her picture's base | The blank profile's backdrop | Its outfit |
+  |---|---|---|---|
+  | Spring | `spring` | Pale green | Green, a pink collar |
+  | Summer | `summer`, else `spring` | Pale gold | Sky blue, a white collar |
+  | Autumn | `fall`, else `spring` | Pale orange | Orange, a russet collar |
+  | Winter | `winter`, else `spring` | Pale blue | Navy, a white collar |
+
+- **Her bust stays master data's** on the cards and sheets that show a bust; a bust that hasn't loaded shows her
+  picture until it has.
 
 #### Her illustrations
 
@@ -3719,28 +3768,28 @@ they're needed.
 
 #### One outfit each, and the resolver
 
-- **Her outfit** is the cast file's: the game never chooses one over it. Her face, bust, talents and temperament come
-  from that outfit; her name is her character's. Talents aren't saved, so a changed outfit shows on the next boot.
+- **Her outfit** is the cast file's: the game never chooses one over it. Her bust, talents and temperament come
+  from that outfit; her name is her character's; her small face is [her picture](#her-picture), from her portraits. Talents aren't saved, so a changed outfit shows on the next boot.
   Without one, she plays **her default outfit from master data**: her first original outfit (no variant, the lowest id),
   else her lowest. (What she wears in a scene is her portraits' outfit, by [context](#outfits-by-context): a different
   thing.)
 - **One resolver** turns a roster id into the outfit it plays: the cast's outfit, else master data's default for her,
   else the id itself for someone master data doesn't hold. The app sees
-  master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing else
+  master data through it, so busts, names, talents, temperaments and pickers all follow the cast with nothing else
   to change.
 - **A sister** (`s<outfitId>`, the Ranker's) is an outfit of an Uma, presented as a character of her own: she plays that
-  outfit (its face, bust, talents and temperament), and her name is the pack's cast entry's `name`, never in git (without
+  outfit (its bust, talents and temperament), and her name is the pack's cast entry's `name`, never in git (without
   one, her elder's name as her sister). She lives in town and is met like anyone; the roster takes her id.
 - **Anyone in town** meets master data through the same resolver: one of the town's people, or any other character,
-  plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face,
-  else her name's letters on a disc.
-- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma on her colour, with her
-  name's first letter and its number, "S1") and reads
+  plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face
+  as her bust. Without portraits, her small face is her blank profile.
+- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma in the season's colours,
+  with her name's first letter and its number, "S1") and reads
   D talents in every activity. The stand-ins are named "Stand-in 1" to "Stand-in 3"; any other unknown character is "An
   Uma".
 - **Everyone on the farm stays in the cast.** An Uma on the roster the pack doesn't hold (one a release dropped, or one
   from an older story) joins the cast bare as the save comes in, at its end, and plays on the default story: her name and
-  face from master data's default outfit for her, or her blank profile.
+  bust from master data's default outfit for her, and her picture or her blank profile.
 
 #### The stand-in pack
 

@@ -7,11 +7,12 @@
 // its tricks), and her nine activities with talent, rank, points and the next challenge. Loaded on demand.
 import { ACTIVITY_NAMES, APTITUDE_NAMES, APTITUDE_POINTS, aptitudesOf, MAX_APTITUDE, TALENT_GRADES, tricksAt, type FarmSave } from '@farm/domain'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
-import { AlbumChrome, FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
+import { AlbumChrome, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { emptyStateHint, runAlbumQuery, type AlbumQuery } from '@luismlorenzana/uma-kit/roster'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import type { MasterView } from '../master/master'
 import {
   activityLines, cardLines, ROSTER_FACETS, ROSTER_QUERY, ROSTER_SORTS, rosterView, sortActivity, sortedFor, stepIn, umaRows, type LoopUmaRow,
@@ -65,7 +66,7 @@ export function RosterAlbum({ save, rows: base, corner }: { save: FarmSave; rows
               <li key={row.id}>
                 <button type="button" onClick={() => navigate(withParam(location, 'uma', row.id), { state: { back: true } })} data-away={row.home ? undefined : true}
                   className="flex w-full min-w-0 flex-col items-center gap-0.5 text-center" data-uma={row.id} aria-label={`${row.name}, ${first}${row.home ? '' : ', in town'}`}>
-                  <FaceTile outfitId={row.id} size={72} badges={{ ...umaBadges(row), ...corner?.(row) }} label={row.name} className={row.home ? '' : 'opacity-60'} />
+                  <Avatar id={row.id} size={72} badges={{ ...umaBadges(row), ...corner?.(row) }} label={row.name} className={row.home ? '' : 'opacity-60'} />
                   <span className="w-full truncate text-[13px] font-semibold text-ink">{row.name}</span>
                   <span className="w-full truncate text-[12px] text-ink-soft" data-card-rank>{first}</span>
                   {row.home

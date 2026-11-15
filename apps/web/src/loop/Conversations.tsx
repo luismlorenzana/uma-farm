@@ -3,11 +3,11 @@
 // "Bond n" chips that replay them, **Read** for any opened and unread, and the tie's line for a pair with none written.
 // Replays pay nothing and mark nothing new. Loaded on demand with the Diary.
 import type { SaveV4 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Panel } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
 import { storyReady, useStory } from '../story/story'
 import { conversationRows, readParam, type ConversationRow } from './hearts-view'
@@ -35,8 +35,8 @@ function PairRow({ row, nameOf }: { row: ConversationRow; nameOf: (id: string) =
     <li className="space-y-1 py-2" data-pair={`${row.a}-${row.b}`} data-hearts={row.hearts}>
       <div className="flex items-center gap-2.5">
         <span className="flex shrink-0 -space-x-2">
-          <span className="block size-7"><FaceTile outfitId={row.a} size={28} label={nameOf(row.a)} round /></span>
-          <span className="block size-7"><FaceTile outfitId={row.b} size={28} label={nameOf(row.b)} round /></span>
+          <span className="block size-7"><Avatar id={row.a} size={28} label={nameOf(row.a)} /></span>
+          <span className="block size-7"><Avatar id={row.b} size={28} label={nameOf(row.b)} /></span>
         </span>
         <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{nameOf(row.a)} &amp; {nameOf(row.b)}</span>
         <span className="shrink-0 text-[14px] tracking-[-1px]" aria-label={`Bond ${row.hearts} of 5`}>

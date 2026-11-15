@@ -81,6 +81,14 @@ async function render(node: ReactNode, at: string) {
 }
 const $ = (selector: string) => document.body.querySelector(selector) as HTMLElement | null
 const $$ = (selector: string) => [...document.body.querySelectorAll(selector)] as HTMLElement[]
+/** An element's words, leaving out the letters on a blank profile's face (its avatar). */
+const words = (el: Element | null | undefined): string | undefined => {
+  if (!el) return undefined
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+  let out = ''
+  for (let node = walk.nextNode(); node; node = walk.nextNode()) if (!node.parentElement?.closest('[data-avatar]')) out += node.textContent ?? ''
+  return out
+}
 const until = async (ok: () => boolean) => {
   for (let i = 0; i < 150 && !ok(); i++) await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
   expect(ok()).toBe(true)
@@ -160,17 +168,17 @@ describe('the town', () => {
     expect(path).toBe(`/town?at=${sister}`)
     expect(save().today.actions).toBe(0)
     expect($$('[data-place-panel] [data-person]').map((p) => p.dataset.person)).toContain(SISTER)
-    expect($(`[data-person="${SISTER}"]`)?.textContent).toBe('Invented Sister')
+    expect(words($(`[data-person="${SISTER}"]`))).toBe('Invented Sister')
     // The café: Fable keeps it, at her post.
     await click($('[data-location="cafe"]'))
     expect($('[data-place-name]')?.textContent).toBe('Invented Café')
-    expect($('[data-keeper]')?.textContent).toBe('Fable · The smith')
+    expect(words($('[data-keeper]'))).toBe('Fable · The smith')
     // The general store: its keeper sells seeds; the mayor's office takes build orders and lends toward them.
     await click($('[data-location="store"]'))
-    expect($('[data-keeper]')?.textContent).toBe('Dune · The shopkeeper')
+    expect(words($('[data-keeper]'))).toBe('Dune · The shopkeeper')
     expect($('[data-post-item="seeds"]')?.getAttribute('href')).toBe('/town?at=store&sheet=shop')
     await click($('[data-location="mayor"]'))
-    expect($('[data-keeper]')?.textContent).toBe('Ember · The mayor')
+    expect(words($('[data-keeper]'))).toBe('Ember · The mayor')
     expect($$('[data-post-item]').map((p) => [p.dataset.postItem, p.getAttribute('href')])).toEqual([['build', '/town?at=mayor&sheet=mayor'], ['loan', '/town?at=mayor&sheet=mayor']])
     // The plaza's keeper is at her office, so the plaza shows none.
     await click($('[data-location="plaza"]'))
@@ -281,10 +289,10 @@ describe('the town', () => {
     expect($('[data-people]')?.dataset.people).toBe('7')
     const rows = $$('[data-person-row]')
     expect(rows[0]?.dataset.personRow).toBe('90001')
-    expect(rows[0]?.textContent).toBe('AsterOn the farmMet')
-    expect($(`[data-person-row="${SISTER}"]`)?.textContent).toMatch(/^Invented SisterAt [A-Za-z ’]+ today$/)
-    expect($('[data-person-row="90006"]')?.textContent).toBe('FableAt Invented Café, most days · The smith')
-    expect($('[data-person-row="90002"]')?.textContent).toBe('BerylAt the Rancher’s, most days · The rancher')
+    expect(words(rows[0])).toBe('AsterOn the farmMet')
+    expect(words($(`[data-person-row="${SISTER}"]`))).toMatch(/^Invented SisterAt [A-Za-z ’]+ today$/)
+    expect(words($('[data-person-row="90006"]'))).toBe('FableAt Invented Café, most days · The smith')
+    expect(words($('[data-person-row="90002"]'))).toBe('BerylAt the Rancher’s, most days · The rancher')
     await type($('[data-search]'), 'invented sis')
     expect($$('[data-person-row]').map((r) => r.dataset.personRow)).toEqual([SISTER])
     // A tap goes to her, where she is.

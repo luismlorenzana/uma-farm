@@ -4,11 +4,12 @@
 // be called off until then. One in town moves in at once with Invite to the farm on her profile, while a bed is free. The
 // pickers are uma-kit's, over the roster's rows. It's the Dorm for 20: eight levels, beds only. Loaded on demand.
 import { atHome, arriving, bedsAt, dormBought, DORM_LEVELS, freeBeds, isFarmhand, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
-import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
+import { UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { buyDormLevel, cancelDormSwap, swapUmas } from './actions'
@@ -122,9 +123,9 @@ function Dorm({ save }: { save: FarmSave }) {
               <ul className="divide-y divide-hairline rounded-md border border-hairline">
                 {save.dorm.swaps.map((s) => (
                   <li key={s.out} className="flex min-h-12 items-center gap-2 px-3" data-swap={`${s.out}:${s.in}`}>
-                    <FaceTile outfitId={s.out} size={32} label={nameOf(s.out)} round />
+                    <Avatar id={s.out} size={32} label={nameOf(s.out)} />
                     <span aria-hidden>→</span>
-                    <FaceTile outfitId={s.in} size={32} label={nameOf(s.in)} round />
+                    <Avatar id={s.in} size={32} label={nameOf(s.in)} />
                     <span className="min-w-0 flex-1 truncate text-[13px]">{nameOf(s.in)} arrives tomorrow</span>
                     <Button variant="tertiary" size="sm" onClick={() => run(cancelDormSwap(s.out), 'Swap called off')} data-action="cancel-swap">Call off</Button>
                   </li>
@@ -189,7 +190,7 @@ function UmaList({ title, ids, nameOf, status, rows, where, empty }: {
             return (
               <li key={id}>
                 <Link to={umaSheet(id)} state={{ back: true }} className="flex min-h-14 items-center gap-2.5 px-3 py-1" data-dorm-uma={id} data-status={status(id)}>
-                  <FaceTile outfitId={id} size={40} label={nameOf(id)} />
+                  <Avatar id={id} size={40} label={nameOf(id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-semibold">{nameOf(id)}</span>
                     <span className="block truncate text-[12px] text-ink-soft">{row ? cardLines(row, null)[0] : ''}</span>

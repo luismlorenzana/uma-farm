@@ -23,11 +23,11 @@ import {
 } from '@farm/domain'
 import { inviteHer } from './actions'
 import { giveBetterRing } from './bench-actions'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { useIllustrationsOf } from '../dialogue/illustrations'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
@@ -89,7 +89,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
     >
       <div ref={top} className="flex items-center gap-3 pb-3" data-profile={id} data-stage={love.stage} data-level={love.level} data-side={side}>
         <span className="relative block w-14 shrink-0">
-          <FaceTile outfitId={id} size={56} badges={row ? umaBadges(row) : undefined} label={name} />
+          <Avatar id={id} size={56} badges={row ? umaBadges(row) : undefined} label={name} />
           {float && <span key={float.key} aria-hidden className="love-float pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-1.5 text-[14px] font-bold text-[#c2385e] shadow-1" data-love-float={float.points}>+{float.points}</span>}
         </span>
         <div className="min-w-0 flex-1 space-y-0.5">
@@ -251,7 +251,7 @@ function TieItem({ id, tie, nameOf }: { id: string; tie: TieRow; nameOf: (id: st
   const location = useLocation()
   return (
     <li className="flex min-h-12 items-center gap-2.5 px-3 py-1" data-tie={tie.with} data-hearts={tie.hearts} data-here={tie.here || undefined} data-closest={tie.closest || undefined}>
-      <FaceTile outfitId={tie.with} size={32} label={nameOf(tie.with)} round className={tie.here ? '' : 'opacity-60'} />
+      <Avatar id={tie.with} size={32} label={nameOf(tie.with)} className={tie.here ? '' : 'opacity-60'} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[14px] font-semibold">{nameOf(tie.with)}</span>
