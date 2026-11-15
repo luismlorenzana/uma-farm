@@ -1,7 +1,8 @@
 # AGENTS.md — guide for AI coding agents
 
 uma-farm is a personal farm game inspired by *Umamusume: Pretty Derby*, played on the owner's iPhone as a Home Screen
-web app. Days are turns: Umas plant, gather, process and ship, and an authored cast brings a romance to each. Read this
+web app, played sideways. Days are turns of ten actions: you farm, go into town and court the Umas you choose, and
+the ones you invite to work take the farm over, from meeting her to married life. Read this
 before changing anything.
 
 ## Read first

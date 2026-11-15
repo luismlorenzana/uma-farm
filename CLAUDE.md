@@ -64,7 +64,7 @@ The owner gave every session full autonomy to commit, publish and deploy (2026-1
   when work spreads.
 - **Scope:** build the owner's spec literally, with no inherited filters. Deferred topics are discussion only.
 - **The real game, never a sandbox:** no testing tools, cheats, jump-ahead shortcuts or debug panels; long paths are
-  checked by domain simulations and my own local runs, and the owner only plays.
+  checked by domain simulations and Claude's own local runs, and the owner only plays.
 - **The owner runs nothing:** never hand them a command. Their steps are only what needs their hands: a phone check, a
   review, a play, or a console entry with no API. Ask for one in one line, with the link.
 - **Packets ahead:** keep the next piece written ahead of the work, so a session can always pick it up.
@@ -86,8 +86,8 @@ The owner gave every session full autonomy to commit, publish and deploy (2026-1
 
 `AGENTS.md` has the commands (`NODE_AUTH_TOKEN=$(gh auth token) pnpm install`, then `pnpm lint`, `pnpm test`,
 `pnpm build`). `.claude/launch.json` starts `farm-api` (:8101, auth off) and `farm-web` (:5194, `/api` proxied). To try
-the owner guard locally, run the built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. The HD-2D farm is `?stage=1`;
-the preview pane may not screenshot WebGL, so check it with `read_page` and the dev-only `window.__farmStage`.
+the owner guard locally, run the built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. The dev API builds
+`@farm/domain` before it starts, so it never reads a stale save version.
 
 ## Production (live since 2026-11-08)
 
