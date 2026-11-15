@@ -173,14 +173,14 @@ describe('what\'s written and what\'s a placeholder (the sandbox\'s marks)', () 
     expect(part(two, 'Her meeting scene').written).toBe(true)
     expect(part(two, 'Her chats')).toMatchObject({ written: false, plays: 'The default story’s talks, by her stage and temperament' })
     expect(part(two, 'Her occasions')).toMatchObject({
-      written: false, plays: '0 of 19 written; New Year’s, the Flower Show and the Fishing Derby’s night play the default story’s, the rest play only when written',
+      written: false, plays: '0 of 14 written, and 0 festival nights; New Year’s, the Flower Show and the Fishing Derby’s night play the default story’s, the rest play only when written',
     })
     expect([part(two, 'Her greetings'), part(two, 'Her small talk'), part(two, 'Her gift lines')].map((p) => p.written)).toEqual([false, false, false])
     // With her occasions and talk written (the derby's and the contest's nights under their aliases), every part is hers.
     const full = storyPackFrom(withOccasions())
     expect([part(writtenOf(full, ONE), 'Her occasions'), part(writtenOf(full, ONE), 'Her greetings'), part(writtenOf(full, ONE), 'Her small talk'), part(writtenOf(full, ONE), 'Her gift lines')])
       .toEqual([
-        { part: 'Her occasions', written: true, plays: 'All 19' }, { part: 'Her greetings', written: true, plays: 'Hers, by birthday, place, season and hour' },
+        { part: 'Her occasions', written: true, plays: 'All 14, and 5 festival nights' }, { part: 'Her greetings', written: true, plays: 'Hers, by birthday, place, season and hour' },
         { part: 'Her small talk', written: true, plays: '5, hers' }, { part: 'Her gift lines', written: true, plays: 'Every taste, hers' },
       ])
     expect(part(two, 'Her chapters').plays).toContain('Getting to know her')

@@ -11,12 +11,12 @@
 //                    greetings, smallTalk, giftLines, and a beat for each of the 27 rungs
 //   her route        her meeting, Friendship 1–10, the confession, Romance 1–10, the proposal, the wedding, the
 //                    invitation to work, the wedding night, moving in, Spouse 1–5, each evening's scene, and every
-//                    occasion a route can write (`occasionPieces`: New Year's, the five festivals' days and nights, her
-//                    birthday, her anniversary, and each of the story's days' scenes, the game's six and world.json's)
+//                    occasion a route can write (`occasionPieces`: New Year's, the five festivals' days, her birthday,
+//                    her anniversary, and each of the story's days' scenes, the game's six and world.json's); a
+//                    festival's night is optional: counted as hers (or the default) when written, never missing
 //
 // The scaffold writes a piece only from the default story's words in the pack's shape; the pieces it has none for (her
-// greetings, small talk and gift lines; her anniversary, the nights but the Fishing Derby's, the story's days) stay
-// missing until the story writes them.
+// greetings, small talk and gift lines; her anniversary, the story's days) stay missing until the story writes them.
 //
 // **The marker** sits on the piece when it's an object (an event, a beat, a chapter, her job, a routine stop, her chats,
 // gifts, meals, keepsake, wedding): `"draft": "default"`. A piece that's a plain value or a list of lines (her home; her
@@ -51,20 +51,24 @@ export const PLAIN_PIECES: readonly string[] = ['home', 'favouriteLine', 'townLi
 /** Her route's events before her occasions, in the story's order: her meeting and the rungs to the wedding, her life's
  * events and the spouse ladder, each evening's scene. */
 const ROUTE_EVENTS: readonly string[] = [...RUNGS.slice(0, RUNGS.indexOf('wedding') + 1), 'invited-to-work', 'wedding-night', 'moving-in', 's1', 's2', 's3', 's4', 's5', ...EVENING_SCENES]
-/** A route piece and the event ids that write it (a festival's night under any of its ids). */
-export interface RoutePiece { piece: string; ids: readonly string[] }
-/** Every piece of a complete route: the events, then every occasion a route can write for the pack's world
- * (`occasionPieces`). */
+/** A route piece and the event ids that write it (a festival's night under any of its ids); an `optional` one (a
+ * festival's night) counts only when it's written. */
+export interface RoutePiece { piece: string; ids: readonly string[]; optional?: true }
+/** Every piece of a route: the events, then every occasion a route can write for the pack's world (`occasionPieces`),
+ * the festivals' nights optional. */
 export const routePieces = (world?: World | null): readonly RoutePiece[] => [...ROUTE_EVENTS.map((piece) => ({ piece, ids: [piece] })), ...occasionPieces({ world: world ?? null })]
-/** Every event of a complete route with the game's own days, one id a piece. */
-export const COMPLETE_EVENTS: readonly string[] = routePieces().map((p) => p.piece)
+/** Every event a complete route holds with the game's own days, one id a piece: the festivals' nights aside. */
+export const COMPLETE_EVENTS: readonly string[] = routePieces().filter((p) => !p.optional).map((p) => p.piece)
+/** The festivals' nights: hers when written, never missing. */
+export const OPTIONAL_EVENTS: readonly string[] = routePieces().filter((p) => p.optional).map((p) => p.piece)
 /** The default story's scene for an event id, or none: the scaffold writes a piece only from one. */
 const defaultScene = (event: string): DefaultScene | undefined => (event === ARRIVAL ? defaultSceneOf(ARRIVAL, true) : DEFAULT_EVENTS[event] ?? DEFAULT_EVENINGS[event])
 /** Her bible's pieces the default story has no words for in the pack's shape: hers to write, never scaffolded. */
 export const UNSCAFFOLDED_BIBLE: readonly string[] = ['greetings', 'smallTalk', 'giftLines']
 /** Her route's pieces the default story has no scene for (her anniversary, the nights but the Fishing Derby's, the
  * story's days): hers to write, never scaffolded. */
-export const unscaffoldedRoute = (world?: World | null): string[] => routePieces(world).filter((p) => !p.ids.some((e) => defaultScene(e) !== undefined)).map((p) => p.piece)
+export const unscaffoldedRoute = (world?: World | null): string[] =>
+  routePieces(world).filter((p) => !p.optional && !p.ids.some((e) => defaultScene(e) !== undefined)).map((p) => p.piece)
 /** A beat's piece name: `beat:<rung>`. */
 export const beatPiece = (rung: string): string => `beat:${rung}`
 
@@ -158,7 +162,11 @@ export function umaStatus(files: StatusFiles, id: string): UmaStatus {
     ...CAST_PIECES.map((piece): PieceStatus => ({ part: 'cast', piece, state: castPiece(entry, piece) })),
     ...BIBLE_PIECES.map((piece): PieceStatus => ({ part: 'bible', piece, state: biblePiece(bible, piece) })),
     ...RUNGS.map((rung): PieceStatus => ({ part: 'bible', piece: beatPiece(rung), state: itemPiece(bible?.route, rung) })),
-    ...routePieces(worldOf(files)).map((p): PieceStatus => ({ part: 'route', piece: p.piece, state: itemPiece(route?.events, p.ids) })),
+    // A festival's night counts only when it's written: none is never missing.
+    ...routePieces(worldOf(files)).flatMap((p): PieceStatus[] => {
+      const state = itemPiece(route?.events, p.ids)
+      return p.optional && state === 'missing' ? [] : [{ part: 'route', piece: p.piece, state }]
+    }),
   ]
   const parts = Object.fromEntries(PARTS.map((part) => {
     const of = pieces.filter((p) => p.part === part)

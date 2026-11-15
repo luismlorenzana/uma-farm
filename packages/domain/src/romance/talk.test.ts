@@ -48,24 +48,40 @@ describe('her gift line', () => {
 
 describe('her greeting', () => {
   const spring = farm(on('spring', 3))
-  it('comes from the most specific set that holds lines: birthday, place, season, hour', () => {
+  it('on her birthday her birthday’s alone; otherwise every set that applies, together: place, season, hour', () => {
     expect(greetingLines(spring, PACK, ONE, here('fields'), true)).toEqual(['A birthday hello.'])
-    expect(greetingLines(spring, PACK, ONE, here('fields'), false)).toEqual(['A hello in the Fields.'])
-    expect(greetingLines(spring, PACK, ONE, here('mill'), false)).toEqual(['A spring hello.'])
-    expect(greetingLines(spring, PACK, ONE, here(null), false)).toEqual(['A spring hello.'])
-    // Autumn has no set of hers: the hour's.
+    expect(greetingLines(spring, PACK, ONE, here('fields'), false)).toEqual(['A hello in the Fields.', 'A spring hello.', 'A morning hello.'])
+    expect(greetingLines(spring, PACK, ONE, here('mill'), false)).toEqual(['A spring hello.', 'A morning hello.'])
+    expect(greetingLines(spring, PACK, ONE, here(null, { hour: 'evening' }), false)).toEqual(['A spring hello.', 'An evening hello.'])
+    // Autumn has no set of hers: the place's and the hour's.
     const autumn = farm(on('autumn', 3))
     expect(greetingLines(autumn, PACK, ONE, here('mill'), false)).toEqual(['A morning hello.'])
-    expect(greetingLines(autumn, PACK, ONE, here(null, { hour: 'evening' }), false)).toEqual(['An evening hello.'])
-    expect(greetingLines(autumn, PACK, ONE, here(null, { hour: 'night' }), false)).toEqual(['A night hello.'])
+    expect(greetingLines(autumn, PACK, ONE, here('dorm', { hour: 'night' }), false)).toEqual(['A hello at the Dorm.', 'A night hello.'])
     // In town, her location's set, else the town's.
-    expect(greetingLines(autumn, PACK, ONE, here('cafe', { town: true }), false)).toEqual(['A hello at the Café.'])
-    expect(greetingLines(autumn, PACK, ONE, here('library', { town: true }), false)).toEqual(['A hello in town.'])
+    expect(greetingLines(autumn, PACK, ONE, here('cafe', { town: true }), false)).toEqual(['A hello at the Café.', 'A morning hello.'])
+    expect(greetingLines(autumn, PACK, ONE, here('library', { town: true }), false)).toEqual(['A hello in town.', 'A morning hello.'])
     // The weather's set never plays: the game has no weather yet.
     expect(greetingLines(autumn, PACK, ONE, here('mill'), false)).not.toContain('A rainy hello.')
+    // A birthday with no birthday's set: the sets that apply.
+    const plain = storyPackFrom({ ...withOccasions(), umas: { [ONE]: { ...(withOccasions().umas[ONE] as object), greetings: { seasons: { spring: ['Only spring.'] } } } } })
+    expect(greetingLines(spring, plain, ONE, here('fields'), true)).toEqual(['Only spring.'])
     // No greetings: none, and the talk opens on her line.
     expect(greetingOf(spring, PACK, TWO, here('fields'), true)).toBeNull()
-    expect(greetingOf(spring, PACK, ONE, here('fields'), false)).toBe('A hello in the Fields.')
+  })
+
+  it('draws one greeting a day, the same all day, and every set plays over time', () => {
+    const seen = new Set<string>()
+    // Spring and autumn days of four years, in the Fields by day.
+    for (const day of [1, 2, 3, 4].flatMap((year) => Array.from({ length: 12 }, (_, i) => [on('spring', i + 1, year), on('autumn', i + 1, year)]).flat())) {
+      const save = farm(day)
+      const greeting = greetingOf(save, PACK, ONE, here('fields'), false)!
+      expect(greeting).toBe(greetingOf(save, PACK, ONE, here('fields'), false))
+      expect(greetingLines(save, PACK, ONE, here('fields'), false)).toContain(greeting)
+      seen.add(greeting)
+    }
+    expect([...seen].sort()).toEqual(['A hello in the Fields.', 'A morning hello.', 'A spring hello.'])
+    // On her birthday, only her birthday's.
+    expect(greetingOf(spring, PACK, ONE, here('fields'), true)).toBe('A birthday hello.')
   })
 
   it('knows where you are: her board’s first task, else the Dorm; in town her location; and the hour', () => {

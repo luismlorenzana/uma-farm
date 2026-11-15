@@ -78,13 +78,14 @@ counts the festivals' places, and a 1st counts toward the cook's cooking Legend
 ([the Cooking Contest](../game-mechanics.md#the-cooking-contest)).
 
 **The whole story plays** (F94): every scene the story writes for a day of the year plays on it, from the calendar, one
-action each: New Year's, each festival's day and then its night (the derby's and the contest's under the story's own
-names too), her birthday, her anniversary from the first, and the story's days, the game's own six small days among
+action each: New Year's, each festival's day and then its night where one is written (the derby's and the contest's
+under the story's own names too), her birthday, her anniversary from the first, and the story's days, the game's own six small days among
 them (Blossom viewing on Spring 6 to the sweets day on Winter 8, moved or renamed by `world.json`). A day with several
 of hers plays one: her birthday, her anniversary, the festival's day, then a story day. A chat or a talk in town plays
-on the dialogue engine: her greeting for her birthday, the place, the season or the hour, then her line or a small
-talk, your line under your name; a gift gets her own line, her birthday's first. `pnpm story:status` counts it all, so
-"complete" means everything the game plays is hers. All read by id, so a later release plays on publish
+on the dialogue engine: her birthday's greeting on her birthday, else one drawn from the place's, the season's and the
+hour's together, then her line or a small talk, your line under your name; a gift gets her own line, her birthday's
+first. `pnpm story:status` counts it all (a festival's night only when written), so "complete" means everything the
+game plays is hers: Tier 1 reads 10 of 10. All read by id, so a later release plays on publish
 ([occasion scenes](../game-mechanics.md#occasion-scenes), [talk that knows the
 day](../game-mechanics.md#talk-that-knows-the-day), [her occasions](../story-pack.md#her-occasions)).
 

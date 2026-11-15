@@ -1,14 +1,14 @@
 // Talk that knows the day: a chat (on the farm or in town) opens with her greeting, then her line, or a small talk.
 //
-//   her greeting   from the most specific of her bible's sets that applies and holds lines (`greetings`):
-//                  1. her birthday's;
-//                  2. the place where you're talking, `places.<id>`: her location in town (else `places.town`), or the
-//                     farm's place where she works today (her board's first task's) or lives (the Dorm);
-//                  3. the season's;
-//                  4. the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after
-//                     a night in with her or once she's tonight's companion.
-//                  None with no set holding lines: the talk opens on her line. Her `weather` is read and kept: it plays
-//                  once the game has weather
+//   her greeting   from her bible's sets (`greetings`): on her birthday, her birthday's alone (when it holds lines);
+//                  otherwise one drawn from every set that applies now, their lines together:
+//                  - the place where you're talking, `places.<id>`: her location in town (else `places.town`), or the
+//                    farm's place where she works today (her board's first task's) or lives (the Dorm);
+//                  - the season's;
+//                  - the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after
+//                    a night in with her or once she's tonight's companion.
+//                  So every set plays over time. None with no line: the talk opens on her line. Her `weather` is read
+//                  and kept: it plays once the game has weather
 //   her line       one of her stage's lines (`chatLineV4`'s: her bible's set, else the default story's talks) or one of
 //                  her small talks that fit the moment, drawn together: a small talk fits when every tag it carries
 //                  matches (`at` the place, or `town` anywhere in town; `season`; `stage` her chat set)
@@ -59,18 +59,15 @@ export function talkAt(save: Pick<SaveV4, 'calendar' | 'roster' | 'dorm' | 'love
 const pick = <T>(save: Pick<SaveV4, 'account' | 'calendar'>, what: string, list: readonly T[]): T | null =>
   list.length === 0 ? null : list[Math.min(list.length - 1, Math.floor(draw(save.account.uid, save.calendar.day, what, 0) * list.length))]!
 
-/** Her greeting's set for this talk: the most specific that applies and holds lines (her birthday's, the place's, the
- * season's, the hour's); none when no set holds any. */
+/** Her greeting's lines for this talk: on her birthday her birthday's alone, when it holds any; otherwise every line of
+ * the sets that apply now, together: the place's (in town, her location's, else the town's), the season's and the
+ * hour's. None when no set holds any. */
 export function greetingLines(save: Pick<SaveV4, 'calendar'>, pack: Pick<StoryPack, 'bibles'>, id: string, at: TalkAt, birthday: boolean): readonly string[] {
   const g = greetingsOf(pack, id)
-  const place = at.place !== null ? g.places?.[at.place] ?? [] : []
-  const sets: (readonly string[] | undefined)[] = [
-    birthday ? g.birthday : undefined,
-    place.length > 0 ? place : at.town ? g.places?.town : undefined,
-    g.seasons?.[dateOf(save.calendar.day).season],
-    g.times?.[at.hour],
-  ]
-  return sets.find((s) => (s?.length ?? 0) > 0) ?? []
+  if (birthday && (g.birthday?.length ?? 0) > 0) return g.birthday!
+  const own = at.place !== null ? g.places?.[at.place] ?? [] : []
+  const place = own.length > 0 ? own : at.town ? g.places?.town ?? [] : []
+  return [...place, ...(g.seasons?.[dateOf(save.calendar.day).season] ?? []), ...(g.times?.[at.hour] ?? [])]
 }
 
 /** Her greeting for this talk, or null: one of `greetingLines`, drawn by the account, the day and her id. */

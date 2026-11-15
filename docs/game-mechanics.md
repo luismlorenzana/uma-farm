@@ -5433,7 +5433,7 @@ while you've talked today, paying nothing): her greeting, then her line or a sma
 
 | Piece | What plays | Without hers |
 |---|---|---|
-| **Her greeting** | From the most specific set that applies and holds lines: 1. her birthday's; 2. the place where you're talking, `places.<id>` (in town her location today, else `places.town`; on the farm the place of her work board's first task, else the Dorm when she lives there); 3. the season's; 4. the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after a night in with her or once she's tonight's companion | None: the talk opens on her line |
+| **Her greeting** | On her birthday, her birthday's alone (when she has them). Otherwise one drawn from every set that applies now, their lines together, so each plays over time: the place where you're talking, `places.<id>` (in town her location today, else `places.town`; on the farm the place of her work board's first task, else the Dorm when she lives there); the season's; and the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after a night in with her or once she's tonight's companion | None: the talk opens on her line |
 | **Her line or a small talk** | One drawn from her stage's lines and her small talks that fit the moment together. A small talk fits when every tag it carries matches: `at` the place (or `town` anywhere in town), `season`, `stage` her chat set. It plays as its lines on the dialogue engine, hers and yours (`you`, under your name), she on the stage throughout | Her line alone |
 | **Her gift line** | On her birthday her `giftLines.birthday`; else her `giftLines` for the gift's taste | The default story's reactions for the taste |
 

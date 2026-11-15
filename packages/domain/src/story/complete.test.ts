@@ -9,7 +9,7 @@ import { townDay } from '../town/town'
 import { RUNGS, type Cast } from './authored'
 import {
   BIBLE_PIECES, CAST_PIECES, COMPLETE_EVENTS, DRAFT, draftNotes, leftWords, pieceWords, ROUTINE_DAYS, routePieces, scaffoldPack, scaffoldTemperament, umaStatus,
-  UNSCAFFOLDED_BIBLE, unscaffoldedRoute, type Scaffold,
+  OPTIONAL_EVENTS, UNSCAFFOLDED_BIBLE, unscaffoldedRoute, type Scaffold,
 } from './complete'
 import { DEFAULT_MORNINGS, DEFAULT_TALKS } from './default-story'
 import { readStoryPack, type PackFiles, type StoryPack } from './pack'
@@ -60,10 +60,10 @@ const scaffolded = () => {
   return { files, s, after: applied(files, s) }
 }
 const playable = (files: PackFiles): StoryPack => ({ ...readStoryPack(files).pack, master: MASTER })
-/** The route pieces the scaffold can't write (no default scene), and the event ids it writes: the Fishing Derby's night
- * under the default's `derby-night`. */
+/** The route pieces the scaffold can't write (no default scene), and the event ids it writes: every other piece, and the
+ * one festival's night the default story has, the Fishing Derby's, as `derby-night`. */
 const NO_DEFAULT = unscaffoldedRoute()
-const SCAFFOLDED = COMPLETE_EVENTS.filter((e) => !NO_DEFAULT.includes(e)).map((e) => (e === 'fishing-derby-night' ? 'derby-night' : e))
+const SCAFFOLDED = [...COMPLETE_EVENTS.filter((e) => !NO_DEFAULT.includes(e)), 'derby-night']
 
 describe('the scaffold: only what’s missing, from the default story, marked', () => {
   it('fills every missing piece for each Uma and leaves hers alone', () => {
@@ -77,10 +77,7 @@ describe('the scaffold: only what’s missing, from the default story, marked', 
     expect(route.events.slice(2).every((e) => e.draft === DRAFT)).toBe(true)
     expect(route.events.map((e) => e.id).sort()).toEqual([...SCAFFOLDED].sort())
     // The pieces the default story has no words for stay missing: hers to write.
-    expect(NO_DEFAULT).toEqual([
-      'flower-show-night', 'cooking-contest-night', 'animal-show-night', 'harvest-cup-night', 'anniversary',
-      'blossom-viewing', 'wishing-night', 'first-cold-evening', 'first-snow', 'longest-night', 'sweets-day',
-    ])
+    expect(NO_DEFAULT).toEqual(['anniversary', 'blossom-viewing', 'wishing-night', 'first-cold-evening', 'first-snow', 'longest-night', 'sweets-day'])
     // Her chapters are hers; the others' are the four defaults, each marked.
     expect(s.wrote[THREE]!.some((w) => w.piece === 'chapters')).toBe(false)
     expect(s.wrote[TWO]!.filter((w) => w.part === 'cast').map((w) => w.piece)).toEqual([...CAST_PIECES])
@@ -250,7 +247,8 @@ describe('the status and the check', () => {
     expect(now.parts).toEqual({
       cast: { hers: 0, default: 2, missing: 0, of: 2 },
       bible: { hers: 4, default: 7 + 26, missing: UNSCAFFOLDED_BIBLE.length, of: BIBLE_PIECES.length + RUNGS.length },
-      route: { hers: 2, default: SCAFFOLDED.length - 2, missing: NO_DEFAULT.length, of: COMPLETE_EVENTS.length },
+      // The scaffolded derby night counts, as the default; the nights not written aren't pieces.
+      route: { hers: 2, default: SCAFFOLDED.length - 2, missing: NO_DEFAULT.length, of: COMPLETE_EVENTS.length + 1 },
     })
     expect(now.pieces.filter((p) => p.state === 'missing').map((p) => p.piece)).toEqual([...UNSCAFFOLDED_BIBLE, ...NO_DEFAULT])
     expect(umaStatus(readStoryPack(after).files, THREE).parts.cast).toEqual({ hers: 1, default: 1, missing: 0, of: 2 })
@@ -263,7 +261,7 @@ describe('the status and the check', () => {
     expect(entry({ home: 'cafe', draft: { home: DRAFT }, job: { at: 'cafe' } })).toBe('hers')
     expect(entry({ job: { what: 'Waits tables', at: 'cafe' } })).toBe('hers')
     expect(draftNotes({ cast: { umas: [{ characterId: ONE, home: 'cafe', draft: { home: DRAFT }, routine: [{ at: 'cafe', days: [1, 4, 7, 10], draft: DRAFT }] }] }, umas: {}, routes: {} }, ONE)).toEqual([])
-    expect(leftWords(now)[2]).toMatch(/^route: missing flower-show-night, cooking-contest-night, animal-show-night, harvest-cup-night, anniversary, blossom-viewing, [^;]*; default f2–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk, fishing, picnic, market, cooking, festival\), dates \(walk, /)
+    expect(leftWords(now)[2]).toMatch(/^route: missing anniversary, blossom-viewing, [^;]*; default f2–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk, fishing, picnic, market, cooking, festival\), dates \(walk, /)
     expect(leftWords(was)[2]).toMatch(/^route: missing f2–f10, confession/)
   })
 
@@ -323,12 +321,12 @@ describe('the status and the check', () => {
 
 describe('a complete Uma counts every occasion, her greetings, her small talk and her gift lines', () => {
   const written = (ids: readonly string[]) => ids.map((e) => ({ id: e, steps: [{ narrate: `Her own ${e}.` }] }))
-  it('a night is hers under its alias; a world.json day adds its scene; the talk pieces are hers once they hold a line', () => {
-    expect(COMPLETE_EVENTS.slice(-19)).toEqual([
-      'new-year', 'flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup',
-      'flower-show-night', 'fishing-derby-night', 'cooking-contest-night', 'animal-show-night', 'harvest-cup-night', 'birthday', 'anniversary',
+  it('a night is hers under its alias, and one not written is never missing; a world.json day adds its scene; the talk pieces are hers once they hold a line', () => {
+    expect(COMPLETE_EVENTS.slice(-14)).toEqual([
+      'new-year', 'flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup', 'birthday', 'anniversary',
       'blossom-viewing', 'wishing-night', 'first-cold-evening', 'first-snow', 'longest-night', 'sweets-day',
     ])
+    expect(OPTIONAL_EVENTS).toEqual(['flower-show-night', 'fishing-derby-night', 'cooking-contest-night', 'animal-show-night', 'harvest-cup-night'])
     const world = { days: [{ id: 'lantern-day', name: 'Lantern day', day: 2, scene: 'lantern-scene' }, { id: 'first-snow', name: 'Snowfall', season: 'winter', day: 5 }] }
     expect(routePieces(world as never).map((p) => p.piece).slice(-9)).toEqual(['birthday', 'anniversary', 'lantern-scene', 'first-snow', 'blossom-viewing', 'wishing-night', 'first-cold-evening', 'longest-night', 'sweets-day'])
     const occasions = ['new-year', 'flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup', 'flower-show-night', 'derby-night', 'harvest-moon',
@@ -342,6 +340,13 @@ describe('a complete Uma counts every occasion, her greetings, her small talk an
     const status = umaStatus(files, ONE)
     const state = (piece: string) => status.pieces.find((p) => p.piece === piece)?.state
     expect(['fishing-derby-night', 'cooking-contest-night', 'lantern-scene', 'sweets-day', 'anniversary'].map(state)).toEqual(['hers', 'hers', 'hers', 'missing', 'hers'])
+    // The nights she wrote count as hers; a festival with none written has no piece, so it's never missing.
+    // 66 pieces (51 events, 8 occasions, the 7 days' scenes) and her 5 nights: 13 occasions and the 5 nights hers.
+    expect(status.parts.route).toEqual({ hers: 18, default: 0, missing: 53, of: 71 })
+    expect(state('flower-show-night')).toBe('hers')
+    const fewer = umaStatus({ ...files, routes: { [ONE]: { characterId: ONE, events: written([...occasions.filter((e) => !['flower-show-night', 'animal-show-night'].includes(e)), 'lantern-scene']) } } }, ONE)
+    expect(fewer.pieces.some((p) => p.piece === 'flower-show-night' || p.piece === 'animal-show-night')).toBe(false)
+    expect(fewer.parts.route.missing).toBe(status.parts.route.missing)
     // The game's sweets day plays on its day, so it's still a piece; world.json moved the first snow, still missing.
     expect(state('first-snow')).toBe('missing')
     expect(['greetings', 'smallTalk', 'giftLines'].map(state)).toEqual(['hers', 'hers', 'missing'])

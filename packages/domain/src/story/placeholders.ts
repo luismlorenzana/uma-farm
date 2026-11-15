@@ -767,13 +767,14 @@ export function storyDaysOn(pack: WorldPack, day: number): StoryDay[] {
 }
 /** Her occasions a route can write, one piece each, with the event ids that write it: New Year's, the five festivals'
  * days, their nights (under any of their ids: `<festival>-night`, or the story's alias), her birthday, her anniversary,
- * and each of the story's days' scenes (the game's own six and world.json's). */
-export function occasionPieces(pack: WorldPack): { piece: string; ids: readonly string[] }[] {
+ * and each of the story's days' scenes (the game's own six and world.json's). A festival's night is `optional`: it plays
+ * when it's written, and a festival with none written has no night scene, which is never missing. */
+export function occasionPieces(pack: WorldPack): { piece: string; ids: readonly string[]; optional?: true }[] {
   const scenes = [...new Set(storyDaysOf(pack).map((d) => d.scene))]
   return [
     { piece: 'new-year', ids: ['new-year'] },
     ...FESTIVAL_IDS.map((f) => ({ piece: f as string, ids: [f] })),
-    ...FESTIVAL_IDS.map((f) => ({ piece: FESTIVAL_NIGHTS[f][0]!, ids: FESTIVAL_NIGHTS[f] })),
+    ...FESTIVAL_IDS.map((f) => ({ piece: FESTIVAL_NIGHTS[f][0]!, ids: FESTIVAL_NIGHTS[f], optional: true as const })),
     { piece: 'birthday', ids: ['birthday'] },
     { piece: 'anniversary', ids: ['anniversary'] },
     ...scenes.map((scene) => ({ piece: scene, ids: [scene] })),
@@ -838,8 +839,11 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
   const scripted = pack.scripted.get(id) ?? new Set<string>()
   const events = [...RUNGS.filter((r) => r !== ARRIVAL), ...DEFAULT_LIFE_EVENTS]
   const writtenEvents = events.filter((r) => scripted.has(r)).length
-  const pieces = occasionPieces(pack)
+  const all = occasionPieces(pack)
+  const pieces = all.filter((p) => !p.optional)
   const occasions = pieces.filter((p) => p.ids.some((o) => scripted.has(o))).length
+  const nights = all.filter((p) => p.optional && p.ids.some((o) => scripted.has(o))).length
+  const nightWords = `${nights} festival night${nights === 1 ? '' : 's'}`
   const greetings = Object.values(bible?.greetings ?? {}).some((v) => Array.isArray(v) ? v.length > 0 : typeof v === 'object' && v !== null && Object.values(v).some((l) => Array.isArray(l) && l.length > 0))
   const giftLines = (['loved', 'liked', 'neutral', 'disliked'] as const).filter((t) => (bible?.giftLines?.[t]?.length ?? 0) > 0)
   const evenings = EVENING_SCENES
@@ -858,7 +862,8 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
     part('Her chats', chats.length === 3, 'Friend, partner and spouse', chats.length > 0 ? `Her ${chats.join(' and ')} lines; the default story’s talks for the rest` : 'The default story’s talks, by her stage and temperament'),
     part('Her meeting scene', scripted.has(ARRIVAL), 'Her arrival scene', 'The default story’s meeting, in town'),
     part('Her events', writtenEvents === events.length, `All ${events.length}`, `${writtenEvents} of ${events.length} written; the rest play the default story’s, paying as written`),
-    part('Her occasions', occasions === pieces.length, `All ${pieces.length}`, `${occasions} of ${pieces.length} written; New Year’s, the Flower Show and the Fishing Derby’s night play the default story’s, the rest play only when written`),
+    part('Her occasions', occasions === pieces.length, `All ${pieces.length}, and ${nightWords}`,
+      `${occasions} of ${pieces.length} written, and ${nightWords}; New Year’s, the Flower Show and the Fishing Derby’s night play the default story’s, the rest play only when written`),
     part('Her evenings', writtenEvenings === evenings.length, `All ${evenings.length}`, `${writtenEvenings} of ${evenings.length} written; the rest the default story’s`),
     part('Her chapters', (entry?.chapters?.length ?? 0) > 0, `${entry?.chapters?.length ?? 0}, the story’s`, `The four defaults: ${DEFAULT_CHAPTERS.map((c) => c.title).join(', ')}`),
     part('Her life in town', !!(entry?.home ?? entry?.job ?? entry?.routine?.length), [entry?.home ? 'A home' : '', entry?.job ? 'a job' : '', entry?.routine?.length ? 'a routine' : ''].filter(Boolean).join(', '),
