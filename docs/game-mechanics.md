@@ -2130,8 +2130,8 @@ The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see
 
 ### The town
 
-Every character lives in town from day 1: everyone in master data, once each, in her default outfit or the pack's
-outfit for her, and the pack's sisters. The town is a map you walk around: going in takes one of the day's actions, and
+**The cast lives in town from day 1:** the owner's Umas, the story's cast (sisters included), in her default outfit or
+the pack's outfit for her. Nobody else from master data is in the game. The town is a map you walk around: going in takes one of the day's actions, and
 walking between its places is free. Each place lists who's there **now**. The story puts each Uma where her life takes
 her (her home, her part-time job, the places she likes, and when); anyone it says nothing of for today is placed by
 today's draw. The town's people, fourteen Umas in the town's roles, are at their posts. Tap an Uma for her menu: you
@@ -3074,9 +3074,9 @@ How long marriage takes, answered the same way: a test (`packages/domain/src/rom
 game's own rules with a plain bot, ten actions a day, courting **one default-story Uma** from meeting her to the wedding
 night and farming with what's left. `MARRIAGE=1` prints the tables below.
 
-- **The town is honest.** Master data there is 159 invented characters, so the daily draw puts about 24 out at the six
-  spots and the rest at home, as on the phone. She has no `home` or `job` in the story, so the draw places her: about one
-  day in six. A second way gives her cast entry a **routine** at the Café on four days a season (3, 6, 9 and 12), the
+- **The town is honest.** The cast there is a hundred invented characters, as the owner's is, so the daily draw puts
+  about 24 out at the six spots and the rest at home, as on the phone. She has no `home` or `job` in the story, so the
+  draw places her: about one day in four. A second way gives her cast entry a **routine** at the Café on four days a season (3, 6, 9 and 12), the
   draw placing her the other days.
 - **She's met only by meeting her:** introducing yourself in town, the day she's out. Talks, gifts, Praise and the
   invitation to work need her **in front of you**: on the farm when she lives there, else in town where she is today.
@@ -3107,62 +3107,62 @@ farmhand living in town is in front of you no more often than before, and that a
 
 |  | Devoted, the draw | Devoted, a routine | Casual, the draw | Casual, a routine |
 |---|---|---|---|---|
-| Met her, day | 9 (4–26) | 3 | 9 (4–26) | 3 |
-| Out of her reach, days | 241 (231–283) | 94 (89–100) | 305 (285–337) | 107 (99–117) |
-| In front of you, before she's a farmhand | 18% of days | 49% of days | 18% of days | 49% of days |
-| In front of you, once she's a farmhand | 18% of days | 44% of days | 17% of days | 44% of days |
-| Friendship 3, day | 58 (52–92) | 24 (21–27) | 58 (52–94) | 24 (21–27) |
-| A farmhand, day | 67 (53–93) | 26 (23–28) | 69 (53–104) | 26 (23–28) |
-| The confession, day | 186 (168–208) | 102 (94–106) | 218 (195–236) | 115 (108–118) |
-| The proposal, day | 294 (283–331) | 169 (165–173) | 370 (350–398) | 192 (186–203) |
-| **The wedding**, day | **295 (284–332): Spring 7, year 7** | **170 (166–174): Autumn 2, year 4** | **371 (351–399): Autumn 11, year 8** | **193 (187–204): Spring 1, year 5** |
-| Meeting her to the wedding, days | 280 (262–324) | 167 (163–171) | 363 (340–395) | 190 (184–201) |
-| Actions spent on her | 181 (172–187) | 247 (243–256) | 223 (205–223) | 283 (274–289) |
+| Met her, day | 4 (1–19) | 3 (1–3) | 4 (1–19) | 3 (1–3) |
+| Out of her reach, days | 176 (162–203) | 80 (76–90) | 233 (214–243) | 91 (81–97) |
+| In front of you, before she's a farmhand | 25% of days | 52% of days | 25% of days | 52% of days |
+| In front of you, once she's a farmhand | 25% of days | 50% of days | 24% of days | 49% of days |
+| Friendship 3, day | 46 (39–59) | 22 (20–26) | 46 (39–59) | 22 (20–26) |
+| A farmhand, day | 51 (40–63) | 24 (21–27) | 51 (40–63) | 24 (21–27) |
+| The confession, day | 144 (125–154) | 94 (85–105) | 175 (166–186) | 105 (94–112) |
+| The proposal, day | 235 (220–256) | 158 (152–168) | 302 (283–314) | 178 (170–182) |
+| **The wedding**, day | **236 (221–257): Winter 8, year 5** | **159 (153–169): Summer 3, year 4** | **303 (284–315): Summer 3, year 7** | **179 (171–183): Autumn 11, year 4** |
+| Meeting her to the wedding, days | 235 (217–250) | 156 (150–166) | 292 (270–312) | 176 (169–180) |
+| Actions spent on her | 199 (187–205) | 262 (255–279) | 240 (232–247) | 283 (274–294) |
 | Evenings | 0 | 0 | 0 | 0 |
-| Gifts: loved, liked | 42, 10 | 30, 42 | 0, 66 | 0, 84 |
-| Gold at the wedding | 208,945g (201,325–262,180) | 107,830g (104,465–112,525) | 278,110g (250,685–304,510) | 120,300g (116,125–133,680) |
-| Days her event waited on her bar | 258 (239–299) | 142 (139–149) | 339 (316–373) | 166 (160–175) |
-| Days it waited on a ring | 2 (0–3) | 1 (0–4) | 2 (0–3) | 2 (0–4) |
+| Gifts: loved, liked | 43, 14 | 24, 52 | 0, 71 | 0, 84 |
+| Gold at the wedding | 164,375g (150,805–178,055) | 93,760g (91,880–107,135) | 207,435g (198,655–227,460) | 106,135g (101,580–111,405) |
+| Days her event waited on her bar | 211 (193–225) | 133 (127–142) | 268 (244–288) | 151 (146–157) |
+| Days it waited on a ring | 2 (0–4) | 1 (0–3) | 0 (0–4) | 1 (0–3) |
 | Short nights | 0 (0–1) | 1 (0–1) | 0 (0–1) | 1 (0–1) |
-| Real time, at 3–5 minutes a day | 15 h–25 h | 9 h–14 h | 19 h–31 h | 10 h–16 h |
+| Real time, at 3–5 minutes a day | 12 h–20 h | 8 h–13 h | 15 h–25 h | 9 h–15 h |
 
 **Invited to the farm the day she's met:**
 
 |  | Devoted, the draw | Devoted, a routine | Casual, the draw | Casual, a routine |
 |---|---|---|---|---|
-| Met her, day | 9 (4–26) | 3 | 9 (4–26) | 3 |
-| Out of her reach, days | 8 (3–25) | 2 | 8 (3–25) | 2 |
+| Met her, day | 4 (1–19) | 3 (1–3) | 4 (1–19) | 3 (1–3) |
+| Out of her reach, days | 3 (0–18) | 2 (0–2) | 3 (0–18) | 2 (0–2) |
 | In front of you, before she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
 | In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
-| Friendship 3, day | 18 (15–36) | 16 (14–16) | 18 (15–36) | 16 (14–16) |
-| A farmhand, day | 19 (16–37) | 17 (15–17) | 19 (16–37) | 17 (15–17) |
-| The confession, day | 30 (27–48) | 28 (26–28) | 34 (31–52) | 31 (30–32) |
-| The proposal, day | 43 (38–61) | 43 (38–43) | 55 (47–73) | 48 (47–53) |
-| **The wedding**, day | **44 (39–62): Winter 8, year 1** | **44 (39–44): Winter 8, year 1** | **56 (48–74): Spring 8, year 2** | **49 (48–54): Spring 1, year 2** |
-| Meeting her to the wedding, days | 35 (34–40) | 41 (36–41) | 44 (43–51) | 46 (45–51) |
-| Actions spent on her | 150 (145–162) | 166 (150–170) | 182 (178–213) | 190 (182–205) |
-| Evenings | 26 (24–28) | 28 (25–30) | 34 (32–42) | 35 (32–38) |
-| Gifts: loved, liked | 0, 34 | 0, 32 | 0, 44 | 0, 40 |
-| Gold at the wedding | 6,405g (5,060–11,465) | 5,935g (5,220–6,510) | 12,315g (7,060–14,935) | 9,740g (7,110–10,685) |
-| Days her event waited on her bar | 12 (11–15) | 15 (13–16) | 20 (19–22) | 23 (22–24) |
-| Days it waited on a ring | 1 (0–3) | 4 (1–5) | 1 (0–9) | 2 (0–5) |
+| Friendship 3, day | 16 (14–28) | 15 (14–16) | 16 (14–28) | 15 (14–16) |
+| A farmhand, day | 17 (15–29) | 16 (15–17) | 17 (15–29) | 16 (15–17) |
+| The confession, day | 28 (26–40) | 27 (26–28) | 32 (30–44) | 31 (30–32) |
+| The proposal, day | 43 (38–60) | 43 (38–43) | 48 (47–62) | 48 (47–53) |
+| **The wedding**, day | **44 (39–61): Winter 8, year 1** | **44 (39–44): Winter 8, year 1** | **49 (48–63): Spring 1, year 2** | **49 (48–54): Spring 1, year 2** |
+| Meeting her to the wedding, days | 38 (34–43) | 41 (36–43) | 46 (43–48) | 46 (45–51) |
+| Actions spent on her | 153 (146–178) | 166 (150–170) | 186 (178–198) | 190 (182–205) |
+| Evenings | 26 (25–33) | 28 (25–30) | 35 (32–38) | 35 (32–38) |
+| Gifts: loved, liked | 0, 34 | 0, 31 | 0, 41 | 0, 39 |
+| Gold at the wedding | 6,040g (5,165–12,285) | 5,485g (5,165–6,510) | 10,165g (7,060–12,975) | 9,220g (7,110–10,685) |
+| Days her event waited on her bar | 13 (11–17) | 15 (13–17) | 22 (19–25) | 23 (22–25) |
+| Days it waited on a ring | 2 (1–8) | 4 (1–5) | 2 (0–6) | 2 (0–5) |
 | Short nights | 0 (0–1) | 0 (0–1) | 0 (0–1) | 0 (0–1) |
-| Real time, at 3–5 minutes a day | 2 h–4 h | 2 h–4 h | 3 h–5 h | 2 h–4 h |
+| Real time, at 3–5 minutes a day | 2 h–4 h | 2 h–4 h | 2 h–4 h | 2 h–4 h |
 
-- **Where she lives decides the pace.** Living in town, she's in front of you on about one day in six with the draw,
-  and in four on nine with the routine; on the others the day can't court her at all, and **she never has an evening**,
+- **Where she lives decides the pace.** Living in town, she's in front of you on about one day in four with the draw,
+  and one in two with the routine; on the others the day can't court her at all, and **she never has an evening**,
   since evenings are only for an Uma on the farm. Invited to the farm (free, the day she's met, with a bed free), she's
-  in front of you every day and the wedding comes **in the first year: 35–41 days after meeting her, devoted, or 44–46
-  casual**, some 2–5 hours of play.
+  in front of you every day and the wedding comes **in the first year: 38–41 days after meeting her, devoted, or 46
+  casual**, some 2–4 hours of play.
 - **A farmhand in town is no easier to reach:** the invitation to work makes her a farmhand, but she keeps her life in
-  town, so the draw still decides where she is (18% of days before and after, with the draw). What her becoming a
+  town, so the draw still decides where she is (25% of days before and after, with the draw). What her becoming a
   farmhand changes is her line's +10 a night and Praise, not the days you can talk with her.
-- **In town the route takes years:** devoted, about **280 days (six farm years, 15–25 hours)** with the draw and
-  **167 days (three and a half years)** with the routine; casual, 363 and 190. Nearly every day of it is her bar's wait.
+- **In town the route takes years:** devoted, about **235 days (five farm years, 12–20 hours)** with the draw and
+  **156 days (three and a quarter years)** with the routine; casual, 292 and 176. Nearly every day of it is her bar's wait.
 - **A routine is the story's lever:** four days a season at one place nearly halves the town route, and it's the only
   thing that brings an Uma out more often while she lives in town.
 - **The ring never holds her long:** the bench opens the night after Romance 8, and the Mill's goods kept from Romance
-  5 make a ring there; the proposal waited on it 1–4 days at the median, 9 at most.
+  5 make a ring there; the proposal waited on it 0–4 days at the median, 8 at most.
 - **Her loved gift is out of reach early:** a farming Uma loves Peach, which grows only in the Hills in Summer, and the
   farmer reaches the Hills at Farm Rank 2, so on the farm a devoted bot never holds one before the wedding. Devoted's lead
   is its Great evenings. (A fishing default-story Uma loves Seashell, which nothing in the game gives yet.)

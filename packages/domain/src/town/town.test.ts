@@ -31,6 +31,9 @@ const pack = (files: Partial<Parameters<typeof readStoryPack>[0]> = {}): StoryPa
 const save = (day = 5, more: Partial<SaveV4> = {}): SaveV4 => ({ ...newSave('u-town', AT), calendar: { day }, ...more })
 const drawn = (d: ReturnType<typeof townDay>) => [...d.by.values()].filter((by) => by === 'draw').length
 
+/** A cast of a hundred, as the owner's: the town's people are drawn from it. */
+const CAST = ids(100).map((characterId) => ({ characterId }))
+
 /** A town.json: fourteen people, one a role, the six spots, and three locations of the story's own. */
 const PEOPLE = ids(14, 9_200_101)
 const TOWN = {
@@ -44,13 +47,11 @@ const TOWN = {
 }
 
 describe('who lives in town', () => {
-  it('is every character of master data, once each, and the pack\'s sisters, less the town\'s people', () => {
-    const p = pack({ cast: { umas: [{ characterId: '9200001' }, { characterId: 's920000102', name: 'Invented Sister' }] }, town: TOWN })
-    const folk = townsfolk(p)
-    expect(folk).toHaveLength(120 - 14 + 1)
-    expect(new Set(folk).size).toBe(folk.length)
-    expect(folk).toContain('s920000102')
-    for (const id of PEOPLE) expect(folk).not.toContain(id)
+  it('is the cast only, in its order, sisters included, less the town\'s people: nobody else from master data', () => {
+    const p = pack({ cast: { umas: [{ characterId: '9200001' }, { characterId: 's920000102', name: 'Invented Sister' }, { characterId: '9200030' }, { characterId: PEOPLE[0]! }] }, town: TOWN })
+    expect(townsfolk(p)).toEqual(['9200001', 's920000102', '9200030'])
+    // Master data holds 120 characters here; the 117 outside the cast never live in town.
+    expect(townsfolk(p)).not.toContain('9200002')
   })
 
   it('fills each role with the pack\'s people, and master data\'s from the last in its order where the pack names none', () => {
@@ -116,7 +117,7 @@ describe('the map', () => {
 })
 
 describe('her life in town', () => {
-  const life = (entry: Partial<CastEntry>) => pack({ cast: { umas: [{ characterId: '9200007', ...entry }] }, town: TOWN })
+  const life = (entry: Partial<CastEntry>) => pack({ cast: { umas: [{ characterId: '9200007', ...entry }, ...CAST.filter((u) => u.characterId !== '9200007')] }, town: TOWN })
 
   it('her routine\'s first stop that holds, else her job on its days, else her home: the story places her, whatever the draw', () => {
     const p = life({
@@ -160,7 +161,7 @@ describe('her life in town', () => {
 })
 
 describe('the day\'s draw', () => {
-  const p = pack({ town: TOWN })
+  const p = pack({ cast: { umas: CAST }, town: TOWN })
 
   it('puts up to four at each spot, about two dozen in all, the same town all day', () => {
     const day = townDay(save(), p)

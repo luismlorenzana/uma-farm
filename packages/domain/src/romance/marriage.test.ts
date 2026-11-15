@@ -2,9 +2,9 @@
 // farm's economy. A plain bot plays ten actions a day, courting one default-story Uma from meeting her to the wedding
 // night, and farms with what's left.
 //
-// **The town is honest.** Master data here is 159 invented characters, so the town's daily draw puts about 24 of them
-// out at its six spots and the rest at home, as on the phone. She has no `home` or `job`, so the draw places her (about
-// one day in six); in the routine runs her cast entry adds a routine that puts her at the Café on four days a season.
+// **The town is honest.** The cast here is a hundred invented characters, as the owner's is (master data holds 159, and
+// only the cast lives in town), so the daily draw puts about 24 of them out at its six spots and the rest at home, as on
+// the phone. She has no `home` or `job`, so the draw places her (about one day in four); in the routine runs her cast entry adds a routine that puts her at the Café on four days a season.
 // She's met only by introducing yourself in town, where she is, and talks, gifts and the invitation to work need her in
 // front of you: on the farm when she lives there, else in town where she is today. The bot never forces her into town:
 // a day she's at home it farms instead, and the run counts those days. Her events play from anywhere; her evenings only
@@ -77,7 +77,9 @@ const OUTFITS: readonly MasterOutfit[] = Array.from({ length: COUNT }, (_, i) =>
   return { id: `${characterId}01`, characterId, variant: null, stats: { star5: stats(s) }, growthRatePercents: NONE }
 })
 const MASTER = masterCastFrom(OUTFITS)
-const BASE = storyOf(null, MASTER)
+/** The cast is the first hundred, her first, as the owner's cast of a hundred: only the cast lives in town. */
+const CAST = OUTFITS.slice(0, 100).map((o) => ({ characterId: o.characterId }))
+const BASE = ((pack: StoryPack): StoryPack => ({ ...pack, cast: { ...pack.cast, umas: CAST } }))(storyOf(null, MASTER))
 /** Her tastes for the run: loved her line's default good, liked four goods the woods give all year. */
 const LOVED = favouriteGoodOf(BASE, HER)
 const LIKED = ['button-mushroom', 'shiitake', 'basil', 'mint'] as const

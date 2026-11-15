@@ -87,13 +87,12 @@ export const townLocation = (pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryP
 /** Whether an id is one of the game's own locations: the six spots and the four shops. */
 export const isGameLocation = (id: string): boolean => GAME_LOCATIONS.includes(id)
 
-/** Everyone who lives in town, in a fixed order: master data's characters by id, then the cast's others (its sisters, and
- * anyone master data doesn't hold), less the town's people. The Umas on the farm are among them; they're at the farm. */
+/** Everyone who lives in town: the cast, in its order (the owner's Umas, sisters included), less the town's people, who
+ * are at their posts. Nobody else from master data is in the game. The Umas on the farm are among them; they're at the
+ * farm. */
 export function townsfolk(pack: TownPack): string[] {
   const people = townOf(pack).byId
-  const master = [...(pack.master?.outfits.keys() ?? [])]
-  const known = new Set(master)
-  return [...master, ...pack.cast.umas.map((u) => u.characterId).filter((id) => !known.has(id))].filter((id) => !people.has(id))
+  return [...new Set(pack.cast.umas.map((u) => u.characterId))].filter((id) => !people.has(id))
 }
 
 /** Whether a place in her life holds on a day: its days of the season and its seasons, each every one when left out. */
