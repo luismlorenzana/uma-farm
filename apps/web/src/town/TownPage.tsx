@@ -13,11 +13,11 @@
 // Names and faces are master data's and the pack's, at run time. Its title is the town's name when the world gives
 // one. Loaded on demand.
 import { CAST, placeNameOf, townDay, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -151,8 +151,8 @@ export function Face({ id, size, name }: { id: string; size: number; name: strin
     return () => watch.disconnect()
   }, [seen])
   return (
-    <span ref={ref} className="block shrink-0 overflow-hidden rounded-full bg-sunken" style={{ width: size, height: size }} data-face={seen ? 'shown' : 'waiting'}>
-      {seen && <FaceTile outfitId={id} size={size} label={name} round />}
+    <span ref={ref} className="rounded-avatar block shrink-0 bg-sunken" style={{ width: size, height: size }} data-face={seen ? 'shown' : 'waiting'}>
+      {seen && <Avatar id={id} size={size} label={name} />}
     </span>
   )
 }

@@ -75,6 +75,14 @@ async function render(node: ReactNode, at: string) {
 }
 const $ = (selector: string) => document.body.querySelector(selector) as HTMLElement | null
 const $$ = (selector: string) => [...document.body.querySelectorAll(selector)] as HTMLElement[]
+/** An element's words, leaving out the letters on a blank profile's face (its avatar). */
+const words = (el: Element | null | undefined): string | undefined => {
+  if (!el) return undefined
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+  let out = ''
+  for (let node = walk.nextNode(); node; node = walk.nextNode()) if (!node.parentElement?.closest('[data-avatar]')) out += node.textContent ?? ''
+  return out
+}
 const until = async (ok: () => boolean, tries = 150) => {
   for (let i = 0; i < tries && !ok(); i++) await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
   expect(ok()).toBe(true)
@@ -200,7 +208,7 @@ describe('Tonight\'s companion', () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: one })
     await render(<p />, '/?sheet=end')
     await find('[data-tonight-with]')
-    expect($$('[data-companion]').map((r) => [r.dataset.companion, r.textContent])).toEqual([
+    expect($$('[data-companion]').map((r) => [r.dataset.companion, words(r)])).toEqual([
       [ONE, 'Stand-in 1⌂Farmhouse · ☕'],
       [TWO, 'Stand-in 2⌂Rose Cottage'],
     ])

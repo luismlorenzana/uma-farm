@@ -7,7 +7,8 @@
 //   2. else the blank bust (`blank.tsx`): her silhouette in the outfit's colours, her hair her theme colour's, and a face
 //      for every one of the 22 expressions, laid over it as a portrait's face is. It comes before her master-data bust,
 //      which has no faces: a scene's point is her face changing line by line, and every Uma without portraits looks
-//      alike on the stage until hers are drawn. Her master-data bust and face stay on cards, lists and her profile;
+//      alike on the stage until hers are drawn. Her master-data bust stays on cards; her small face in lists is her
+//      picture (`Avatar.tsx`);
 //   3. a role no one plays: its lettered disc.
 // While her portraits load, the panel holds her place, so a pilot's bust never flashes blank. Loaded with the players.
 import { CAST, dressOf, faceFor, isCastId, isSister, sisterOutfit, type CastId, type SceneLook } from '@farm/domain'

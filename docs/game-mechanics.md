@@ -3437,8 +3437,8 @@ so it needs no release and is replaced the moment her portraits are published.
 
 - **The fallback order on a stage:** her portraits, else the blank bust, else (a role no one plays) the role's lettered
   disc. The blank bust comes before her master-data bust because a scene's point is her face changing line by line,
-  and the master-data bust has no faces. Her master-data face and bust stay where they always were: cards, lists, the
-  town's sheets and her profile.
+  and the master-data bust has no faces. Her master-data bust stays where it always was, on cards and sheets; her small
+  face everywhere else is [her picture](#her-picture).
 - **The base:** a soft silhouette of an Uma (her ears, her long hair, her shoulders) at a portrait's size (525 × 700),
   in the scene's outfit by [outfits by context](#outfits-by-context): each of the 12 has its colours and its mark (the
   kimono's crossed collar and gold obi, the wedding dress's veil and gold flowers, the wedding night outfit's soft robe
@@ -3475,9 +3475,72 @@ so it needs no release and is replaced the moment her portraits are published.
   | `dreamy` | Half-lidded, looking up | A smile | Sparkles, a light blush |
 
 - **Her place holds while her portraits load,** so a pilot's bust never flashes blank before her portrait.
-- **The blank profile:** where master data has no face for her (a stand-in, or one it doesn't hold), lists and cards
-  show the same head and shoulders on her colour, with her letters ("S1"). Where master data has her face and name,
-  those show, as before.
+- **The blank profile** is the same head and shoulders, small: [her picture](#her-picture) while she has neither
+  portraits nor a face in master data.
+
+#### Her picture
+
+Wherever an Uma's face shows small, as an avatar, it's **her picture**, in a rounded square. One avatar shows it
+everywhere: the town's map, who's here and its keepers, People in town, the calendar's cells and its day, the Hearts
+list, her profile's heading and its ties, the roster's cards, the work board, the Dorm and its pickers, Tonight, the
+evenings, the household, the farm map's houses, a scene's guests, the pair talks and the memories. Her picture is the
+first she has of:
+
+1. **Her profile picture** in today's season's outfit: uma-platform's 192 px square cut from her portrait, drawn whole.
+   Three Umas have portraits so far, each with a profile picture per outfit.
+2. **A crop of her portrait base,** cut in place, for a release made before profile pictures (below).
+3. **Master data's face** for her: her outfit's face, or one of the town's people's character face. It shows as it
+   always did, in the square instead of the circle. These faces are square (192 px, a character's 128 px), so they fill
+   it exactly, neither cropped nor letterboxed.
+4. **The blank profile** in the season's colours (below), when master data has no face for her either (a stand-in).
+
+```
+╭──────────────────╮
+│◆    ╱╲    ╱╲     │  a badge in a corner sits over her hair, her ears,
+│    ╭────────╮    │  her shoulders or the backdrop, never her face
+│    │  her   │    │
+│    │  face  │    │  her face centred, out of the corners
+│    ╰────────╯    │
+│   ╱ shoulders ╲ B│
+╰──────────────────╯  a rounded square: its corners 18% of its side
+```
+
+- **The avatar:** a rounded square at the sizes the lists had (20 to 72 pt), its corners 18% of its side at any size,
+  never a circle, with a hairline edge. The badges and counts a list puts on her face (her favourite line's mark, her
+  best talent, her level, a ♥ or a ✓) keep their corners, 4 pt in, over the picture's edge and never clipped by it.
+- **Her profile picture:** her head and shoulders in her portrait's outfit for **today's season** (spring, summer,
+  autumn's `fall` or winter), her calm face, the base's own. Master data's `dialogue-portraits` carries one per base
+  (uma-data 1.9.0, uma-platform's P180): a 192 × 192 WebP of about 10 KB, cut from a square about 1.5 faces wide (331
+  to 336 px of a 525 × 700 base), her face centred and kept out of the corners at 28% of the side. An outfit without
+  one shows her first in Farm Life's order that has one, spring first. On the next season's first morning every
+  picture changes outfit.
+- **Light:** an avatar loads only her profile picture, never her 300 KB base. It's checked against the release and
+  cached on the device by its hash, as a scene's pictures are. A list loads nothing of her portraits for an Uma without
+  them (the art index says so before anything is fetched): she shows master data's face, as before.
+- **A release made before profile pictures:** the avatar cuts the same head and shoulders from her season's base in
+  place (spring when that one isn't drawn): the base her scenes load, placed and scaled so a square fills the avatar,
+  with no new file and no canvas. The square is 1.6 faces wide (358 px), centred across her face, her face's middle 46%
+  down it, kept inside the base.
+- **One seam:** a single function picks her picture's source (`pictureSource`, in `dialogue/picture.ts`): her profile
+  picture when the release has one, else her base, cut in place.
+- **While her portraits are read,** her square stays empty, so a pilot's picture never flashes another first; master
+  data's face, too, leaves it empty until it has loaded.
+- **Without portraits or a face** she shows **the blank profile**, drawn in code: the blank bust's head and shoulders
+  in the season's outfit, on the season's colour (the date chip's) washed light, her hair her theme colour's (else a
+  tone by her id), and her letters ("S1") over her shoulders in ink, or white on winter's navy. Her letters come from
+  her name.
+
+  | Season | Her picture's outfit | The blank profile's backdrop | Its outfit |
+  |---|---|---|---|
+  | Spring | `spring` | Pale green | Green, a pink collar |
+  | Summer | `summer`, else `spring` | Pale gold | Sky blue, a white collar |
+  | Autumn | `fall`, else `spring` | Pale orange | Orange, a russet collar |
+  | Winter | `winter`, else `spring` | Pale blue | Navy, a white collar |
+
+- **uma-kit's own pickers** (the Dorm's) show the same: master data's face as before for an Uma without portraits, and
+  her picture for one with them.
+- **Her bust stays master data's** on the cards and sheets that show a bust; a bust that hasn't loaded shows her
+  picture until it has.
 
 #### Her illustrations
 
@@ -3719,23 +3782,24 @@ they're needed.
 
 #### One outfit each, and the resolver
 
-- **Her outfit** is the cast file's: the game never chooses one over it. Her face, bust, talents and temperament come
-  from that outfit; her name is her character's. Talents aren't saved, so a changed outfit shows on the next boot.
+- **Her outfit** is the cast file's: the game never chooses one over it. Her bust, talents and temperament come
+  from that outfit; her name is her character's; her small face is [her picture](#her-picture): her portraits' crop,
+  else that outfit's face. Talents aren't saved, so a changed outfit shows on the next boot.
   Without one, she plays **her default outfit from master data**: her first original outfit (no variant, the lowest id),
   else her lowest. (What she wears in a scene is her portraits' outfit, by [context](#outfits-by-context): a different
   thing.)
 - **One resolver** turns a roster id into the outfit it plays: the cast's outfit, else master data's default for her,
   else the id itself for someone master data doesn't hold. The app sees
-  master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing else
-  to change.
+  master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing
+  else to change.
 - **A sister** (`s<outfitId>`, the Ranker's) is an outfit of an Uma, presented as a character of her own: she plays that
   outfit (its face, bust, talents and temperament), and her name is the pack's cast entry's `name`, never in git (without
   one, her elder's name as her sister). She lives in town and is met like anyone; the roster takes her id.
 - **Anyone in town** meets master data through the same resolver: one of the town's people, or any other character,
   plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face,
-  else her name's letters on a disc.
-- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma on her colour, with her
-  name's first letter and its number, "S1") and reads
+  else her blank profile.
+- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma in the season's colours,
+  with her name's first letter and its number, "S1") and reads
   D talents in every activity. The stand-ins are named "Stand-in 1" to "Stand-in 3"; any other unknown character is "An
   Uma".
 - **Everyone on the farm stays in the cast.** An Uma on the roster the pack doesn't hold (one a release dropped, or one

@@ -36,7 +36,7 @@ uma-platform, never in a copy here.
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
 | `@luismlorenzana/uma-kit` | 0.20.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame with its left rail and top bar (0.20.0's landscape variants), its side panels (regular and wide) and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album |
 | `@luismlorenzana/uma-art` | 2.30.0 | web | The bar's, map's, item and emote art |
-| `@luismlorenzana/uma-data` | 1.7.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0); test fixtures from `/testing` |
+| `@luismlorenzana/uma-data` | 1.9.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0, its profile pictures from 1.9.0); test fixtures from `/testing` |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The Warehouse's stock types (the work engine's screens are retired with the work board) |
 | `@luismlorenzana/uma-server` | 0.2.0 | api | The owner guard, the master data proxy, the private pack route |
 
@@ -140,6 +140,14 @@ Sheets and scenes are query parameters on the page under them:
   client, verified and cached by hash. `Bust.tsx` composes them: the outfit by context and the face by the expressions'
   fallbacks (the domain's `story/look.ts`), the face drawn over the base at that base's position by the browser; without
   her portraits, her master-data bust. Tests set a synthetic source (`setPortraitSource`).
+- **Her picture** (`src/dialogue/Avatar.tsx` and `picture.ts`, loaded with the lists and the players): the one avatar
+  every list draws an Uma's small face with, a rounded square (`rounded-avatar`). Inside it, the first of: her season's
+  profile picture from `dialogue-portraits` (uma-data 1.9.0's `dialogueProfileFor`, 192 px, drawn whole); for a
+  release before profiles, her season's portrait base placed in CSS so a head-and-shoulders square around its `face`
+  fills the box; master data's face for her, as uma-kit's FaceTile drew it; her blank profile (`blank-profile.tsx`) in
+  the season's colours. `pictureSource` is the single seam where the picture's source is chosen. uma-kit's own face
+  tiles (the pickers) get no face URL from the album's art (`master/album-art.tsx`) for an Uma with portraits, so their
+  fallback draws her picture; the others get master data's face as before.
 - **The story pack** (`src/story/story.ts`): loaded once, by boot, with master data's placeholders (the domain's
   `storyOf`: each character's default outfit, and each outfit's line from its stats); the boot waits for both.
   `outfitFor` resolves a roster key (a character id) to her outfit: the cast's, else her default. As a save comes in, an

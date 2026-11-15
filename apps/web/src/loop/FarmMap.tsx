@@ -15,11 +15,11 @@ import {
   ANIMAL_HOME, chapterTitle, farmPlace, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt, STATIONS,
   type BuildPlace, type DigId, type FarmPlace, type FarmPlaceId, type FarmSave, type RanchHome, type StationId,
 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, CloseIcon, HelpButton, LockedIcon, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -204,7 +204,7 @@ function FarmScreen({ save, peek, tile }: { save: FarmSave; peek: FarmPlace | un
                     <span className="absolute top-1 right-1 flex -space-x-1.5">
                       {house.residents.map((id) => (
                         <span key={id} className="relative">
-                          <FaceTile outfitId={id} size={20} label={nameOf(id)} round />
+                          <Avatar id={id} size={20} label={nameOf(id)} />
                           {hearts.has(id) && <span aria-hidden className="absolute -top-1 -right-1 text-[10px] text-danger">♥</span>}
                         </span>
                       ))}

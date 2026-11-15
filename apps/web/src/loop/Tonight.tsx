@@ -10,10 +10,10 @@
 // picks her at once: her house is tonight's. She greets you in the morning. End the day never waits on it. Loaded on
 // demand.
 import { birthdaysOf, daySetState, marriedCount, type SaveV4, type StoryPack } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { Link, useLocation } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import { tonightRows, type TonightRow } from './evening-view'
 import { InviteChip } from './HeartMarks'
@@ -115,7 +115,7 @@ function TonightWith({ rows }: { rows: readonly CompanionView[] }) {
             <button type="button" role="radio" aria-checked={row.picked} disabled={busy} onClick={() => pick(row)}
               className={`flex min-h-14 w-full items-center gap-2.5 rounded-md border px-2.5 text-left ${row.picked ? 'border-[#c2385e] bg-[#c2385e]/8' : 'border-hairline bg-panel'}`}
               data-companion={row.id} data-picked={row.picked || undefined}>
-              <FaceTile outfitId={row.id} size={40} label={row.name} round />
+              <Avatar id={row.id} size={40} label={row.name} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-semibold">{row.name}</span>
                 <span className="flex items-center gap-1 truncate text-[12px] text-ink-soft">

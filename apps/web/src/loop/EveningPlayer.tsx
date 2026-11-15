@@ -14,12 +14,12 @@ import {
   ladderOf, levelWords, mayOpenEvening,
   type EveningCard, type EveningKind, type EveningRole, type PlayedEvent, type SaveV4, type StoryPack,
 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { SceneLookProvider } from '../dialogue/Bust'
@@ -84,7 +84,7 @@ function Picker({ save, pack, master, onPick, onClose }: { save: SaveV4; pack: S
           {rows.map((row) => (
             <li key={row.id}>
               <button type="button" onClick={() => onPick(row.id)} className="flex min-h-14 w-full items-center gap-3 py-1.5 text-left" data-pick={row.id} data-invite={row.invite ?? undefined}>
-                <FaceTile outfitId={row.id} size={44} label={row.name} />
+                <Avatar id={row.id} size={44} label={row.name} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="flex items-center gap-1.5">
                     <span className="min-w-0 truncate text-[15px] font-semibold">{row.name}</span>
@@ -136,7 +136,7 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
     <Sheet open onClose={onClose} title={`An evening with ${name}`} label={`An evening with ${name}`}>
       <div className="space-y-3 pb-2" data-evening-kinds={id}>
         <div className="flex items-center gap-3">
-          <FaceTile outfitId={id} size={48} label={name} />
+          <Avatar id={id} size={48} label={name} />
           <div className="min-w-0 flex-1 text-[13px]">
             <p className="font-semibold" style={{ color: colour }} data-evening-role>{roleWords(save, id)} · {levelWords(love)}</p>
             {bonus !== null && <p className="flex items-center gap-1 text-[#c2385e]" data-evening-invite><InviteChip /> She asked you: +{bonus} with the evening</p>}

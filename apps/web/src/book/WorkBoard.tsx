@@ -9,11 +9,11 @@ import {
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   type CropId, type DigId, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { setHandTasks } from '../loop/actions'
 import { useTalents } from '../loop/talents'
 import { plural, shortDate } from '../loop/words'
@@ -77,7 +77,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
   return (
     <li className="space-y-2 rounded-md border border-hairline bg-panel px-3 py-2 shadow-1" data-hand={id}>
       <div className="flex items-center gap-2">
-        <FaceTile outfitId={id} size={44} label={name} round />
+        <Avatar id={id} size={44} label={name} />
         <span className="min-w-0 flex-1">
           <Link to={`/hearts?view=work&uma=${id}`} state={{ back: true }} className="block truncate text-[15px] font-semibold text-ink">{name}</Link>
           <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{pack ? jobWords(pack, id) : 'A job in town'}, then the farm</span>
