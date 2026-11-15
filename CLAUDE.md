@@ -2,7 +2,7 @@
 
 - Before working here, read the cross-game plan in the sibling repo: `../uma-platform/docs/architecture.md`,
   `roadmap.md` and `decisions.md` (also on GitHub at `luismlorenzana/uma-platform`).
-- **Where the game is going: [the roadmap](docs/roadmap.md),** from today's sandbox to a full game in Phases 0–5. **How
+- **Where the game is going: [the roadmap](docs/roadmap.md),** from today's game to the full game in Phases 0–4. **How
   it works today: [the game mechanics](docs/game-mechanics.md),** with its tables generated from the code.
 - **Start with [docs/handoff/README.md](docs/handoff/README.md):** what's being built now, the open packets and the
   owner's steps. Packets are written from the roadmap, one per piece, as each starts; new ones are numbered from F61.
@@ -12,7 +12,8 @@
   `pnpm docs:update` regenerates its tables and every HTML page in `docs/pages/`.
 - This game stands alone: its own save, rules and economy. It reads master data from uma-platform by stable IDs only,
   and never imports from uma-rpg, uma-racer or uma-quest at runtime.
-  - Save v4 is the only save: an older one starts over on the device, and the server keeps it in `saveBackups`.
+  - Save v5 is the farm the owner keeps: a change grows it in place or migrates it, never a start-over. The server keeps
+    older saves in `saveBackups`.
   - **Parcels are one-way** (parked until the farm's own game is done): the farm sends and the games receive. No server
     ever writes into a save, the farm's or a game's. Each game's accept list and caps are that game's to set.
 - Shared changes (master data schema, shared packages, `uma-work`, `uma-kit/work`, `uma-post`, original art) happen in a
@@ -62,6 +63,8 @@ The owner gave every session full autonomy to commit, publish and deploy (2026-1
 - **Plain answers:** answer the literal question first. Prefer the smallest fix over a redesign, and use a task table
   when work spreads.
 - **Scope:** build the owner's spec literally, with no inherited filters. Deferred topics are discussion only.
+- **The real game, never a sandbox:** no testing tools, cheats, jump-ahead shortcuts or debug panels; long paths are
+  checked by domain simulations and my own local runs, and the owner only plays.
 - **The owner runs nothing:** never hand them a command. Their steps are only what needs their hands: a phone check, a
   review, a play, or a console entry with no API. Ask for one in one line, with the link.
 - **Packets ahead:** keep the next piece written ahead of the work, so a session can always pick it up.

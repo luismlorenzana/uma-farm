@@ -1,7 +1,8 @@
 # The story pack: a menu
 
-**For the story session.** This page lists everything the game can read from a story pack: what each part does in play,
-and what plays when it's missing. It's a menu, not a checklist:
+**For the story session.** This page is the story's standing guide: first how the story reaches the game, then
+everything the game can read from a story pack, what each part does in play, and what plays when it's missing. It's a
+menu, not a checklist:
 
 - **every part is optional;**
 - **any number of characters is fine,** in any order, including none;
@@ -16,10 +17,126 @@ good and her line's work filled in. It plays whole and pays as written ones do, 
 full list is in [what plays without the story](game-mechanics.md#what-plays-without-the-story)). **Your writing replaces
 it piece by piece:** her chat set for a stage replaces the default talks for it, an event of an id replaces that
 event, her gifts replace her default tastes, and anything you haven't written stays the default, so ship whatever's
-written. The Farm Story Sandbox marks, for each character, what's written and what's still the default. How your work reaches the game is in
-[F40](handoff/tasks/F40-story-authoring.md); how the game plays is in
+written. The Farm Story Sandbox marks, for each character, what's written and what's still the default. How your work
+reaches the game is the first part, [below](#how-the-story-reaches-the-game); how the game plays is in
 [the game mechanics](game-mechanics.md#the-cast-and-the-story-pack). The page view is
 [story-pack.html](pages/story-pack.html).
+
+## How the story reaches the game
+
+The story session is free. It builds the world, the backgrounds and the characters however it wants, and much of it may
+never appear in the game: it informs the dialogue that does. There are no layers, waves, counts or required shapes. This
+part says how the story's work reaches the game; the rest of the page is the menu of what the game reads.
+
+### What's the story's
+
+- **Everything about the story:** world building, backgrounds and histories; characters and their voices,
+  relationships, routes and scenes. Any form, any length, any order, and as many characters as the story wants.
+- **Who:** any character in master data, by her `characterId`, and the Uma Ranker's sisters ([sisters](#sisters)).
+- **Her life:** her chapters, her home, her job and her routine, her scenes and her words are the story's choice, every
+  one optional ([the cast](#the-cast-castjson)).
+
+### Where it lives
+
+`content/story/`, on the machine where the story is written, which git ignores. Organise it as you like: the game reads
+only the pack's files ([the files](#the-files)), and anything else there is yours.
+
+### Reading it: the Farm Story Sandbox
+
+The Farm Story Sandbox is the story's reading tool, served on the machine where the story is written (`pnpm stories`,
+http://127.0.0.1:4321). It reads the pack with the game's own reader:
+
+- **each character:** what's written and what still plays the default story, her chapters, her route and her bible;
+- **the World page:** what the game will use of `world.json`, beside the world bible;
+- **the pack's errors and notes** ([errors and notes](#errors-and-notes));
+- **Review panels:** the owner reads there, and each panel writes the owner's verdict to `content/story/reviews.json`.
+
+### Shipping it
+
+**At the end of every writing session, ship:** `pnpm story:ship --note "what's new, in one line"`, run in this repo's
+checkout where the story is written (macOS or Windows; Node 22.18 or later). **Ship partial work freely:** a pack only
+ever adds to what the game already plays. The owner can ask for a ship at any time ("ship it").
+
+| Step | What happens |
+|---|---|
+| 1. Check | Reads `content/story/` with the game's own reader and prints what it skips (the errors) and the notes. Nothing blocks |
+| 2. Release | Builds the release into the ignored `content/story-release/`: the pack as the game reads it, every broken part already skipped, every other field kept |
+| 3. Publish | Numbers the release (one more than the bucket's current one, or 1), dates it and gives it its note, then uploads the new hash-named files first and `story.json` last to the farm's private bucket |
+| 4. Back up | `pnpm story:push farm` in the sibling `../uma-platform` checkout, when it's there; skipped with a note when it isn't |
+| 5. Say | The release's number, its date and its note |
+
+- **The note** is `--note "…"`, else the first line of `ship.md` in the pack's folder, else none. It's one line of at
+  most 160 characters, since the morning shows it; a longer one stops the ship before anything is uploaded.
+- **On the phone:** the phone picks the release up on its next open. The next morning on an existing farm opens New
+  today with **"New story arrived · *your note*"**, once a release, and Account shows **Story: Release *n*, *date***. A
+  new farm meets the story in its opening.
+- **Nothing new, nothing published:** a pack the bucket already plays keeps its number, and the drafts are still
+  backed up. A ship that stopped partway (say, at the backup) is safe to run again.
+- **`--dry-run`** reads the bucket (the number, which files are there) and lists what it would upload, uploading
+  nothing.
+- **Rolling back:** `pnpm story:ship --release <n>` publishes release *n*'s index again, numbered anew, with the note
+  "Rolled back to *n*". The bucket keeps every file and the last ten indexes, so any of those can come back.
+- **The steps alone:** `pnpm story:release` builds the release (any pack releases; it refuses only when there's no pack
+  folder), and `pnpm story:publish` uploads it, unnumbered, so the morning doesn't announce it. The ship is the routine.
+
+**The machine:** gcloud signed in with the owner's account. The ship never changes the account or its configuration:
+every gcloud call is scoped by the environment.
+
+| Variable | Default | What |
+|---|---|---|
+| `STORY_GCLOUD_CONFIG` | `default` | The gcloud configuration signed in as the owner (`CLOUDSDK_ACTIVE_CONFIG_NAME`) |
+| `STORY_GCLOUD_PROJECT` | `uma-rpg` | The project (`CLOUDSDK_CORE_PROJECT`) |
+| `STORY_BUCKET` | `uma-farm-content` | The farm's private bucket |
+| `STORY_PLATFORM_DIR` | `../uma-platform` | The uma-platform checkout for the backup |
+
+uma-platform's `story:push` uses the `default` configuration whatever `STORY_GCLOUD_CONFIG` says.
+
+### The World Book, and `world.json`
+
+The world building reaches the game in two ways:
+
+- **What the player sees: `world.json`** in the pack, every part optional: the town's, the farm's and the region's
+  names, the farm's history, the festivals, the story's days, each place's name and line, a line for each season, and
+  Town notes. [The world](#the-world-worldjson) has its shape, and `pnpm story:ship` carries it with the pack.
+- **What shapes the game: the World Book,** `content/story/world-book.md`, kept up to date and shipped with every pack
+  (it travels with `story:push farm`). It holds:
+  - the world bible and its history;
+  - every character's background, the families and crews, the town and its places;
+  - **"For the game":** what the story wants the game to support, one item each, with why.
+- **Who reads it:** the game's sessions read it before designing anything (`pnpm story:pull farm`), and the owner reads
+  it on Uma Story's World page, https://uma-platform.web.app/story/farm/world (owner only), where "For the game" stands
+  apart as "What the story asks of the game". `story:push farm` reads the drafts from `../uma-farm/content/story`, or
+  from `STORY_FARM_DIR`; `story:ship` sets it for you.
+- **"For the game" is where the story asks.** The game's side picks each item up into the roadmap or a packet, and once
+  it's built, this menu says how to write for it. Group scenes, for the families and crews, are on the roadmap's long
+  game ([Phase 2](roadmap.md#phase-2-the-whole-farm)).
+
+### What the game assumes
+
+The owner's standing direction for anything that reaches the screen:
+
+- **adults only,** tender and never explicit;
+- **the protagonist is a man** (the owner, 2026-11-14): named by the player and never drawn, the player's eyes. Lines may
+  say he, her husband, the groom;
+- **a gift names a good the game has** (`goods/ids.ts`); a new good is a request to the game (her bible's
+  `gifts.proposed`), not a rule.
+
+### Privacy
+
+- **The story names real franchise characters,** so it never goes in git or in uma-art. `content/story/` is ignored by
+  git, and `docs/story/` holds only original drafts, with no franchise names.
+- **No character or outfit names** in code, tests, docs, commit messages or pull request bodies. The private-content
+  guard runs in CI.
+- **Commit only tools or original drafts** (`docs/story/`), never the private pack.
+- **Backups, from uma-platform:** `pnpm story:push farm` backs up the drafts (the ship runs it), and
+  `pnpm story:pull farm --drafts` brings them to this Mac.
+
+### How changes reach the story
+
+- **Each rule change updates this menu in the same commit** as the code and [the game mechanics](game-mechanics.md), so
+  this page is always what the game reads today.
+- **The main session messages the story session** when something it can use ships: a new field, a new scene to write,
+  a new event id.
 
 ## How the game reads a pack
 
@@ -110,8 +227,8 @@ Each limit is what its screen shows. A longer line is an error.
 The owner's standing direction for anything on screen (the placeholder and school are notes):
 
 - `{farmer}` is the one placeholder: the farmer's name, filled as the line shows. Any other `{…}` shows as written.
-- **The protagonist is a man** (the owner, 2026-11-14): named by the player, never drawn. A line may say he, her
-  husband, the groom; no word about him is a note any more.
+- **The protagonist is a man** ([what the game assumes](#what-the-game-assumes)): a line may say he, her husband, the
+  groom, and no word about him is a note any more.
 - Nothing reads as school.
 
 ## The cast: `cast.json`
@@ -346,6 +463,17 @@ one you leave out plays the default.**
 The rungs pay as written (below). The rest pay nothing: their choices are wording only, and the usual sizes don't apply
 to them. Any other id is a note, kept for the story.
 
+**The Uma loop's scenes** ([the Uma loop](game-mechanics.md#the-uma-loop)): her stages run acquaintance, friend,
+farmhand, sweetheart, engaged and married. Her rungs run along all of them, and each stage adds scenes of its own:
+
+| Her stage | Its scenes |
+|---|---|
+| Acquaintance | Her meeting scene (`arrival`), as you introduce yourself in town |
+| Friend | The hangouts' scenes (`hangout-<kind>`) |
+| Farmhand | The invitation to work (`invited-to-work`) |
+| Sweetheart, and on | The dates' scenes (`date-<kind>`), `dinner-in-town` (from Romance 3) and `a-night-in` (from Romance 6) |
+| Married | `wedding-night` and `moving-in` after the wedding, then `s2` and `s4`; her bible's `mornings` (the night's companion) and `meals` |
+
 **An occasion scene** costs the player one action (a special day's event actions first) and pays nothing. It plays once
 a day with each Uma, whatever her stage, so write it for a friend and a wife alike. Without an `outfit` she wears the
 kimono at New Year's and on the derby night, and the garden party dress at the Flower Show.
@@ -422,6 +550,9 @@ Named by the two ids in numeric order, `<a>-<b>`: the game finds it by that name
 
 Any levels, in any order. A level not written plays the game's two short lines. A pair the ties don't hold never plays (a
 note).
+
+Scenes with three or more (a family's, a crew's reunion) aren't read yet: they're on the roadmap's long game
+([Phase 2](roadmap.md#phase-2-the-whole-farm)).
 
 ## The household: `household.json`
 
@@ -611,36 +742,6 @@ title in the Diary's list, its lines (`{farmer}` filled), and what unlocks it, f
 - **Where it shows:** the Diary's **Town notes**, in the file's order, each a tap to read; an introduction, a talk or a gift that
   unlocks one says "Town note · *title* ›" there and then; the night's are named the next morning in New today ("*title*",
   tagged **Town note**, or "*title* +2 more"), a tap opening the note in the Diary.
-
-## Shipping
-
-**`pnpm story:ship --note "what's new, in one line"`** puts the pack on the owner's phone. Run it at the end of every
-writing session, on the machine where the story is written (macOS or Windows). In order:
-
-| Step | What happens |
-|---|---|
-| 1. Check | Reads `content/story/` with the game's own reader and prints what it skips (the errors) and the notes. Nothing blocks |
-| 2. Release | Builds the release into the ignored `content/story-release/`: the pack as the game reads it, every broken part already skipped, every other field kept |
-| 3. Publish | Numbers the release (one more than the bucket's current one, or 1), dates it and gives it its note, then uploads the new hash-named files first and `story.json` last to the farm's private bucket |
-| 4. Back up | `pnpm story:push farm` in the sibling `../uma-platform` checkout, when it's there; skipped with a note when it isn't |
-| 5. Say | The release's number, its date and its note |
-
-- **The note** is `--note "…"`, else the first line of `ship.md` in the pack's folder, else none. It's one line of at
-  most 160 characters, since the morning shows it; a longer one stops the ship before anything is uploaded.
-- **On the phone:** the next morning on an existing farm opens New today with **"New story arrived · *your note*"**,
-  once a release, and Account shows **Story: Release *n*, *date***. A new farm meets the story in its opening.
-- **Nothing new, nothing published:** a pack the bucket already plays keeps its number, and the drafts are still
-  backed up. A ship that stopped partway is safe to run again.
-- **`--dry-run`** reads the bucket (the number, which files are there) and lists what it would upload, uploading
-  nothing.
-- **Rolling back:** `pnpm story:ship --release <n>` publishes release *n*'s index again, numbered anew, with the note
-  "Rolled back to *n*". The bucket keeps every file and the last ten indexes.
-- **The machine:** gcloud is called with the environment only, never changing the account or its configuration.
-  `STORY_GCLOUD_CONFIG` names the configuration (default `default`), `STORY_GCLOUD_PROJECT` the project (`uma-rpg`),
-  `STORY_BUCKET` the bucket (`uma-farm-content`) and `STORY_PLATFORM_DIR` the uma-platform checkout
-  (`../uma-platform`).
-- **The steps alone:** `pnpm story:release` builds the release (any pack releases; it refuses only when there's no pack
-  folder), and `pnpm story:publish` uploads it, unnumbered, so the morning doesn't announce it. The ship is the routine.
 
 ## What reads now, and what acts on it later
 

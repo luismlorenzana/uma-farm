@@ -1,7 +1,7 @@
 # The game's design
 
-**Second pass: the owner's rework (2026-11-14), with the owner's answers folded in.** What the farm is to play, rebuilt
-around the owner's input:
+**Second pass: the owner's rework (2026-11-14), with the owner's answers folded in, and all built (F74–F85).** What the
+farm is to play, rebuilt around the owner's input:
 - a landscape game with a farm map and a navigable town;
 - a dialogue engine with busts, faces and outfits;
 - a day of limited actions, and a farming loop in the spirit of the classic farm-life games;
@@ -177,7 +177,7 @@ In the spirit of the classic farm-life games, with the owner's additions.
   - **choices**;
   - for some scenes, a backdrop of the place.
 - **The art:**
-  - the pilot is complete: 12 outfit portraits and 15 faces each, for the two Umas with full art;
+  - three Umas have their portraits: 12 outfits and 15 faces each;
   - each face sits over each outfit's portrait;
   - neutral is the portrait's own face;
   - a face the art hasn't drawn yet shows its nearest one.
@@ -252,7 +252,7 @@ Story packs and art will take a long time to land, so every Uma plays fully befo
 | Talents and ranks | **Built on:** they start each aptitude, which grows with practice |
 | Building by Farm Rank, the projects list | **Kept**, with loans and upkeep added |
 | The town screen and its spots | **Built on:** a navigable town map, routines from the story |
-| Meeting by triggers; the welcome week | **Changed:** introductions in town; the welcome week is the owner's call |
+| Meeting by triggers; the welcome week | **Changed:** introductions in town; no welcome week |
 | The romance: ladders, events, evenings, perks, the ring, weddings, houses, household | **Kept**, re-staged into the new loop with farmhand, wedding night and moving in |
 | Her chapters | **Kept** |
 | Busts in scenes; the scene, event and pair players | **Replaced** by the dialogue engine |
