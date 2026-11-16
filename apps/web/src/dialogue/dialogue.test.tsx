@@ -136,6 +136,20 @@ describe('the compositor', () => {
     expect(face.style.top).toBe(`${(top / 700) * 100}%`)
     expect(face.style.width).toBe(`${(224 / 525) * 100}%`)
   })
+  it('stands in a box as wide as her panel, with a backdrop or without: Safari sizes a shrink-to-fit box around her as 0 px wide', async () => {
+    const { BustPanel } = await import('./Stage')
+    setPortraitSource({ portraitsOf: async () => PORTRAITS, art: ART })
+    for (const backdrop of [null, <span key="b" data-backdrop />]) {
+      await act(async () => root.render(
+        <SceneLookProvider value={{ day: 1, leads: [String(ID)] }}><BustPanel bust={{ who: String(ID), name: 'Her', emote: 'happy' }} backdrop={backdrop} /></SceneLookProvider>,
+      ))
+      await settle()
+      const box = $('[data-bust-box]')!
+      expect(box.classList.contains('w-full')).toBe(true)
+      expect(box.classList.contains('h-full')).toBe(true)
+      expect(box.querySelector('[data-portrait]')).not.toBeNull()
+    }
+  })
   it('swaps only the face, fading the new one in over the last; neutral fades it away; reduced motion swaps at once', async () => {
     setPortraitSource({ portraitsOf: async () => PORTRAITS, art: ART })
     await act(async () => root.render(bust('happy')))

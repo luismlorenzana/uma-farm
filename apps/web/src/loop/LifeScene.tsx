@@ -112,7 +112,12 @@ async function stepsFor(kind: LifeKind, save: SaveV4, story: StoryPack, master: 
       const event = await herEventOf(story, id, kind)
       return { steps: event.steps, ...(event.outfit ? { outfit: event.outfit } : {}) }
     }
-    case 'talk': return { steps: todaysTalk(save, story, id, talentTable(master).get(outfitFor(id))?.temperament ?? 'steady', birthdaysOf(story, master.birthdays)).steps }
+    case 'talk': {
+      // `{name}` is hers (the default story's talks), filled here as her profile and the town fill it; the line fills
+      // `{farmer}`.
+      const steps = todaysTalk(save, story, id, talentTable(master).get(outfitFor(id))?.temperament ?? 'steady', birthdaysOf(story, master.birthdays)).steps
+      return { steps: steps.map((s) => ('say' in s ? { ...s, line: s.line.split('{name}').join(name) } : s)) }
+    }
     default: return { steps: mealScene(save, story, id, kind, name) }
   }
 }

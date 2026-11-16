@@ -19,7 +19,9 @@ export function BustPanel({ bust, backdrop = null, onTap, data = {} }: { bust: O
       onClick={onTap} aria-hidden={bust ? undefined : true} data-bust={bust ? bust.who : 'narrator'} data-stage-bust {...data}>
       {backdrop}
       {bust && (
-        <span className={`relative flex h-full max-w-full items-end ${backdrop ? 'ml-auto justify-end pt-6 pr-3' : 'justify-center pt-1'}`} data-who={bust.who}>
+        // As wide as the panel: the bust inside is sized by its height, and Safari sizes a box that shrinks to fit it as
+        // 0 px wide (iPhone showed no bust at all).
+        <span className={`relative flex h-full w-full max-w-full items-end ${backdrop ? 'justify-end pt-6 pr-3' : 'justify-center pt-1'}`} data-who={bust.who} data-bust-box>
           <SceneBust who={bust.who} name={bust.name} emote={bust.emote ?? null} size={220} />
         </span>
       )}

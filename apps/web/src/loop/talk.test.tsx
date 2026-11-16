@@ -144,6 +144,21 @@ describe('talk that knows the day', () => {
     ])
   })
 
+  it('a default talk fills in her name, as her profile does', async () => {
+    // An Uma and a spring day whose talk opens on a default line naming her (`{name}`).
+    const days = Array.from({ length: 12 }, (_, i) => farmDay({ year: 1, season: 'spring', day: i + 1 }))
+    const named = (d: number, id: string) => {
+      const first = todaysTalk(farm(d), fixture.pack!, id, 'steady').steps[0]
+      return first && 'say' in first && first.line.includes('{name}') ? first.line : null
+    }
+    const [id, day] = ['9000002', '9000003'].flatMap((id) => days.map((d) => [id, d] as const)).find(([id, d]) => named(d, id) !== null)!
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(day) })
+    await render(<HeartsPage />, `/hearts?uma=${id}`)
+    await click(await find('[data-action="chat"]'))
+    await find('[data-life="talk"]')
+    const name = $('[data-life="talk"] [data-speaker]')!.textContent!
+    expect($('[data-life="talk"] [data-line]')?.dataset.line).toBe(named(day, id)!.split('{name}').join(name).split('{farmer}').join('Robin'))
+  })
   it('a gift draws her own line for its taste', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(farmDay({ year: 1, season: 'spring', day: 3 })) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
