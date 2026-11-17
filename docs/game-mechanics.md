@@ -4384,7 +4384,7 @@ Master data's private `dialogue-portraits` family holds them, keyed by her chara
 700, her face neutral), with where the face sits on it, and **a face per expression** (224 × 224, with alpha), drawn to
 sit over any of her portraits. The game draws the face over the portrait at that portrait's face position, unscaled,
 in straight alpha. Her portraits load the first time she's on a stage, then each picture by its path: checked against
-the release and cached on the device by its hash, so a scene plays offline once seen. Eight Umas have portraits so
+the release and cached on the device by its hash, so a scene plays offline once seen. Twelve Umas have portraits so
 far, each with her outfits and her faces; the next follow in the Uma Ranker's order. An outfit or a face not drawn for her yet falls
 back (below), so a story can name one before its art exists.
 
@@ -4584,7 +4584,7 @@ first she has of:
 
 At her big moments the scene opens onto **a full-screen illustration**. Master data's private `illustrations` family
 holds them, keyed by her character id: her scenes in the art's order, each with its title, its outfit and its moment
-(1672 × 941, from Uma Character Art's Farm Life universe). Eight Umas' nine each are published. **An Uma without any
+(1672 × 941, from Uma Character Art's Farm Life universe). Twelve Umas' nine each are published. **An Uma without any
 plays every scene on her bust and face, exactly as before.**
 
 ```

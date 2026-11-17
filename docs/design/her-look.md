@@ -30,7 +30,7 @@ uma-platform's **Uma Character Art** (https://uma-platform.web.app/art) holds, f
 - the full-body 3D render (`outfit-renders`, 768×1024);
 - the **universe looks**: ChatGPT's owner-approved pictures of an Uma in another world, Farm Life among them.
 
-Farm Life is where the farm's art comes from: **eight Umas have their dialogue portraits** (12 outfits and 15 faces
+Farm Life is where the farm's art comes from: **twelve Umas have their dialogue portraits** (12 outfits and 15 faces
 each) **and all nine of their illustrations**. Master data carries them to the game, with no farm release.
 
 ### What the farm shows today
@@ -38,8 +38,8 @@ each) **and all nine of their illustrations**. Master data carries them to the g
 | Where | Art | Expressions |
 |---|---|---|
 | Cards, lists, the town's sheets, her profile | Her face (`outfit-faces`) and her master-data bust | — |
-| Every scene (the dialogue engine) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, eight Umas so far); else the blank bust: her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
-| Her big moments | Her illustration, full screen (master data's `illustrations`, eight Umas' nine so far); else her bust | — |
+| Every scene (the dialogue engine) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, twelve Umas so far); else the blank bust: her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
+| Her big moments | Her illustration, full screen (master data's `illustrations`, twelve Umas' nine so far); else her bust | — |
 | Her profile's Gallery | Each illustration she's shown, kept for good; the rest locked, with their titles | — |
 
 ## Her wardrobe
@@ -136,7 +136,7 @@ steps](../story-pack.md#steps)). The owner cross-references the outfits with the
 **For the character-art session (ChatGPT), standing:** what to draw for each Uma, so the farm can show her in every
 outfit, every feeling and every big moment. It changes as the game does. The technical format is worked out together.
 
-**Where it stands:** eight Umas have their portraits (12 outfits and 15 faces each) and all nine of their
+**Where it stands:** twelve Umas have their portraits (12 outfits and 15 faces each) and all nine of their
 illustrations. Until an Uma has hers, the game plays her on the blank bust, so nothing waits on the art.
 
 ### What to draw
@@ -253,8 +253,8 @@ The story may name other scenes of hers for its own moments; these nine are the 
 
 ### The order
 
-1. **Done:** eight Umas' portraits, 12 outfits and 15 faces each, and their nine illustrations each (master data
-   `1959d8964b95`, 2026-11-17). The six extra faces can follow for all eight.
+1. **Done:** twelve Umas' portraits, 12 outfits and 15 faces each, and their nine illustrations each (master data
+   `00598e1d125e`, 2026-11-17). The six extra faces can follow for all twelve.
 2. **Next, in the Uma Ranker's order:** her spring outfit and the core faces first, then the romance faces, then the
    other outfits, then her illustrations.
 

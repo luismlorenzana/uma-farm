@@ -177,7 +177,7 @@ In the spirit of the classic farm-life games, with the owner's additions.
   - **choices**;
   - for some scenes, a backdrop of the place.
 - **The art:**
-  - eight Umas have their portraits (12 outfits and 15 faces each) and their nine illustrations;
+  - twelve Umas have their portraits (12 outfits and 15 faces each) and their nine illustrations;
   - each face sits over each outfit's portrait;
   - neutral is the portrait's own face;
   - a face the art hasn't drawn yet shows its nearest one.
