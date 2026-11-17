@@ -52,7 +52,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **Farmhands** | **Deployed** | A friend invited to work does her part-time job, then gives the farm 3 actions a day (more settled in, married and well fed) on the tasks you set on the Book's work board, overnight. Each task's aptitude starts from her talent and rises with practice, for more goods, better stars and tricks ([farmhands](game-mechanics.md#farmhands)) |
 | **The dialogue engine** | **Deployed** | Every scene on one engine: her portrait in the moment's outfit, her face changing line by line through 22 expressions. Eight Umas have their portraits and illustrations ([the dialogue engine](game-mechanics.md#the-dialogue-engine)) |
 | **The default Uma** | **Deployed** | Every Uma plays whole before her story and art land: the default story, from meeting her to married life, and the blank bust, with a face for every expression. Hers replaces each piece the moment it lands ([what plays without the story](game-mechanics.md#what-plays-without-the-story)) |
-| **Illustrations and the gallery** | **Deployed** | Her big moments open onto her illustration, full screen: meeting her, a summer date at the shore, the confession and her yes, the wedding, the wedding night, a night in and the morning after. Each one seen stays in the gallery on her profile. The first Uma has all nine ([her illustrations](game-mechanics.md#her-illustrations)) |
+| **Illustrations and the gallery** | **Deployed** | Her big moments open onto her illustration, full screen: meeting her, a summer date at the shore, the confession and her yes, the wedding, the wedding night, a night in and the morning after. Each one seen stays in the gallery on her profile. Eight Umas have all nine ([her illustrations](game-mechanics.md#her-illustrations)) |
 | **The pacing** | **Checked by simulation** | The domain plays whole years on the game's rules: the farmer alone pays his way and his takeout in the first year, two farmhands pay their upkeep many times over and a cook among them feeds the farm, two years with the Coop and the Mine never run short, and four years at 10, 20 and 50 Umas show who holds a real job ([the pacing](game-mechanics.md#the-pacing)) |
 | **The story** | **Being written** | By the story session, read in the Farm Story Sandbox and shipped with one command at the end of each session. Tier 1's ten are complete and live (release 8, 2026-11-15), and the game plays everything it writes, read by id: every occasion (each festival's day and night, her birthday, her anniversary, the story's days), greetings, small talk and gift lines ([occasion scenes](game-mechanics.md#occasion-scenes), [talk that knows the day](game-mechanics.md#talk-that-knows-the-day)). The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack](story-pack.md) says how it reaches the game and lists what the game reads |
 | **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's. The Umas' faces and busts on cards and lists are master data's, and so are eight Umas' dialogue portraits and nine illustrations each, from Uma Character Art's Farm Life. Every other Uma plays scenes on the blank bust. [The art brief](design/her-look.md#the-art-brief) says what's drawn next |
@@ -94,10 +94,12 @@ Phase 1  One game, built around the Umas   ── done: one build on v5, the far
 Phase 2  The whole farm                    ── each workshop's game, the sea, festivals and the long game
 Phase 3  Feel and polish                   ── sound, animation, settings, balance, speed
 Phase 4  Steady                            ── error reports, save safety, a tested playthrough, releases
+Later    Release packs                     ── sets of Umas after the launch cast (the Ranker's Tier 1–5)
+Later    Parcels to the other games        ── parked until the farm's own game is done
 ```
 
 Phase 2 is under way, one workshop at a time: the Kitchen is in, with the Cooking Contest (your go, 2026-11-15; F92
-and F93), and the sea and expeditions (2.4) are next. Phase 3 can start now that the first workshop plays.
+and F93); farm days, home after the wedding and the launch cast (F95, F96) come before the sea and expeditions (2.4). Phase 3 can start now that the first workshop plays.
 Phase 4's error reports and save safety are small and can come any time.
 
 ### Phase 0: Clean slate (done)
@@ -139,7 +141,10 @@ in real jobs and 50 running past the farm's jobs by about ten Umas, the work the
 ([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)). The workshops came next, the Kitchen
 first (the owner's go, 2026-11-15): **2.3 is done:** its stove, recipes, dishes and staff meal (F92), and the Cooking
 Contest on Autumn 10, the first festival you play (F93) ([the Kitchen](game-mechanics.md#the-kitchen),
-[the Cooking Contest](game-mechanics.md#the-cooking-contest)). The sea and expeditions are next.
+[the Cooking Contest](game-mechanics.md#the-cooking-contest)). **Before the sea** (the owner, 2026-11-17): farm days and
+home after the wedding (F95: a farmhand works the farm on the days her town life leaves free and eats her meals there;
+only a spouse moves in, into a room; the Dorm retires), and the launch cast (F96: the Ranker's Tier 1–5, 50 Umas). The
+sea and expeditions come next.
 
 | Step | What |
 |---|---|
@@ -175,6 +180,12 @@ How each workshop is built:
 | 4.2 **Save safety** | A save-health check when the app opens, scheduled save exports, and a tested restore |
 | 4.3 **A tested playthrough** | A headless browser plays the first days on every push, and CI fails if it breaks |
 | 4.4 **Releases** | A version and a short "What's new" in the app, so you see what changed as you play |
+
+### Later: release packs
+
+The game opens with **the launch cast**, the Uma Ranker's Tier 1–5: 50 Umas (F96, the owner, 2026-11-17). Later
+releases add sets of Umas as **release packs**. How a pack is defined (by the Ranker's tiers, or by hand), published
+(with master data or the story) and opened on a farm already playing is worked out when it starts.
 
 ### Later: parcels to the other games
 

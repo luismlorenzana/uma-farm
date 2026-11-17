@@ -89,13 +89,17 @@ game plays is hers: Tier 1 reads 10 of 10. All read by id, so a later release pl
 ([occasion scenes](../game-mechanics.md#occasion-scenes), [talk that knows the
 day](../game-mechanics.md#talk-that-knows-the-day), [her occasions](../story-pack.md#her-occasions)).
 
-**Next: the sea and expeditions** (Phase 2.4): the Dock's and the Boat's spots; regions, parties and their power,
-results and loot, and the log ([the roadmap](../roadmap.md#phase-2-the-whole-farm)). Its packet is written when it starts,
-numbered from F95.
+**Now: farm days, home after the wedding, and the launch cast** (the owner, 2026-11-17): Umas live on the farm only once
+married, in a room; a farmhand comes to work on the days her town life leaves free and eats her meals there; the Dorm
+retires (F95). The game opens with the Ranker's Tier 1–5, 50 Umas (F96). Then the sea and expeditions (Phase 2.4), its
+packet numbered from F97 ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
 
 ## Open packets
 
-None open: the next is written when Phase 2.4 starts.
+| Packet | What | Who |
+|---|---|---|
+| [F95](tasks/F95-farm-days-and-home-after-the-wedding.md) | **Farm days, and home after the wedding:** farmhands on the farm on the days their town life leaves free, eating their meals there; only a spouse moves in, into a room; the Dorm retires | Claude |
+| [F96](tasks/F96-the-launch-cast.md) | **The launch cast:** the Ranker's Tier 1–5, 50 Umas, are the game's only Umas | Claude |
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
