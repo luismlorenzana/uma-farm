@@ -347,7 +347,7 @@ The owner's standing direction for anything on screen (the placeholder and schoo
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one | Master data's first five characters, by id |
+| `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one. **The game plays the launch cast's 50 only** (the Ranker's Tier 1–5, [the launch cast](game-mechanics.md#the-launch-cast)): a character outside it stays in the pack and plays nowhere | The launch cast's 50, bare, on the default story |
 | `welcome` | **Retired** (the owner, 2026-11-14: no welcome week). Nobody comes to the Gate: you meet everyone by introducing yourself in town. A `welcome` is still read, and noted as retired; it acts on nothing | — |
 | `version`, `export`, `ranker` | The story's own (the sandbox's) | Nothing |
 

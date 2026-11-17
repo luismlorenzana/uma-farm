@@ -165,6 +165,7 @@ export * from './story/pack'
 // The default story's home: what plays wherever the pack is silent, and the one lookup that reads "the pack's, or the
 // default" (her outfit, line, tastes, talks, events, chapters, keepsake, pairs, household and the rest).
 export * from './story/placeholders'
+export * from './story/launch'
 // The default story's words: her talks by stage and temperament, gift reactions, every event, occasion and evening's
 // scene, morning greetings and meal lines. Loaded with the story pack.
 export * from './story/default-story'

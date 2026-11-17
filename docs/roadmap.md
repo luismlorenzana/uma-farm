@@ -48,6 +48,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **The Kitchen** | **Built** (F92, F93) | From Farm Rank 3 (3,000g · 40 logs · 20 vegetables), levels 1–5 (6 to 15 dishes a play): once a day, a menu of up to three known recipes cooked at the stove for 60 s, with a farmhand as its assistant; 80 recipes (three known when it stands, the rest at the shop's Recipes shelf); dishes don't ship, they feed **the staff meal**: a dish for every three mouths, eaten in place of their meals, everyone well fed by its stars ([the Kitchen](game-mechanics.md#the-kitchen)). **The Cooking Contest** on Autumn 10 is the first festival you play: three actions, one dish cooked live, judged against the orchard and the ranch, the places paying gold and Farm Rank points ([the Cooking Contest](game-mechanics.md#the-cooking-contest)) |
 | **The calendar** | **Deployed** | The bar's date opens the year on one screen: its festivals, the story's days, birthdays, anniversaries and the faces of the Umas with an event each day. Special days add actions for events, and the occasion scenes play on their days ([the calendar](game-mechanics.md#the-calendar-screen)) |
 | **The town** | **Deployed** | A map you walk around: who's at each place now (each Uma's fixed schedule: the story's home, job and routine, else her favourite spot every third day), the town's people at their posts, and her menu. You meet her by introducing yourself; there's no welcome week ([the town](game-mechanics.md#the-town), [meeting her](game-mechanics.md#meeting-her)) |
+| **The launch cast** | **Built** (F96) | The game's Umas are the Uma Ranker's Tier 1–5, 50 of them; the story's other Umas wait for a release pack, and the town's people keep their posts ([the launch cast](game-mechanics.md#the-launch-cast)) |
 | **The Uma loop** | **Deployed** | Acquaintance, friend, farmhand, sweetheart, engaged, married: talks and gifts, hangouts and dates at two actions, Dinner in town and A night in, the ring and the wedding, the wedding night and moving in, then married life's meals and the night's companion, who greets you in the morning. Her whole romance plays in her own chapters: hearts, heart events and plays, perks, houses and bonds ([the Uma loop](game-mechanics.md#the-uma-loop), [her chapters](game-mechanics.md#her-chapters)) |
 | **Farmhands** | **Deployed** | A friend invited to work does her part-time job, then gives the farm 3 actions a day (more settled in, married and well fed) on the tasks you set on the Book's work board, overnight. Each task's aptitude starts from her talent and rises with practice, for more goods, better stars and tricks ([farmhands](game-mechanics.md#farmhands)) |
 | **The dialogue engine** | **Deployed** | Every scene on one engine: her portrait in the moment's outfit, her face changing line by line through 22 expressions. Eight Umas have their portraits and illustrations ([the dialogue engine](game-mechanics.md#the-dialogue-engine)) |
@@ -99,7 +100,7 @@ Later    Parcels to the other games        ── parked until the farm's own ga
 ```
 
 Phase 2 is under way, one workshop at a time: the Kitchen is in, with the Cooking Contest (your go, 2026-11-15; F92
-and F93); farm days, home after the wedding and the launch cast (F95, F96) come before the sea and expeditions (2.4). Phase 3 can start now that the first workshop plays.
+and F93); the launch cast is in (F96), and farm days and home after the wedding (F95) come before the sea and expeditions (2.4). Phase 3 can start now that the first workshop plays.
 Phase 4's error reports and save safety are small and can come any time.
 
 ### Phase 0: Clean slate (done)
@@ -141,10 +142,10 @@ in real jobs and 50 running past the farm's jobs by about ten Umas, the work the
 ([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)). The workshops came next, the Kitchen
 first (the owner's go, 2026-11-15): **2.3 is done:** its stove, recipes, dishes and staff meal (F92), and the Cooking
 Contest on Autumn 10, the first festival you play (F93) ([the Kitchen](game-mechanics.md#the-kitchen),
-[the Cooking Contest](game-mechanics.md#the-cooking-contest)). **Before the sea** (the owner, 2026-11-17): farm days and
-home after the wedding (F95: a farmhand works the farm on the days her town life leaves free and eats her meals there;
-only a spouse moves in, into a room; the Dorm retires), and the launch cast (F96: the Ranker's Tier 1–5, 50 Umas). The
-sea and expeditions come next.
+[the Cooking Contest](game-mechanics.md#the-cooking-contest)). **Before the sea** (the owner, 2026-11-17): the launch cast is
+in (F96: the Ranker's Tier 1–5, 50 Umas, [the launch cast](game-mechanics.md#the-launch-cast)); farm days and home after
+the wedding come next (F95: a farmhand works the farm on the days her town life leaves free and eats her meals there;
+only a spouse moves in, into a room; the Dorm retires). Then the sea and expeditions.
 
 | Step | What |
 |---|---|

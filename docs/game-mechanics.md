@@ -4719,6 +4719,20 @@ Uma (the roster, her route, the Dorm, work, bonds, Memories and meeting scenes).
 introduce yourself, and has a route of her own. One you meet whom the pack doesn't hold joins the cast bare, on the
 default story.
 
+#### The launch cast
+
+The game opens with **50 Umas: the Uma Ranker's Tier 1–5** (the owner, 2026-11-17), and only they are in the game: in
+town, on the People page, met, on the calendar's birthdays and occasions, and in the romance. Later releases add sets of
+Umas as release packs ([the roadmap](roadmap.md#later-release-packs)).
+
+| | The rule |
+|---|---|
+| **The 50** | The live Ranker plan's Tier 1–5 (generated 2026-11-16, profiles revision 6), in its order: 44 characters and 6 sisters, by id (`story/launch.ts`'s `LAUNCH_CAST`) |
+| **The cast** | Kept to the 50 as the pack loads (`launchCast`): each one's story entry, in the story's order; one the story lacks joins bare at the end and plays the default story. With no pack, the 50 bare |
+| **The rest of the story** | Stays in the pack and plays nowhere: today the story holds 100 Umas (Tiers 1–10), and Tiers 6–10 wait for a release pack |
+| **The town's people** | Keep their posts (`town.json`): the town's roles, not the cast. Ten of the fourteen are Umas the Ranker leaves out of its playable tiers |
+| **Already met** | An Uma on a farm's roster stays on the cast (`withCast`): a farm grows in place. The owner's three are all Tier 1 |
+
 #### What the pack holds
 
 The pack is a folder of JSON files, kept out of git. **It's a menu, not a checklist:** every part is optional, any number

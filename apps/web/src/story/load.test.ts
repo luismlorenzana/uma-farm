@@ -1,7 +1,7 @@
 // The loader seam: the pack farm-api serves, else no pack when it serves none, each with master data's placeholders; and
 // the stand-in alone with `VITE_FARM_STORY=stand-in` (Vitest's). A production build holds no stand-in at all
 // (`scripts/check-size.mjs`'s DEV_ONLY_MODULES). farm-api is a stub, master data the invented album fixture; no network.
-import { eventOf, favouriteOf, outfitOf, placeholderEvent, STAND_IN_FILES, storyFileName, storyFilePath, type StoryIndex } from '@farm/domain'
+import { eventOf, favouriteOf, LAUNCH_CAST, outfitOf, placeholderEvent, STAND_IN_FILES, storyFileName, storyFilePath, type StoryIndex } from '@farm/domain'
 import { createHash, webcrypto } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -59,24 +59,34 @@ describe('the loader seam', () => {
     expect(api.asked).toEqual([])
   })
 
-  it('plays the release farm-api serves, with master data\'s placeholders', async () => {
+  it('plays the release farm-api serves, with master data\'s placeholders, its cast kept to the launch cast', async () => {
     vi.stubEnv('VITE_FARM_STORY', '')
     serveRelease()
-    const pack = await loadStoryPack()
+    // The stand-in's cast is 9000001–9000003; a launch cast of two keeps those two, in the pack's order.
+    const pack = await loadStoryPack(['9000003', '9000001'])
+    expect(pack.cast.umas.map((u) => u.characterId)).toEqual(['9000001', '9000003'])
     expect(pack.cast.umas[0]!.paragraph).toBe('Served by farm-api.')
     expect([...pack.master!.outfits.keys()]).toEqual(['90001', '90002', '90003', '90004', '90005', '90006'])
     expect(api.asked[0]).toBe('story.json')
   })
 
-  it('plays no pack when farm-api serves none (nothing published yet): master data\'s first five, on placeholders', async () => {
+  it('plays no pack when farm-api serves none (nothing published yet): the launch cast, bare, on placeholders', async () => {
     vi.stubEnv('VITE_FARM_STORY', '')
-    const pack = await loadStoryPack()
+    // The album fixture's six invented characters, 90001–90006, one outfit each (81001–81006); a launch cast of five.
+    const pack = await loadStoryPack(['90001', '90002', '90003', '90004', '90005'])
     expect(api.asked).toEqual(['story.json'])
-    // The album fixture's six invented characters, 90001–90006, one outfit each (81001–81006): the first five.
     expect(pack.cast.umas.map((u) => u.characterId)).toEqual(['90001', '90002', '90003', '90004', '90005'])
     expect(outfitOf(pack, '90001')).toBe('81001')
     expect(favouriteOf(pack, '90001')).not.toBeNull()
     expect(pack.bibles.size + pack.scripted.size + pack.ties.ties.length).toBe(0)
     expect((await eventOf(pack, '90001', 'f1')).steps).toEqual(placeholderEvent('90001', 'f1'))
+  })
+
+  it('the game\'s own launch cast is the Ranker\'s 50, so a pack without them plays them bare', async () => {
+    vi.stubEnv('VITE_FARM_STORY', '')
+    serveRelease()
+    const pack = await loadStoryPack()
+    expect(pack.cast.umas.map((u) => u.characterId)).toEqual([...LAUNCH_CAST])
+    expect(pack.cast.umas.every((u) => Object.keys(u).length === 1)).toBe(true)
   })
 })

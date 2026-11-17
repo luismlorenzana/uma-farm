@@ -2,11 +2,12 @@
 // `/api/content/story…` (`delivery.ts`: the index fresh, each file verified by hash and cached, the last index offline),
 // with master data's placeholders (`storyOf`): each character's default outfit and her line from her stats. When farm-api
 // serves no pack at all (a 404 for `story.json`: nothing published yet, or no `content/story-release/` on the dev server),
-// the game plays with no pack: master data's first five on placeholders, so a farm always opens and plays whole. The
+// the game plays with no pack, on placeholders, so a farm always opens and plays whole. Either way the cast is the launch
+// cast's 50 (`launchCast`, F96): the story's entry for each, else a bare one. The
 // invented stand-in is the tests' only (`VITE_FARM_STORY=stand-in`, Vitest's): no production build holds it
 // (`scripts/check-size.mjs`'s `DEV_ONLY_MODULES`). Loaded on demand, with the pack, so none of it reaches the initial JS.
 import {
-  birthdaysOf, castEntry, festivalsOf, isCastId, isSister, masterCastFrom, outfitOf, sisterNameOf, speakerId, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit,
+  birthdaysOf, castEntry, festivalsOf, isCastId, isSister, LAUNCH_CAST, launchCast, masterCastFrom, outfitOf, sisterNameOf, speakerId, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit,
   type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
@@ -26,12 +27,15 @@ let birthdays: MasterView['birthdays'] = new Map()
 /** The story the game plays: the release farm-api serves, or no pack when it serves none, with master data's
  * placeholders. Both wait for master data, as the boot does. A shipped release new to this device waits for the
  * morning's "New story arrived" (`news.ts`). In the tests, the invented stand-in alone. */
-export async function loadStoryPack(): Promise<StoryPack> {
+/** The story pack the game plays: the released one (else none), with master data's placeholders, its cast kept to the
+ * launch cast (`launch`, the Ranker's Tier 1–5; the tests name their own). */
+export async function loadStoryPack(launch: readonly string[] = LAUNCH_CAST): Promise<StoryPack> {
   if (import.meta.env.DEV && import.meta.env.VITE_FARM_STORY === 'stand-in') return storyPackFrom(STAND_IN_FILES)
   const arrived = (index: { number?: number }) => { if (index.number) keepArrived({ number: index.number }) }
   const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null, arrived }), masterReady()])
   birthdays = view.birthdays
-  return storyOf(pack, masterCast(view))
+  // The launch cast (F96): the game's Umas are the Ranker's Tier 1–5, whatever else the story holds.
+  return launchCast(storyOf(pack, masterCast(view)), launch)
 }
 
 /** The special days: the year's festivals (the story's) and the cast's birthdays (her cast entry's, else master data's). */
