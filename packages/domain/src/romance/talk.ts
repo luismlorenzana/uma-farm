@@ -3,7 +3,7 @@
 //   her greeting   from her bible's sets (`greetings`): on her birthday, her birthday's alone (when it holds lines);
 //                  otherwise one drawn from every set that applies now, their lines together:
 //                  - the place where you're talking, `places.<id>`: her location in town (else `places.town`), or the
-//                    farm's place where she works today (her board's first task's) or lives (the Dorm);
+//                    farm's place where she works today (her board's first task's);
 //                  - the season's;
 //                  - the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after
 //                    a night in with her or once she's tonight's companion.
@@ -40,16 +40,15 @@ export function talkHour(save: Pick<SaveV4, 'today' | 'homestead'>, id: string):
   return evenings.length > 0 ? 'evening' : 'morning'
 }
 
-/** The farm's place where she is by day: her work board's first task's place (a farmhand's), else the Dorm when she
- * lives there; null for neither (a spouse in her house). */
-export function farmPlaceOf(save: Pick<SaveV4, 'roster' | 'dorm'>, id: string): string | null {
+/** The farm's place where she is by day: her work board's first task's place (a farmhand's); null with none (a spouse
+ * in her house, or a farmhand with an empty board). */
+export function farmPlaceOf(save: Pick<SaveV4, 'roster'>, id: string): string | null {
   const task = save.roster[id]?.farmhand !== undefined ? save.roster[id]?.tasks?.[0] : undefined
-  if (task) return taskPlace(task)
-  return save.dorm.home.includes(id) ? 'dorm' : null
+  return task ? taskPlace(task) : null
 }
 
 /** Where you'd talk with her now (`whereYouMeet`): on the farm at her farm place, or in town at her location today. */
-export function talkAt(save: Pick<SaveV4, 'calendar' | 'roster' | 'dorm' | 'love' | 'today' | 'homestead'>, pack: SchedulePack, id: string): TalkAt {
+export function talkAt(save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today' | 'homestead'>, pack: SchedulePack, id: string): TalkAt {
   const meet = whereYouMeet(save, pack, id)
   const hour = talkHour(save, id)
   return meet.farm ? { place: farmPlaceOf(save, id), town: false, hour } : { place: meet.at, town: meet.at !== null, hour }

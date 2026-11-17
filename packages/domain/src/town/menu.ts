@@ -8,11 +8,11 @@
 //   give a gift          1     met: once a day, one good from the Warehouse
 //   ask her out          2     her evening: a hangout with a friend (Friendship 3), a date with a sweetheart (Romance 1)
 //                              or a spouse; one evening a day across everyone
-//   invite her to work   1     a friend (Friendship 3), once: she's a farmhand, on the farm by day
+//   invite her to work   1     a friend (Friendship 3), once: she's a farmhand, on the farm on her farm days
 //   her event            1     met, when it's Ready (a special day's event actions first)
 //
 // **Where you meet her:** you talk with her, give her a gift, ask her out and invite her to work where she's in front of
-// you: on the farm when she lives there or works it by day, else in town where she is today, once you've gone into town
+// you: on the farm when she lives there (a spouse in her room) or it's her farm day, else in town where she is today, once you've gone into town
 // (`whereYouMeet`, `town.ts`). Her profile follows the same rule; her Ready event plays from anywhere.
 import { actionCost, actionsLeft, canSpendForEvent, type ActionId, type SpecialDays } from '../farm/actions'
 import { goodOf, isSeedId } from '../goods/ids'
@@ -49,7 +49,7 @@ export const MENU_RULES: readonly { id: MenuItemId; label: string; action: Actio
     id: 'evening', label: 'Ask her out', action: 'hangout',
     when: `Her evening, its play and her scene: a hangout with a friend (Friendship ${HANGOUT_FROM} and up), a date with a sweetheart (Romance ${DATE_FROM} and up) or a spouse. One evening a day across everyone`,
   },
-  { id: 'work', label: 'Invite her to work', action: 'invite', when: `A friend (Friendship ${FRIEND_FROM} and up), once: she’s a farmhand from today, on the farm by day` },
+  { id: 'work', label: 'Invite her to work', action: 'invite', when: `A friend (Friendship ${FRIEND_FROM} and up), once: she’s a farmhand from today, on the farm on her farm days (the days her town schedule leaves free)` },
   { id: 'event', label: 'Her event', action: 'event', when: 'Met, when her next event is Ready; a special day’s event actions pay first' },
 ]
 const LABEL = new Map(MENU_RULES.map((r) => [r.id, r.label]))

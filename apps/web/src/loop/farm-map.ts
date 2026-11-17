@@ -32,11 +32,12 @@ const LOTS_FROM = FIELD.col + FIELD.cols + 1
 /** A lot: two by two. */
 const LOT = 2
 
-/** The farm's places by lot column, three to a column, top to bottom: the yard, then the stations, the Gate's row, the
+/** The farm's places by lot column, three to a column, top to bottom: the yard (the bin and the Warehouse: the retired
+ * Dorm's lot under them stays open ground), then the stations, the Gate's row, the
  * ranch, the mine's and the quarry's. The homestead's houses take their own columns after the yard. The town's places
  * (the shop, the festival ground, the expedition post, the town itself) are in town, down the road. */
 export const LOT_COLUMNS: readonly (readonly FarmPlaceId[])[] = [
-  ['bin', 'warehouse', 'dorm'],
+  ['bin', 'warehouse'],
   ['mill', 'sawmill', 'smokehouse'],
   ['gate', 'board', 'dock'],
   ['coop', 'barn', 'kitchen'],
@@ -66,7 +67,7 @@ export function mapLots(shown: readonly HomesteadPlace[]): { lots: Lot[]; road: 
 
 /** The places whose screens have landed, each with where a tap on it goes: the field (its own screen) and the bin and
  * shop (their sheets over the farm) and the Warehouse; the Kitchen (its sheet); the woods' edge, the pond's edge, the five stations, the Coop and
- * the Barn, the Mine and the Quarry (their menus, in the side panel); the Dorm (its page), the Gate (its quick look, the
+ * the Barn, the Mine and the Quarry (their menus, in the side panel); the Gate (its quick look, the
  * visitor waiting), the Dock (its quick look, with the Boat to build) and the Town (its screen). Until then a place shows
  * "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
@@ -86,7 +87,6 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['bin', '/?sheet=bin'],
   ['shop', '/?sheet=shop'],
   ['warehouse', '/warehouse'],
-  ['dorm', '/dorm'],
   ['gate', '/?peek=gate'],
   ['dock', '/?peek=dock'],
   ['town', '/town'],

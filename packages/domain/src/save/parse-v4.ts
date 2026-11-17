@@ -2,7 +2,7 @@
 // keys (an older save's `start`, `visitors`, `work`, a roster Uma's `affinity` among them) are refused; roster keys are character ids by form,
 // or a sister's `s<outfitId>` (the API has no story pack or master data): the roster is everyone you've met, her `joined`
 // the day you met her; `love` holds exactly the roster's keys, each in range; `memories` and
-// `arrivals` name roster Umas; the farmer's name is empty or within its rule; the Dorm is on its eight levels. Each
+// `arrivals` name roster Umas; the farmer's name is empty or within its rule; the retired Dorm keeps its level, and loading clears who was home and its swaps. Each
 // part of the romance adds the checks for what it fills. Today's evenings fill the day's slots (one, two on days
 // divisible by 4 from 10 married, and festival night once at most: the story says which days are festivals) with the
 // evening kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game. The
@@ -333,17 +333,12 @@ function parseHomestead(value: unknown, path: string, today: number, roster: Rea
   return { houses, tonight, alone, slept, furniture, married, finale, ...(companion === undefined ? {} : { companion }) }
 }
 
-/** Who lives where: no house holds more residents than its rooms; a spouse in a house has no Dorm
- * bed (not home, not in a swap); her room tonight is hers, a spouse in tonight's house; the married count the night saw
+/** Who lives where: no house holds more residents than its rooms; her room tonight is hers, a spouse in tonight's house; the married count the night saw
  * is no more than the spouses now. */
-function parseRooms(save: Pick<SaveV5, 'love' | 'dorm' | 'homestead'>, path: string): void {
+function parseRooms(save: Pick<SaveV5, 'love' | 'homestead'>, path: string): void {
   save.homestead.houses.forEach((house, i) => {
     if (residentsOf(save, i).length > roomsOf(house)) fail(`${path}.homestead.houses.${i}`, `expected at most ${roomsOf(house)} residents`)
   })
-  for (const [id, love] of Object.entries(save.love)) {
-    if (love.house === undefined) continue
-    if (save.dorm.home.includes(id) || save.dorm.swaps.some((s) => s.in === id)) fail(`${path}.love.${id}.house`, 'a spouse in her house has no Dorm bed')
-  }
   const { alone, tonight, married, companion } = save.homestead
   if (alone !== null && save.love[alone]?.house !== tonight) fail(`${path}.homestead.alone`, 'expected a spouse in tonight’s house')
   if (companion !== undefined && save.love[companion]?.house !== tonight) fail(`${path}.homestead.companion`, 'expected a spouse in tonight’s house')
@@ -534,7 +529,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love })),
     roster,
     love,
-    dorm: parseDorm(o.dorm, `${path}.dorm`, ids, buildings.dorm),
+    dorm: parseDorm(o.dorm, `${path}.dorm`, buildings.dorm),
     items: parseWarehouse(o.items, `${path}.items`, isStockId),
     bin: parseWarehouse(o.bin, `${path}.bin`, isGoodOrRingId),
     fields: parseFields(o.fields, `${path}.fields`),

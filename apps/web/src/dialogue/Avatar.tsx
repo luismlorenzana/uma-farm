@@ -1,5 +1,5 @@
 // The avatar: an Uma's small face wherever one shows as an avatar (the town's map, who's here, its keepers and People;
-// the calendar; her profile, its ties and the Hearts list; the work board; the Dorm; Tonight and the evenings; the
+// the calendar; her profile, its ties and the Hearts list; the work board; Tonight and the evenings; the
 // household; the farm map's houses; a scene's guests; the pair talks; the memories). One component, at uma-kit's
 // FaceTile's sizes:
 //   - a rounded square (`rounded-avatar`: its corners 18% of its side, at any size), never a circle;

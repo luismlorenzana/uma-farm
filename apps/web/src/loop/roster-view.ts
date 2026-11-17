@@ -4,10 +4,10 @@
 // Uma picker (the Fields' tender, the jobs, the swaps) read these. They cover everyone you've met, on the farm or in town. Her
 // favourite line is the story pack's. Pure but for the pack, which boot has loaded before any screen.
 import {
-  atHome, farmHome,
+  atHome, onFarmToday,
   ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteOf, FAVOURITE_ACTIVITIES,
   pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
-  type Activity, type RosterUma, type FarmSave, type StoryPack, type Talents, type TalentStep,
+  type Activity, type RosterUma, type FarmSave, type SchedulePack, type StoryPack, type Talents, type TalentStep,
 } from '@farm/domain'
 import { storyPack } from '../story/story'
 import type { UmaPickerRow, UmaPickerSort } from '@luismlorenzana/uma-kit/album'
@@ -20,8 +20,9 @@ export interface LoopUma {
 }
 
 export interface RosterView {
+  /** The Umas on the farm today: the spouses in their rooms, and the farmhands on their farm day. */
   home: LoopUma[]
-  /** Umas you've met who live in town. */
+  /** Umas you've met who are in town today. */
   away: number
 }
 
@@ -41,10 +42,14 @@ export function bestRank(uma: Pick<RosterUma, 'ranks'>): string {
   return rank === 0 && points === 0 ? RANKS[0] : `${RANKS[rank]} · ${ACTIVITY_NAMES[best]}`
 }
 
-export function rosterView(save: FarmSave): RosterView {
+/** Whether she's on the farm today (the pack reads a farmhand's farm days; without it, only a spouse in her room is). */
+const hereToday = (save: FarmSave, pack: SchedulePack | null, id: string): boolean => (pack ? onFarmToday(save, pack, id) : atHome(save, id))
+
+export function rosterView(save: FarmSave, pack: SchedulePack | null = storyPack()): RosterView {
+  const home = Object.keys(save.roster).filter((id) => hereToday(save, pack, id)).sort((a, b) => Number(a) - Number(b))
   return {
-    home: farmHome(save).flatMap((id) => (save.roster[id] ? [{ outfitId: id, rank: bestRank(save.roster[id]) }] : [])),
-    away: Object.keys(save.roster).length - farmHome(save).length,
+    home: home.map((id) => ({ outfitId: id, rank: bestRank(save.roster[id]!) })),
+    away: Object.keys(save.roster).length - home.length,
   }
 }
 
@@ -104,7 +109,7 @@ export function umaRows(save: FarmSave, ids: readonly string[], names: ReadonlyM
     const favourite = story ? favouriteOf(story, id) : null
     const row: LoopUmaRow = {
       id, name, releasedAt: base?.releasedAt ?? '', level: null, search: name.toLowerCase(), facets: {}, sorts: {},
-      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: atHome(save, id), practice: uma.practice, farmhand: uma.farmhand ?? null,
+      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: hereToday(save, story, id), practice: uma.practice, farmhand: uma.farmhand ?? null,
     }
     const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [], where: [row.home ? 'home' : 'away'] }
     for (const a of ACTIVITIES) {

@@ -35,7 +35,7 @@ function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
   return {
     ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() },
-    dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, items: { 'seed-carrot': [9, 0, 0, 0, 0] },
+    items: { 'seed-carrot': [9, 0, 0, 0, 0] },
   }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

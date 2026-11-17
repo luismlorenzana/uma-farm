@@ -1,4 +1,4 @@
-// Food: who eats (the farmer, everyone on the farm, the farmhands who work), the pantry and its three days, takeout at
+// Food: who eats (the farmer, the spouses in their rooms, the farmhands on their farm day), the pantry and its three days, takeout at
 // 15g a meal charged with the upkeep from the first night, a short night's takeout owed like upkeep, the farmer's batch
 // and its refusals, the plain rule's goods, a ★2+ meal's well fed without stacking, the Cook task's batches by her
 // Cooking, a household meal's batch, and the save's pantry, grown in place. Invented ids; no story pack.
@@ -29,10 +29,10 @@ function farm(gold = 500, items: SaveV4['items'] = {}, day = 1): SaveV4 {
   const save = newSave('food', AT)
   return { ...save, farmer: { name: 'Robin' }, gold, items: { ...save.items, ...items }, calendar: { day } }
 }
-/** Umas home in the Dorm. */
+/** Spouses home on the farm, in the Farmhouse's two rooms. */
 const home = (save: SaveV4, ids: string[]): SaveV4 => ({
-  ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) }, love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, newLove()])) },
-  dorm: { ...save.dorm, home: [...save.dorm.home, ...ids] },
+  ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
+  love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1, house: 0 }])) },
 })
 /** Friends from town invited to work on day 1. */
 const hands = (save: SaveV4, ids: string[]): SaveV4 => ({
@@ -51,13 +51,15 @@ describe('who eats, and takeout', () => {
     expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 
-  it('feeds everyone living on the farm and every farmhand who works tonight; one in town with nothing to do doesn\'t eat', () => {
-    // Two Umas home; two farmhands from town: A forages, B has no tasks.
+  it('feeds the spouses living on the farm and every farmhand on her farm day, with work or without', () => {
+    // Two spouses home; two farmhands from town: A forages, B has no tasks. With no pack to read their schedules, every
+    // day is both farmhands' farm day (`farm-days.test.ts` has a town day's).
     const save = setTasks(hands(home(farm(), [C, '404']), [A, B]), A, [{ kind: 'forage', area: 'woods' }])
     const morning = night(save)
-    // The farmer, two home and A: four mouths, eight meals.
-    expect(money(morning)).toContainEqual({ kind: 'takeout', meals: 8, paid: 120, due: 120 })
-    expect(mealsNeeded(save)).toBe(8)
+    // The farmer, two home, A and B: five mouths, ten meals; the two spouses' upkeep, and none for the farmhands.
+    expect(money(morning)).toContainEqual({ kind: 'takeout', meals: 10, paid: 150, due: 150 })
+    expect(money(morning)).toContainEqual({ kind: 'upkeep', paid: 20, due: 20 })
+    expect(mealsNeeded(save, null)).toBe(10)
   })
 
   it('owes the takeout it can\'t pay, like upkeep: a short night counted, half pace from the second', () => {
@@ -102,7 +104,7 @@ describe('the farmer\'s batch', () => {
 
   it('saves gold: a ★1 batch of two Button Mushrooms (60g at the bin) is 90g of takeout, three a night or one for three nights', () => {
     const save = home(farm(500, { 'button-mushroom': [2, 0, 0, 0, 0] }), [A, B])
-    // Shipped and takeout bought: the bin pays 60g, three mouths eat 90g of takeout, two Umas' upkeep is 20g.
+    // Shipped and takeout bought: the bin pays 60g, three mouths eat 90g of takeout, two spouses' upkeep is 20g.
     const bought = night(ship(save, 'button-mushroom', 1, 2))
     expect(bought.gold).toBe(500 + 60 - 90 - 20)
     // Cooked: the six meals are tonight's, and nothing is bought.
@@ -179,7 +181,7 @@ describe('well fed from a good meal', () => {
 })
 
 describe('the Cook task', () => {
-  /** A cook (A) and a forager (B), both from town; two Umas home. */
+  /** A cook (A) and a forager (B), both from town, on their farm day; two spouses home. */
   const kitchen = (items: SaveV4['items']): SaveV4 => {
     const save = hands(home(farm(500, items, 2), [C, '404']), [A, B])
     return setTasks(setTasks(save, A, [{ kind: 'cook' }, { kind: 'forage', area: 'woods' }]), B, [{ kind: 'forage', area: 'woods' }])
@@ -191,15 +193,15 @@ describe('the Cook task', () => {
     const save = kitchen({ carp: [10, 0, 0, 0, 0] })
     // Five mouths: the farmer, two home, two farmhands; ten meals. A D talent starts her at Cooking 2: two batches of 7,
     // from four carp; her third action forages.
-    expect(mealsNeeded(save)).toBe(10)
+    expect(mealsNeeded(save, null)).toBe(10)
     expect(aptitudeOf(save.roster[A]!, 'cook', () => 3).level).toBe(2)
     const { lines, worked } = handsTonight(save, save, talentsD, null)
     expect(lines[0]).toMatchObject({ id: A, spent: 3, done: { cook: 14, forage: 1 } })
     expect(worked).toContainEqual({ outfitId: A, place: 'kitchen' })
     const morning = night(save)
-    // No takeout: only the four Umas' upkeep.
-    expect(money(morning)).toEqual([{ kind: 'pantry', meals: 10, spoiled: 0, fed: 0 }, { kind: 'upkeep', paid: 40, due: 40 }])
-    expect(morning.gold).toBe(460)
+    // No takeout: only the two spouses' upkeep (the farmhands' cost is their meals).
+    expect(money(morning)).toEqual([{ kind: 'pantry', meals: 10, spoiled: 0, fed: 0 }, { kind: 'upkeep', paid: 20, due: 20 }])
+    expect(morning.gold).toBe(480)
     expect(morning.items.carp).toEqual([6, 0, 0, 0, 0])
     // Four keep for tomorrow night.
     expect(morning.farm.pantry).toEqual([{ day: 2, stars: 1, meals: 4 }])

@@ -4,7 +4,7 @@
 // profile. The invented stand-in
 // pack (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { homesteadShown, inviteToFarm, meet, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { homesteadShown, meet, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -39,7 +39,7 @@ const { setAskBeforeEnd } = await import('./ask')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const DAY = 30
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
@@ -52,6 +52,8 @@ function farm(love: Record<string, Partial<Love>> = {}, more: Partial<SaveV4> = 
   const loves = Object.fromEntries(Object.entries(love).map(([id, l]) => [id, { ...joined.love[id]!, ...l }]))
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, ...loves }, ...more }
 }
+/** Farmhands from day 1: on the farm on their farm days (day 30, Summer 6: 9000001's and 9000002's, not 9000003's). */
+const hands = (s: SaveV4, ids: readonly string[]): SaveV4 => ({ ...s, roster: { ...s.roster, ...Object.fromEntries(ids.map((id) => [id, { ...s.roster[id]!, farmhand: 1 }])) } })
 /** 9000001 married on day 2 and housed in the Farmhouse. */
 const wedOne = (love: Partial<Love> = {}): SaveV4 => moveSpouse(farm({ [ONE]: { stage: 'spouse', level: 0, points: 0, wed: 2, ...love } }), ONE, 0)
 
@@ -134,7 +136,7 @@ describe('the homestead on the map', () => {
     expect(places[0]).toMatchObject({ residents: [ONE], rooms: '1/2', to: '/?sheet=homestead&house=0', label: 'Farmhouse, 1 of 2 rooms: Stand-in 1' })
     // Its column stands after the yard's.
     const { lots } = mapLots(shown)
-    expect(lots.slice(3, 6).map((l) => (l.kind === 'house' ? l.place.id : l.id))).toEqual(['farmhouse', 'house-1', 'house-2'])
+    expect(lots.slice(2, 5).map((l) => (l.kind === 'house' ? l.place.id : l.id))).toEqual(['farmhouse', 'house-1', 'house-2'])
     // Before the first wedding the lot waits; with two houses built and one married the map holds one homestead column:
     // the second's lots show from three married.
     expect(houseLot(farm(), homesteadShown(farm())[1]!)).toMatchObject({ name: 'House 1', locked: true, label: 'House 1, locked: Opens with your first wedding' })
@@ -194,13 +196,13 @@ describe('the homestead\'s sheet', () => {
   })
 
   it('cooks a batch in the farmhouse kitchen: the pantry, tonight\'s takeout, two goods picked, six meals for an action', async () => {
-    // The three home and the farmer: eight meals tonight, none in the pantry.
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, { items: { carp: [3, 0, 0, 0, 0], salmon: [0, 2, 0, 0, 0], 'pine-log': [5, 0, 0, 0, 0] } }) })
+    // Two farmhands on their farm day and the farmer: six meals tonight, none in the pantry. The third is in town today.
+    useGame.setState({ uid: 'u1', status: 'ready', save: hands(farm({}, { items: { carp: [3, 0, 0, 0, 0], salmon: [0, 2, 0, 0, 0], 'pine-log': [5, 0, 0, 0, 0] } }), [ONE, TWO, THREE]) })
     await render(<p />, '/?sheet=homestead&house=0')
     await find('[data-kitchen]')
     expect($('[data-pantry]')?.textContent).toBe('Pantry · empty')
-    expect($('[data-table]')?.textContent).toBe('Tonight · 4 at the table · 8 meals')
-    expect($('[data-takeout]')?.textContent).toBe('Takeout tonight · 8 meals · 120g')
+    expect($('[data-table]')?.textContent).toBe('Tonight · 3 at the table · 6 meals')
+    expect($('[data-takeout]')?.textContent).toBe('Takeout tonight · 6 meals · 90g')
     // Food only, the plain rule's two picked to start: two ★2 goods, whose meals leave everyone well fed.
     expect($$('[data-food-key]').map((b) => b.dataset.foodKey)).toEqual(['carp@1', 'salmon@2'])
     expect($('[data-batch]')?.textContent).toBe('6 meals ★2 from Salmon and Salmon: well fed')
@@ -214,7 +216,7 @@ describe('the homestead\'s sheet', () => {
     expect(save().items).toMatchObject({ carp: [2, 0, 0, 0, 0], salmon: [0, 1, 0, 0, 0] })
     expect(save().today.actions).toBe(1)
     await until(() => $('[data-pantry]')?.textContent === 'Pantry · 6 meals')
-    expect($('[data-takeout]')?.textContent).toBe('Takeout tonight · 2 meals · 30g')
+    expect($('[data-takeout]')?.textContent).toBe('The pantry covers tonight')
   })
 })
 
@@ -282,7 +284,8 @@ describe('married life: the night\'s companion and the household\'s meals', () =
   }, 20_000)
 
   it('cooks a meal from the homestead: an action, everyone at the table fed and pleased, and her line as you sit down', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: wedOne() })
+    // The household: the spouse in her room, and every farmhand.
+    useGame.setState({ uid: 'u1', status: 'ready', save: hands(wedOne(), [TWO, THREE]) })
     await render(<p />, '/?sheet=homestead')
     await find('[data-meals]')
     expect($('[data-action="cook-breakfast"]')?.textContent).toBe('Breakfast · 1')

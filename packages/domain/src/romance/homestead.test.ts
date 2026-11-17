@@ -39,24 +39,22 @@ const says = (steps: readonly Step[]): string[] => steps.flatMap((s) => ('say' i
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ story, birthdays: BIRTHDAYS })
 
-/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0, rich enough to build. */
+/** A named farm on `day`, the opening read and the stand-ins met (`joinCast`) at Friendship 0, rich enough to build. */
 function farm(day = 30, gold = 1_000_000): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day }, gold }
   const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
-/** A spouse married on `wed`, still in her Dorm bed. */
+/** A spouse married on `wed`, waiting for a room (living in town). */
 const spouse = (save: SaveV4, id: string, wed = 2, love: Partial<Love> = {}): SaveV4 => withLove(save, id, { stage: 'spouse', level: 0, points: 0, wed, ...love })
-/** `n` more invented spouses (9000004 on), married on day 1 in id order, each home in the Dorm (or away). */
-function more(save: SaveV4, n: number, from = 9000004, home = true): SaveV4 {
+/** `n` more invented spouses (9000004 on), married on day 1 in id order, each waiting for a room (living in town). */
+function more(save: SaveV4, n: number, from = 9000004): SaveV4 {
   const ids = Array.from({ length: n }, (_, i) => String(from + i))
   return {
     ...save,
     roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
     love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1 }])) },
-    dorm: { ...save.dorm, level: 8, home: [...save.dorm.home, ...(home ? ids : [])] },
-    buildings: { ...save.buildings, dorm: 8 },
   }
 }
 /** 9000001's bible with other wishes. */
@@ -119,11 +117,11 @@ describe('the houses', () => {
 })
 
 describe('rooms', () => {
-  it('gives her the Farmhouse at her wedding, at once: she leaves the Dorm, freeing her bed, and is still on the farm', () => {
+  it('gives her the Farmhouse at her wedding, at once: she moves onto the farm', () => {
     const save = farm(30)
+    expect(onFarm(save, ONE)).toBe(false)
     const wed = playWedding(save, NO_WISHES)
     expect(wed.love[ONE]!.house).toBe(0)
-    expect(wed.dorm.home).not.toContain(ONE)
     expect(residentsOf(wed, 0)).toEqual([ONE])
     // On the farm: jobs and tending (`onFarm`), Ready and evenings (home).
     expect(onFarm(wed, ONE)).toBe(true)
@@ -157,12 +155,13 @@ describe('rooms', () => {
     expect(wishesOf(PACK, ONE)).toEqual(['own-house', 'birthday-alone'])
   })
 
-  it('keeps her Dorm bed with no room free ("Needs a room"), and moves her in the morning after a house is built', () => {
+  it('has her live in town with no room free ("Needs a room"), and moves her in the morning after a house is built', () => {
     let save = more(spouse(spouse(farm(30), TWO, 2), THREE, 3), 0)
     save = moveSpouse(moveSpouse(save, TWO, 0), THREE, 0)
     const wed = playWedding(save, NO_WISHES)
     expect(wed.love[ONE]!.house).toBeUndefined()
-    expect(wed.dorm.home).toContain(ONE)
+    expect(onFarm(wed, ONE)).toBe(false)
+    expect(wed.dorm).toEqual(save.dorm)
     expect(homeOf(wed, NO_WISHES, ONE)).toMatchObject({ needs: true })
     expect(waitingForRooms(wed)).toEqual([ONE])
     // Nothing free overnight: she waits.
@@ -172,7 +171,7 @@ describe('rooms', () => {
     expect(built.love[ONE]!.house).toBeUndefined()
     const next = runNight(built, context(NO_WISHES))
     expect(next.love[ONE]!.house).toBe(1)
-    expect(next.dorm.home).not.toContain(ONE)
+    expect(onFarm(next, ONE)).toBe(true)
     expect(next.summary!.hearts).toContainEqual({ kind: 'moved', id: ONE, house: 1 })
     expect(parseSaveV5(json(next))).toEqual(next)
   })
@@ -188,19 +187,19 @@ describe('rooms', () => {
     expect(swapped.gold).toBe(gold)
     expect(() => swapRooms(save, ONE, TWO)).toThrow('They share a house already.')
     expect(() => moveSpouse(farm(), ONE, 0)).toThrow('Only a spouse has a room.')
-    const leaving = { ...spouse(farm(), ONE), dorm: { ...farm().dorm, swaps: [{ out: ONE, in: '9000009' }] } }
-    expect(() => moveSpouse(leaving, ONE, 0)).toThrow('She leaves tomorrow.')
+    // A spouse waiting for a room moves in from town.
+    expect(moveSpouse(spouse(farm(), ONE), ONE, 0).love[ONE]!.house).toBe(0)
   })
 
-  it('refuses a full house\'s extra resident, a housed spouse in the Dorm and a house for anyone but a spouse', () => {
+  it('refuses a full house\'s extra resident and a house for anyone but a spouse', () => {
     const save = moveSpouse(moveSpouse(spouse(spouse(spouse(farm(), ONE), TWO, 3), THREE, 4), ONE, 0), TWO, 0)
     const crowded = json(save)
     crowded.love[THREE]!.house = 0
-    crowded.dorm.home = crowded.dorm.home.filter((id) => id !== THREE)
     expect(() => parseSaveV5(crowded)).toThrow('save.homestead.houses.0: expected at most 2 residents')
+    // A spouse in her house with a Dorm bed (a save from before the Dorm retired) loads, the bed cleared.
     const bed = json(save)
     bed.dorm.home.push(ONE)
-    expect(() => parseSaveV5(bed)).toThrow('save.love.9000001.house: a spouse in her house has no Dorm bed')
+    expect(parseSaveV5(bed).dorm.home).toEqual([])
     const friend = json(farm())
     friend.love[ONE]!.house = 0
     expect(() => parseSaveV5(friend)).toThrow('save.love.9000001.house: only a spouse')
@@ -288,8 +287,9 @@ describe('the house\'s morning', () => {
     expect(breakfastTomorrow(save, 0)).toBe(true)
     expect(sleepRows(save, NO_WISHES, BIRTHDAYS)[0]).toMatchObject({ house: 0, residents: [ONE, TWO], breakfast: true, nights: null })
     const next = runNight(save, context(NO_WISHES))
-    expect(next.summary!.hearts.find((h) => h.kind === 'house')).toMatchObject({ breakfast: 3 })
-    expect([ONE, TWO, THREE].map((id) => next.roster[id]!.wellFed)).toEqual([1, 1, 1])
+    // It feeds those who live on the farm: the two in the Farmhouse, not 9000003 in town.
+    expect(next.summary!.hearts.find((h) => h.kind === 'house')).toMatchObject({ breakfast: 2 })
+    expect([ONE, TWO, THREE].map((id) => next.roster[id]!.wellFed)).toEqual([1, 1, 0])
     // A meal running (a reception today): no breakfast, no ☕.
     const fed = { ...save, today: { ...save.today, reception: 2 } }
     expect(breakfastTomorrow(fed, 0)).toBe(false)
@@ -349,14 +349,14 @@ describe('the house\'s morning', () => {
 
 describe('the household', () => {
   /** `n` married spouses, all invented, on day `day`, away (the Dorm holds 20). */
-  const marriedFarm = (n: number, day = 30) => more(farm(day), n, 9000004, false)
+  const marriedFarm = (n: number, day = 30) => more(farm(day), n, 9000004)
 
   it('announces each milestone once as the count passes it, gives the furniture at 5 and opens House 1 at 1', () => {
     const one = runNight(marriedFarm(1), context())
     expect(one.summary!.news).toContainEqual({ kind: 'household', married: 1 })
     expect(one.homestead).toMatchObject({ married: 1, furniture: [] })
     expect(runNight(one, context()).summary!.news.some((n) => n.kind === 'household')).toBe(false)
-    const five = householdNight(more(one, 4, 9000010, false))
+    const five = householdNight(more(one, 4, 9000010))
     expect(five.news).toEqual([{ kind: 'household', married: 5 }])
     expect(five.save.homestead.furniture).toEqual([null, null, null, null, null])
     const placed = placeFurniture(five.save, 0, 0)
@@ -370,7 +370,7 @@ describe('the household', () => {
   it('makes household scenes Ready from the morning after 5, 10 and 15, once each, never auto-played', () => {
     const four = runNight(marriedFarm(4), context())
     expect(householdReady(four)).toEqual([])
-    const five = runNight(more(four, 1, 9000020, false), context())
+    const five = runNight(more(four, 1, 9000020), context())
     expect(householdReady(five)).toEqual(['household:5'])
     const play = householdPlay(five, householdOf(PACK), 'household:5')!
     // Invented spouses without a beat say the game's one line, between the pack's open and close.
@@ -379,7 +379,7 @@ describe('the household', () => {
     const read = readHousehold(five, 'household:5')
     expect(householdReady(read)).toEqual([])
     expect(readHousehold(read, 'household:5')).toBe(read)
-    const fifteen = runNight(more(read, 10, 9000030, false), context())
+    const fifteen = runNight(more(read, 10, 9000030), context())
     expect(householdReady(fifteen)).toEqual(['household:10', 'household:15'])
     expect(parseSaveV5(json(fifteen))).toEqual(fifteen)
   })
@@ -394,7 +394,7 @@ describe('the household', () => {
   it('opens the finale once, the morning after the 20th wedding, then the Festival of Vows each later year', () => {
     const nineteen = runNight(marriedFarm(19, 50), context())
     expect(nineteen.homestead.finale).toBe(0)
-    const wed = more(nineteen, 1, 9000100, false)
+    const wed = more(nineteen, 1, 9000100)
     expect(householdReady(wed)).not.toContain('finale')
     const morning = runNight(wed, context())
     expect(marriedCount(morning)).toBe(FINALE_MARRIED)

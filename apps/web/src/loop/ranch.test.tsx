@@ -149,8 +149,9 @@ describe('the Mine', () => {
 
 describe('the work board', () => {
   it('sets a farmhand to the Coop\'s care and another to the Mine\'s face, and the morning reports their work', async () => {
+    // Spring 6: a farm day for both (the first is in town on 1, 4, 7 and 10, the second on 2, 5, 8 and 11).
     const base = farm()
-    useGame.setState({ save: { ...base, ranch: { animals: [{ id: 'chicken-1', kind: 'chicken', fondness: 0, fed: false, cared: false, ready: false }], silo: 20 } } })
+    useGame.setState({ save: { ...base, calendar: { day: 6 }, ranch: { animals: [{ id: 'chicken-1', kind: 'chicken', fondness: 0, fed: false, cared: false, ready: false }], silo: 20 } } })
     await render(<WorkBoard save={save()} />, '/book?task=81001')
     await click(await find('[data-add-task="81001"] [data-kind="care"]'))
     await click($('[data-add-task="81001"] [data-where="coop"]'))
@@ -165,11 +166,26 @@ describe('the work board', () => {
     await render(<WorkBoard save={save()} />, '/book')
     expect($('[data-hand="81001"] [data-task-words]')?.textContent).toBe('Care for animals · the Coop')
     expect($('[data-hand="81002"] [data-task-words]')?.textContent).toBe('Work a face · the Mine')
-    expect(await endTheDay(7)).toBe(true)
+    expect(await endTheDay(6)).toBe(true)
     const work = summaryParts(save().summary!).find((p) => p.section === 'work')!.lines.map((l) => l.text)
     expect(work[0]).toMatch(/· 2 of 3 actions · tended animals twice$/)
     expect(work[1]).toMatch(/· 3 of 3 actions · worked 3 faces · \+\d+ goods$/)
     expect(save().places.mine.deepest).toBe(1)
+  })
+
+  it('shows each farmhand\'s farm days, and on a town day "In town today · back …" with nothing tonight', async () => {
+    // Spring 7: the first is in town (her town days are 1, 4, 7 and 10), the second on the farm (hers, 2, 5, 8 and 11).
+    useGame.setState({ save: farm() })
+    await render(<WorkBoard save={save()} />, '/book')
+    await find('[data-hand="81001"]')
+    expect($('[data-hand="81001"] [data-farm-days]')?.textContent).toBe('Farm days · 2, 3, 5, 6, 8, 9, 11, 12')
+    expect($('[data-hand="81002"] [data-farm-days]')?.textContent).toBe('Farm days · 1, 3, 4, 6, 7, 9, 10, 12')
+    expect($('[data-hand="81001"] [data-in-town]')?.textContent).toBe('In town today · back Spring 8')
+    expect($('[data-hand="81001"] [data-tonight]')).toBeNull()
+    expect($('[data-hand="81001"] [data-actions]')).toBeNull()
+    expect($('[data-hand="81002"] [data-in-town]')).toBeNull()
+    expect($('[data-hand="81002"] [data-tonight]')?.textContent).toBe('Tonight · No tasks: set her tasks')
+    expect($('[data-hand="81002"] [data-actions]')?.dataset.actions).toBe('3')
   })
 
   it('words a hungry night as a warning', () => {

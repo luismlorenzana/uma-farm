@@ -1,16 +1,16 @@
 // The loop's actions on the day: End the day and dismiss the morning; the day's actions: a plot cleared, a tile cleared,
 // tilled, planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
 // town; the ranch's feeding, care, collecting and grass, the rancher's animals and fodder; a dig's face and its stairs;
-// the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
-// read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; her illustrations seen; the chat and
+// the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the scenes,
+// read once; the farmer's name, the opening, and meeting scenes; her illustrations seen; the chat and
 // the gift (an action each) and praise; the pair conversations read; and a farmhand's tasks on the work board (free).
 // Each reads the save right before its rule runs (as
 // `edit`), commits it to the store and the device, and syncs; a refused rule throws its words. The night reads the
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
 // of the initial JS.
 import {
-  payBuild, borrowFor, repayLoan, buyDorm, cancelSwap, swapDorm, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
-  touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
+  payBuild, borrowFor, repayLoan, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
+  touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, upgradeStation, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
@@ -163,15 +163,6 @@ export const borrowAndBuild = (project: string, name = '') => change((s) => borr
 /** At the mayor's office, in town: repays a loan in full. */
 export const repayTheLoan = (project: string) => change((s) => repayLoan(s, project))
 
-// --- The roster ----------------------------------------------------------------------------------------------
-
-/** Buys the Dorm's next level: the gold now, the beds tomorrow. */
-export const buyDormLevel = () => change(buyDorm)
-/** Swaps an Uma home for one living in town, arriving tomorrow. */
-export const swapUmas = (out: string, into: string) => change((s) => swapDorm(s, out, into))
-/** Calls off a swap: she stays. */
-export const cancelDormSwap = (out: string) => change((s) => cancelSwap(s, out))
-
 // --- The scenes -----------------------------------------------------------------------------------------------
 
 /** The opening played through or skipped: it goes in `diary.read`, once, a player's change. Nobody waits at the Gate:
@@ -181,9 +172,6 @@ export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
   if (!save || save.diary.read.includes(id)) return
   await change((s) => readScene(s, id))
 }
-
-/** Invite to the farm: one you've met who lives in town moves into a free Dorm bed now. */
-export const inviteHer = (id: string) => change((s) => inviteToFarm(s, id))
 
 /** A farmhand's tasks on the work board, in your order: free. */
 export const setHandTasks = (id: string, tasks: readonly FarmTask[]) => change((s) => setTasks(s, id, tasks))

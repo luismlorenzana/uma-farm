@@ -26,7 +26,7 @@ writing session ends with [the ship's routine](../story-pack.md#shipping-it): st
 
 **She's where you can find her** (F88): only your cast lives in town, with the town's people at their posts. Every Uma
 keeps a fixed schedule, hers from the story or the default (her favourite spot every third day), shown on her profile
-("Where to find her") and on the calendar's days; nobody appears at random. A farmhand is on the farm by day, you can
+("Where to find her") and on the calendar's days; nobody appears at random. A farmhand is on the farm on her farm days (F95), you can
 ask an Uma you meet in town out for an evening, and every default gift can be had in the first Spring. Faces are
 rounded squares cut from her portraits in the season's outfit ([her picture](../game-mechanics.md#her-picture)).
 
@@ -37,7 +37,7 @@ it's yours at once, wild ground with no upkeep. A farmhand's field task names it
 shows who works it ([the field's plots](../game-mechanics.md#the-fields-plots),
 [the field's screen](../game-mechanics.md#the-fields-screen)).
 
-**Everyone eats, from day one** (F90): the farmer, everyone living on the farm and every farmhand who works that day eat
+**Everyone eats, from day one** (F90): the farmer, every spouse in her room and every farmhand on her farm day eat
 two meals a night, from the pantry first; what it's short is takeout, 15g a meal, charged with the upkeep, so a new
 farm's first morning says "Takeout · 30g". Cook a batch in the farmhouse kitchen (the homestead's sheet, or **Kitchen ›**
 in the Book): an action, two goods of food, six meals that keep three days, 90g of takeout saved. A household meal cooks
@@ -51,8 +51,8 @@ cooking saves](../game-mechanics.md#what-food-costs-and-what-cooking-saves)).
 then thin ones (half), and its panel says "3 full hauls left", then **Thin · half hauls**; and a good shipped past a
 crate of 50 in a night eases −10% a crate, down to half, recovering a step a night: the bin and the Warehouse say
 **Eased −20%**. Well fed keeps its extra action but no longer lifts a haul's count. A simulation plays 10, 20 and 50
-Umas over four years: 10 and 20 are fully in real jobs, and 50 run past the farm's jobs by about ten Umas, the work
-Phase 2's employers bring ([the farm at scale](../game-mechanics.md#the-farm-at-scale-10-20-and-50-umas),
+Umas over four years: on their farm days (F95) two thirds of them are on the farm a day, all in real jobs with real
+work still waiting, 50 included ([the farm at scale](../game-mechanics.md#the-farm-at-scale-10-20-and-50-umas),
 [thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day), [the market](../game-mechanics.md#the-market-feels-a-flood),
 [a station's levels](../game-mechanics.md#its-levels)).
 
@@ -93,15 +93,19 @@ day](../game-mechanics.md#talk-that-knows-the-day), [her occasions](../story-pac
 Only they are in town, on People, met, on the calendar and in the romance; the story's other Umas stay in the pack for
 a later release pack, and the town's people keep their posts ([the launch cast](../game-mechanics.md#the-launch-cast)).
 
-**Now: farm days, and home after the wedding** (the owner, 2026-11-17; F95): Umas live on the farm only once married,
-in a room; a farmhand comes to work on the days her town life leaves free and eats her meals there; the Dorm retires.
-Then the sea and expeditions (Phase 2.4), its packet numbered from F97 ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
+**Farm days, and home after the wedding** (F95): nobody lives on the farm until she marries you, and then she has her
+room in a house ("Needs a room" in town until one frees). A farmhand comes to work on her farm days, the days her town
+life leaves free (eight of each season's twelve on the default schedule): there she's in front of you, works overnight
+and eats her two meals, her only cost; on her town days she's at her place in town. Her profile's **Where to find her**
+and the Book's work board show her farm days ("In town today · back Spring 5"). The Dorm is retired: its page, its tile,
+Invite to the farm, beds, swaps and upkeep are gone, and your farm's Uma in the Dorm lives in town, everything else
+kept ([farmhands](../game-mechanics.md#farmhands), [the retired Dorm](../game-mechanics.md#the-retired-dorm)).
+
+**Now: the sea and expeditions** (Phase 2.4), its packet numbered from F97 ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
 
 ## Open packets
 
-| Packet | What | Who |
-|---|---|---|
-| [F95](tasks/F95-farm-days-and-home-after-the-wedding.md) | **Farm days, and home after the wedding:** farmhands on the farm on the days their town life leaves free, eating their meals there; only a spouse moves in, into a room; the Dorm retires | Claude |
+None open: the next, the sea and expeditions (Phase 2.4), is written from the roadmap as it starts, numbered from F97.
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
@@ -123,6 +127,7 @@ Not packets: each has a standing guide that changes as the game does.
 | **Eat on your phone:** read the morning's "Takeout" line, cook a batch on the Farmhouse's sheet, and set a farmhand to Cook on the Book's work board; tell me if takeout bites as it should | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Cook at the stove on your phone:** on the Farmhouse's sheet tap **At the stove · 1** and play the 30 seconds held sideways (tell me if the burners and the tickets are big enough for your thumb, and the timing feels fair); once the Farm Rank offers it, build the Kitchen, play its menu, serve the staff meal, and read the next morning's "Staff meal" line | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Enter the Cooking Contest on your phone,** on Autumn 10 with the Kitchen built: pick a dish and a cook, play the 60 seconds held sideways, read the cook's judging and the board, and the next morning see the Farm Rank's points; tell me if the rivals feel fair at your Farm Rank | [uma-farm.web.app](https://uma-farm.web.app) |
+| **See farm days on your phone:** open the Uma who lived in the Dorm: her profile says **Lives in town** with Where to find her; the farm map has no Dorm. Once you have a farmhand, the Book's work board shows her farm days | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play the whole story on your phone:** on a festival day open the calendar and play an Uma's **Play · 1** twice, her day's scene then its night's; on Spring 6 play her Blossom viewing; Chat with her on her profile and read her greeting and, some days, a small talk with your line under your name; give her a gift and read her own line. Tell me if the greeting and the small talk read right where you are | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Meet Tier 1's story on your phone:** open the game and see Account's **Story: Release 8, Nov 15, 2026**; the next morning opens with **New story arrived**. Then play, and meet them as they come | [uma-farm.web.app](https://uma-farm.web.app) |
@@ -137,7 +142,8 @@ Not packets: each has a standing guide that changes as the game does.
 - **Work at scale:** a station's level and loads, an area or a spot going thin after four hauls, and a good eased after a flood ([thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day), [the market](../game-mechanics.md#the-market-feels-a-flood)).
 - **The town map:** walk between places, see who's there now, and meet whoever you like by introducing yourself ([the town](../game-mechanics.md#the-town)).
 - **Her stages,** acquaintance to married: hangouts and dates at two actions, Dinner in town, A night in ([the Uma loop](../game-mechanics.md#the-uma-loop)).
-- **Farmhands:** invite a friend to work, set her tasks on the Book's work board, and watch her aptitudes rise ([farmhands](../game-mechanics.md#farmhands)).
+- **Farmhands:** invite a friend to work, set her tasks on the Book's work board, and watch her aptitudes rise; she comes on her farm days ([farmhands](../game-mechanics.md#farmhands)).
+- **Home after the wedding:** nobody lives on the farm until she marries you; the Dorm is retired ([the retired Dorm](../game-mechanics.md#the-retired-dorm)).
 - **Upkeep and loans:** the Book's money, and the mayor's office in town ([upkeep and loans](../game-mechanics.md#upkeep-and-loans)).
 - **Food:** the morning's "Takeout" and "From the pantry", the Farmhouse's kitchen, and Cook on the work board ([food](../game-mechanics.md#food)).
 - **The stove and the Kitchen:** At the stove in the Farmhouse's kitchen; the Kitchen from Farm Rank 3, its recipes at the shop, and the staff meal ([the Kitchen](../game-mechanics.md#the-kitchen)).

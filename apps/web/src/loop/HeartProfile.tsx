@@ -16,14 +16,13 @@
 // the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
 // old one comes back); "Needs a ring" links to the Forge's bench. One you've met who lives in town has, under her face,
 // **Where to find her** (today's place with Find her ›, and this season's days and places, her fixed schedule; a
-// farmhand on the farm by day, after her job), then **Invite to the farm**: she moves into a free Dorm bed at once; with
-// none free, "No bed free" and the Dorm. **Chapters**,
+// farmhand's farm days and town days), then "Lives in town" and that she moves to the farm after your wedding (a spouse
+// waiting for a room: once a room is free). **Chapters**,
 // under the Next card: her chapters (the pack's or the four defaults), the one she's in with its events played and to
 // come, a gate's words ("Opens when the Kitchen is built"), and what opens the next. Loaded on demand.
 import {
-  atHome, birthdaysOf, canAsk, galleryOf, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
+  atHome, birthdaysOf, canAsk, galleryOf, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
-import { inviteHer } from './actions'
 import { giveBetterRing } from './bench-actions'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -108,7 +107,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       <div className="sticky top-0 z-10 -mx-4 bg-panel px-4 pb-3" data-profile-sides>
         <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       </div>
-      {!atHome(save, id) && <InviteCard save={save} pack={pack} id={id} />}
+      {!atHome(save, id) && <TownCard save={save} pack={pack} id={id} />}
       {side === 'work'
         ? row && <WorkSide row={row} />
         : <HeartsSide save={save} pack={pack} id={id} card={card} nameOf={nameOf} />}
@@ -117,21 +116,13 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
 }
 
 /** She lives in town: **Where to find her** (today, and this season's days and places, from her fixed schedule; a
- * farmhand on the farm by day), then **Invite to the farm** while a bed is free (she moves in at once), else why not and
- * the Dorm. */
-function InviteCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: string }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const block = inviteBlock(save, id)
+ * farmhand's farm days and town days), then "Lives in town": she moves to the farm after your wedding, or a spouse
+ * waiting for a room once one is free. */
+function TownCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: string }) {
   const find = findHer(save, pack, id)
-  const invite = () => {
-    if (busy) return
-    setBusy(true)
-    setError(null)
-    inviteHer(id).catch((err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work. Try again.')).finally(() => setBusy(false))
-  }
+  const waiting = save.love[id]?.stage === 'spouse'
   return (
-    <section className="mb-3 space-y-2 rounded-md border border-hairline bg-sunken/50 p-3" aria-label="Where she lives" data-invite={block ?? 'open'}>
+    <section className="mb-3 space-y-2 rounded-md border border-hairline bg-sunken/50 p-3" aria-label="Where she lives" data-town-card>
       <div className="space-y-0.5 text-[13px]" aria-label="Where to find her" data-find-her={find.at ?? (find.farm ? 'farm' : 'home')}>
         <p className="text-micro">Where to find her</p>
         <p className="flex min-h-8 items-center justify-between gap-2" data-find-today>
@@ -142,19 +133,8 @@ function InviteCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: st
           <p key={i} className="text-ink-soft" data-find-line={l.at ?? 'home'}>{i === 0 && <span className="font-semibold text-ink">{find.season} · </span>}{l.text}</p>
         ))}
       </div>
-      <p className="text-[14px] font-semibold" data-lives-in-town>Lives in town</p>
-      {block === null ? (
-        <button type="button" onClick={invite} disabled={busy} data-action="invite"
-          className="font-display grid min-h-12 w-full place-items-center rounded-md bg-accent text-[16px] font-bold text-accent-ink disabled:opacity-60">
-          Invite to the farm
-        </button>
-      ) : (
-        <p className="flex min-h-11 items-center justify-between gap-2 text-[13px] text-ink-soft" data-invite-block>
-          <span>{block}</span>
-          <Link to="/dorm" state={{ back: true }} className="shrink-0 font-semibold text-accent-strong underline">The Dorm ›</Link>
-        </p>
-      )}
-      {error && <p role="status" className="text-[13px] font-semibold text-danger">{error}</p>}
+      <p className="text-[14px]" data-lives-in-town><span className="font-semibold">Lives in town</span>
+        <span className="text-ink-soft"> · {waiting ? 'moves to the farm once a room is free' : 'moves to the farm after your wedding'}</span></p>
     </section>
   )
 }

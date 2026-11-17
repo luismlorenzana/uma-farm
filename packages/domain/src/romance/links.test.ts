@@ -27,7 +27,7 @@ const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const context: NightContext = { story: PACK, birthdays: birthdaysOf(PACK, new Map()) }
 
-/** A named farm on `day`, the stand-ins home in the Dorm at Friendship 0, their meeting scenes played. */
+/** A named farm on `day`, the stand-ins met at Friendship 0 and living in town, their meeting scenes played. */
 function farm(day = 30): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day }, gold: 50_000 }
   const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
@@ -131,11 +131,13 @@ describe('scene links: her events, Memories and evenings', () => {
     const save = farm()
     expect(mayOpenEvening(save, PACK, ONE)).toBe(false)
     expect(mayOpenEvening(save, PACK, 'pick')).toBe(false)
-    const friend = withLove(save, ONE, { level: 3 })
+    // A friend in town isn't in front of you until you go in; a farmhand on her farm day (Summer 6) is, on the farm.
+    const town = withLove(save, ONE, { level: 3 })
+    expect(mayOpenEvening(town, PACK, ONE)).toBe(false)
+    const friend = { ...town, roster: { ...town.roster, [ONE]: { ...town.roster[ONE]!, farmhand: town.roster[ONE]!.joined } } }
     expect(mayOpenEvening(friend, PACK, ONE)).toBe(true)
     expect(mayOpenEvening(friend, PACK, 'pick')).toBe(true)
-    // Living in town, no evening; spent, none tonight.
-    expect(mayOpenEvening({ ...friend, dorm: { ...friend.dorm, home: [TWO, THREE] } }, PACK, ONE)).toBe(false)
+    // Spent, none tonight.
     const spent = spendEvening(friend, PACK, ONE, 'walk', 70).save
     expect(mayOpenEvening(spent, PACK, ONE)).toBe(false)
     expect(mayOpenEvening(spent, PACK, 'pick')).toBe(false)

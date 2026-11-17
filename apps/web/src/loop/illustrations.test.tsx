@@ -5,7 +5,7 @@
 // illustrations plays as before. The invented stand-in pack (9000001–9000003), invented outfits, and uma-data's synthetic
 // illustrations for 9000001; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { costOf, inviteToFarm, meet, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { costOf, meet, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { ILLUSTRATION_MOMENTS } from '@luismlorenzana/uma-data'
 import { syntheticIllustrations } from '@luismlorenzana/uma-data/testing'
 import { act, type ReactNode } from 'react'
@@ -48,7 +48,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 /** A named farm on day 21, the stand-in's three home and their arrivals played; 9000001 at `love`. */
 function farm(love: Partial<Love> = {}, more: Partial<SaveV4> = {}): SaveV4 {
   const fresh = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY } }, 'scene:1:open')
-  const joined = [ONE, TWO, THREE].reduce((s, id) => inviteToFarm(meet(s, id, fixture.pack!).save, id), fresh)
+  const joined = [ONE, TWO, THREE].reduce((s, id) => meet(s, id, fixture.pack!).save, fresh)
   const out = { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, [ONE]: { ...joined.love[ONE]!, ...love } }, ...more }
   return out.buildings.forge !== undefined ? readScene(out, 'scene:bench') : out
 }

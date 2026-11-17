@@ -2,10 +2,9 @@
 // town show it, and who's in town on a calendar day. Every placement is the schedule's, never a draw. Names are the
 // town map's (the pack's, else the game's). Pure, so the screens and the tests read the same.
 import {
-  atHome, dateOf, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereOn, whereYouMeet, type SaveV4,
-  type SeasonPlace, type StoryPack,
+  atHome, dateOf, farmDaysIn, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereOn, whereYouMeet,
+  type SaveV4, type SeasonPlace, type StoryPack,
 } from '@farm/domain'
-import { jobWords } from '../book/board-words'
 import { shortDate } from './words'
 
 type Pack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'master'>>
@@ -40,8 +39,20 @@ export function seasonLines(pack: Pack, id: string, season: Parameters<typeof se
   })
 }
 
+/** A farmhand's season: her farm days first ("On the farm · 2, 3, 5, 6, 8, 9, 11, 12", its `at` `farm`), then her town
+ * days by place, as her schedule puts her out ("The Café · 1, 4, 7, 10", "The Bakery, at work · 1–6"). */
+export function farmhandLines(pack: Pack, id: string, season: Parameters<typeof seasonSchedule>[2]): SeasonLine[] {
+  const farm = farmDaysIn(pack, id, season)
+  const town = seasonSchedule(pack, id, season).flatMap((g): SeasonLine[] => {
+    const days = g.days.filter((d) => !farm.includes(d))
+    if (g.at === null || days.length === 0) return []
+    return [{ at: g.at, text: `${placeName(pack, g.at)}${g.by === 'job' ? ', at work' : ''} · ${daysWords(days)}` }]
+  })
+  return [{ at: 'farm', text: `On the farm · ${farm.length === 12 ? 'every day' : daysWords(farm)}` }, ...town]
+}
+
 /** Where to find her, for her profile: today's place in words (and its location, for **Find her ›**), and this season's
- * lines. A farmhand is on the farm by day, after her job; one who lives on the farm is there. */
+ * lines. A farmhand is on the farm on her farm days and in town on the rest; a spouse in her room lives on the farm. */
 export interface FindHer {
   today: string
   /** Her place in town today, or null (on the farm, at home). */
@@ -55,20 +66,20 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
   const date = dateOf(save.calendar.day)
   const season = SEASON_NAMES[date.season]
   if (save.roster[id] && atHome(save, id)) return { today: 'On the farm', at: null, season: 'Every day', lines: [{ at: null, text: 'She lives on the farm' }], farm: true }
-  if (save.roster[id] && isFarmhand(save, id) && onFarmToday(save, id)) {
-    return { today: 'On the farm', at: null, season: 'Every day', lines: [{ at: null, text: `On the farm by day, after her job: ${jobWords(pack, id)}` }], farm: true }
-  }
+  const hand = !!save.roster[id] && isFarmhand(save, id)
+  const lines = hand ? farmhandLines(pack, id, date.season) : seasonLines(pack, id, date.season)
+  if (hand && onFarmToday(save, pack, id)) return { today: 'On the farm', at: null, season, lines, farm: true }
   const at = whereYouMeet(save, pack, id).at
   const next = at ? null : nextOut(pack, id, save.calendar.day)
   const work = at !== null && whereOn(pack, id, save.calendar.day).by === 'job'
   const today = at ? `${placeName(pack, at)}${work ? ', at work' : ''}` : next ? `At home · next out ${shortDate(next.day)}` : 'At home'
-  return { today, at, season, lines: seasonLines(pack, id, date.season), farm: false }
+  return { today, at, season, lines, farm: false }
 }
 
 /** Who's in town on a calendar day, by place: each place with anyone, in the map's order, her Umas in the cast's order
  * (met first). A day ahead reads the save as it stands (who's on the farm, who's a farmhand). */
 export interface TownRow { at: string; name: string; ids: string[] }
-export function townRows(save: Pick<SaveV4, 'calendar' | 'roster' | 'dorm' | 'love'>, pack: Pack, day: number): TownRow[] {
+export function townRows(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'>, pack: Pack, day: number): TownRow[] {
   const town = townDay(save, pack, day)
   return townLocations(pack).flatMap((l): TownRow[] => {
     const here = town.at.get(l.id) ?? []

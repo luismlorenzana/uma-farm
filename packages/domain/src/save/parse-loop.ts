@@ -2,7 +2,7 @@
 // by form: the API has no master data or story pack, and an id a later release drops still parses. Internal to `save/`:
 // `parse-v4.ts` composes these and re-exports the public names (the work places and their slots).
 import { SEASONS } from '../farm/calendar'
-import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
+import { DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
@@ -14,7 +14,7 @@ import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
   MARKET_FLOOR, MAX_FIELD_TILES, MAX_KITCHEN_BASE, MAX_PLOTS, MEAL_KEEPS, MENU_RECIPES, STATION_MAX_LEVEL, STOVE_PLAYS,
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
-  REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
+  REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
   type Expedition, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV5, type StarCounts,
   type StationLoad, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
@@ -91,25 +91,16 @@ export function parseRanks(value: unknown, path: string): Record<Activity, RankS
   })) as Record<Activity, RankState>
 }
 
-/** The Dorm on its eight levels; home at most its beds. */
-export function parseDorm(value: unknown, path: string, roster: ReadonlySet<string>, bought: number | undefined): SaveV5['dorm'] {
+/** The retired Dorm, kept in its shape (v5 grows in place): its level on its eight levels, no higher than the level
+ * bought, and read by nothing; who was home and the swaps waiting are cleared, whatever they held, so everyone who lived
+ * there lives in town from this load. Pure, so a load never stamps the save. */
+export function parseDorm(value: unknown, path: string, bought: number | undefined): SaveV5['dorm'] {
   const o = object(value, path, ['level', 'home', 'swaps'])
   const level = int(o.level, `${path}.level`, 1, DORM_MAX_LEVEL)
   if (bought === undefined || level > bought) fail(`${path}.level`, 'above the level bought (buildings.dorm)')
-  const home = unique(list(o.home, `${path}.home`, 0, bedsAt(level)).map((v, i) => member(v, `${path}.home.${i}`, roster)), `${path}.home`)
-  const atHome = new Set(home)
-  const swaps = list(o.swaps, `${path}.swaps`, 0, bedsAt(DORM_MAX_LEVEL)).map((v, i): DormSwap => {
-    const at = `${path}.swaps.${i}`
-    const s = object(v, at, ['out', 'in'])
-    const out = member(s.out, `${at}.out`, roster)
-    const into = member(s.in, `${at}.in`, roster)
-    if (!atHome.has(out)) fail(`${at}.out`, 'expected an Uma at home')
-    if (atHome.has(into)) fail(`${at}.in`, 'expected an Uma away')
-    return { out, in: into }
-  })
-  unique(swaps, `${path}.swaps`, (s) => s.out)
-  unique(swaps, `${path}.swaps`, (s) => s.in)
-  return { level, home, swaps }
+  if (!Array.isArray(o.home)) fail(`${path}.home`, 'expected a list')
+  if (!Array.isArray(o.swaps)) fail(`${path}.swaps`, 'expected a list')
+  return { level, home: [], swaps: [] }
 }
 
 // --- The Warehouse --------------------------------------------------------------------------------------------------
@@ -347,8 +338,8 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
 const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals'] as const
 const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly'] as const
 
-/** A loan's project: a place you build, a Dorm level (`dorm:2` … `dorm:8`) or a house on the homestead (`house:1` …
- * `house:6`). */
+/** A loan's project: a place you build, a house on the homestead (`house:1` … `house:6`), or a level of the retired
+ * Dorm (`dorm:2` … `dorm:8`) a save may still owe on. */
 const isLoanFor = (id: unknown): id is string => typeof id === 'string' && (isBuildPlace(farmPlace(id)) || DORM_LOAN.test(id) || HOUSE_LOAN.test(id))
 const LOAN_FOR_WORDS = 'expected a place you build, dorm:2 to dorm:8, or house:1 to house:6'
 
@@ -562,10 +553,13 @@ const FESTIVAL_NEWS_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
 /** The household milestones a morning may announce. */
 const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
-/** §5 New today. An older v4's "chapter done" line (the global chapters') is read and dropped. */
+/** The most Umas a retired Dorm's "home" line named: its top level's 20 beds. */
+const DORM_HOME_NEWS = 20
+/** §5 New today. An older v4's "chapter done" line (the global chapters') and the retired Dorm's lines are read and
+ * dropped. */
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
   // A new story release, the season, New Year's, festivals and the story's days (today and tomorrow), the goals' news,
-  // the Dorm's new level and Umas home from a swap, and the household's.
+  // the retired Dorm's news (read and dropped), and the household's.
   const read = list(value, path, 0, 1 + 8 + 4 + 1 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
@@ -604,11 +598,10 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
         const ids = keys(object(v, at, ['kind', 'ids']).ids, `${at}.ids`)
         return { kind, ids: ids.length > 0 ? ids : fail(`${at}.ids`, 'expected a note’s id') }
       }
-      case 'dorm': return { kind, level: int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, DORM_MAX_LEVEL) }
-      case 'home': {
-        const h = object(v, at, ['kind', 'umas'])
-        return { kind, umas: unique(list(h.umas, `${at}.umas`, 1, bedsAt(DORM_MAX_LEVEL)).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
-      }
+      // The retired Dorm's news, a new level or Umas home from a swap: a morning from before its retirement is read and
+      // drops it.
+      case 'dorm': int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, DORM_MAX_LEVEL); return null
+      case 'home': list(object(v, at, ['kind', 'umas']).umas, `${at}.umas`, 1, DORM_HOME_NEWS).forEach((id, j) => member(id, `${at}.umas.${j}`, roster)); return null
       // A household milestone.
       case 'household': {
         const married = object(v, at, ['kind', 'married']).married
@@ -616,7 +609,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       }
     }
   })
-  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'notes' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
+  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'notes' ? n.kind
     : n.kind === 'festival' || n.kind === 'new-year' || n.kind === 'days' ? `${n.kind}:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
       : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }

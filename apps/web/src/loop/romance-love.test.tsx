@@ -4,7 +4,7 @@
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
 // 4 in its cast) and invented outfits; the server is a stub.
 import 'fake-indexeddb/auto'
-import { inviteToFarm, meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -32,7 +32,7 @@ const { summaryParts } = await import('./summary-words')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const ONE = '9000001'
 const THREE = '9000003'
@@ -46,6 +46,8 @@ function farm(day = 2): SaveV4 {
   return { ...joined, today: { ...joined.today, bonds: {} }, arrivals: [ONE, '9000002', THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0], 'golden-carrot': [1, 0, 0, 0, 0], limestone: [1, 0, 0, 0, 0] } }
 }
 const withLove = (s: SaveV4, id: string, love: Partial<SaveV4['love'][string]>): SaveV4 => ({ ...s, love: { ...s.love, [id]: { ...s.love[id]!, ...love } } })
+/** A farmhand from day 1: on the farm, in front of you, on her farm days (9000001's are all but Spring 1, 4, 7 and 10). */
+const hand = (s: SaveV4, id: string): SaveV4 => ({ ...s, roster: { ...s.roster, [id]: { ...s.roster[id]!, farmhand: 1 } } })
 
 let host: HTMLDivElement
 let root: Root
@@ -109,7 +111,30 @@ describe('her profile on v4', () => {
     expect($('[data-next-words]')?.textContent).toBe('200 to go')
   })
 
+  it('says she lives in town, with where to find her and no invitation to the farm: only a spouse moves in', async () => {
+    await render(<HeartsPage />, `/hearts?uma=${ONE}`)
+    await find(`[data-love="${ONE}"]`)
+    expect($('[data-lives-in-town]')?.textContent).toBe('Lives in town · moves to the farm after your wedding')
+    expect($('[data-find-her]')).not.toBeNull()
+    expect($('[data-find-today]')?.textContent).toBe('Today · At home · next out Spring 4')
+    expect($('[data-action="invite"]')).toBeNull()
+    // A farmhand's Where to find her lists her farm days, then her town days; Spring 2 is a farm day.
+    await act(async () => useGame.setState({ save: hand(farm(), ONE) }))
+    await settle()
+    expect($('[data-find-today]')?.textContent).toBe('Today · On the farm')
+    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12', 'The Plaza · 1, 4, 7, 10'])
+    // A spouse waiting for a room lives in town until one is free; in her room, the card goes.
+    await act(async () => useGame.setState({ save: withLove(farm(), ONE, { stage: 'spouse', level: 0, wed: 1 }) }))
+    await settle()
+    expect($('[data-lives-in-town]')?.textContent).toBe('Lives in town · moves to the farm once a room is free')
+    await act(async () => useGame.setState({ save: withLove(farm(), ONE, { stage: 'spouse', level: 0, wed: 1, house: 0 }) }))
+    await settle()
+    expect($('[data-lives-in-town]')).toBeNull()
+  })
+
   it('chats once a day for +15, with her line and the "+N" over her face', async () => {
+    // A farmhand on her farm day: in front of you on the farm.
+    useGame.setState({ save: hand(farm(), ONE) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     const chat = await find('[data-action="chat"]')
     expect(chat.textContent).toBe('Chat · 1')
@@ -127,16 +152,18 @@ describe('her profile on v4', () => {
       at = `${location.pathname}${location.search}`
       return null
     }
-    useGame.setState({ save: withLove(farm(), ONE, { level: 3 }) })
+    // Spring 4: she's out in town, and you've gone in, so she's in front of you.
+    const fourth = withLove(farm(4), ONE, { level: 3 })
+    useGame.setState({ save: { ...fourth, today: { ...fourth.today, town: true } } })
     await render(<><HeartsPage /><Where /></>, `/hearts?uma=${ONE}`)
     await click(await find('[data-action="invite-work"]'))
-    await until(() => save().roster[ONE]!.farmhand === 2)
+    await until(() => save().roster[ONE]!.farmhand === 4)
     expect(save().today.actions).toBe(1)
     await until(() => decodeURIComponent(at) === `/hearts?uma=${ONE}&life=invited-to-work:${ONE}`)
   })
 
   it('lists each good\'s points for her in the gift picker, "?" until her taste is known, and learns a given one', async () => {
-    useGame.setState({ save: withLove(farm(), ONE, { level: 1 }) })
+    useGame.setState({ save: hand(withLove(farm(), ONE, { level: 1 }), ONE) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await click(await find('[data-action="gift"]'))
     const points = () => Object.fromEntries($$('[data-gift]').map((b) => [b.dataset.gift, b.dataset.giftPoints]))

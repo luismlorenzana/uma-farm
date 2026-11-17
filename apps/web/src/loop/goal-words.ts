@@ -8,7 +8,7 @@ import {
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 const ORDINALS = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth']
 
-/** "Farm Rank 2 · The Coop to build (not built yet), Block B (800g), Dorm level 3 (7 beds), New seeds at the shop". */
+/** "Farm Rank 2 · The Coop to build (not built yet), Block B (800g), New seeds at the shop". */
 export const farmRankWords = (rank: number): string => {
   const opens = farmRankOpens(rank)
   return opens.length > 0 ? `Farm Rank ${rank} · ${opens.join(', ')}` : `Farm Rank ${rank}`

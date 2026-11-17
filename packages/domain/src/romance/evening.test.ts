@@ -1,13 +1,16 @@
 // The evening: who can spend one and which kinds open by her ladders,
 // her favourite kind, the points with each factor once, the slots and festival night, the morning's invitations (who,
 // how many, the weight, the same save drawing the same) and their answers, Tonight's rule, the night's step 9 and the
-// save's parse. Invented ids only: the stand-ins 9000001–9000003 and 9000004 onward built here.
+// save's parse. Invented ids only: the stand-ins 9000001–9000003 and 9000004 onward built here. The stand-ins are
+// farmhands with a home in town (an invented one), so every day of theirs is a farm day: in front of you on the farm.
+// The morning's invitations are the spouses' in their rooms.
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_YEAR, festivalOn } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
-import { eveningsOn, invitesFor, marriedCount, newLove, newRosterUma, newSave, type Love, type SaveV4 } from '../save/v4'
+import { eveningsOn, FARMHOUSE, invitesFor, marriedCount, newLove, newRosterUma, newSave, type Love, type SaveV4 } from '../save/v4'
 import type { UmaBible } from '../story/authored'
+import { atHomeInTown } from '../story/authored.fixture'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
@@ -21,31 +24,42 @@ import {
 import { bar } from './love'
 
 const AT = '2026-11-11T10:00:00.000Z'
-const PACK = storyPackFrom(STAND_IN_FILES)
+/** The stand-in pack, each stand-in with a home in town: no day puts her out, so every day is a farm day. */
+const PACK = storyPackFrom(atHomeInTown(STAND_IN_FILES))
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ story })
 
-/** A named farm on `day`, the opening read: the stand-ins home (`joinCast`) at Friendship 0. */
+/** A named farm on `day`, the opening read: the stand-ins met (`joinCast`) at Friendship 0, farmhands on the farm. */
 function farm(day = 3): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
-  return { ...joined, today: { ...joined.today, bonds: {} } }
+  const roster = Object.fromEntries(Object.entries(joined.roster).map(([id, uma]) => [id, { ...uma, farmhand: uma.joined }]))
+  return { ...joined, roster, today: { ...joined.today, bonds: {} } }
+}
+/** Not a farmhand: she lives in town, and isn't on the farm. */
+function inTown(save: SaveV4, id: string): SaveV4 {
+  const { farmhand: _, ...uma } = save.roster[id]!
+  return { ...save, roster: { ...save.roster, [id]: uma } }
+}
+/** Houses enough for `n` spouses' rooms: the Farmhouse's two, then extended houses of four. */
+const roomOf = (i: number) => (i < 2 ? 0 : 1 + Math.floor((i - 2) / 4))
+function housed(save: SaveV4, ids: readonly string[], from = 0): SaveV4 {
+  const houses = Array.from({ length: roomOf(from + ids.length - 1) + 1 }, (_, n) => save.homestead.houses[n] ?? (n === 0 ? FARMHOUSE : { name: `Invented House ${'ABCDEF'[n - 1]}`, extended: true }))
+  return {
+    ...save,
+    love: { ...save.love, ...Object.fromEntries(ids.map((id, i) => [id, { ...newLove(), ...save.love[id], stage: 'spouse' as const, level: 0, wed: 1, house: roomOf(from + i) }])) },
+    homestead: { ...save.homestead, houses, slept: houses.map((_, n) => save.homestead.slept[n] ?? 0) },
+  }
 }
 const withLove = (save: SaveV4, love: Partial<Love>, id = ONE): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
 const at = (stage: Love['stage'], level: number): Pick<Love, 'stage' | 'level'> => ({ stage, level })
 /** All three stand-ins at Friendship 3 (friends). */
 const friends = (save: SaveV4): SaveV4 => [ONE, TWO, THREE].reduce((s, id) => withLove(s, { level: 3 }, id), save)
-/** `n` invented spouses, 9000004 onward, home: what the household milestones count. */
+/** `n` invented spouses, 9000004 onward, home in their rooms: what the household milestones count. */
 function married(save: SaveV4, n: number): SaveV4 {
   const ids = Array.from({ length: n }, (_, i) => String(9000004 + i))
-  return {
-    ...save,
-    roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
-    love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1 }])) },
-    dorm: { ...save.dorm, level: 8, home: [...save.dorm.home, ...ids] },
-    buildings: { ...save.buildings, dorm: 8 },
-  }
+  return housed({ ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) } }, ids)
 }
 /** A pack whose 9000001 has these date beats only (the rest of her bible as the stand-in's). */
 function packWith(games: readonly string[]): Pick<StoryPack, 'cast' | 'bibles'> {
@@ -68,10 +82,11 @@ describe('who', () => {
     expect(eveningRole(at('spouse', 0))).toBe('spouse')
   })
 
-  it('she must be in front of you: home, a farmhand on the farm by day, or out in town today with you there; a spouse in her house is home', () => {
+  it('she must be in front of you: home, a farmhand on the farm on her farm day, or out in town today with you there; a spouse in her house is home', () => {
     const save = withLove(farm(), { level: 3 })
     expect(kindsNow(save, PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
-    const away = { ...save, dorm: { ...save.dorm, home: [TWO, THREE] } }
+    const away = inTown(save, ONE)
+    expect(homeTonight(save, ONE)).toBe(false)
     expect(homeTonight(away, ONE)).toBe(false)
     // In town: out where her schedule puts her, but not in front of you until you've gone into town.
     const outDay = seasonSchedule(PACK, ONE, 'spring').find((g) => g.at !== null)!.days[0]!
@@ -82,7 +97,7 @@ describe('who', () => {
     expect(eveningHere(goToTown(townDay), PACK, ONE)).toBe(true)
     expect(kindsNow(goToTown(townDay), PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
     expect(spendEvening(goToTown(townDay), PACK, ONE, 'walk', 90).save.today.evenings).toEqual([{ with: ONE, kind: 'walk' }])
-    // A farmhand, on the farm by day.
+    // A farmhand, on the farm on her farm day.
     const hand = { ...away, roster: { ...away.roster, [ONE]: { ...away.roster[ONE]!, farmhand: away.calendar.day } } }
     expect(kindsNow(hand, PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
     expect(homeTonight(withLove(away, { stage: 'spouse', level: 0, wed: 1, house: 0 }), ONE)).toBe(true)
@@ -241,17 +256,19 @@ describe('the slots', () => {
 })
 
 describe('invitations', () => {
-  it('none from an Uma below F3, away, or whose favourite kind isn\'t open to her; one a morning', () => {
+  it('none but from a spouse home in her room, whose favourite kind is open to her; one a morning', () => {
     expect(inviteCandidates(farm(), PACK)).toEqual([])
-    // 9000001's favourite, stargazing, opens at R3; the stand-in's forager and fisher favour walk.
-    const save = friends(farm())
-    expect(inviteCandidates(save, PACK)).toEqual([TWO, THREE])
-    expect(inviteCandidates(withLove(save, { stage: 'romance', level: 2 }), PACK)).toEqual([TWO, THREE])
-    expect(inviteCandidates(withLove(save, { stage: 'romance', level: 3 }), PACK)).toEqual([ONE, TWO, THREE])
-    expect(inviteCandidates({ ...save, dorm: { ...save.dorm, home: [ONE, TWO] } }, PACK)).toEqual([TWO])
+    // Friends and sweethearts, farmhands on the farm, live in town: they never ask.
+    expect(inviteCandidates(withLove(friends(farm()), { stage: 'romance', level: 3 }), PACK)).toEqual([])
+    // Spouses in their rooms: 9000001's favourite, stargazing, is open to a spouse; the forager and fisher favour walk.
+    const save = housed(farm(), [ONE, TWO, THREE])
+    expect(inviteCandidates(save, PACK)).toEqual([ONE, TWO, THREE])
+    // A spouse waiting for a room lives in town.
+    expect(inviteCandidates(withLove(save, { house: undefined }, TWO), PACK)).toEqual([ONE, THREE])
     const drawn = drawInvites(save, PACK)
     expect(drawn.today.invites).toHaveLength(1)
-    expect(drawn.today.invites[0]).toMatchObject({ kind: 'walk', answer: null })
+    const [invite] = drawn.today.invites
+    expect(invite).toMatchObject({ kind: favouriteKind(PACK, invite!.id), answer: null })
     expect(drawInvites(farm(), PACK).today.invites).toEqual([])
   })
 
@@ -267,7 +284,7 @@ describe('invitations', () => {
   })
 
   it('weights the least seen: 1 + days since her last evening (or since she arrived), up to 14', () => {
-    const joined = withLove(friends(farm(20)), { evening: 19 }, TWO)
+    const joined = withLove(housed(friends(farm(20)), [TWO, THREE]), { evening: 19 }, TWO)
     const save = { ...joined, roster: { ...joined.roster, [THREE]: { ...joined.roster[THREE]!, joined: 1 } } }
     expect(inviteWeight(save, TWO)).toBe(2)
     expect(inviteWeight(save, THREE)).toBe(15) // joined day 1: 19 days, held to 14
@@ -310,7 +327,7 @@ describe('Tonight\'s rule', () => {
     const save = withLove(farm(), { level: 3 }, TWO)
     expect(eveningUmas(save, PACK)).toEqual([TWO])
     expect(tonightOpens(save, PACK)).toBe(true)
-    expect(tonightOpens({ ...save, dorm: { ...save.dorm, home: [ONE, THREE] } }, PACK)).toBe(false)
+    expect(tonightOpens(inTown(save, TWO), PACK)).toBe(false)
     const spent = spendEvening(save, PACK, TWO, 'market', 40).save
     expect(tonightOpens(spent, PACK)).toBe(false)
     // A festival day keeps it open for festival night.
@@ -321,7 +338,7 @@ describe('Tonight\'s rule', () => {
 
 describe('the night and the save', () => {
   it('draws the morning\'s invitation at step 9 into today and §4, after step 7 cleared yesterday\'s', () => {
-    const eve = { ...friends(farm(4)), today: { ...farm().today, invites: [{ id: TWO, kind: 'walk' as const, answer: 'yes' as const }] } }
+    const eve = { ...housed(friends(farm(4)), [ONE, TWO, THREE]), today: { ...farm().today, invites: [{ id: TWO, kind: 'walk' as const, answer: 'yes' as const }] } }
     const spent = spendEvening(eve, PACK, TWO, 'walk', 90).save
     const morning = runNight(spent, context())
     expect(morning.calendar.day).toBe(5)

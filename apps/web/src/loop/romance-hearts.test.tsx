@@ -4,7 +4,7 @@
 // with its track, Next card, chapters, perks, gifts and ties, switching to Work; the Work view's album with her level in each card's
 // corner. The invented stand-in pack and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { inviteToFarm, meet, newSave, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newSave, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation, useRoutes } from 'react-router'
@@ -32,7 +32,7 @@ const { default: HeartsPage } = await import('./HeartsPage')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
@@ -127,11 +127,11 @@ describe('the Hearts view', () => {
     expect(first.querySelector('[data-points]')?.textContent).toBe('200/200')
     expect(first.querySelector('[data-note]')?.textContent).toBe('Ready · Friendship 1 · the Fields · +2 banked')
     expect(first.querySelector('[data-row-chapter]')?.textContent).toBe('Ch. 1 · Getting to know her')
-    // 9000002's route isn't scripted: her short bar says it all.
-    expect($(`[data-heart-row="${TWO}"] [data-note]`)?.textContent).toBe('')
+    // 9000002 lives in town (no farmhand, no spouse): her row says where to find her.
+    expect($(`[data-heart-row="${TWO}"] [data-note]`)?.textContent).toBe('Lives in town: find her there')
     expect($('[data-married]')?.textContent).toBe('Married 0/3')
     expect(Object.fromEntries($$('[data-filter]').map((c) => [c.dataset.filter, c.textContent]))).toEqual({
-      ready: 'Ready1', friends: 'Friends3', partners: 'Partners', married: 'Married', away: 'In town',
+      ready: 'Ready1', friends: 'Friends3', partners: 'Partners', married: 'Married', away: 'In town3',
     })
   })
 

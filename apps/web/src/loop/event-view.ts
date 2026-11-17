@@ -27,6 +27,8 @@ export const BACKDROPS: Readonly<Record<string, { frame: string; tint: string; n
   'hilltop-track': { frame: 'racecourse', tint: '#d2e7b7' },
   'sea-pier': { frame: 'fishery-workbench', tint: '#9fc6de' },
 }
+/** Places off the farm map that a scene may still name, each on its own building: the retired Dorm. */
+const RETIRED_FRAMES: Readonly<Record<string, string>> = { dorm: 'dorm' }
 /** A farm place's ground by the season. */
 export const SEASON_GROUND: Readonly<Record<Season, string>> = { spring: '#dcefc7', summer: '#f6e7b0', autumn: '#f2d3b0', winter: '#e3ebf3' }
 
@@ -43,7 +45,7 @@ export interface PlaceCard {
 export function placeCard(place: string, day: number): PlaceCard {
   const backdrop = BACKDROPS[place]
   if (backdrop) return { place, frame: backdrop.frame, ground: backdrop.tint, night: backdrop.night ?? false }
-  return { place, frame: farmPlace(place)?.frame ?? 'fields', ground: SEASON_GROUND[dateOf(day).season], night: false }
+  return { place, frame: farmPlace(place)?.frame ?? RETIRED_FRAMES[place] ?? 'fields', ground: SEASON_GROUND[dateOf(day).season], night: false }
 }
 
 /** The player's title: "The Fields · Friendship 1", "The Pond at night · Romance 5". */
@@ -166,7 +168,7 @@ export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFa
         perk('s1', 'breakfast'),
         ...(date ? [`Your anniversary: ${SEASON_NAMES[date.season]} ${date.day}, each year`] : []),
         // Her room, and the house's mornings.
-        ...(facts.house !== undefined ? [facts.house === null ? 'Her room: none free yet, so she keeps her Dorm bed until a house is built' : `Her room: ${facts.house}`] : []),
+        ...(facts.house !== undefined ? [facts.house === null ? 'Her room: none free yet, so she lives in town until a room frees' : `Her room: ${facts.house}`] : []),
         ...(facts.house !== undefined ? ['House mornings: +30 for her each morning you sleep there'] : []),
       ]
     }

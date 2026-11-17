@@ -88,7 +88,7 @@ export function WorkFacts({ row }: { row: LoopUmaRow }) {
     <div className="min-w-0 text-[13px] text-ink-soft">
       {row.favourite && <p data-favourite-line={row.favourite}>Favourite · {ACTIVITY_NAMES[row.favourite]} (×1.2 rank points)</p>}
       <p>Joined {shortDate(row.joined)}</p>
-      <p data-where={row.home ? 'home' : 'away'}>{row.home ? 'On the farm' : <>In town · <Link to="/dorm" className="font-semibold text-accent-strong underline">the Dorm</Link></>}</p>
+      <p data-where={row.home ? 'home' : 'away'}>{row.home ? 'On the farm today' : 'In town today'}</p>
       {row.farmhand !== null && <p data-farmhand>Farmhand since {shortDate(row.farmhand)} · <Link to="/book" state={{ back: true }} className="font-semibold text-accent-strong underline">her tasks</Link></p>}
     </div>
   )

@@ -39,7 +39,7 @@ const [ONE, TWO, THREE]: readonly string[] = STAND_INS
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const context = (): NightContext => ({ story: PACK })
 
-/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0. */
+/** A named farm on `day`, the opening read and the stand-ins met (`joinCast`) at Friendship 0, living in town. */
 function farm(day = 3): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
@@ -272,25 +272,28 @@ describe('the wedding', () => {
     expect(goodCount(served.save.items, 'dish-fish-3')).toBe(0)
     expect(served.save.today.reception).toBe(2)
     expect(parseSaveV5(json(served.save))).toEqual(served.save)
-    // A meal running: 9000002 had 4 days (3 after tonight's count), 9000003 1 (none after it).
-    const fed = { ...served.save, roster: { ...served.save.roster, [TWO]: { ...served.save.roster[TWO]!, wellFed: 4 }, [THREE]: { ...served.save.roster[THREE]!, wellFed: 1 } } }
+    // It feeds those who live on the farm: the bride, in her room, and 9000002, a spouse in hers, whose meal running (4
+    // days, 3 after tonight's count) it never shortens; 9000003 lives in town (1 day, none after it).
+    const wed = withLove(served.save, { stage: 'spouse', level: 0, wed: 1, house: 0 }, TWO)
+    const fed = { ...wed, roster: { ...wed.roster, [TWO]: { ...wed.roster[TWO]!, wellFed: 4 }, [THREE]: { ...wed.roster[THREE]!, wellFed: 1 } } }
     const morning = runNight(fed, context())
-    expect([ONE, TWO, THREE].map((id) => morning.roster[id]!.wellFed)).toEqual([2, 3, 2])
+    expect([ONE, TWO, THREE].map((id) => morning.roster[id]!.wellFed)).toEqual([2, 3, 0])
     expect(morning.today.reception).toBe(0)
     const cake = playEvent(engaged(), PACK, ONE, wedding('fields', null))
     expect(cake.card.wedding).toMatchObject({ dish: null, stars: null, days: CAKE_DAYS })
-    expect(runNight(cake.save, context()).roster[TWO]!.wellFed).toBe(1)
+    expect(runNight(cake.save, context()).roster[ONE]!.wellFed).toBe(1)
     // A second wedding the same day never shortens the first's reception.
     expect(playEvent({ ...engaged(), today: { ...engaged().today, reception: 2 } }, PACK, ONE, wedding('fields', null)).save.today.reception).toBe(2)
   })
 
-  it('has every spouse and her two closest friends on the farm as guests', () => {
+  it('has every spouse on the farm and her two closest friends, wherever they live, as guests', () => {
+    // Her friends live in town: where she is never gates an occasion.
     const save = engaged()
     expect(weddingGuests(save, PACK, ONE)).toEqual([TWO, THREE])
-    const married = withLove(save, { stage: 'spouse', level: 0, wed: 10, ring: 2 }, THREE)
+    const married = withLove(save, { stage: 'spouse', level: 0, wed: 10, ring: 2, house: 0 }, THREE)
     expect(weddingGuests(married, PACK, ONE)).toEqual([THREE, TWO])
-    const away = { ...save, dorm: { ...save.dorm, home: [ONE, TWO] } }
-    expect(weddingGuests(away, PACK, ONE)).toEqual([TWO])
+    // A spouse waiting for a room comes as her friend.
+    expect(weddingGuests(withLove(save, { stage: 'spouse', level: 0, wed: 10, ring: 2 }, THREE), PACK, ONE)).toEqual([TWO, THREE])
     expect(playEvent(save, PACK, ONE, wedding('fields', null)).card.wedding?.guests).toEqual([TWO, THREE])
   })
 
@@ -376,7 +379,7 @@ describe('a whole wedding day on the stand-in', () => {
     expect(married.save.love[ONE]).toMatchObject({ stage: 'spouse', ring: 3 })
     expect(Object.values(married.save.love).filter((l) => l.stage === 'spouse')).toHaveLength(1)
     const morning = runNight(married.save, context())
-    expect(morning.roster[TWO]!.wellFed).toBe(1)
+    expect(morning.roster[ONE]!.wellFed).toBe(1)
     expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 })

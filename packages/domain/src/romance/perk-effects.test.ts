@@ -18,7 +18,7 @@ import { parseSaveV5 } from '../save/parse-v4'
 import { fieldTiles, bareTile, newSave, pairKey, type Animal, type Love, type SaveV4, type Tile } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
-import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
+import { atHomeInTown, STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
@@ -38,15 +38,24 @@ import {
 
 const AT = '2026-11-11T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const PACK = storyPackFrom(STAND_IN_FILES)
+/** The stand-in pack, each stand-in with a home in town: every day is a farmhand's farm day (`farm` makes them farmhands). */
+const PACK = storyPackFrom(atHomeInTown(STAND_IN_FILES))
 const [ONE, TWO, THREE] = STAND_INS as [string, string, string]
 const FOUR = '9000004'
 const context = (story: NightContext['story'] = PACK): NightContext => ({ story, talentOf: () => TALENT_D })
 
-/** A named farm on `day`, the opening read: 9000001 (a farmer), 9000002 (a forager) and 9000003 (a fisher) home. */
+/** A named farm on `day`, the opening read: 9000001 (a farmer), 9000002 (a forager) and 9000003 (a fisher), farmhands on
+ * the farm on their farm day (every day: their homes in town leave every day free). */
 function farm(day = 3, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 {
-  const save = joinCast(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+  const save = hired(joinCast(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack))
   return { ...save, today: { ...save.today, bonds: {} } }
+}
+/** Everyone on the roster a farmhand, from the day she joined. */
+const hired = (save: SaveV4): SaveV4 => ({ ...save, roster: Object.fromEntries(Object.entries(save.roster).map(([id, uma]) => [id, { ...uma, farmhand: uma.farmhand ?? uma.joined }])) })
+/** She lives in town, not a farmhand: not on the farm. */
+function away(save: SaveV4, id: string): SaveV4 {
+  const { farmhand: _, ...uma } = save.roster[id]!
+  return { ...save, roster: { ...save.roster, [id]: uma } }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
 const at = (stage: Love['stage'], level: number, more: Partial<Love> = {}): Partial<Love> => ({ stage, level, ...more })
@@ -57,9 +66,9 @@ const withBond = (save: SaveV4, a: string, b: string, points: number): SaveV4 =>
 function packWithFour(calling: 'farming' | 'foraging' | 'fishing' | 'mining' | 'quarry', favouriteLine?: UmaBible['favouriteLine']): StoryPack {
   const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: FOUR, outfitId: '900000401', calling, paragraph: 'Invented.' }] }
   const ties: Ties = { version: 1, ties: [...json(STAND_IN_TIES).ties, { a: TWO, b: FOUR, kind: 'friends', strength: 1, line: 'They met here.', history: 'Invented.' }, { a: THREE, b: FOUR, kind: 'other', strength: 1, line: 'Neighbours.', history: 'Invented.' }] }
-  return storyPackFrom({ ...STAND_IN_FILES, cast, ties, ...(favouriteLine ? { umas: { ...STAND_IN_FILES.umas, [FOUR]: { favouriteLine } } } : {}) })
+  return storyPackFrom(atHomeInTown({ ...STAND_IN_FILES, cast, ties, ...(favouriteLine ? { umas: { ...STAND_IN_FILES.umas, [FOUR]: { favouriteLine } } } : {}) }))
 }
-const withFour = (pack: StoryPack, day = 3): SaveV4 => meet(farm(day, pack), FOUR, pack).save
+const withFour = (pack: StoryPack, day = 3): SaveV4 => hired(meet(farm(day, pack), FOUR, pack).save)
 /** `n` married on the farm's love (the household's count), invented ids that aren't on the roster. */
 const married = (save: SaveV4, n: number): SaveV4 => ({
   ...save, love: { ...save.love, ...Object.fromEntries(Array.from({ length: n }, (_, i) => [String(9100001 + i), { ...save.love[ONE]!, stage: 'spouse' as const, level: 0, wed: 1 }])) },
@@ -200,11 +209,17 @@ describe('the line effects', () => {
 })
 
 describe('night chores', () => {
-  it('counts 1 at F6, 2 at R7 and 3 at S4, never more, and none away', () => {
+  it('counts 1 at F6, 2 at R7 and 3 at S4, never more, and none away: on the farm is a spouse in her room or a farmhand on her farm day', () => {
     expect([at('friendship', 5), at('friendship', 6), at('romance', 7), spouse(4), spouse(5)].map((l) => choresOf(l as Love))).toEqual([0, 1, 2, 3, 3])
     const save = withLove(farm(), TWO, spouse(5))
     expect(choresTonight(save, PACK, TWO)).toBe(3)
-    expect(choresTonight({ ...save, dorm: { ...save.dorm, home: save.dorm.home.filter((id) => id !== TWO) } }, PACK, TWO)).toBe(0)
+    // A spouse waiting for a room, not a farmhand, lives in town; in her room she lives on the farm.
+    expect(choresTonight(away(save, TWO), PACK, TWO)).toBe(0)
+    expect(choresTonight(away(withLove(save, TWO, spouse(5, { house: 0 })), TWO), PACK, TWO)).toBe(3)
+    // A farmhand on her town day is in town: on the stand-in's own schedule, 9000002 is out on Spring 2, 5, 8 and 11.
+    const plain = storyPackFrom(STAND_IN_FILES)
+    const f6 = withLove(farm(), TWO, at('friendship', 6))
+    expect([3, 5].map((day) => choresTonight({ ...f6, calendar: { day } }, plain, TWO))).toEqual([1, 0])
   })
 
   it('a forager\'s bring an item each from her rank\'s deepest area this season at a day\'s haul\'s stars; a fisher\'s a fish from her deepest spot', () => {
@@ -277,8 +292,9 @@ describe('morning items', () => {
     expect(advance({ ...json(farm().love[ONE]!), stage: 'romance', level: 1, points: 240 }, 12)).toMatchObject({ level: 2, morning: 12 })
     expect(advance({ ...json(farm().love[ONE]!), stage: 'spouse', level: 1, wed: 1, points: 600 }, 30)).toMatchObject({ level: 2, morning: 30 })
     expect(advance({ ...json(farm().love[ONE]!), stage: 'romance', level: 2, morning: 12, points: 280 }, 16)).toMatchObject({ level: 3, morning: 12 })
-    const away: SaveV4 = { ...withLove(farm(), TWO, at('romance', 2, { morning: 10 })), calendar: { day: 14 } }
-    expect(leaveMorningItems({ ...away, dorm: { ...away.dorm, home: [ONE, THREE] } }, PACK, talentsD).lines).toEqual([])
+    const off: SaveV4 = { ...withLove(farm(), TWO, at('romance', 2, { morning: 10 })), calendar: { day: 14 } }
+    expect(leaveMorningItems(away(off, TWO), PACK, talentsD).lines).toEqual([])
+    expect(leaveMorningItems(off, PACK, talentsD).lines).toHaveLength(1)
   })
 
   it('lands at night step 9 with its Hearts line', () => {
@@ -308,7 +324,7 @@ describe('the mentor', () => {
   it('pays at night step 6', () => {
     const pack = packWithFour('foraging')
     const four = withFour(pack)
-    const base: SaveV4 = { ...four, dorm: { ...four.dorm, level: 2, home: [...four.dorm.home, FOUR] }, buildings: { ...four.buildings, dorm: 2 } }
+    const base: SaveV4 = four
     const night = (save: SaveV4) => nightWorking(save, [{ outfitId: TWO, place: 'forest' }, { outfitId: FOUR, place: 'forest' }], [], pack)
     // At Friendship 8 she isn't a mentor yet (her own ×1.05 from F5 either way).
     const before = night(withLove(base, TWO, at('friendship', 8)))
@@ -371,16 +387,19 @@ describe('her signature dish', () => {
 })
 
 describe('breakfast', () => {
-  it('feeds the crew one day when none is; a meal running is neither shortened nor extended; not a staff meal', () => {
-    const base = farm()
+  it('feeds those who live on the farm one day when none is; a meal running is neither shortened nor extended; not a staff meal', () => {
+    // The three spouses in their rooms (the Farmhouse's two, and House 1's); a farmhand who lives in town isn't fed.
+    const wed = [ONE, TWO, THREE].reduce((s, id, i) => withLove(s, id, spouse(1, { house: i < 2 ? 0 : 1 })), farm())
+    const base: SaveV4 = { ...wed, homestead: { ...wed.homestead, houses: [...wed.homestead.houses, { name: 'Rose Cottage', extended: false }], slept: [0, 0] } }
+    expect(breakfast(withLove(base, ONE, at('romance', 7)), PACK).fed).toEqual([TWO, THREE])
     const save: SaveV4 = { ...base, roster: { ...base.roster, [TWO]: { ...base.roster[TWO]!, wellFed: 2 } } }
     const { save: after, fed } = breakfast(save, PACK)
     expect(fed).toEqual([ONE, THREE])
     expect([ONE, TWO, THREE].map((id) => after.roster[id]!.wellFed)).toEqual([1, 2, 1])
     expect(after.farm.counts).toEqual(save.farm.counts)
     expect(after.workshops).toEqual(save.workshops)
-    // +5 a pair it fed (the breakfast).
-    expect(bondOf(after, ONE, THREE) - bondOf(save, ONE, THREE)).toBe(5)
+    // +5 a pair it fed (the breakfast), ×1.5 from Romance 4 for her closest friend (both spouses here): 8.
+    expect(bondOf(after, ONE, THREE) - bondOf(save, ONE, THREE)).toBe(8)
     expect(bondOf(after, ONE, TWO)).toBe(bondOf(save, ONE, TWO))
     // Nobody to feed: unchanged.
     const fedAll = breakfast(after, PACK)
@@ -393,13 +412,10 @@ describe('the ranch\'s and mining\'s perks', () => {
   const miner = packWithFour('mining')
   const quarrier = packWithFour('quarry')
   const rancher = packWithFour('farming', 'ranch')
-  /** 9000004 at home in the Dorm, at `love`, on a farm with these places standing. */
+  /** 9000004, a farmhand on the farm on her farm day, at `love`, on a farm with these places standing. */
   const four = (pack: StoryPack, love: Partial<Love>, ...places: string[]): SaveV4 => {
     const met = withFour(pack)
-    const save: SaveV4 = {
-      ...met, dorm: { ...met.dorm, level: 2, home: [...met.dorm.home, FOUR] },
-      buildings: { ...met.buildings, dorm: 2, ...Object.fromEntries(places.map((id) => [id, 1])) },
-    }
+    const save: SaveV4 = { ...met, buildings: { ...met.buildings, ...Object.fromEntries(places.map((id) => [id, 1])) } }
     return withLove(save, FOUR, love)
   }
   const chicken = (n: number, more: Partial<Animal> = {}): Animal => ({ id: `chicken-${n}`, kind: 'chicken', fondness: 0, fed: false, cared: false, ready: false, ...more })
@@ -504,7 +520,7 @@ describe('the ranch\'s and mining\'s perks', () => {
     expect(parseSaveV5(json(night))).toEqual(night)
     // No animals in her building, or away from the farm: none.
     expect(ranchChores(withAnimals(coop, []), rancher).chores).toEqual([])
-    expect(ranchChores({ ...coop, dorm: { ...coop.dorm, home: coop.dorm.home.filter((id) => id !== FOUR) } }, rancher).chores).toEqual([])
+    expect(ranchChores(away(coop, FOUR), rancher).chores).toEqual([])
   })
 
   it('a ranch Uma working the Coop gives an extra good at times: the perks\' extras on what she collects', () => {

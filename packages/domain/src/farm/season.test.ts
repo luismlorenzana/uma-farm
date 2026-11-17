@@ -5,26 +5,26 @@
 // his next build waits for logs), each where it isn't thin yet today (four full hauls a place; a farmhand's places left to
 // her). He keeps the logs and fish his next build takes, and builds as he goes, never into a
 // night he can't pay: the Mill on a loan from the mayor's office as soon as he holds its logs (Spring), then the Farm
-// Rank 3 stations, with his own gold or a loan. Alone, nobody lives on the farm: an Uma there eats, and one with no work
-// costs her upkeep and her meals for nothing. Every night the farm eats, then pays its bill after the bin: the loans'
+// Rank 3 stations, with his own gold or a loan. Nobody lives on the farm (only a spouse does, in her room). Every night
+// the farm eats, then pays its bill after the bin: the loans'
 // shares, then the takeout and the upkeep. **He eats takeout** (30g a night) while his gold holds, and cooks a batch
 // from his cheapest goods to bridge a night it wouldn't: six meals, his next three nights'.
 //
-// **Beside him, the same year with two farmhands**, two friends from town invited to work on Spring 2 (10g of upkeep
-// each a night from then on): one waters the whole field, the other forages and fishes at the deepest places the farm
-// reaches. Two Umas live on the farm from Summer, three from Autumn and four from Winter (the Dorm's second level for the
-// fourth), though none of them works it. The farmer then grows a field twice the size, plants it and harvests it, waters
+// **Beside him, the same year with two farmhands**, two friends from town invited to work on Spring 2: they live in town
+// and come on their farm days, the eight of each season's twelve their default schedule leaves free, and work and eat on
+// the farm those days (their meals are their cost; no upkeep). One waters the whole field, the other forages and fishes
+// at the deepest places the farm reaches. The farmer then grows a field twice the size, plants it and harvests it, waters
 // only what she won't reach tonight, gathers no more than he did alone, and spends the rest of his day with the people in
 // town; their aptitudes grow with the year. **The field hand is the Cook**: once the field's watered, her actions left
 // cook a batch each until the pantry holds tonight's meals, and he keeps back from the bin the goods her batches take
 // (★2 goods first, whose meals leave everyone well fed). The same farm on takeout alone is the measure of what she saves.
 //
-// **And the whole farm, over two years**: the same farm with its two farmhands builds the Coop as soon as the Farm Rank
+// **And the whole farm, over three years**: the same farm with its two farmhands builds the Coop as soon as the Farm Rank
 // offers it and its logs and vegetables are held, keeps four chickens there, fed from fodder he buys in town, and invites
-// a third friend to care for them (feed, collect, care); in its second year it builds the Mine (its planks sawn from
+// a third friend to care for them (feed, collect, care); once Farm Rank 4 comes (its third year) it builds the Mine (its planks sawn from
 // his logs at the Sawmill), invites a fourth to work its face, and takes the stairs whenever she finds them. The Coop and
-// the Mine add their upkeep (15g a night each) and their farmhands' (10g each); the chickens cost their price and their
-// feed. The Cook feeds them all.
+// the Mine add their upkeep (15g a night each) and their farmhands' meals on their farm days; the chickens cost their
+// price and their feed. The Cook feeds them all.
 //
 // Spring's checks are the first season's: the day's budget holds, watered crops grow and dry ones don't, the season's
 // end withers what's left, and the bin pays. The year's: the bill is always paid (never a short night), the loan
@@ -32,21 +32,23 @@
 // with the farmhands, richer than the farmer alone, his own watering mostly theirs. Food's: takeout bites from the first
 // night and never sinks the farm alone, and cooking every night he can alone eats every meal and never runs short; the
 // Cook's farm eats from the pantry and ends the year richer than on takeout.
-// The whole farm's: never a short night in two years, every season ahead of its bill, and the eggs and the ores each
-// paying more than their place's nights cost (its upkeep, its farmhand's, the feed and the hens). No story pack (the
-// night runs the farm's steps). `SEASON=1` prints the six runs.
+// The whole farm's: never a short night in three years, every season ahead of its bill, and the eggs and the ores each
+// paying more than their place's nights cost (its upkeep, its farmhand's meals, the feed and the hens). The night reads a
+// pack of the four farmhands alone (`castPack`: invented, on the default schedule, no bible), for their farm days.
+// `SEASON=1` prints the six runs.
 import { describe, expect, it } from 'vitest'
 import { actionsLeft, DAY_ACTIONS, goToTown, spendActions } from './actions'
 import { heldFor, payBuild } from './builds'
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS, type Season } from './calendar'
-import { borrowFor, buildOrders, UPKEEP_BUILDING, UPKEEP_RESIDENT, upkeepOf } from './economy'
+import { borrowFor, buildOrders, UPKEEP_BUILDING, upkeepOf } from './economy'
 import { aptitudeOf, aptitudesOf, handsTonight, setTasks } from './farmhands'
 import { addBatch, BATCH_GOODS, cookBatch, cookBatchAt, foodHeld, mealsNeeded, MEALS_A_DAY, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
 import { buyRecipe, knownRecipes, recipeLock, recipeOf } from '../kitchen/recipes'
 import { botKitchen, botKitchenKeeps, botRecipe } from '../kitchen/stove-bots'
 import { talentsD } from './talents'
-import { bedsAt, farmRankOf } from './farm'
-import { buyDorm, dormBought } from './dorm'
+import { farmRankOf } from './farm'
+import { farmDayOn, worksOn } from '../town/town'
+import { castPack } from '../story/authored.fixture'
 import { placeBuilt, farmPlace, type FarmPlaceId } from './places'
 import { clearTile, harvestTile, plantTile, seedsInSeason, stagesOf, TILES_HARVESTED, tillTile, waterTile } from '../fields/fields'
 import { stairsLock, takeStairs } from '../gathering/digs'
@@ -80,19 +82,22 @@ const HANDS = { field: '9101', gather: '9102' } as const
 const RANCH_HANDS = { coop: '9103', mine: '9104' } as const
 /** The Cook: the field hand, once the field's watered. */
 const COOK = HANDS.field
+/** The four farmhands' pack, in this order: each on the default schedule, her town days every third day of a season
+ * from day 1, 2, 3 and 1, her farm days the other eight. */
+const SIM_PACK = castPack([HANDS.field, HANDS.gather, RANCH_HANDS.coop, RANCH_HANDS.mine])
 const HIRED = 2
 const FIELD = Array.from({ length: FIELD_TILES }, (_, i) => i)
 /** What he builds, in order, each from its season once the Farm Rank offers it: the Mill as soon as he holds its logs,
- * the Dorm's second level for a fourth Uma, then the Farm Rank 3 stations. Alone, nobody lives on the farm: no Dorm. */
+ * then the Farm Rank 3 stations. */
 const PLAN: readonly { project: string; from: Season }[] = [
-  { project: 'mill', from: 'spring' }, { project: 'dorm:2', from: 'autumn' }, { project: 'sawmill', from: 'spring' }, { project: 'smokehouse', from: 'spring' },
+  { project: 'mill', from: 'spring' }, { project: 'sawmill', from: 'spring' }, { project: 'smokehouse', from: 'spring' },
 ]
-const PLAN_ALONE = PLAN.filter((p) => !p.project.startsWith('dorm'))
+const PLAN_ALONE = PLAN
 /** The whole farm's: the Coop after the Mill (from Summer, its Farm Rank's season), the rest as before, the Kitchen once the
  * Farm Rank 3 stations stand, then the Mine. (The year with two farmhands ends before its stations are all up: it builds
  * no Kitchen.) */
 const PLAN_WHOLE: readonly { project: string; from: Season }[] = [
-  { project: 'mill', from: 'spring' }, { project: 'coop', from: 'summer' }, { project: 'dorm:2', from: 'autumn' }, { project: 'sawmill', from: 'spring' },
+  { project: 'mill', from: 'spring' }, { project: 'coop', from: 'summer' }, { project: 'sawmill', from: 'spring' },
   { project: 'smokehouse', from: 'spring' }, { project: 'kitchen', from: 'spring' }, { project: 'mine', from: 'spring' },
 ]
 /** The run's food, as `simulate` sets it: on takeout alone, the farm never builds the Kitchen. */
@@ -104,12 +109,6 @@ const RESERVE = 600
 /** Fodder: a buy when the silo runs low. */
 const FEED_LOW = 12
 const FEED_BUY = 40
-/** Who lives on the farm from each season, as the beds allow: invented ids, nobody working yet. The farmer alone keeps
- * nobody: everyone who lives on the farm eats, and an Uma who doesn't work it costs her upkeep and her meals for nothing. */
-const RESIDENTS: Readonly<Record<Season, readonly string[]>> = {
-  spring: [], summer: ['9001', '9002'], autumn: ['9001', '9002', '9003'], winter: ['9001', '9002', '9003', '9004'],
-}
-const residentsOf = (run: Run, season: Season): readonly string[] => (run === 'alone' ? [] : RESIDENTS[season])
 
 /** What the bot did, day by day. */
 interface Day {
@@ -152,8 +151,9 @@ interface Day {
 
 const growing = (save: SaveV4): number[] => fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready ? [i] : []))
 const left = actionsLeft
-/** The places a farmhand gathers at tonight: he leaves them to her. */
-const hers = (save: SaveV4): string[] => Object.values(save.roster).flatMap((u) => (u.tasks ?? []).flatMap((t) => (t.kind === 'forage' ? [t.area] : t.kind === 'fish' ? [t.spot] : [])))
+/** The places a farmhand on her farm day gathers at tonight: he leaves them to her (on her town day, they're his). */
+const hers = (save: SaveV4): string[] => Object.entries(save.roster).filter(([id]) => worksOn(save, SIM_PACK, id))
+  .flatMap(([, u]) => (u.tasks ?? []).flatMap((t) => (t.kind === 'forage' ? [t.area] : t.kind === 'fish' ? [t.spot] : [])))
 /** Whether a place is thin for him today: its four full hauls taken, or it's a farmhand's tonight. */
 const thinFor = (save: SaveV4, where: string): boolean => thinToday(save, where) || hers(save).includes(where)
 /** Where he gathers: the nearest area or spot in his reach that isn't thin for him yet today (four full hauls a place,
@@ -169,11 +169,8 @@ function haul(save: SaveV4, k: number): SaveV4 {
   const pick = kinds.find((n) => !thinFor(save, fresh(save, n === 0 ? 'fishery' : 'forest'))) ?? k % 3
   return pick === 0 ? fish(save, fresh(save, 'fishery')).save : pick === 1 ? forage(save, fresh(save, 'forest')).save : chop(save, fresh(save, 'forest')).save
 }
-/** Whether a project is done: built, paid today, or the Dorm's level bought. */
-const done = (save: SaveV4, project: string): boolean => {
-  const dorm = /^dorm:(\d)$/.exec(project)
-  return dorm ? dormBought(save) >= Number(dorm[1]) : placeBuilt(save, project as FarmPlaceId) || save.farm.builds.includes(project as FarmPlaceId)
-}
+/** Whether a project is done: built, or paid today. */
+const done = (save: SaveV4, project: string): boolean => placeBuilt(save, project as FarmPlaceId) || save.farm.builds.includes(project as FarmPlaceId)
 const nextProject = (save: SaveV4, run: Run): string | null => planOf(run).find((p) => !done(save, p.project))?.project ?? null
 /** Whether the next build's season has come. */
 const nextInSeason = (save: SaveV4, run: Run): boolean => {
@@ -194,16 +191,6 @@ function keep(save: SaveV4, id: string, run: Run): number {
 /** Whether the next build still waits for logs: he chops first. */
 const wantsLogs = (save: SaveV4, run: Run): boolean => keep(save, 'pine-log', run) > heldFor(save.items, { family: 'woods', refined: false })
 
-/** Everyone the season has on the farm, home in the Dorm, as many as its beds take. */
-function residents(save: SaveV4, run: Run): SaveV4 {
-  const ids = residentsOf(run, dateOf(save.calendar.day).season).slice(0, bedsAt(save.dorm.level))
-  if (ids.every((id) => save.dorm.home.includes(id))) return save
-  return {
-    ...save, roster: { ...save.roster, ...Object.fromEntries(ids.filter((id) => !save.roster[id]).map((id) => [id, newRosterUma(save.calendar.day)])) },
-    love: { ...save.love, ...Object.fromEntries(ids.filter((id) => !save.love[id]).map((id) => [id, newLove()])) }, dorm: { ...save.dorm, home: [...ids] },
-  }
-}
-
 /** A friend from town invited to work today, with her tasks. */
 function invite(save: SaveV4, id: string, tasks: FarmTask[]): SaveV4 {
   const day = save.calendar.day
@@ -211,7 +198,7 @@ function invite(save: SaveV4, id: string, tasks: FarmTask[]): SaveV4 {
   return setTasks(next, id, tasks)
 }
 
-/** From Spring 2, the two farmhands: friends from town (they live there), each with her tasks; the gatherer's follow the
+/** From Spring 2, the two farmhands: friends from town (they live there, and come on their farm days), each with her tasks; the gatherer's follow the
  * farm's reach to its deepest area and spot. Cooking, the field hand is the Cook: once the field's watered, her actions
  * left cook a batch each until the pantry holds tonight's meals. */
 function hire(save: SaveV4, food: Food): SaveV4 {
@@ -229,7 +216,7 @@ function kitchenKeeps(save: SaveV4, food: Food, run: Run): Map<string, number> {
   const keeps = new Map<string, number>(botKitchenKeeps(save))
   if (food !== 'cook' || run === 'alone' || !save.roster[COOK]) return keeps
   const level = aptitudeOf(save.roster[COOK]!, 'cook', () => 3).level
-  const short = Math.max(0, mealsNeeded(save) - pantryMeals(save))
+  const short = Math.max(0, mealsNeeded(save, SIM_PACK) - pantryMeals(save))
   // Her batches tonight, by the plain rule, as she'll take them.
   let kitchen = save
   for (let n = Math.ceil(short / cookBatchAt(level)); n > 0; n--) {
@@ -294,7 +281,7 @@ function ranchAndMine(start: SaveV4, day: Day, run: Run): SaveV4 {
 
 /** Tonight's bill as the farm stands: its upkeep and anything owed, and takeout for every meal the pantry is short. */
 const billTonight = (save: SaveV4): number =>
-  upkeepOf(save).gold + save.farm.owed + Math.max(0, mealsNeeded(save) - pantryMeals(save)) * TAKEOUT_PRICE
+  upkeepOf(save).gold + save.farm.owed + Math.max(0, mealsNeeded(save, SIM_PACK) - pantryMeals(save)) * TAKEOUT_PRICE
 
 /** The next build, from its season and once its goods are held: with his own gold, else a loan from the mayor's office
  * (going into town for it); never one that leaves less gold than tonight's bill. */
@@ -306,7 +293,7 @@ function build(start: SaveV4, run: Run): { save: SaveV4; built: string | null } 
   if (!order) return { save: start, built: null }
   if (start.gold + order.borrow - order.cost < billTonight(start)) return { save: start, built: null }
   if (order.own === null) {
-    const save = order.kind === 'dorm' ? buyDorm(start) : payBuild(start, next.project as FarmPlaceId)
+    const save = payBuild(start, next.project as FarmPlaceId)
     return { save, built: `${next.project} (own gold)` }
   }
   if (order.lock !== null || (!start.today.town && left(start) < 1)) return { save: start, built: null }
@@ -325,7 +312,7 @@ function quickestSeed(save: SaveV4, daysLeft: number, run: Run) {
 /** One day's play, then the night; with farmhands, he leaves her the watering she'll do tonight. */
 function play(start: SaveV4, log: Day[], run: Run, food: Food): SaveV4 {
   const hands = run !== 'alone'
-  let save = residents(start, run)
+  let save = start
   if (hands) save = hire(save, food)
   const keepGrowing = hands ? KEEP_GROWING_HANDS : KEEP_GROWING
   const day: Day = {
@@ -342,7 +329,7 @@ function play(start: SaveV4, log: Day[], run: Run, food: Food): SaveV4 {
   day.built = built.built
   if (run === 'whole') save = ranchAndMine(save, day, run)
   // The Kitchen, once it stands: his play every day he can (the casual bot), then the staff meal.
-  const played = botKitchen(save)
+  const played = botKitchen(save, 'casual', SIM_PACK)
   save = played.save
   day.dishes = played.dishes
   day.staff = played.served
@@ -373,7 +360,7 @@ function play(start: SaveV4, log: Day[], run: Run, food: Food): SaveV4 {
   }
   // With the farmhands: water what she won't reach tonight, as the farm stands now.
   if (hands) {
-    const tonight = fieldTiles(handsTonight(save, save, talentsD, null).save)
+    const tonight = fieldTiles(handsTonight(save, save, talentsD, SIM_PACK).save)
     for (const i of growing(save)) if (!fieldTiles(save)[i]!.watered && !tonight[i]!.watered && left(save) > 0) { save = waterTile(save, i); day.watered++ }
   }
   // A recipe for the goods the farm ships most of, bought in town at the day's end with gold to spare, on a day the
@@ -412,7 +399,7 @@ function play(start: SaveV4, log: Day[], run: Run, food: Food): SaveV4 {
   }
   day.spent = save.today.actions
   const before = fieldTiles(save).map((t) => t.growth)
-  const morning = runNight(save, {})
+  const morning = runNight(save, { story: SIM_PACK })
   day.hands = morning.summary!.work.reduce((n, w) => n + (w.kind === 'farmhand' ? w.spent : 0), 0)
   day.grewTonight = fieldTiles(morning).filter((t, i) => t.crop !== null && t.growth > before[i]!).length
   const money = morning.summary?.money ?? []
@@ -466,7 +453,7 @@ function simulate(run: Run, years = 1, food: Food = 'cook'): { log: Day[]; end: 
     }
   }
   if (process.env.SEASON) {
-    const name = run === 'alone' ? 'The farmer alone' : run === 'hands' ? 'With two farmhands' : 'The whole farm: the Coop and the Mine, two years'
+    const name = run === 'alone' ? 'The farmer alone' : run === 'hands' ? 'With two farmhands' : 'The whole farm: the Coop and the Mine, three years'
     console.log(`--- ${name}, ${food === 'cook' ? 'cooking' : food === 'stove' ? 'cooking every night he can' : 'on takeout'} ---`)
     console.log(log.map((d) => `${dateOf(d.day).season} ${dateOf(d.day).day}: ${d.spent} actions${hands(run) ? ` (+${d.hands} theirs, ${d.people} with the people)` : ''}, harvested ${d.harvested}, watered ${d.watered}, planted ${d.planted}, `
       + `${d.grewTonight} grew tonight, ${d.gold}g morning, +${d.income} bin${d.eggs + d.ores > 0 ? ` (eggs ${d.eggs}, ores ${d.ores})` : ''}, ${d.mouths} mouths: ${d.pantry} from the pantry, `
@@ -498,19 +485,23 @@ function simulate(run: Run, years = 1, food: Food = 'cook'): { log: Day[]; end: 
 const hands = (run: Run): boolean => run !== 'alone'
 
 /** A place's own books on the whole farm, from the night it stood: its goods sold (the eggs, the ores) against its
- * nights' upkeep, its farmhand's and, for the Coop, the hens and their feed. */
+ * nights' upkeep, its farmhand's meals on her farm days (at takeout's price, the most they cost) and, for the Coop, the
+ * hens and their feed. */
 function ranchBooks(log: readonly Day[], mornings: readonly SaveV4[], place: 'coop' | 'mine'): { nights: number; earned: number; cost: number } {
   const from = mornings.findIndex((m) => placeBuilt(m, place))
   if (from < 0) return { nights: 0, earned: 0, cost: 0 }
   const days = log.slice(from + 1)
   const earned = days.reduce((n, d) => n + (place === 'coop' ? d.eggs : d.ores), 0)
   const spent = place === 'coop' ? log.reduce((n, d) => n + d.ranchSpent, 0) : 0
-  return { nights: days.length, earned, cost: days.length * (UPKEEP_BUILDING + UPKEEP_RESIDENT) + spent }
+  const hand = place === 'coop' ? RANCH_HANDS.coop : RANCH_HANDS.mine
+  const meals = days.filter((d) => farmDayOn(SIM_PACK, hand, d.day)).length * MEALS_A_DAY * TAKEOUT_PRICE
+  return { nights: days.length, earned, cost: days.length * UPKEEP_BUILDING + meals + spent }
 }
 
 const { log, end, mornings, books } = simulate('alone')
 const withHands = simulate('hands')
-const whole = simulate('whole', 2)
+/** The whole farm, three years: its farmhands' farm days bring Farm Rank 4, and the Mine, in its third. */
+const whole = simulate('whole', 3)
 /** The same farms on takeout alone, for what cooking saves. */
 const aloneTakeout = simulate('alone', 1, 'takeout')
 /** Alone, a batch whenever the pantry won't hold tonight's two meals: six meals, three nights of his. */
@@ -568,7 +559,7 @@ describe('a simulated first year: the farm pays its way', () => {
   it('clears every loan and builds the Mill; the farmer alone reaches Farm Rank 2', () => {
     expect(end.farm.loans).toEqual([])
     expect(log.flatMap((d) => (d.built ? [d.built.split(' ')[0]] : []))).toEqual(['mill'])
-    expect(end.dorm).toMatchObject({ level: 1, home: [] })
+    expect(upkeepOf(end).residents).toBe(0)
     // The Farm Rank 3 stations wait for the farmhands' pace: the farmer alone ships about 9,000g in a year.
     expect(farmRankOf(end.farm.points)).toBe(2)
   })
@@ -581,18 +572,28 @@ describe('a simulated first year: the farm pays its way', () => {
 describe('a simulated first year with two farmhands: they pay their way', () => {
   const { log: days, end: last, mornings: mornings2, books: books2 } = withHands
 
-  it('pays their upkeep, 10g each a night, and every night\'s: never a short night, never half pace', () => {
+  it('pays every night\'s bill, their meals on their farm days with it: never a short night, never half pace, and no upkeep for them', () => {
     expect(days.filter((d) => d.short).map((d) => d.day)).toEqual([])
     for (const morning of mornings2) expect(morning.farm).toMatchObject({ owed: 0, short: 0 })
-    // Four home and the two farmhands.
-    expect(upkeepOf(last).residents).toBe(6)
-    expect(upkeepOf(last).gold - upkeepOf(end).gold).toBeGreaterThanOrEqual(6 * UPKEEP_RESIDENT)
+    // Nobody lives on the farm, and the farmhands cost no upkeep: only the places built.
+    expect(upkeepOf(last).residents).toBe(0)
+    expect(upkeepOf(last).gold).toBe(upkeepOf(last).places * UPKEEP_BUILDING)
+    // On a farm day of both, three mouths eat; on a town day of one, two.
+    const both = days.find((d) => d.day > HIRED && farmDayOn(SIM_PACK, HANDS.field, d.day) && farmDayOn(SIM_PACK, HANDS.gather, d.day))!
+    const one = days.find((d) => d.day > HIRED && !farmDayOn(SIM_PACK, HANDS.field, d.day))!
+    expect([both.mouths, one.mouths]).toEqual([3, 2])
   })
 
-  it('works their actions every night from Spring 2, and the morning reports them', () => {
+  it('works their actions on their farm days from Spring 2, and the morning reports them; on a town day she\'s in town', () => {
     expect(days[0]!.hands).toBe(0)
-    for (const d of days.slice(1)) expect(d.hands, `day ${d.day}`).toBeGreaterThanOrEqual(3)
-    expect(mornings2.at(-1)!.summary!.work.filter((w) => w.kind === 'farmhand').map((w) => w.kind === 'farmhand' && w.id)).toEqual([HANDS.field, HANDS.gather])
+    // Their town days differ (the field hand's 1, 4, 7, 10, the gatherer's 2, 5, 8, 11): one of them works every day.
+    for (const d of days.slice(1)) expect(d.hands, `day ${d.day}`).toBeGreaterThanOrEqual(1)
+    // Each morning reports the farmhands who worked: those on their farm day.
+    for (const [i, morning] of mornings2.entries()) {
+      const worked = morning.summary!.work.filter((w) => w.kind === 'farmhand').map((w) => w.kind === 'farmhand' && w.id)
+      const day = days[i]!.day
+      expect(worked, `day ${day}`).toEqual([HANDS.field, HANDS.gather].filter((id) => day >= HIRED && farmDayOn(SIM_PACK, id, day)))
+    }
   })
 
   it('earns more each season than its takeout, upkeep and loans take, and ends the year richer than the farmer alone', () => {
@@ -602,16 +603,16 @@ describe('a simulated first year with two farmhands: they pay their way', () => 
     expect(last.farm.loans).toEqual([])
   })
 
-  it('frees the farmer\'s own day for the people: her watering is most of the field\'s', () => {
+  it('frees the farmer\'s own day for the people: her watering is much of the field\'s, his on her town days', () => {
     const his = (d: readonly Day[]) => d.reduce((n, x) => n + x.watered, 0)
-    expect(his(days)).toBeLessThan(his(log) / 2)
-    expect(days.reduce((n, d) => n + d.people, 0)).toBeGreaterThan(DAYS_PER_YEAR * 2)
+    expect(his(days)).toBeLessThan((his(log) * 2) / 3)
+    expect(days.reduce((n, d) => n + d.people, 0)).toBeGreaterThan(DAYS_PER_YEAR)
     expect(days.reduce((n, d) => n + d.grewTonight, 0)).toBeGreaterThan(log.reduce((n, d) => n + d.grewTonight, 0))
   })
 
-  it('raises their aptitudes over the year: the field hand waters a row in one action by its end', () => {
+  it('raises their aptitudes over the year: the field hand waters two tiles an action, Watering 5 by its end', () => {
     const talentIn = () => 3 as const
-    expect(aptitudeOf(last.roster[HANDS.field]!, 'water', talentIn).level).toBeGreaterThanOrEqual(6)
+    expect(aptitudeOf(last.roster[HANDS.field]!, 'water', talentIn).level).toBeGreaterThanOrEqual(5)
     expect(aptitudeOf(last.roster[HANDS.gather]!, 'fish', talentIn).level).toBeGreaterThanOrEqual(4)
     expect(aptitudeOf(last.roster[HANDS.gather]!, 'forage', talentIn).level).toBeGreaterThanOrEqual(4)
   })
@@ -661,15 +662,16 @@ describe('food with two farmhands, the field hand on Cook: cooking pays for itse
     expect(bought / takeout.end.farm.counts[GOLD_SHIPPED]!).toBeLessThan(0.3)
   })
 
-  it('feeds the farm from the pantry once the field yields: less takeout each season from Summer, under a third of it by Winter', () => {
+  it('feeds the farm from the pantry once the field yields: less takeout each season from Summer, a third less than on takeout by Winter', () => {
     const [, summer, autumn, winter] = seasons
     expect(autumn!.takeout).toBeLessThan(summer!.takeout)
     expect(winter!.takeout).toBeLessThan(autumn!.takeout)
-    expect(winter!.takeout).toBeLessThan(takeout.books[3]!.takeout / 3)
-    expect(winter!.pantry).toBeGreaterThan(winter!.takeoutMeals * 2)
-    // Her batches grow with her Cooking, and her ★2 meals leave the farmhands well fed.
-    expect(aptitudeOf(last.roster[COOK]!, 'cook', () => 3).level).toBeGreaterThanOrEqual(3)
-    expect(winter!.fed).toBeGreaterThan(DAYS_PER_SEASON)
+    expect(winter!.takeout).toBeLessThan((takeout.books[3]!.takeout * 2) / 3)
+    // On her farm days, once the field's watered, she cooks: the pantry feeds part of every night from Autumn, and her ★2
+    // meals leave a farmhand well fed now and then.
+    for (const season of [autumn!, winter!]) expect(season.pantry).toBeGreaterThan(0)
+    expect(aptitudeOf(last.roster[COOK]!, 'cook', () => 3).level).toBeGreaterThanOrEqual(2)
+    expect(winter!.fed).toBeGreaterThan(0)
     expect(days.reduce((n, d) => n + d.spoiled, 0)).toBe(0)
   })
 
@@ -679,33 +681,33 @@ describe('food with two farmhands, the field hand on Cook: cooking pays for itse
   })
 })
 
-describe('the whole farm over two years: the Coop and the Mine pay their way', () => {
+describe('the whole farm over three years: the Coop and the Mine pay their way', () => {
   const { log: days, end: last, mornings: all, books: seasons } = whole
   const builtOn = (place: string) => days.find((d) => d.built?.startsWith(`${place} `))?.day ?? null
 
-  it('pays every night\'s upkeep for two years: never a short night, never half pace', () => {
-    expect(days).toHaveLength(2 * DAYS_PER_YEAR)
+  it('pays every night\'s upkeep for three years: never a short night, never half pace', () => {
+    expect(days).toHaveLength(3 * DAYS_PER_YEAR)
     expect(days.filter((d) => d.short).map((d) => d.day)).toEqual([])
     for (const morning of all) expect(morning.farm).toMatchObject({ owed: 0, short: 0 })
   })
 
-  it('earns more each season than its upkeep and loans take, and ends the two years richer than one year with two farmhands', () => {
-    expect(seasons).toHaveLength(8)
-    for (const [i, b] of seasons.entries()) expect(b.income, `${b.season} ${i < 4 ? 1 : 2}`).toBeGreaterThan(b.takeout + b.upkeep + b.repaid)
+  it('earns more each season than its upkeep and loans take, and ends the three years richer than one year with two farmhands', () => {
+    expect(seasons).toHaveLength(12)
+    for (const [i, b] of seasons.entries()) expect(b.income, `${b.season} ${Math.floor(i / 4) + 1}`).toBeGreaterThan(b.takeout + b.upkeep + b.repaid)
     expect(last.gold).toBeGreaterThan(withHands.end.gold)
     expect(last.farm.loans).toEqual([])
   })
 
-  it('builds the Coop in its first year, the Kitchen and the Mine in its second, and counts them in the upkeep', () => {
+  it('builds the Coop in its first year, the Kitchen in its second and the Mine in its third (Farm Rank 4), and counts them in the upkeep', () => {
     expect(builtOn('coop')).toBeLessThanOrEqual(DAYS_PER_YEAR)
     expect(builtOn('kitchen')).toBeGreaterThan(DAYS_PER_YEAR)
     expect(builtOn('kitchen')).toBeLessThan(builtOn('mine')!)
-    expect(builtOn('mine')).toBeGreaterThan(DAYS_PER_YEAR)
+    expect(builtOn('mine')).toBeGreaterThan(2 * DAYS_PER_YEAR)
     expect(upkeepOf(last).places).toBe(upkeepOf(withHands.end).places + 3)
-    expect(upkeepOf(last).residents).toBe(upkeepOf(withHands.end).residents + 2)
+    expect(upkeepOf(last).residents).toBe(0)
   })
 
-  it('pays more in eggs than the Coop\'s nights cost (its upkeep, its farmhand, the hens and their feed), and more in ores than the Mine\'s', () => {
+  it('pays more in eggs than the Coop\'s nights cost (its upkeep, its farmhand\'s meals, the hens and their feed), and more in ores than the Mine\'s', () => {
     const coop = ranchBooks(days, all, 'coop')
     const mine = ranchBooks(days, all, 'mine')
     expect(coop.nights).toBeGreaterThan(DAYS_PER_YEAR)
@@ -714,8 +716,10 @@ describe('the whole farm over two years: the Coop and the Mine pay their way', (
     expect(mine.earned).toBeGreaterThan(mine.cost)
   })
 
-  it('reports the farmhands at the Coop and the Mine each morning, and takes the stairs to the Farm Rank\'s reach', () => {
-    const morning = all.at(-1)!.summary!.work
+  it('reports the farmhands at the Coop and the Mine on their farm days, and takes the stairs to the Farm Rank\'s reach', () => {
+    // The last morning after a farm day of both.
+    const at = [...all.keys()].reverse().find((i) => [RANCH_HANDS.coop, RANCH_HANDS.mine].every((id) => farmDayOn(SIM_PACK, id, days[i]!.day)))!
+    const morning = all[at]!.summary!.work
     expect(morning).toContainEqual(expect.objectContaining({ kind: 'farmhand', id: RANCH_HANDS.coop, done: expect.objectContaining({ care: expect.any(Number) }) }))
     expect(morning).toContainEqual(expect.objectContaining({ kind: 'farmhand', id: RANCH_HANDS.mine, done: { mine: expect.any(Number) } }))
     expect(morning).toContainEqual(expect.objectContaining({ kind: 'ranch', home: 'coop', hungry: 0 }))

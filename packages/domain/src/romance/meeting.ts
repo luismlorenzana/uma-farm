@@ -4,9 +4,10 @@
 // town and the night.
 //
 //   introduce      in town today (`today.town`), where she is now, not met yet, and not one of the town's people:
-//                  one action, and she joins the roster (`meet`) at Friendship 0. She keeps living in town; Invite to the
-//                  farm (`inviteToFarm`) brings her into a free Dorm bed. Her meeting scene (her arrival scene, or the
-//                  default story's) plays next (`sceneDue`). No cap on how many
+//                  one action, and she joins the roster (`meet`) at Friendship 0. She lives in town: nobody lives on the
+//                  farm until she marries you (a spouse in her room), and a friend you invite to work comes on her farm
+//                  days. Her meeting scene (her arrival scene, or the default story's) plays next (`sceneDue`). No cap
+//                  on how many
 //   no welcome     nobody comes to the Gate, and the night meets no one: the pack's welcome list and her trigger to meet
 //                  are read and retired. Her chapters' gates stay (`chapters.ts`), and the trigger menu stays theirs and
 //                  the Town notes'
@@ -15,11 +16,10 @@
 import { seedTies } from '../farm/bonds'
 import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { dateOf, festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
-import { freeBeds } from '../farm/dorm'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
 import { SaveRuleError } from '../save/rules'
-import { atHome, newLove, newRosterUma, type SaveV4 } from '../save/v4'
+import { newLove, newRosterUma, type SaveV4 } from '../save/v4'
 import type { StoryTrigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { townOf } from '../story/placeholders'
@@ -65,8 +65,7 @@ export function triggerHolds(save: SaveV4, trigger: StoryTrigger, talks: number,
   }
 }
 
-/** You've met her: she joins the roster today at Friendship 0 with 0 points, living in town (no Dorm bed: Invite to the
- * farm brings her), and each of her ties with someone met starts at its seed (`seedTies`). Her meeting scene is due next
+/** You've met her: she joins the roster today at Friendship 0 with 0 points, living in town, and each of her ties with someone met starts at its seed (`seedTies`). Her meeting scene is due next
  * (`sceneDue`). Refused for someone met already. Never stamps. */
 export function meet(save: SaveV4, id: string, pack: Pick<StoryPack, 'ties'> | null = null): { save: SaveV4 } {
   if (save.roster[id]) throw new SaveRuleError('bad-job', 'You’ve met her already.')
@@ -91,20 +90,4 @@ export function introduce(save: SaveV4, pack: MeetPack, id: string): SaveV4 {
   const block = introduceBlock(save, pack, id)
   if (block) throw new SaveRuleError(block === 'No actions left today.' ? 'no-actions' : 'not-ready', block)
   return meet(spend(save, 'introduce'), id, pack).save
-}
-
-/** Why she can't be invited to the farm now, or null: she's met and lives in town, and a bed is free this morning. */
-export function inviteBlock(save: Pick<SaveV4, 'roster' | 'dorm' | 'love'>, id: string): string | null {
-  if (!save.roster[id]) return 'You haven’t met her yet.'
-  if (atHome(save, id)) return 'She lives on the farm.'
-  if (save.dorm.swaps.some((s) => s.in === id)) return 'She arrives tomorrow.'
-  if (freeBeds(save) <= 0) return 'No bed free.'
-  return null
-}
-
-/** Invite to the farm: one you've met who lives in town moves into a free Dorm bed now. */
-export function inviteToFarm(save: SaveV4, id: string): SaveV4 {
-  const block = inviteBlock(save, id)
-  if (block) throw new SaveRuleError(block === 'No bed free.' ? 'locked' : 'bad-job', block)
-  return { ...save, dorm: { ...save.dorm, home: [...save.dorm.home, id] } }
 }

@@ -215,8 +215,7 @@ describe('the Farm Rank', () => {
     expect($('[data-points]')?.textContent).toBe('47 points')
     expect($('[data-next]')?.textContent).toBe('103 more for Farm Rank 2 (150)')
     expect($$('[data-opens] li').map((li) => li.textContent)).toEqual([
-      'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s', 'Dorm level 3 (7 beds)',
-      'New seeds at the shop',
+      'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s', 'New seeds at the shop',
     ])
     expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0', 'Festivals · 150 · 75 · 25 a place0'])
   })
@@ -232,7 +231,7 @@ describe("the morning's goal lines", () => {
       { key: 'built:boat', text: 'Built overnight · the Boat', to: '/?peek=dock', tag: 'Built' },
       {
         key: 'farm-rank:2', to: '/?sheet=rank', tag: 'Farm Rank',
-        text: 'Farm Rank 2 · The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New seeds at the shop',
+        text: 'Farm Rank 2 · The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, New seeds at the shop',
       },
       { key: 'milestone:rank:hand', text: 'First Uma at Hand · +300g', to: '/diary', tag: 'Milestone' },
       { key: 'milestone:row:woods:refined', text: 'Woods, refined: every grade shipped · +500g', to: '/diary', tag: 'Milestone' },

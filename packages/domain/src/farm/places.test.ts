@@ -1,4 +1,4 @@
-// The farm map's places: eight rows of three and the Town below them, the frames, and what opens each: day 1, a build
+// The farm map's places: eight rows of three (the yard's two since the Dorm retired) and the Town below them, the frames, and what opens each: day 1, a build
 // the Farm Rank offers, or the Umas met.
 import { describe, expect, it } from 'vitest'
 import { LOOP_WORK_PLACES } from '../save/parse-v4'
@@ -10,7 +10,7 @@ describe('the farm map', () => {
     const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => MAP_PLACES.filter((p) => p.row === r + 1).map((p) => p.name))
     expect(rows).toEqual([
       ['Fields', 'Mill', 'Coop'], ['Forest', 'Sawmill', 'Barn'], ['Fishery', 'Smokehouse', 'Kitchen'], ['Mine', 'Smelter', 'Restaurant'],
-      ['Quarry', 'Cutter', 'Forge'], ['Shipping bin', 'Warehouse', 'Dorm'], ['Requests board', 'Gate', 'Dock'], ['Shop', 'Festival ground', 'Expedition post'], ['Town'],
+      ['Quarry', 'Cutter', 'Forge'], ['Shipping bin', 'Warehouse'], ['Requests board', 'Gate', 'Dock'], ['Shop', 'Festival ground', 'Expedition post'], ['Town'],
     ])
     // Each row fills from the left; the Town stands alone in the middle, under the Gate's spine.
     for (const p of MAP_PLACES) expect(p.col, p.id).toBe(p.id === 'town' ? 1 : MAP_PLACES.filter((q) => q.row === p.row).indexOf(p))
@@ -39,11 +39,11 @@ describe('the farm map', () => {
   it('opens day 1\'s places, a build once it stands, and the board with five Umas met', () => {
     const day1 = newSave('u1', '2026-11-09T10:00:00.000Z')
     const open = (save: typeof day1) => FARM_PLACES.filter((p) => placeOpen(save, p)).map((p) => p.id)
-    expect(open(day1)).toEqual(['fields', 'forest', 'fishery', 'bin', 'warehouse', 'dorm', 'gate', 'shop', 'town'])
+    expect(open(day1)).toEqual(['fields', 'forest', 'fishery', 'bin', 'warehouse', 'gate', 'shop', 'town'])
     // The Farm Rank alone builds nothing.
     expect(open({ ...day1, farm: { ...day1.farm, points: 22_000 } })).toEqual(open(day1))
     const built = { ...day1, buildings: { ...day1.buildings, mill: 1, dock: 1, boat: 1 } }
-    expect(open(built)).toEqual(['fields', 'mill', 'forest', 'fishery', 'bin', 'warehouse', 'dorm', 'gate', 'dock', 'shop', 'town', 'boat'])
+    expect(open(built)).toEqual(['fields', 'mill', 'forest', 'fishery', 'bin', 'warehouse', 'gate', 'dock', 'shop', 'town', 'boat'])
     expect(placeBuilt(built, 'mill')).toBe(true)
     // A Mill paid for today, or an older save's plans (0), isn't built.
     expect(placeBuilt({ buildings: { dorm: 1, mill: 0 } }, 'mill')).toBe(false)

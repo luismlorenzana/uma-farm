@@ -231,7 +231,8 @@ describe('her night', () => {
   })
 
   it('rises over days: her practice climbs, and the morning says when an aptitude reaches a level', () => {
-    let save = tasks(growing(farm(), [...START_CLEAR]), A, [{ kind: 'water', tiles: [...START_CLEAR] }])
+    // Gold enough for a week of both farmhands' meals, so the farm never runs short (half pace).
+    let save = tasks(growing({ ...farm(), gold: 5000 }, [...START_CLEAR]), A, [{ kind: 'water', tiles: [...START_CLEAR] }])
     const ups: string[] = []
     for (let d = 0; d < 8; d++) {
       save = growing(night(save), [...START_CLEAR])
@@ -269,11 +270,13 @@ describe('her night', () => {
     expect(night(once).summary!.work[0]).toMatchObject({ actions: 1, spent: 1, half: true })
   })
 
-  it('pays a farmhand\'s upkeep, 10g a night, once, wherever she lives', () => {
+  it('costs no upkeep: her meals on her farm days are her cost; once she\'s a spouse in her room, she\'s a resident', () => {
     const save = farm()
-    expect(upkeepOf(save)).toMatchObject({ residents: 2, gold: 2 * UPKEEP_RESIDENT })
-    expect(upkeepOf({ ...save, dorm: { ...save.dorm, home: [A] } }).residents).toBe(2)
-    expect(upkeepOf({ ...save, roster: { [A]: newRosterUma(1) }, love: { [A]: newLove() } }).residents).toBe(0)
+    expect(upkeepOf(save)).toMatchObject({ residents: 0, gold: 0 })
+    const wed = { ...save, love: { ...save.love, [A]: { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1, house: 0 } } }
+    expect(upkeepOf(wed)).toMatchObject({ residents: 1, gold: UPKEEP_RESIDENT })
+    // Two farmhands on their farm day: the farmer and both eat, six meals of takeout, and no upkeep.
+    expect(night(farm()).summary!.money).toEqual([{ kind: 'takeout', meals: 6, paid: 90, due: 90 }])
   })
 
   it('gives the same morning from the same save, and keeps a save the parse takes', () => {

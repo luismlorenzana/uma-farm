@@ -137,21 +137,6 @@ describe('the morning\'s ranks', () => {
   })
 })
 
-describe('the morning\'s Dorm news', () => {
-  it('says the Dorm\'s new beds and who\'s home, each a tap', () => {
-    const names: Readonly<Record<string, string>> = { 101: 'Aster', 202: 'Beryl' }
-    const summary: MorningSummary = {
-      day: 8, bin: [], work: [], ranks: [], hearts: [], nudges: [],
-      news: [{ kind: 'dorm', level: 2 }, { kind: 'home', umas: ['101'] }],
-    }
-    expect(summaryParts(summary, (id) => names[id] ?? 'An Uma')).toEqual([{ section: 'news', title: 'New today', lines: [
-      { key: 'dorm', text: 'Dorm level 2 · 5 beds', to: '/dorm' },
-      { key: 'home', text: 'Aster is home', to: '/dorm' },
-    ] }])
-    expect(summaryParts({ ...summary, news: [{ kind: 'home', umas: ['101', '202'] }] })[0]!.lines[0]!.text).toBe('2 Umas are home')
-  })
-})
-
 describe('the morning\'s new story', () => {
   it('opens New today with "New story arrived" and the release\'s note, read by its number, tagged New, a tap to the Hearts tab', () => {
     const summary: MorningSummary = {

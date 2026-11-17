@@ -3,7 +3,7 @@
 // breakdown. The save holds ids and gold; these say them, for the morning card, the Book, the Diary's projects and the
 // mayor's office. Loaded on demand with those screens. Pure, so the screens and the tests read the same.
 import {
-  DORM_LOAN, HOUSE_LOAN, loanClears, placeNameOf, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT, type FarmPlaceId, type FarmSave, type Loan, type MoneyLine, type StoryPack,
+  DORM_LOAN, HOUSE_LOAN, loanClears, placeNameOf, UPKEEP_BUILDING, UPKEEP_RESIDENT, type FarmPlaceId, type FarmSave, type Loan, type MoneyLine, type StoryPack,
   type Upkeep,
 } from '@farm/domain'
 import { plural, shortDate, theName } from './words'
@@ -19,8 +19,8 @@ export interface ProjectNames {
 export const projectNames = (pack: Partial<Pick<StoryPack, 'world'>> | null, save: Pick<FarmSave, 'homestead'>): ProjectNames => ({
   place: (id) => placeNameOf(pack, id), house: (n) => save.homestead.houses[n]?.name ?? `House ${n}`,
 })
-/** A loan's project by name: the place as the map names it, "Dorm level 2", or the house by its name ("Rose Cottage"),
- * "House 2" before it has one. */
+/** A loan's project by name: the place as the map names it, or the house by its name ("Rose Cottage"), "House 2" before
+ * it has one; a loan a save still holds toward the retired Dorm, "Dorm level 2". */
 export function projectName(project: string, names: ProjectNames): string {
   const house = HOUSE_LOAN.exec(project)
   if (house) return names.house(Number(house[1]))
@@ -37,14 +37,13 @@ export function loanWords(save: Pick<FarmSave, 'calendar'>, loan: Loan): string 
   return `${gold(loan.owed)} owed · ${gold(loan.nightly)} a night · clears in about ${plural(nights, 'night')} (${shortDate(day)})`
 }
 
-/** The upkeep's breakdown, a line each that counts: "2 places built · 30g", "1 house · 15g", "2 Dorm beds · 10g", "3 on
- * the farm · 30g". */
+/** The upkeep's breakdown, a line each that counts: "2 places built · 30g", "1 house · 15g", "2 spouses on the farm ·
+ * 20g". A farmhand isn't in it: her meals on her farm days are her cost. */
 export function upkeepLines(upkeep: Upkeep): { key: string; text: string; gold: number }[] {
   return [
     { key: 'places', text: plural(upkeep.places, 'place built', 'places built'), gold: upkeep.places * UPKEEP_BUILDING },
     { key: 'houses', text: plural(upkeep.houses, 'house'), gold: upkeep.houses * UPKEEP_BUILDING },
-    { key: 'beds', text: `${plural(upkeep.beds, 'Dorm bed')} past the first three`, gold: upkeep.beds * UPKEEP_BED },
-    { key: 'residents', text: `${plural(upkeep.residents, 'Uma', 'Umas')} on or working the farm`, gold: upkeep.residents * UPKEEP_RESIDENT },
+    { key: 'residents', text: `${plural(upkeep.residents, 'spouse')} on the farm`, gold: upkeep.residents * UPKEEP_RESIDENT },
   ].filter((line) => line.gold > 0)
 }
 

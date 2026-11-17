@@ -82,7 +82,7 @@ describe('world.json’s reader', () => {
       'Festival moon-night: a festival of the story’s own needs its name, its season and its day; skipped',
       'Festival 3: id is one of the game’s festivals (flower-show, fishing-derby, cooking-contest, animal-show, harvest-cup) or one of the story’s own, in lowercase words joined by -; skipped',
       'Place fields line: no line; skipped',
-      'Place orchard: not one of the farm’s places (fields, mill, coop, forest, sawmill, barn, fishery, smokehouse, kitchen, mine, smelter, restaurant, quarry, cutter, forge, bin, warehouse, dorm, board, gate, dock, shop, festival, expeditions, town, boat); skipped',
+      'Place orchard: not one of the farm’s places (fields, mill, coop, forest, sawmill, barn, fishery, smokehouse, kitchen, mine, smelter, restaurant, quarry, cutter, forge, bin, warehouse, board, gate, dock, shop, festival, expeditions, town, boat); skipped',
       'Season monsoon: not one of spring, summer, autumn, winter; skipped',
       'Note no-title: no title; the note is skipped',
       'Note talky unlock: a note’s unlock is one of spot, season, festival, farm-rank, built, shipped, event (talks is meeting her own); skipped, so the note is in the Diary from the start',
@@ -91,6 +91,13 @@ describe('world.json’s reader', () => {
       'Note empty: no line left; the note is skipped',
       'Note kept: listed twice; the later one is skipped',
     ])
+  })
+
+  it('reads the retired Dorm’s words and doesn’t show them: a note, not an error', () => {
+    const read = checkWorld({ places: { dorm: { name: 'An Invented Dorm', line: 'An invented line.' }, fields: { name: 'An Invented Field' } } })
+    expect(read.errors).toEqual([])
+    expect(read.notes).toContain('Place dorm: the Dorm is retired, so its name and line aren\'t shown')
+    expect(read.value!.places).toEqual({ fields: { name: 'An Invented Field' } })
   })
 
   it('refuses a file that isn’t a world, and the game’s own words play', () => {

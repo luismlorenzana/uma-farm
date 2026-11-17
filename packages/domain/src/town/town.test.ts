@@ -7,9 +7,9 @@ import { goToTown, GAME_DAYS } from '../farm/actions'
 import { DAYS_PER_SEASON, farmDay, SEASONS } from '../farm/calendar'
 import { chatV4, giftV4 } from '../romance/acts'
 import { spendEvening } from '../romance/evening'
-import { introduce, inviteToFarm, meet } from '../romance/meeting'
+import { introduce, meet } from '../romance/meeting'
 import { parseSaveV5 } from '../save/parse-v4'
-import { newRosterUma, newSave, type SaveV4 } from '../save/v4'
+import { newLove, newRosterUma, newSave, type Love, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { CAST_IDS } from '../story/cast'
 import { SHOP_IDS, SPOT_IDS, type CastEntry } from '../story/authored'
@@ -18,7 +18,7 @@ import { readStoryPack, type StoryPack } from '../story/pack'
 import { inviteToWork } from '../romance/loop'
 import { herMenu } from './menu'
 import {
-  castPlace, defaultDays, defaultSpot, giftedToday, lifeHolds, onFarmToday, scheduleOf, seasonSchedule, SHOPS, talkedToday, townDay, townLineOf, townLocations, townsfolk,
+  castPlace, defaultDays, defaultSpot, farmDaysIn, giftedToday, lifeHolds, onFarmToday, scheduleOf, seasonSchedule, SHOPS, talkedToday, townDay, townLineOf, townLocations, townsfolk,
   townTalksOf, whereOn, whereYouMeet,
 } from './town'
 
@@ -34,6 +34,8 @@ const pack = (files: Partial<Parameters<typeof readStoryPack>[0]> = {}): StoryPa
   storyOf(readStoryPack({ umas: {}, routes: {}, ...files }).pack, MASTER)
 const save = (day = 5, more: Partial<SaveV4> = {}): SaveV4 => ({ ...newSave('u-town', AT), calendar: { day }, ...more })
 const spring = (day: number) => farmDay({ year: 1, season: 'spring', day })
+/** A spouse; in her room in the Farmhouse unless `room` is false (waiting for a room). */
+const spouse = (room = true): Love => ({ ...newLove(), stage: 'spouse', level: 0, wed: 1, ...(room ? { house: 0 } : {}) })
 
 /** A cast of a hundred, as the owner's: the town's people are drawn from it. */
 const CAST = ids(100).map((characterId) => ({ characterId }))
@@ -206,22 +208,56 @@ describe('the default schedule', () => {
     for (const season of SEASONS) expect(seasonSchedule(p, '9200050', season).find((g) => g.at !== null)!.days).toHaveLength(4)
   })
 
-  it('leaves the Umas on the farm at the farm, and a farmhand there by day; one met who lives in town keeps her days', () => {
+  it('leaves a spouse in her room at the farm, and a farmhand there on her farm days; one met who lives in town keeps her days', () => {
     const roster = Object.fromEntries(ids(60).map((id) => [id, newRosterUma(1)]))
-    const home = ids(20)
-    const farm = save(spring(1), { roster, dorm: { level: 8, home, swaps: [] } })
+    const love = Object.fromEntries(ids(60).map((id, i) => [id, i < 2 ? spouse() : newLove()]))
+    const farm = save(spring(1), { roster, love })
     const day = townDay(farm, p)
-    for (const id of home) expect(day.where.has(id)).toBe(false)
+    for (const id of ids(2)) expect(day.where.has(id)).toBe(false)
+    for (const id of ids(2)) expect(onFarmToday(farm, p, id, spring(2))).toBe(true)
     expect(day.where.has('9200022')).toBe(true)
-    // One who moves in today leaves her spot, and nobody else moves.
-    const moved = townDay({ ...farm, dorm: { ...farm.dorm, home: [...home, '9200022'] } }, p)
-    expect(moved.where.has('9200022')).toBe(false)
+    // A spouse waiting for a room lives in town, keeping her days; one who moves in leaves her spot, and nobody else moves.
+    const waiting = { ...farm, love: { ...farm.love, 9200022: spouse(false) } }
+    expect(onFarmToday(waiting, p, '9200022')).toBe(false)
+    expect([...townDay(waiting, p).where]).toEqual([...day.where])
+    const moved = townDay({ ...farm, love: { ...farm.love, 9200022: spouse() } }, p)
     expect([...moved.where]).toEqual([...day.where].filter(([id]) => id !== '9200022'))
-    // A farmhand who lives in town is on the farm by day: not in town, and in front of you.
+    // A farmhand who lives in town: her town days are her default schedule's four (the 22nd: 1, 4, 7, 10), her farm days
+    // the other eight. Spring 1 is a town day: she's at her spot, and there's where you meet her.
     const hired = { ...farm, roster: { ...farm.roster, 9200022: { ...farm.roster['9200022']!, farmhand: 1 } } }
-    expect(onFarmToday(hired, '9200022')).toBe(true)
-    expect(townDay(hired, p).where.has('9200022')).toBe(false)
-    expect(whereYouMeet(hired, p, '9200022')).toEqual({ here: true, farm: true, at: null })
+    expect(farmDaysIn(p, '9200022', 'spring')).toEqual([2, 3, 5, 6, 8, 9, 11, 12])
+    expect(onFarmToday(hired, p, '9200022')).toBe(false)
+    expect(townDay(hired, p).where.get('9200022')).toBe(defaultSpot(p, '9200022'))
+    expect(whereYouMeet(goToTown(hired), p, '9200022')).toEqual({ here: true, farm: false, at: defaultSpot(p, '9200022') })
+    // Spring 2 is a farm day: she's on the farm, off the town's map, and in front of you without going into town.
+    const two = { ...hired, calendar: { day: spring(2) } }
+    expect(onFarmToday(two, p, '9200022')).toBe(true)
+    expect(whereYouMeet(two, p, '9200022')).toEqual({ here: true, farm: true, at: null })
+    // On Spring 4, a town day again, she's back at her spot.
+    expect(townDay({ ...hired, calendar: { day: spring(4) } }, p).where.get('9200022')).toBe(defaultSpot(p, '9200022'))
+  })
+
+  it('makes her farm days the days her schedule leaves free: her home and at home count; a season with none, the default\'s other eight', () => {
+    const own = pack({
+      town: TOWN,
+      cast: {
+        umas: [
+          // A job on four days, her home the rest: the job's days are her town days.
+          { characterId: '9200001', job: { at: 'bakery', days: [1, 2, 3, 4] }, home: 'blue-cottage' },
+          // A routine every day in Summer only: Summer has no free day, the rest are all free.
+          { characterId: '9200002', routine: [{ at: 'old-pier', seasons: ['summer'] }] },
+          // A job every day: no free day, every season.
+          { characterId: '9200003', job: { at: 'cafe' } },
+        ],
+      },
+    })
+    expect(farmDaysIn(own, '9200001', 'spring')).toEqual([5, 6, 7, 8, 9, 10, 11, 12])
+    expect(farmDaysIn(own, '9200002', 'spring')).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    // The 2nd in the cast: her default days are 2, 5, 8 and 11.
+    expect(farmDaysIn(own, '9200002', 'summer')).toEqual([1, 3, 4, 6, 7, 9, 10, 12])
+    // The 3rd: her default days are 3, 6, 9 and 12.
+    expect(farmDaysIn(own, '9200003', 'winter')).toEqual([1, 2, 4, 5, 7, 8, 10, 11])
+    for (const season of SEASONS) for (const id of ['9200001', '9200002', '9200003']) expect(farmDaysIn(own, id, season).length, `${id} ${season}`).toBeGreaterThan(0)
   })
 
   it('says her line: the pack\'s town lines, else the game\'s, the same all day', () => {
@@ -275,10 +311,14 @@ describe('her menu', () => {
     const met = meet(save(), '9200007', p).save
     expect(whereYouMeet(met, p, '9200007')).toEqual({ here: false, farm: false, at: out })
     expect(whereYouMeet(goToTown(met), p, '9200007')).toEqual({ here: true, farm: false, at: out })
-    expect(whereYouMeet(inviteToFarm(met, '9200007'), p, '9200007')).toEqual({ here: true, farm: true, at: null })
-    // A farmhand is on the farm by day, from the invitation on.
+    // A spouse in her room lives on the farm.
+    expect(whereYouMeet({ ...met, love: { ...met.love, 9200007: spouse() } }, p, '9200007')).toEqual({ here: true, farm: true, at: null })
+    // A farmhand is on the farm on her farm days, from the invitation on: her job at the Café holds every day, so they're
+    // the default schedule's other eight (Spring 5 is one); on a town day she's at the Café.
     const friend: SaveV4 = { ...goToTown(met), love: { ...met.love, 9200007: { ...met.love['9200007']!, level: 3 } } }
-    expect(whereYouMeet(inviteToWork(friend, '9200007'), p, '9200007')).toEqual({ here: true, farm: true, at: null })
+    const hired = inviteToWork(friend, '9200007')
+    expect(whereYouMeet(hired, p, '9200007')).toEqual({ here: true, farm: true, at: null })
+    expect(whereYouMeet({ ...hired, calendar: { day: 4 } }, p, '9200007')).toEqual({ here: true, farm: false, at: out })
     // Only the cast lives in town: anyone else is nowhere in it.
     const stranger = EVERYONE.find((id) => id !== '9200007' && !PEOPLE.includes(id))!
     expect(whereYouMeet(goToTown(save()), p, stranger)).toEqual({ here: false, farm: false, at: null })
@@ -321,13 +361,15 @@ describe('her menu', () => {
     expect(out.today.evenings).toEqual([{ with: '9200007', kind: 'walk' }])
     expect(out.today.actions).toBe(goToTown(friend).today.actions + 2)
     expect(evening(out)).toMatchObject({ open: false, done: true, why: 'Spent this evening ✓' })
-    // On the farm she's in front of you without going into town; one evening a day across everyone.
-    const home = inviteToFarm(friend, '9200007')
+    // On the farm, a farmhand on her farm day (Spring 5), she's in front of you without going into town; one evening a day
+    // across everyone.
+    const home = inviteToWork(friend, '9200007')
     expect(evening(home)).toMatchObject({ cost: 2, open: true })
     expect(evening({ ...home, today: { ...home.today, actions: 9 } })).toMatchObject({ open: false, why: 'That takes 2 actions.' })
     expect(evening({ ...home, today: { ...home.today, evenings: [{ with: '9200001', kind: 'walk' }] } }).why).toBe('Tonight’s evening is spent')
-    // A farmhand is in front of you every day.
-    expect(evening(inviteToWork(friend, '9200007'))).toMatchObject({ open: true })
+    // On her town day (Spring 4) she's in town: in front of you there once you've gone in.
+    expect(evening({ ...home, calendar: { day: 4 } }).why).toBe('She isn’t here today.')
+    expect(evening(goToTown({ ...home, calendar: { day: 4 } }))).toMatchObject({ open: true })
     expect(() => spendEvening(friend, p, '9200007', 'walk', 70)).toThrow('She isn’t here today.')
   })
 })

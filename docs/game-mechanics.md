@@ -80,9 +80,9 @@ card of what the night brought, and ten actions again.
    feed · care · collect            the Coop, the Barn           5 workshops (none open)
    work a face (the stairs free)    the Mine, the Quarry         6 ranks and bonds (the farmhands')
    start a load                     a station                    7 crops wither; the date turns
-   ship a crate                     the bin                      8 the Dorm, the goals, meeting her
+   ship a crate                     the bin                      8 places built, the goals, the Farm Rank
    go into town                     the road (the shops, the town)
-   free: building, the Dorm, the stairs, talks, the evening
+   free: building, the stairs, walking the town, Tonight
  the morning: the summary card ◄──────────────────────────────── 9 the morning summary
    the bin · work done · hearts · new today · today
    [Start the day] ──► the next day, ten actions again
@@ -283,7 +283,7 @@ each Uma who has it written. A day with no scene written for anyone is a marked 
   a station's load started; a crate shipped; going into town; with the Umas, introducing yourself, a talk, a gift, the
   invitation to work, her event, or an occasion scene with her; a batch cooked in the farmhouse kitchen; and once
   married, a household meal. **A hangout or a date takes two,** and entering the Cooking Contest three (the festival's
-  event actions first). Looking is free, and so are building a place, the Dorm, walking between the town's places and
+  event actions first). Looking is free, and so are building a place, walking between the town's places and
   choosing tonight's companion; the shop is free once you're in town.
 - **Going into town** takes one action and opens the town and its shop for the rest of the day.
 - **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
@@ -391,11 +391,11 @@ The night is one fixed run of steps over the save:
 1. **The bin pays.** Everything shipped today pays at its price × stars × demand on the day it was shipped, so a
    season's last night still pays that season's demand. Gold rises and the bin empties. Before it, once anyone is
    married, tonight's house is noted.
-2. **The farmhands work, the farm eats and pays its bill, then crops grow.** First each farmhand, in the order you
-   invited her, after her part-time job, spends her actions today on her tasks on the work board (see
+2. **The farmhands work, the farm eats and pays its bill, then crops grow.** First each farmhand on her farm day (one
+   on a town day is in town), in the order you invited her, spends her actions today on her tasks on the work board (see
    [Farmhands](#farmhands)): her watering grows tonight, her harvests and hauls go into the Warehouse at once, a cook's
-   meals into the pantry, and a load she starts finishes at step 4. **Then the farm eats:** the farmer, everyone living
-   on the farm and every farmhand who worked tonight, two meals each, from the pantry first; what it's short is takeout
+   meals into the pantry, and a load she starts finishes at step 4. **Then the farm eats:** the farmer, every spouse in
+   her room and every farmhand on her farm day, two meals each, from the pantry first; what it's short is takeout
    (see [food](#food)). **Then the bill:** the bin's pay joins the last seven nights' income, each loan takes its share
    of it, and the takeout and the upkeep are charged (see [upkeep and loans](#upkeep-and-loans)). Then each growing
    tile watered today grows one stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn't grow. A
@@ -413,7 +413,7 @@ The night is one fixed run of steps over the save:
 7. **The date turns.** On a season's last night, growing crops that don't grow next season wither first. Then the date
    moves on, and the whole of today's record clears: the day's actions and event actions, going into town, the places
    worked, chats, gifts, praise, events, evenings and invitations.
-8. **The farm's news.** The places paid for yesterday stand; a Dorm level you bought takes effect and swaps arrive; the
+8. **The farm's news.** The places paid for yesterday stand; the
    Diary pays its milestones and rows and the Farm Rank is recomputed; the Town notes whose unlock now holds unlock; the
    ring bench opens the night after the first Romance 8, and the household's milestones are noted.
 9. **The morning.** A wedding's reception is served, the house's morning given, spouses move into rooms, the Festival
@@ -431,8 +431,8 @@ The steps as the game lists them:
 | 1 | `settleThePlay` | Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges; the Cooking Contest’s dish judged (its play’s score 0), its prize paid |
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
-| 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
-| 2 | `theFarmEats` | The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil |
+| 2 | `farmhandsWork` | The farmhands: each on her farm day (one on a town day is in town, and doesn’t work), in the order you invited them, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
+| 2 | `theFarmEats` | The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil |
 | 2 | `settleTheAccounts` | The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
@@ -450,18 +450,17 @@ The steps as the game lists them:
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
 | 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception, the staff meal, the Kitchen’s assistant and the Contest’s cook |
 | 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news |
-| 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
 | 8 | `unlockTownNotes` | Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them |
 | 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning |
 | 8 | `householdMilestones` | Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning |
-| 9 | `serveTheReception` | A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running |
-| 9 | `houseMorningStep` | The house’s morning: each resident of the house slept in +30 (only hers on a birthday-alone night); her breakfast (S1) feeds everyone on the farm with no meal left; each resident at S2+ leaves one more morning item; a house with residents not slept in for 8 nights misses you |
-| 9 | `moveInRooms` | Rooms: spouses home in the Dorm who wait for a room take one, in wedding order, by the same default as a wedding’s |
+| 9 | `serveTheReception` | A wedding’s reception: everyone who lives on the farm (the spouses in their rooms) well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running |
+| 9 | `houseMorningStep` | The house’s morning: each resident of the house slept in +30 (only hers on a birthday-alone night); her breakfast (S1) feeds everyone who lives on the farm with no meal left; each resident at S2+ leaves one more morning item; a house with residents not slept in for 8 nights misses you |
+| 9 | `moveInRooms` | Rooms: the spouses waiting for a room, living in town, take one the morning one frees, in wedding order, by the same default as a wedding’s |
 | 9 | `vowsMorning` | The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse |
-| 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) |
-| 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 3+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
+| 9 | `morningItems` | Morning items: each Uma on the farm this morning (a spouse in her room, a farmhand on her farm day) leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) |
+| 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among the spouses in their rooms (the Umas home) whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
 | 9 | `noteTheFed` | The farmhands well fed this morning are noted (`today.fed`): each works one more action today |
 | 9 | `buildSummary` | The morning summary, from what changed; §2 Work done opens with each farmhand’s day, then the loads and the Coop’s and the Barn’s nights, §3 Ranks closes with the aptitudes that reached a level; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones |
 <!-- /live -->
@@ -472,7 +471,7 @@ The steps as the game lists them:
 - **The farmhands well fed this morning** are noted last of all (`today.fed`): each works one more action today.
 - **The night is one change.** Its steps write nothing on their own; the save is stamped once, with the real time, after
   step 9.
-- Ranks, the Dorm, the goals and meeting her are described with the Umas and the farm's progress, and the romance's steps
+- Ranks, the goals and meeting her are described with the Umas and the farm's progress, and the romance's steps
   in Part 3.
 
 #### The morning summary
@@ -493,7 +492,7 @@ line is a tap to its place.
 | Work done | First each farmhand's night, "*Name* · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good", tagged **Well fed** when she had her extra action, **Half pace** in red at half pace, or **No tasks** with "No tasks: set her tasks" ("Nothing to do tonight" when her tasks found nothing); then each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The work board in the Book; the station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full**; an aptitude a farmhand reached, "*Name* · Watering 3 · Two tiles an action" (with the trick that level opens), tagged **Aptitude** | Her profile's Work side |
 | Hearts | First, once married, "☾ Morning with *Name*" (the night's companion, **Play** her greeting); who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar (the season, New Year's, the festival and the story's days), but the Kitchen for the Cooking Contest's; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged | The People page; the calendar (the season, New Year's, the festival and the story's days), but the Kitchen for the Cooking Contest's; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead |
 | Today | "3 tiles to water" (the growing tiles this morning); "9 tiles to plant" (empty tilled tiles that the season's seeds you hold could fill) | The farm map |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
@@ -520,7 +519,7 @@ farm's places start six columns sooner than when the map held the field's 40 til
  │ the    │ ┌▣▣▣≈≈○≈▲┐   │p│ bin       │           │            │         │ To │
  │ woods' │ └≈○≈≈▲≈≈≈┘   │a│ Warehouse │ a house   │ Sawmill    │ Board   │    │
  │ edge   │   Fields     │t│           │           │            │         │town│
- │        ├──────────────┤h│ Dorm      │ a house   │ Smokehouse │ Dock    │    │
+ │        ├──────────────┤h│ (grass)   │ a house   │ Smokehouse │ Dock    │    │
  │        │ the pond's   │ │           │           │            │ …and 4  │    │
  │        │ edge         │ │           │           │            │ columns │    │
  └────────┴──────────────┴─┴───────────┴───────────┴────────────┴─────────┴────┘
@@ -535,7 +534,8 @@ farm's places start six columns sooner than when the map held the field's 40 til
   dot under it for each plot once the farm has more than one, and the Fields' name. Above it, the whole field's counts at
   a glance, each only when it isn't 0: **"6 to water"** (growing and dry), **"2 ripe"**, **"3 to plant"** (empty tilled
   soil). Its spoken name says them all ("Fields, 2 plots, 6 to water, 2 ripe"). A tap opens the field's screen.
-- **The lots,** column by column: the yard (the Shipping bin, the Warehouse, the Dorm); the homestead's houses (the
+- **The lots,** column by column: the yard (the Shipping bin and the Warehouse, open ground below them since the Dorm
+  retired); the homestead's houses (the
   Farmhouse and two lots from day 1, more columns as the household grows); the stations (the Mill, the Sawmill, the
   Smokehouse); the Gate, the Requests board and the Dock; the ranch (the Coop, the Barn, the Kitchen); the Mine, the
   Smelter and the Restaurant; the Quarry, the Cutter and the Forge.
@@ -565,7 +565,6 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Forge | `forge` | Farm Rank 8, then built (not built yet) |
 | Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
-| Dorm | `dorm` | Day 1 |
 | Requests board | `card-library` (borrowed) | 5 Umas met |
 | Gate | `scenario-gate` | Day 1 |
 | Dock | `ley-spring` (borrowed) | Farm Rank 6, then built |
@@ -588,7 +587,6 @@ What a tap does:
 | The Mine or the Quarry, built | Its panel: the floor you're on with its finds, **Work a face · 1 action**, and the stairs: their progress, then **Take the stairs · free** (see [the Mine and the Quarry](#the-mine-and-the-quarry)); the map tags it "Floor 3" |
 | The Shipping bin | The bin's sheet |
 | The Warehouse | The Warehouse |
-| The Dorm | The Dorm's page |
 | The Gate | Its quick look: everyone lives in town, and the Town |
 | The Dock | Its quick look: its Build card, then the Boat's |
 | The road to town | The town map: Go into town · 1 action, then its places, who's there now and the People list (see [the town](#the-town)) |
@@ -664,7 +662,7 @@ app asks for landscape.
   cards, a level reached overnight. Each is laid out sideways: her bust on the left, the lines and the choices on the
   right; a play's name and legend on its left, the play on its right.
 - **Lists sit in two columns** where they fit: the Hearts rows and the Town's People, the Town's spots, the
-  Warehouse's goods, the Dorm's and the Diary's panels, the Book's cards and Account's panels; the Work view's faces sit
+  Warehouse's goods, the Diary's panels, the Book's cards and Account's panels; the Work view's faces sit
   five or six across.
 - **The farm map's panels** (the woods', the pond's, a station's) sit at the right without dimming the map, and so do the
   field's screen's (a tile's, a row's), so the next tile is one tap away.
@@ -690,7 +688,7 @@ At its right end:
 #### The rail
 
 **Farm · Town · People · Book · Diary**, down the left edge. The page you're on is lit: a marker on the rail's inner edge
-and its two-tone icon. A farm place's page (the Warehouse, the Dorm …) keeps Farm lit.
+and its two-tone icon. A farm place's page (the Warehouse …) keeps Farm lit.
 - **Farm:** the farm map.
 - **Town:** the town's screen (see [the town](#the-town)).
 - **People:** everyone you've met, on the farm or in town, by their route; its Work view is the roster's album, with their
@@ -745,8 +743,7 @@ Then six cards, each a tap to its place:
 | Gold | The farm's gold | The bin |
 | Farm Rank | The rank and its points | The Farm Rank's sheet |
 | Goods | Every good the Warehouse holds | The Warehouse |
-| Umas on the farm | Who lives on the farm, and how many you've met | People's Work view |
-| Dorm | Beds used of beds | The Dorm |
+| On the farm today | The spouses in their rooms and the farmhands on their farm day, and how many you've met | People's Work view |
 | To build | The places offered at this Farm Rank | The Diary's projects |
 
 Its help says how the upkeep, food, a short night and the loans work, in five lines; the board's says how the
@@ -1398,7 +1395,7 @@ Each station, what builds it, what opens it, its jobs and a load:
 #### Its levels
 
 A station's level is the loads it takes a day: level 1 is the station built, one load a day, and each level after it
-one more, up to level 5's five. Its levels are bought as the Dorm's are: at the station, with gold only, from each
+one more, up to level 5's five. Its levels are bought at the station, with gold only, from each
 level's Farm Rank, and the level comes the next morning.
 
 <!-- live:station-levels -->
@@ -1861,8 +1858,7 @@ Gold is whole and never goes below 0; a purchase short of gold is refused ("Need
 and 9 Carrot seeds.
 - **Earned:** the bin, and the Diary's milestones and collection rows; a loan lends toward a build.
 - **Spent:** the night's upkeep and loans' shares, seeds at the shop, places to build at their quick looks or the
-  mayor's office, Dorm levels at the Dorm, and houses on the
-  homestead.
+  mayor's office, and houses on the homestead.
 
 The gold chip in the bar shows the coin and your gold, and opens the bin.
 
@@ -2180,15 +2176,17 @@ its upkeep:
 |---|---|---|
 | Each place built (the stations, the Coop and the Barn, the Mine and the Quarry, the Dock, the Boat, and each later one) | 15g | The start’s own places; the animals, whose cost is their feed |
 | Each house built on the homestead | 15g | The Farmhouse |
-| Each Dorm bed past the first 3, at the level in effect | 5g | Level 1’s 3 beds |
-| Each Uma living on the farm or working it: home in the Dorm, a spouse in her house, or a farmhand wherever she lives; once each | 10g | Those who live in town and don’t work the farm |
+| Each spouse living on the farm, in her room | 10g | Everyone who lives in town: a farmhand’s cost is her meals on her farm days, and a spouse waiting for a room costs nothing until she moves in |
 | Short of it | What gold there is pays; the rest is owed with tomorrow’s | The first short night warns; from night 2 in a row, half pace until it’s paid |
 <!-- /live -->
 
-- **What it counts** is read at night step 2, before the night's builds stand: a place or a Dorm level paid for today
-  costs from tomorrow night, its first night standing, and a house (which stands at once) from tonight. A new farm owes
-  no upkeep: it grows with what you build and who you bring. (It pays its farmer's takeout from the first night:
-  [food](#food).)
+- **What it counts** is read at night step 2, before the night's builds stand: a place paid for today costs from
+  tomorrow night, its first night standing, and a house (which stands at once) from tonight. A new farm owes no upkeep:
+  it grows with what you build and who marries you. (It pays its farmer's takeout from the first night, and a
+  farmhand's meals on her farm days: [food](#food).)
+- **No Dorm beds and no farmhand 10g:** the Dorm is retired ([the retired Dorm](#the-retired-dorm)), and a farmhand's
+  cost is her two meals on each farm day, from the pantry or takeout, nothing on a town day. Only a spouse in her room is
+  a resident.
 - **What pays:** the farm's gold after the bin, the loans' shares and the night's takeout. Gold never goes below 0.
 - **Short of upkeep:** what gold there is pays, takeout first, and the rest is **owed** (`farm.owed`), takeout and
   upkeep alike, added to the next night's upkeep. The short nights in a row are counted (`farm.short`):
@@ -2216,19 +2214,19 @@ borrowing are free.
 | Term | The rule |
 |---|---|
 | What it lends | What the build is short of gold, rounded up to 100g, never past its cost; you bring the goods |
-| Toward | A place offered at your Farm Rank (its game built), the Dorm’s next level at its Farm Rank, or the next house once its wedding has come |
+| Toward | A place offered at your Farm Rank (its game built), or the next house once its wedding has come |
 | The fee | 10% of the loan, rounded up to 10g, owed with it |
 | Each night | A tenth of what’s owed when it’s taken (rounded up to 5g), from the night’s income only, before the upkeep |
 | Repay | At the office, in full, any time you’re in town; the fee isn’t returned |
 <!-- /live -->
 
 - **The office's orders** (`buildOrders`): every place offered at your Farm Rank whose game is built and that doesn't
-  stand (one paid today says "Builds tonight"), the Dorm's next level once its Farm Rank comes, and the next house once
-  its wedding has come. Each says what it costs, and:
+  stand (one paid today says "Builds tonight"), and the next house once its wedding has come. (A loan a save still holds
+  toward the retired Dorm's level is repaid like any other.) Each says what it costs, and:
   - **Build · 1,000g** when the gold and goods are there: the build as its own card orders it, with your gold;
   - **Borrow 400g · Build** when only gold is short and the office lends: what it's short, rounded up to 100g, with the
     terms under it ("Need 360g more · 440g owed, a tenth a night from income"). The loan and the build are one tap: a
-    place stands the next morning, a Dorm level's beds come the next morning, and a house stands at once, named in its
+    place stands the next morning, and a house stands at once, named in its
     row's field as on the homestead;
   - otherwise why not: its goods ("Need 20 logs more."), the loans held ("One loan at a time: this one first.",
     "Two loans at a time: one of these first."), or the limit ("The office lends up to 1,000g at Farm Rank 1.").
@@ -2240,7 +2238,7 @@ borrowing are free.
 - **When it clears:** the nights at its share (what's owed ÷ its share, rounded up) from today: "clears in about 10
   nights (Spring 14)", as the Book, the projects list and the office say it. "About", since a night with fewer sales
   repays less.
-- **Ordering a build stays where it is.** A place's Build card on the farm, the Dorm's page and the homestead still
+- **Ordering a build stays where it is.** A place's Build card on the farm and the homestead still
   order with your own gold and goods, free and with no trip to town; the office orders the same builds, and only it
   lends. Paying your own way needs nobody's leave, and builds are rare, so a trip to town would add a step and no
   choice: the trip is the price of credit.
@@ -2265,15 +2263,15 @@ feeds many. The rules are `farm/food.ts`.
      once married: Breakfast · 1, Dinner · 1     ★2+ meal → that Uma is well fed tomorrow (+1 action)
        (each a batch too)                        what's short: takeout, 15g a meal ──► the bill, with the upkeep
    the Book: a farmhand on Cook                  a meal keeps three days, then it spoils
- the morning:  From the pantry · 6 meals · Well fed      Takeout · 30g      Upkeep · 45g
+ the morning:  From the pantry · 6 meals · Well fed      Takeout · 30g      Upkeep · 15g
 ```
 
 <!-- live:food -->
 |  | The rule |
 |---|---|
-| Who eats | The farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who works that day (spends an action tonight): 2 meals each, at night |
+| Who eats | The farmer, every spouse in her room (who lives on the farm) and every farmhand on her farm day (on the farm that day, with work or without): 2 meals each, at night. A farmhand on a town day eats in town, and costs the farm nothing |
 | The pantry | Cooked meals wait here, by the day cooked and their stars. A meal keeps 3 days: cooked today, it’s eaten tonight, tomorrow night or the night after, then it spoils |
-| The night’s meals | Night step 2, after the farmhands work: the Umas eat first (the farmhands who worked, in their order, then the rest of the farm), the farmer last; the oldest meals first, the best of those |
+| The night’s meals | Night step 2, after the farmhands work: the Umas eat first (the farmhands on the farm, in their order, then the spouses in their rooms), the farmer last; the oldest meals first, the best of those |
 | Takeout | 15g a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats 2: 30g a night |
 | Short of it | Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s |
 | Cook a batch | The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, 6 meals from 2 goods of food you choose |
@@ -2296,10 +2294,10 @@ A farmhand's batch by her Cooking (her aptitude, [aptitude](#aptitude)):
 | Goods a batch | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
 <!-- /live -->
 
-- **Who eats:** the farmer, everyone living on the farm (home in the Dorm, or a spouse in her house), and every
-  farmhand who works that day: one who spent an action tonight, wherever she lives. A farmhand from town with nothing to
-  do eats at home. An Uma who lives on the farm eats whether she works or not, so a resident with no work costs her
-  upkeep and her meals.
+- **Who eats:** the farmer, every spouse in her room (who lives on the farm), and every farmhand on her farm day, the
+  day being settled, with work on her board or without: she was on the farm by day ([farmhands](#farmhands)). On a town
+  day she's in town and eats there: she costs the farm nothing. Her meals are her cost, in place of the farmhands' old
+  10g a night of upkeep; a spouse in her room eats and pays her 10g as a resident.
 - **A new farm** pays its farmer's two meals of takeout the first night: the first morning says "Takeout · 30g".
 - **The pantry** keeps meals by the day they were cooked and their stars (`farm.pantry`). The night eats the oldest
   first and the best of those, so yesterday's meals go before today's. A meal keeps three days: cooked today, it's eaten
@@ -2585,13 +2583,15 @@ All 80 come to 119,450g at the shop (the three known free).
   `farm.counts['cooked:<dish>']` counts them, and `workshops.best.kitchen` keeps the best score.
 - **The worked play:** level 1, no assistant, 3 Carrot Salads and 3 Carp Grills from ★1 goods, Fine: 6 × 1.5 = **9
   dishes**, 5 Carrot Salads and 4 Carp Grills, **★2**.
-- **The assistant** (optional): a farmhand with an action tonight. One of her actions tonight is the play's (the work
+- **The assistant** (optional): a farmhand on the farm today (her farm day: "She's in town today." otherwise) with an
+  action tonight. One of her actions tonight is the play's (the work
   board says "1 at the Kitchen", her night counts it at the Kitchen, and the morning's line says "assisted at the
   Kitchen"). Her term is her Cooking aptitude's yield × her
   cooking rank's workshop yield ([what a rank gives](#what-a-rank-gives)) × her line's +10% (+20% from R5, a cook's).
   She gets a point of Cooking practice and counts toward cooking's challenges: `play` by the tier (assist 5 plays, a Fine
   play, a Masterwork) and `dishes` by the stars made (10 dishes of ★4+).
-- **A cook's chores:** each cook (her line cooking) living on the farm adds a dish to every play for each of her night
+- **A cook's chores:** each cook (her line cooking) on the farm today (a spouse in her room, or a farmhand on her farm
+  day) adds a dish to every play for each of her night
   chores (1 from F6, 2 from R7, 3 from S4). They don't bank: a day without a play makes none.
 
 #### The staff meal
@@ -2669,8 +2669,9 @@ On Autumn 10, the game’s day. A Contest the story moves takes its new season�
   words: "No contest today.", "Build the Kitchen to enter.", "A play is under way.", "Entering takes 3 actions.",
   "You don't know that recipe.", "That isn't a main for Carrot Salad.", "Short 1 Carrot.", "Only a farmhand cooks for
   you.", "She has no action left tonight.".
-- **The cook** is chosen as the Kitchen's assistant is: a farmhand with an action tonight (`today.cook`; the work board
-  counts it "at the Kitchen", beside an assistant's). Her Cooking doesn't change the dish: one dish is made whoever
+- **The cook** is a farmhand with an action tonight (`today.cook`; the work board counts it "at the Kitchen", beside an
+  assistant's), on her farm day or her town day alike: the Contest is a festival in town, and where she is never gates
+  it. Her Cooking doesn't change the dish: one dish is made whoever
   cooks. She gets a point of Cooking practice, a 1st counts `won` toward her cooking challenge (only the Legend's reads
   it, [the challenges](#the-challenges)), and her bar gets a festival together's +50, once a festival a year
   ([points from every source](#points-from-every-source)).
@@ -2798,8 +2799,9 @@ the casual bot and serves the staff meal; he buys a recipe on the shop's shelf f
 ## Part 2 — The Umas and the farm's progress
 
 Every character lives in the town from day 1, and you meet her there by introducing yourself, one of the day's actions.
-Met, she keeps living in town, where you find her for a talk, a gift and her events; **Invite to the farm** on her
-profile brings her into a free Dorm bed. The Dorm's beds cap who lives and works on the farm at once.
+Met, she keeps living in town, where you find her for a talk, a gift and her events. **Nobody lives on the farm until
+she marries you:** a friend you invite to work (a farmhand) comes on her **farm days**, the days her life in town leaves
+free, and only a spouse moves in, into a room in a house.
 Every Uma has a talent, G to S, in each of nine activities, read from her stats, and climbs six ranks in each by working
 and meeting a challenge. The farm climbs a ladder of its own, the Farm Rank, from what it earns and grows, and grows by
 building: the rank offers each place, and you build it with gold and the farm's goods. There are no global chapters and
@@ -2808,122 +2810,68 @@ no farm-wide story.
 ```
  day 1: your name ──► the opening's lines ──► Home: nobody met, everyone in town
  the town: Go into town (1 action) ──► walk to her (free) ──► Introduce yourself (1 action): met ──► her meeting scene
-           she lives in town ──► Invite to the farm (her profile) ── a bed free? ──► the Dorm
- the Dorm: Upgrade · 1,000g ── night ──► 5 beds (beds only)
- swap: one Uma home ⇄ one in town ── night ──► she's home
+           she lives in town ──► Friendship 3: Invite her to work (1 action) ──► a farmhand, on the farm on her farm days
+ the wedding ──► her room in a house ──► she lives on the farm
+             └─► no room free: "Needs a room", in town ── the morning a room frees ──► she moves in
 ```
 
 ### The roster
 
-The roster is everyone you've met, and her `joined` the day you met her. Who is **home** (on the farm) is capped by the
-Dorm's beds; everyone else on the roster **lives in town** as a friend. A spouse in her house is on the farm too,
-without a Dorm bed. Only Umas on the farm spend evenings; a farmhand works the farm wherever she lives; talks,
-gifts and her events reach everyone you've met, on the farm or in town, an action each.
+The roster is everyone you've met, and her `joined` the day you met her. Everyone on it **lives in town**, but a spouse
+in her room, who **lives on the farm** (`atHome`, `onFarm` and `farmHome` read a spouse's `love.house` only). A farmhand
+is on the farm by day on her farm days and works it those nights ([farmhands](#farmhands)); talks, gifts and her events
+reach everyone you've met, wherever she is, an action each.
 
 #### How Umas join
 
 You meet her in town by introducing yourself: see [meeting her](#meeting-her). Met, she joins the roster at Friendship 0
-and lives in town; **Invite to the farm** on her profile brings her into a free Dorm bed at once. There's no cap on how
-many you meet. Nothing is drawn.
+and lives in town. There's no cap on how many you meet. Nothing is drawn.
 
-#### The Dorm's levels and beds
+#### Living in town
 
-Beds cap who lives and works on the farm at once. Level 1 comes with the farm; each later level is bought at the Dorm.
-The Dorm for 20: its eight levels, their beds, what each costs, and the Farm Rank it needs. The levels bring beds only:
+Everyone you've met lives in town until she marries you. She keeps her ranks and her route. Talks, gifts, her evening
+and her events reach her: you find her in town on her days, where her fixed schedule puts her ([who's
+where](#whos-where)), and ask her out there. Once she's a farmhand she's on the farm on her farm days, in front of you
+there, and in town on her town days ([farmhands](#farmhands)). After the wedding she takes a room on the homestead and
+lives on the farm; with no room free she lives in town, "Needs a room", until the morning one frees ([rooms and
+moves](#rooms-and-moves)).
 
-<!-- live:dorm-levels -->
-| Level | Beds | Costs | Farm Rank | Cumulative |
-|---|---|---|---|---|
-| 1 | 3 | — | — | 0g |
-| 2 | 5 | 1,000g | 1 | 1,000g |
-| 3 | 7 | 3,000g | 2 | 4,000g |
-| 4 | 9 | 8,000g | 3 | 12,000g |
-| 5 | 11 | 15,000g | 4 | 27,000g |
-| 6 | 14 | 28,000g | 5 | 55,000g |
-| 7 | 17 | 50,000g | 6 | 105,000g |
-| 8 | 20 | 85,000g | 7 | 190,000g |
-<!-- /live -->
+#### The retired Dorm
 
-- **Buying:** the gold goes now; the beds come the next morning. A purchase is refused at the top level ("The Dorm is
-  at its top level."), before its Farm Rank ("Opens at Farm Rank 2.") and when gold is short. A level bought today can
-  be followed by the next one the same day; both arrive the next morning.
-- **Beds free** are the level in effect's beds less the Umas home. A level bought today doesn't count until it takes
-  effect.
-- **Who comes home:** one you've met lives in town until you invite her: **Invite to the farm** on her profile brings
-  her once a bed is free (at once), or a swap the next morning.
-- **Invite to the farm:** one you've met who lives in town moves into a free Dorm bed now and can work today. Refused
-  with no bed free ("No bed is free: upgrade the Dorm, or swap."), for one arriving by a swap tomorrow, and for one on the
-  farm already.
+The Dorm is retired: Invite to the farm, its beds and levels, swaps, its page, its tile on the farm map, its upkeep (5g
+a bed past three), its Farm Rank offers and its morning lines are gone. The save keeps `dorm` in its shape (v5 grows in
+place):
 
-#### Living in town, and swaps
-
-Everyone you've met who isn't on the farm **lives in town**. She keeps her ranks and her route, and earns no rank
-points. Talks, gifts, her evening and her events reach her: you find her in town on her days, where her fixed schedule
-puts her ([who's where](#whos-where)), and ask her out there. Once she's a farmhand she's on the farm by day, in front of
-you every day ([farmhands](#farmhands)).
-
-- **A swap** sends one Uma home to town and brings one from town home in her place. It is free and unlimited, and it
-  happens the next morning: the one leaving goes to town and the one arriving takes her bed.
-- **Who can go to town:** any Uma home. Refused: one already leaving ("She leaves tomorrow.") and anyone not home ("She
-  isn't on the farm.").
-- **Who can come home:** anyone on the roster who lives in town and isn't already arriving ("She arrives tomorrow."). One home
-  already is refused ("She's on the farm already."), and so is a spouse in her house ("She lives in her house.").
-- **Leaving tomorrow:** until the night, the swap picker shows an Uma a swap takes out greyed out with "Leaves
-  tomorrow".
-- **Calling off:** a swap can be called off any time before the night; she stays.
-
-#### The night's roster step and the morning's news
-
-Night step 8 runs, in order, after the calendar has turned:
-
-1. **The Dorm settles:** a level bought takes effect, then each swap: the Uma leaving goes to town and the one arriving
-   comes home in her place.
-2. **The goals** (see [the night's goals check](#the-nights-goals-check)).
-
-The night meets no one: you meet everyone by introducing yourself in town.
-
-The places paid for yesterday stand first, before the Dorm settles. The morning's **New today** lists, after the
-season, festival, built, Farm Rank, milestone and household lines:
-
-| Line | When | Opens |
-|---|---|---|
-| "Dorm level 2 · 5 beds" | A level bought took effect | The Dorm |
-| "{name} is home", or "3 Umas are home" | Swaps brought Umas home | The Dorm |
-
-`{name}` is her name, from master data.
+- **Loading clears `dorm.home` and `dorm.swaps`,** whatever they held. Everyone who lived in the Dorm lives in town from
+  then, keeping her ladders, ranks, farmhand flag, perks, gallery and everything else.
+- **`dorm.level` and `buildings.dorm` are kept,** still checked on the eight levels, and nothing reads them.
+- **A loan** a save still holds toward a Dorm level (`dorm:<level>`) is repaid like any other ("Dorm level 2"); the
+  office offers no Dorm level ("The Dorm is retired.").
+- **A morning from before** with the Dorm's news ("Dorm level 2 · 5 beds", "{name} is home") is read and those lines
+  dropped.
+- **A story** may still name `dorm` as a scene's backdrop (the Dorm's building); world.json's words for it are read and
+  not shown (a note, not an error).
+- **Loading never stamps the save:** `account.updatedAt` doesn't move, and nothing else changes.
 
 #### The roster's screens
 
-- **The Dorm** (the Dorm on the map):
-  - its level and "3 of 5 beds"; with a bed free and someone in town, "A bed is free: invite someone from town on her
-    profile."; after buying, "Level 3 tomorrow · 7 beds";
-  - the next level, "Level 3 · 7 beds", with "· Farm Rank 2" while it's locked, and **Upgrade · 3,000g** (disabled
-    until the Farm Rank is reached and the gold is there; "Need 500g more" when only gold is short); at the top, "The
-    Dorm is at its top level.";
-  - **Levels:** the eight, each "Built", "Tomorrow", or its cost and Farm Rank;
-  - **Tomorrow:** each swap as two faces with "… arrives tomorrow" and **Call off**;
-  - **On the farm · n:** each Uma with her best rank and "Farmhand", "Idle" (not working the farm) or "Leaves tomorrow";
-  - **Swap** (or "Swap · nobody in town"), enabled when someone home can go and someone in town can come: a picker over
-    the Umas home ("Who goes to town?", one leaving greyed out with why), then over those in town ("Who comes home for
-    {name}?");
-  - **In town · n:** each Uma with "In town" or "Arrives tomorrow", or "Nobody you’ve met lives in town." Every row opens
-    her profile.
 - **The Gate** (its quick look on the map): "Everyone lives in town.", with the Town (see [meeting her](#meeting-her)).
 - **The roster** is the People page's **Work** view (`/hearts?view=work`; `/roster` lands there): everyone on the roster,
-  on the farm or in town, as an album of cards in three columns, under the line "3 on the farm · 2 in town · by joined".
+  on the farm today or in town, as an album of cards in three columns, under the line "3 on the farm · 2 in town · by
+  joined" (on the farm today: the spouses in their rooms and the farmhands on their farm day).
   - **Her face** carries her favourite line's mark top left (a Carrot farming, a Pine Log foraging, a Carp fishing,
     Copper Ore mining, on a light disc), her best talent's grade bottom right on a coloured chip (S gold, A coral, B
     blue, C green, D and below grey), and her level in words top right ("F7", "R4", "S2").
   - **Her card** says her best rank ("Hand · Farming", or "Novice" before her first points) and her best talent
     ("Fishing A"). Sorted by an activity, it says her rank and talent in it ("Hand · C") and the activity, with her
-    points when sorted by them ("Fishing · 52 pts"). An Uma in town is dimmed, and her second line says "In town".
+    points when sorted by them ("Fishing · 52 pts"). An Uma in town today is dimmed, and her second line says "In town".
   - **Search** by name.
-  - **Filters:** Where (On the farm, In town); Favourite line (Farming, Mining, Fishing, Foraging); her talent in each
-    activity (C+, B+, A+, S); her rank in each activity (Novice … Legend).
+  - **Filters:** Where (On the farm, In town: today's); Favourite line (Farming, Mining, Fishing, Foraging); her talent in
+    each activity (C+, B+, A+, S); her rank in each activity (Novice … Legend).
   - **Sorts:** Joined (the default, oldest first), Talent and Rank points (each in a chosen activity, the sort sheet's
     "In" chips, Farming until one is chosen; highest first), and Name.
   - **A tap on her card** opens her profile on its Work side: "Favourite · Fishing (×1.2 rank points)", "Joined Spring
-    1", and "On the farm" or "In town · the Dorm"; then her nine activities, each with its talent chip, her
+    1", and "On the farm today" or "In town today"; then her nine activities, each with its talent chip, her
     favourite mark on her favourite, "Hand · 52 / 160" (her points alone at Legend), and a line below: "Next: Catch 10
     fish at the River · 3/10", "Points full · …", or "Ranks up tonight · …". A challenge whose target is 1 shows without
     a count.
@@ -3010,7 +2958,7 @@ to find her") and the calendar's days ("In town") all read it, so what her profi
 | The default schedule | An Uma the story hasn’t scheduled (no `routine`, `job` or `home` on the map): at her favourite spot on every third day of each season, by her place in the cast (the 1st, 4th, 7th… on 1, 4, 7, 10; the 2nd, 5th, 8th… on 2, 5, 8, 11; the 3rd, 6th, 9th… on 3, 6, 9, 12); at home, off the map, the other days |
 | Her favourite spot | Her cast entry’s `spot`; else the 6 in turn by her place in the cast, 3 Umas each (the 1st to 3rd at `plaza`, the 4th to 6th at `market`…, the 19th starting again) |
 | A spot | Holds everyone the schedules put there, with no cap; nobody is placed at random |
-| On the farm | An Uma living on the farm (the Dorm, a spouse’s house) is at the farm, never in town; so is a farmhand by day, after her part-time job |
+| On the farm | A spouse in her room lives at the farm, never in town. A farmhand is at the farm on her farm days, the days the rows above don’t put her out in town (a day at her `home` or at home off the map is one); a season with none, the default schedule’s other days (8 of 12). On her town days she’s in town by her schedule |
 | The town’s people | Each at her post: her role’s shop or office, else the spot she keeps |
 | Her line | One a day (`draw(uid, day, 'town-line:<id>', 0)`) of her bible’s `townLines`, else the game’s 6: “Oh, hello! Out for a walk too?” “Lovely day for it, isn’t it?” “You’re from the farm up the road, aren’t you?” “I come here when I need to think.” “Good to see you, {farmer}.” “Busy day? Mine’s only just starting.” |
 <!-- /live -->
@@ -3026,8 +2974,9 @@ to find her") and the calendar's days ("In town") all read it, so what her profi
 - **The posts:** each of the town's people is at one post: the spot `town.json` has her keep, else her role's shop or
   office, else the spot the game has her keep. A place whose keeper is posted elsewhere shows none (with no `town.json`,
   the mayor is at her office and the shopkeeper at the store, so the plaza and the market show no keeper).
-- **On the farm:** an Uma who lives on the farm (the Dorm, or a spouse's house) isn't in town; neither is a farmhand by
-  day ([farmhands](#farmhands)). Nobody else moves when one moves in. One you've met who lives in town keeps her days.
+- **On the farm:** a spouse in her room lives on the farm and isn't in town; a farmhand on her farm day isn't either,
+  and on her town days she's in town by her schedule ([farmhands](#farmhands)). Nobody else moves when one moves in.
+  One you've met who lives in town keeps her days, and so does a spouse waiting for a room.
 
 #### Her menu
 
@@ -3045,7 +2994,7 @@ open is greyed with why. **Back** returns to the map.
 | Talk | 1 action | Met: once a day each, +15. Her line for the day plays on the dialogue engine |
 | Give a gift | 1 action | Met: once a day each, one good from the Warehouse at the stars you choose; her reaction plays on the dialogue engine |
 | Ask her out | 2 actions | Her evening, its play and her scene: a hangout with a friend (Friendship 3 and up), a date with a sweetheart (Romance 1 and up) or a spouse. One evening a day across everyone |
-| Invite her to work | 1 action | A friend (Friendship 3 and up), once: she’s a farmhand from today, on the farm by day |
+| Invite her to work | 1 action | A friend (Friendship 3 and up), once: she’s a farmhand from today, on the farm on her farm days (the days her town schedule leaves free) |
 | Her event | 1 action | Met, when her next event is Ready; a special day’s event actions pay first |
 <!-- /live -->
 
@@ -3063,14 +3012,14 @@ open is greyed with why. **Back** returns to the map.
   one evening a day across everyone, the same kinds and scenes as on the farm ([the evening](#the-evening)). Otherwise
   it says why: "From Friendship 3", "Spent this evening ✓", "Tonight's evening is spent", "That takes 2 actions.".
 - **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, keeps her life in
-  town, and is on the farm by day from now on. Her scene plays over the town as soon as the action is spent ([the
+  town, and is on the farm on her farm days from now on. Her scene plays over the town as soon as the action is spent ([the
   invitation to work](#the-invitation-to-work)); then her menu says "Farmhand ✓" and her line ("The farm? I'd love to.
   Count me in."), and "Works the farm ✓". Set her tasks on the work board in the Book ([farmhands](#farmhands)).
 - **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
   action (a special day's event actions first), and with none left it doesn't start.
 - **Not out now:** "At home today. Out on Spring 7, at the Library." (her next day out, from her schedule; with her profile once met); one on the farm: "She lives
-  on the farm. Her profile ›", or for a farmhand "On the farm by day, after her job. Her profile ›" (her menu still
-  works there: she's in front of you).
+  on the farm. Her profile ›" (a spouse in her room), or for a farmhand on her farm day "On the farm today, her farm day.
+  Her profile ›" (her menu still works there: she's in front of you).
 - **One of the town's people** (her face at her post, or on the People list) shows her role, what she does and her
   ties with the cast, each with its line, and her post's menu: the general store's **Buy seeds ›** opens the shop;
   the mayor's office's **Order a build ›** and **Borrow or repay ›** both open the office's sheet, its orders and its
@@ -3080,13 +3029,15 @@ open is greyed with why. **Back** returns to the map.
   Diary: an introduction or a talk at a spot visits it ([Town notes](#town-notes)).
 
 **Where you meet her** (the talk-and-gift rule, and the evening's): you talk with her, give her a gift, ask her out and
-invite her to work only where she's in front of you: **on the farm** when she lives there (the Dorm, or a spouse's
-house) or works it by day (a farmhand), else **in town where she is today**, once you've gone into town (`whereYouMeet`).
+invite her to work only where she's in front of you: **on the farm** when she lives there (a spouse in her room) or
+it's her farm day (a farmhand), else **in town where she is today**, once you've gone into town (`whereYouMeet`).
 Her menu in town is always where she is; her profile follows the same rule ([her profile](#her-profile)). **Her Ready
 event plays from anywhere** (her menu, her profile, the morning's Ready line, the calendar). Why: going into town takes
 one of the day's actions and the map shows who's where, so the town is where the day's talks happen, her schedule says
 which days, and an Uma on the farm is always in front of you; an event is her route's milestone, offered by the
-morning, the calendar and the People page, so a day she's at home never strands it.
+morning, the calendar and the People page, so a day she's at home never strands it. **Where she is never gates an
+occasion** either: her birthday, a festival's day and night and the story's days play from the calendar wherever she is
+([occasion scenes](#occasion-scenes)), on a farm day as on a town day.
 
 #### The town's screen
 
@@ -3094,8 +3045,9 @@ morning, the calendar and the People page, so a day she's at home never strands 
   **Shop**. Its title is the town's name when the world gives one, else "Town". Before you go in today, **Go into town
   · 1 action**.
 - **People:** everyone in town and the town's people, each with her face and name and where she is today ("At the
-  Café today", "At the Bakery, at work today", "At home · out Spring 7" with her next day out, "On the farm", "On the
-  farm by day" for a farmhand who lives in town, "At the Café, most days" for a keeper, "In town"), and **Met** for
+  Café today", "At the Bakery, at work today", "At home · out Spring 7" with her next day out, "On the farm" for a
+  spouse in her room, "On the farm today" for a farmhand on her farm day, "At the Café, most days" for a keeper, "In
+  town"), and **Met** for
   anyone you've met. **Find by name** (any case, accents aside) and a sort: **Met first** (met,
   then talked most, then by name) or **Name**. A tap goes to her: to her place and her menu when she's out, else her
   menu ("At home today").
@@ -3111,24 +3063,28 @@ record reads it as 0, and nothing moves `updatedAt`.
 ### Farmhands
 
 A friend you invite to work is a **farmhand** ([the invitation to work](#the-invitation-to-work)). She keeps her life in
-town, but **she's on the farm by day**: her part-time job comes first, then she's at the farm, in front of you every day
-from the invitation on, for talks, gifts and her evening (she isn't on the town's map, and her schedule's days in town
-stop mattering). She gives the farm a few actions a day on the tasks you set her on the **work board**, in the Book. She
-works them overnight, before the crops grow, so the morning says what she did. Any Uma can do
+town, and comes to the farm on her **farm days**: the days her town schedule (her routine, her part-time job, or the
+default schedule's spot) doesn't put her out in town. On a farm day she's on the farm by day, in front of you for talks,
+gifts and her evening, and off the town's map; she gives the farm a few actions on the tasks you set her on the **work
+board**, in the Book, works them overnight, before the crops grow (so the morning says what she did), and eats her two
+meals on the farm. On her **town days** she's at her place in town, by her schedule, and doesn't work, eat on the farm
+or cost anything. Nobody but a spouse in her room lives on the farm. Any Uma can do
 any task, and each task has an **aptitude**: a level for her that starts from her talents and rises with every action she
 spends on it, bringing more goods, better stars and new tricks. As the farmhands take the farm's work over, your own ten
 actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 
 ```
- your day (10 actions)                 the night, step 2, first: each farmhand in the order you invited her
-   invite her to work · 1 (a friend)     her part-time job (the story's, else a job at her favourite spot)
-   the Book: the work board (free)       then her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
+ her farm days: the days her town schedule leaves free (8 of 12 on the default schedule; a season with none, the
+                default schedule's other eight); a spouse in her room, every day
+ your day (10 actions)                 the night, step 2, first: each farmhand on her farm day, in the order you invited her
+   invite her to work · 1 (a friend)     (on a town day she's in town: no work, no meals on the farm)
+   the Book: the work board (free)       her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
      her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)
      harvest · water · plant ·           the field's tasks, the loads and the animals' care first, in your order, each
      clear and till   (a plot's rows)      until it's done; then her gathering and digging share what's left, a turn each
      load (a station)                    every action: a point of practice in its aptitude; her goods into the Warehouse
      forage · chop (an area)             her place today (where she spent the most) pays rank points, bonds, her line
-     fish (a spot)                     then the crops grow: her watering counts tonight
+     fish (a spot)                     then the farm eats (her two meals), then the crops grow: her watering counts
      care for animals (the Coop or the Barn) · work a face (the Mine or the Quarry) · cook (the farmhouse kitchen)
  the morning: Work done · "Name · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good"; Ranks · "Name · Watering 3"
 ```
@@ -3138,22 +3094,31 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 <!-- live:farmhand-day -->
 |  | Her actions |
 |---|---|
-| A farmhand’s day, after her part-time job (she’s on the farm by day; she works her actions overnight) | 3 |
+| A farmhand’s farm day (she’s on the farm by day, and works her actions overnight; on a town day she doesn’t work) | 3 |
 | Settled in: from 12 days after you invited her (a season) | +1 |
 | Once she’s your spouse | +2 |
 | Well fed this morning: a ★2+ meal last night, a household meal the day before, a wedding’s reception, a spouse’s breakfast | +1 |
 | Half pace: from the second short night of upkeep in a row, until it’s paid | Half of them all, rounded down, never below 1 |
 <!-- /live -->
 
-- **Her part-time job first:** the story's `job` for her ([her life in town](#her-life-in-town)), its words or where it
-  is ("Waits tables", "Works at the Bakery"); else the game's default, a job at her favourite spot ("Helps out at the
-  Café": her cast `spot`, else her default schedule's). It costs the farm nothing, and the board says it.
-- **Then the farm, by day:** after her job she's at the farm, so she's in front of you every day ([where you meet
-  her](#her-menu)): Chat, Gift and her evening are on her profile and her menu without going into town. The town's map
-  and People list say "On the farm by day"; her profile's **Where to find her** says "Today · On the farm" and "Every day
-  · On the farm by day, after her job: Helps out at the Café". Her work is the night's, as before: the overnight work
-  below is unchanged. At night she goes home to town (she takes no Dorm bed, and the morning's invitations stay those of
-  the Umas home).
+- **Her farm days** (`farmDaysIn(pack, id, season)`, `town/town.ts`): every day of the season her schedule doesn't put
+  her out in town by her routine, her job or the default schedule, including a day at her `home` in town or at home off
+  the map. On the default schedule that's the eight days of each season's twelve she isn't at her favourite spot (the
+  first in the cast: 2, 3, 5, 6, 8, 9, 11 and 12). **A season her schedule leaves without one** (a job every day, say):
+  her farm days that season are the default schedule's other days, eight of twelve, so every farmhand works. A spouse in
+  her room is on the farm every day, and works every day.
+- **Her part-time job is her town days:** the story's `job` for her ([her life in town](#her-life-in-town)), its words
+  or where it is ("Waits tables", "Works at the Bakery"); else the game's default, a job at her favourite spot ("Helps
+  out at the Café": her cast `spot`, else her default schedule's). It costs the farm nothing, and the board says it.
+- **On a farm day she's on the farm by day,** in front of you ([where you meet her](#her-menu)): Chat, Gift and her
+  evening are on her profile and her menu without going into town. The town's People list says "On the farm today" and
+  her profile's **Where to find her** "Today · On the farm", then the season's farm days ("On the farm · 2, 3, 5, 6, 8,
+  9, 11, 12") and her town days by place ("The Café · 1, 4, 7, 10"). That night she works her board's tasks and eats two
+  meals, the pantry first, then takeout ([food](#food)); at night she goes home to town.
+- **On a town day she's at her place in town,** by her schedule: her menu is there once you go into town, and the board
+  says "In town today · back Spring 5" (her next farm day). She doesn't work, eat on the farm or cost anything. A
+  festival or any other occasion never moves her: a farm day on a festival is still a farm day, and every occasion she
+  has plays from the calendar wherever she is ([occasion scenes](#occasion-scenes)).
 - **Settled in** is a season after you invited her (`roster[id].farmhand`, the day you did). **Married:** once she's
   your spouse.
 - **Well fed this morning:** a household meal you cook today keeps everyone well fed today and tomorrow, and a ★2+
@@ -3163,14 +3128,17 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
   which feed the farm from the morning, give it that day.
 - **Half pace** reads the day as it was left: the night that counts the second short night still works at full pace, and
   the next day's is half ([upkeep](#upkeep)).
-- **She costs 10g a night** of upkeep, once, wherever she lives (in town, the Dorm or her house).
+- **Her cost is her meals:** two on each farm day, from the pantry or takeout at 15g ([food](#food)). She pays no
+  upkeep; once she's a spouse in her room she's a resident, 10g a night as well as her meals ([upkeep](#upkeep)).
 - **The farmer's ten are never touched.** A task on her board is hers: you don't spend your actions on it.
 
 #### The work board
 
 The Book's **Work board** has a card for each farmhand, in the order they work: her face and name (a tap opens her
-profile's Work side), her job and the day she started, her actions today with what adds to them ("+1 settled in", "+1
-well fed", "half pace" in red), **Tonight**, what she'll do as the farm stands now ("3 of 3 actions · watered 3 tiles"),
+profile's Work side), her job and the day she started, her farm days this season ("Farm days · 2, 3, 5, 6, 8, 9, 11,
+12", "every day" for a spouse in her room); on a farm day her actions today with what adds to them ("+1 settled in", "+1
+well fed", "half pace" in red) and **Tonight**, what she'll do as the farm stands now ("3 of 3 actions · watered 3
+tiles"); on a town day "In town today · back Spring 5" in their place;
 and her tasks in your order, each with her aptitude's level ("Water · rows 1 and 2 · Watering 2"), **↑** to move it up
 and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (for the field's tasks, the plot
 (each plot cleared, and the next greyed with why: "Opens at Farm Rank 3"), then that plot’s rows, each with what it holds
@@ -3381,7 +3349,8 @@ Points are kept to a millionth and shown whole. Every pay of rank points takes t
 assistant 10 and an expedition 10 a day (+10 on a Success, +20 on a Great), but no workshop or expedition is open in
 play. The ranch, the workshops and expeditions are nobody's favourite, so ×1.2 never applies there.
 
-- **Well fed:** an Uma with a meal's days left: a wedding's reception or a spouse's breakfast feeds the farm. The days
+- **Well fed:** an Uma with a meal's days left: a wedding's reception or a spouse's breakfast feeds the spouses who live
+  on the farm, a ★2+ meal from the pantry whoever eats it. The days
   count down each night.
 - **The hearts' factor** reads her friendship level:
 
@@ -3582,26 +3551,26 @@ farm so the ranks came at the pace they came at when each global chapter added 2
 <!-- /live -->
 
 What each rank opens is read from the rules that gate on it (the places it offers to build, the Fields' blocks, the
-Dorm's levels, the shop's seed tiers), so the sheet and the morning can't drift from the game:
+stations' levels, the shop's seed tiers), so the sheet and the morning can't drift from the game:
 
 <!-- live:farm-rank-opens -->
 | Farm Rank | Points | Opens |
 |---|---|---|
-| 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs), Dorm level 2 (5 beds) |
-| 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New seeds at the shop |
-| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, Dorm level 4 (9 beds) |
-| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, Dorm level 5 (11 beds), New seeds at the shop |
-| 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s, Dorm level 6 (14 beds) |
-| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, Dorm level 7 (17 beds) |
-| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play), Dorm level 8 (20 beds) |
+| 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs) |
+| 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, New seeds at the shop |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s |
+| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, New seeds at the shop |
+| 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20 |
+| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
 | 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 | Plot 8 to clear (50,000g) |
 | 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
 <!-- /live -->
 
 - **A rank-up is news:** the morning's New today says "Farm Rank 2 · The Coop to build (2,000g · 30 logs · 20
-  vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New
-  seeds at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are
+  vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, New seeds
+  at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are
   two lines, lowest first.
 
 #### The Diary
@@ -3789,8 +3758,8 @@ it has seeds for, tills and clears a little more while fewer than five tiles gro
 tonight's bill back), and spends what's left fishing, foraging and chopping (chopping first while the next build waits
 for logs), each where it isn't thin yet today: the Woods and the Pond first, a deeper area or spot once they're thin and
 his reach allows ([thin](#thin-four-full-hauls-a-place-a-day)). It builds as it goes, never into a night it can't pay: **the Mill on a loan** from the mayor's office as soon
-as it holds the logs and the gold left covers tonight's bill, then the Farm Rank 3 stations. Nobody lives on the farm:
-an Uma there eats, and one with no work costs her upkeep and her meals for nothing. Every night the farm eats, then pays
+as it holds the logs and the gold left covers tonight's bill, then the Farm Rank 3 stations. Nobody lives on the farm
+(only a spouse would, in her room). Every night the farm eats, then pays
 its bill: the loan's share, the takeout and the upkeep. **The farmer eats takeout** while his gold holds, and cooks a
 batch from his two cheapest goods of food when it won't cover a few nights' takeout. It checks:
 - **every day spends exactly its ten actions,** and every morning has ten again;
@@ -3848,172 +3817,180 @@ The year, season by season (the morning after each season's last night):
 
 ##### With two farmhands
 
-The same test plays the same year a second time with **two farmhands**, friends from town invited to work on Spring 2,
-who live in town and cost 10g of upkeep each a night from then on. One waters the whole field; the other forages and
-fishes at the deepest area and spot the farm reaches (the Hills and the River from Farm Rank 2). Both have a D talent
-everywhere. Two Umas live on the farm from Summer, three from Autumn and four from Winter (the Dorm's second level for
-the fourth), though none of them works it. The farmer keeps a field twice the size (ten tiles growing), plants and
-harvests it himself, waters only what she won't reach tonight (as the board's Tonight shows), gathers no more than the
-four actions a day he did alone (leaving her places to her), and spends the rest of his day with the people in town. **The field hand is the Cook:**
-her board is the whole field's watering, then Cook, so once the field's watered her actions left cook a batch each
-until the pantry holds tonight's meals; the farmer keeps back from the bin the goods her batches will take. The same
-farm on takeout alone runs beside it. It checks:
-- **their upkeep and every night's bill are paid:** never a short night, never half pace, on takeout alone too; four
-  Umas home and the two farmhands on the upkeep;
-- **they work every night from Spring 2,** three actions or more between them, and each morning reports them;
+The same test plays the same year a second time with **two farmhands**, friends from town invited to work on Spring 2.
+They live in town and come on their **farm days**, the eight of each season's twelve their default schedule leaves
+free (the field hand's town days are 1, 4, 7 and 10, the gatherer's 2, 5, 8 and 11, so one of them is on the farm
+every day and both on 3, 6, 9 and 12), and work and eat on the farm those days: their meals are their cost, and they pay
+no upkeep. The night reads a pack of the four invented farmhands (`castPack`), for their farm days. One waters the whole
+field; the other forages and fishes at the deepest area and spot the farm reaches (the Hills and the River from Farm
+Rank 2). Both have a D talent everywhere. Nobody lives on the farm. The farmer keeps a field twice the size (ten tiles
+growing), plants and harvests it himself, waters only what she won't reach tonight (as the board's Tonight shows: all
+of it on her town days), gathers no more than the four actions a day he did alone (leaving her places to her on her farm
+days), and spends the rest of his day with the people in town. **The field hand is the Cook:** her board is the whole
+field's watering, then Cook, so once the field's watered her actions left cook a batch each until the pantry holds
+tonight's meals; the farmer keeps back from the bin the goods her batches will take. The same farm on takeout alone runs
+beside it. It checks:
+- **every night's bill is paid,** their meals with it: never a short night, never half pace, on takeout alone too; no
+  upkeep for them (only the places built), three mouths on a farm day of both and two on a town day of one;
+- **they work on their farm days from Spring 2,** one of them every day, and each morning reports those who worked;
 - **every season earns more than its takeout, upkeep and loans take, and more than the farmer alone's;** the year ships
   more and ends richer;
-- **his own day is freed:** his watering is less than half of what it was alone, more crops grow, and over two of his
-  actions a day go to the people;
-- **their aptitudes rise:** the field hand reaches Watering 6 (a row an action) by the year's end, and the gatherer
+- **his own day is freed:** his watering is under two thirds of what it was alone (her town days are his), more crops
+  grow, and over one of his actions a day goes to the people;
+- **their aptitudes rise:** the field hand reaches Watering 5 (two tiles an action) by the year's end, and the gatherer
   Foraging 4 and Fishing 4;
 - **takeout bites:** on takeout alone it's between a sixth and three tenths of what the farm ships, and never sinks it;
-- **cooking pays for itself once the field yields:** less takeout each season from Summer, under a third of the takeout
-  farm's by Winter, twice as many meals from the pantry as bought in, the cook at Cooking 3 or more, more than twelve
-  well-fed nights in Winter and nothing spoiled; the year ends richer than on takeout, and Autumn and Winter each earn more
-  after their takeout;
+- **cooking pays its way once the field yields:** less takeout each season from Summer, under two thirds of the takeout
+  farm's by Winter, the pantry feeding part of every night from Autumn, the cook at Cooking 2 or more, some well-fed
+  nights and nothing spoiled; the year ends richer than on takeout;
 - **every morning's save parses** as v5.
 
 | Season | The bin paid | Takeout | Upkeep | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|
-| Spring | 4,040g | 825g | 295g | 2,920g | 0 | 2,240g | 35g (the Mill, two farmhands) | 1 |
-| Summer | 8,690g | 1,785g | 660g | 6,245g | 0 | 10,325g | 55g (and two Umas home) | 3 |
-| Autumn | 7,420g | 990g | 1,010g | 5,420g | 0 | 11,005g | 105g (the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter | 14,550g | 225g | 1,380g | 12,945g | 0 | 23,410g | 115g (four home) | 3 |
+| Spring | 1,520g | 660g | 105g | 485g | 0 | 605g | 15g (the Mill) | 1 |
+| Summer | 4,510g | 780g | 180g | 2,940g | 0 | 3,485g | 15g | 1 |
+| Autumn | 5,550g | 585g | 240g | 4,725g | 0 | 8,070g | 30g (the Sawmill) | 3 |
+| Winter | 7,990g | 525g | 510g | 6,955g | 0 | 12,485g | 45g (the Smokehouse) | 3 |
 
-The same farm on takeout alone pays 990g, 1,800g, 2,160g and 2,520g of takeout and ends the year on 17,405g.
+The same farm on takeout alone pays 810g, 840g, 840g and 840g of takeout and ends the year on 11,520g. (Left is after
+the loans' shares too: 270g in Spring, 610g in Summer.)
 
-- **They pay their way many times over:** their 20g a night is part of the year's 3,345g upkeep, against 34,700g
-  shipped (four times the farmer alone's 8,780g). The farmhands spent 373 actions in the year; the farmer watered 18
-  tiles (156 alone) and spent 105 actions with the people.
-- **The farm grows faster:** Farm Rank 3 by Summer's end, the Mill on Spring 7 and the Dorm's second level, the Sawmill
-  and the Smokehouse in Autumn, all on his own gold, and 637 Farm Rank points by Year 2.
-- **The cook pays once the field yields:** in Spring and Summer the field takes most of the field hand's actions, so the
-  farm buys most of its food; as her Watering rises (two tiles an action, then a row) her actions left cook, six or
-  seven meals a batch, the pantry feeds the farm (245 meals in the year, 153 in Winter alone), and her ★2 batches keep
-  the farmhands well fed. She reaches Cooking 3, and the year ends a third richer than on takeout.
+- **Farm days halve their year, near enough:** the farmhands spent 227 actions in the year (373 when they came every
+  day and paid 10g each a night), and the farm ships 19,570g (34,700g before) and ends on 12,485g (23,410g), still over
+  twice the farmer alone's 8,780g shipped. The farmer watered 92 tiles (18 before; 156 alone): on her town days the
+  field is his, and he spent 66 actions with the people (105 before).
+- **The farm grows a season slower:** Farm Rank 3 by Autumn (Summer before), the Mill on Spring 5 on a loan, the Sawmill
+  on Autumn 8 and the Smokehouse on Winter 2, all on his own gold after the Mill, and 445 Farm Rank points by Year 2 (637
+  before).
+- **Their meals are their cost:** 2,550g of takeout in the year against 3,330g on takeout alone, and no upkeep for them
+  (their 20g a night is gone). Two of them on a farm day eat four meals; a town day's farmhand eats in town.
+- **The cook pays once the field yields:** in Spring and Summer the field takes most of the field hand's actions on her
+  farm days, so the farm buys most of its food; from Autumn her actions left cook, seven meals a batch, and the pantry
+  feeds part of every night (52 meals in the year), her ★2 batches leaving a farmhand well fed now and then. She reaches
+  Cooking 2, Watering 5; the year ends richer than on takeout (12,485g against 11,520g).
 - **Where it comes from:** the gatherer works the Hills and the River once Farm Rank 2 opens them, where a haul is worth
   two or three of the Woods', and her foraging rank reaches Skilled (×1.3 yield, +1 quality) on her challenges.
 
 ##### The whole farm: the Coop and the Mine
 
-The same test plays a third run, **two years** of the farm with its two farmhands (the field hand on Cook) that also
+The same test plays a third run, **three years** of the farm with its two farmhands (the field hand on Cook) that also
 builds the ranch, the Kitchen and the Mine: the Coop as soon as the Farm Rank offers it and its logs and vegetables are
 held (from Summer, growing vegetables for it), four chickens there with fodder bought in town when the silo runs low
 (keeping 600g back), and a third friend invited to care for them the day it stands (feed, collect, care); the Kitchen
 once the Farm Rank 3 stations stand, played every day he can as the casual bot and its staff meal served when the dishes
 are there, a recipe bought in town on a day it couldn't cook (one a season at most) for what the farm ships most of; then,
-in its second year, the Mine (its 60 planks sawn from his logs at the Sawmill, a load a day), a fourth friend at its
-face, and the stairs taken whenever she finds them. (The year with two farmhands ends before its Farm Rank 3 stations
-are all up: it builds no Kitchen.) The Coop and the Mine add their 15g a night each and their farmhands' 10g each; the
-chickens cost their 500g and their feed; the cook feeds them all. It checks:
-- **two years without a short night,** never half pace;
-- **every season earns more than its takeout, upkeep and loans take,** and the two years end richer than one year with
+once Farm Rank 4 comes, the Mine (its 60 planks sawn from his logs at the Sawmill, a load a day), a fourth friend at its
+face, and the stairs taken whenever she finds them. Each farmhand comes on her farm days. (Two years were enough before
+farm days; with them, Farm Rank 4 and the Mine come in the third.) The Coop and the Mine add their 15g a night each and
+their farmhands' meals on their farm days; the chickens cost their 500g and their feed; the cook feeds them all. It
+checks:
+- **three years without a short night,** never half pace;
+- **every season earns more than its takeout, upkeep and loans take,** and the three years end richer than one year with
   two farmhands;
-- **the Coop stands in the first year, the Kitchen and then the Mine in the second,** all counted in the upkeep, with
-  their farmhands;
-- **the eggs pay more than the Coop's nights cost** (its upkeep, its farmhand's, the hens and their feed), **and the ores
-  more than the Mine's** (its upkeep and its farmhand's);
-- **each morning reports the farmhands at the Coop and the Mine** and the Coop's night, nobody hungry, and the Mine's
-  deepest floor reaches floor 10 or deeper;
+- **the Coop stands in the first year, the Kitchen in the second and the Mine in the third** (Farm Rank 4), all counted
+  in the upkeep, and nobody a resident;
+- **the eggs pay more than the Coop's nights cost** (its upkeep, its farmhand's meals on her farm days at takeout's
+  price, the hens and their feed), **and the ores more than the Mine's**;
+- **each morning after a farm day of both reports the farmhands at the Coop and the Mine** and the Coop's night, nobody
+  hungry, and the Mine's deepest floor reaches floor 10 or deeper;
 - **every morning's save parses** as v5.
 
 | Season | The bin paid | Takeout | Upkeep | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|
-| Spring 1 | 4,040g | 825g | 295g | 2,920g | 0 | 2,240g | 35g | 1 |
-| Summer 1 | 4,845g | 1,785g | 660g | 2,400g | 0 | 6,000g | 55g | 3 |
-| Autumn 1 | 7,535g | 705g | 1,290g | 5,540g | 0 | 2,300g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter 1 | 13,660g | 555g | 1,680g | 11,425g | 0 | 12,515g | 140g | 3 |
-| Spring 2 | 19,765g | — | 1,710g | 18,055g | 0 | 27,390g | 155g (the Kitchen) | 3 |
-| Summer 2 | 31,855g | 60g | 2,010g | 29,785g | 0 | 47,765g | 180g (the Mine and its farmhand) | 4 |
-| Autumn 2 | 51,495g | 105g | 2,160g | 49,230g | 0 | 97,555g | 180g | 4 |
-| Winter 2 | 66,185g | — | 2,160g | 64,025g | 0 | 159,140g | 180g | 5 |
+| Spring 1 | 2,870g | 660g | 105g | 1,565g | 0 | 1,685g | 15g | 1 |
+| Summer 1 | 2,490g | 780g | 180g | 1,190g | 0 | 2,635g | 15g | 1 |
+| Autumn 1 | 5,180g | 585g | 180g | 4,415g | 0 | 8,410g | 15g | 3 |
+| Winter 1 | 4,185g | 705g | 540g | 2,940g | 0 | 2,910g | 60g (the Coop, the Sawmill, the Smokehouse) | 3 |
+| Spring 2 | 6,715g | 660g | 720g | 5,335g | 0 | 7,665g | 60g | 3 |
+| Summer 2 | 9,985g | 240g | 780g | 8,965g | 0 | 12,190g | 75g (the Kitchen) | 3 |
+| Autumn 2 | 13,720g | 120g | 900g | 12,700g | 0 | 23,450g | 75g | 3 |
+| Winter 2 | 12,490g | 75g | 900g | 11,515g | 0 | 35,575g | 75g | 3 |
+| Spring 3 | 17,695g | 60g | 1,020g | 16,615g | 0 | 42,180g | 90g (the Mine) | 4 |
+| Summer 3 | 29,885g | 15g | 1,080g | 28,790g | 0 | 71,110g | 90g | 4 |
+| Autumn 3 | 34,885g | — | 1,080g | 33,805g | 0 | 103,225g | 90g | 4 |
+| Winter 3 | 40,100g | 60g | 1,080g | 38,960g | 0 | 139,445g | 90g | 5 |
 
-- **The Coop pays its way three times over:** it is built on Autumn 1 of the first year (the vegetables it takes come
-  with Summer's crops), and over its 71 nights its eggs sell for 27,180g against 6,975g of upkeep, its farmhand, the
-  four hens and their fodder. Its farmhand reaches Animal care 9 and the ranch's Expert rank.
-- **The Kitchen doesn't pay its way on a farm this small:** it stands on Spring 10 of the second year (the farmer keeps
-  back its logs and vegetables from Winter), but a play takes 18 goods of one good and one star an ingredient, more than
-  two farmhands' hauls and the field bring in, while the cook eats the same goods at night. It plays 5 days in its year
-  (40 dishes, Good) and serves 13 staff meals; it buys 4 recipes (Oyster and Enoki Mushroom Soup, Trout and Salmon
-  Grill). The cook already fed the farm, so the two years end on 159,140g against 191,300g without it: its build, its
-  recipes, the goods its dishes take and the Mine a season later.
-- **The Mine pays at once:** it is built in the second year's Summer, once Farm Rank 4 comes; its farmhand's faces and
-  the farmer's free stairs reach floor 15 (the Farm Rank's reach), and over its 30 nights its ores sell for 42,455g
-  against 750g of its nights' costs. One miner works four full faces a day and a thin one or two
-  ([thin](#thin-four-full-hauls-a-place-a-day)).
-- **The cook feeds the farm:** from the first Winter the pantry covers nearly every meal (60g of takeout in the whole
-  second year), the cook reaches Cooking 6, and her ★2 batches keep the four farmhands well fed nearly every night: a
-  well-fed farmhand works one more action, with +0.25 quality. The second year ships 190,885g against the 137,600g it
-  shipped before food (266,525g while well fed also gave every haul a quarter more: [well fed](#well-fed)).
-- **The farm in all:** the two years ship 199,380g and end on 159,140g, Farm Rank 5 (2,493 points); every build is
-  paid from its own gold.
-- **Food's numbers:** takeout at 15g a meal, the farmer's batch of six from two goods (so cooking saves gold against
-  takeout), the cook's 6 to 12, and three days a meal keeps. The ranch's and the Mine's stand as built.
+- **The Coop pays its way twice over:** it is built on Winter 1 of the first year (Autumn 1 before farm days), and over
+  its 107 nights its eggs sell for 21,210g against 8,935g of upkeep, its farmhand's meals, the four hens and their
+  fodder. Its farmhand reaches Animal care 8 and the ranch's Expert rank.
+- **The Kitchen** stands on Summer 8 of the second year, played on the days the Warehouse holds a base, its staff meal
+  served 8 nights a season or so from the second year's Autumn; it buys 7 recipes over the three years.
+- **The Mine pays at once:** it is built on Spring 4 of the third year, once Farm Rank 4 comes (the second year's Summer
+  before farm days); its farmhand's faces and the farmer's free stairs reach floor 15 (the Farm Rank's reach), and over
+  its 44 nights its ores sell for 37,625g against 1,560g of its nights' costs.
+- **The cook feeds the farm:** from the second year's Autumn the pantry covers nearly every meal (75g of takeout in the
+  third year's last three seasons), the cook reaches Cooking 3, and her ★2 batches and the staff meal keep the
+  farmhands well fed most nights.
+- **The farm in all:** the three years ship 180,200g and end on 139,445g, Farm Rank 5 (2,292 points); every build is
+  paid from its own gold, the Mill's loan aside. Two years shipped 199,380g and ended on 159,140g with every farmhand
+  there every day: farm days cost the whole farm about a year.
 
 ##### The farm at scale: 10, 20 and 50 Umas
 
 The owner asked: "when we have 10 Umas, then 20 Umas, then 50 Umas, do all those stages support all Umas fully
 working?" A test (`packages/domain/src/farm/scale.test.ts`) answers it on the game's own rules: three farms play four
 years, each bringing in its Umas as farmhands (friends from town, a D talent everywhere) until it works with **10**, **20**
-or **50**: two in its first Spring, then ten by year 2's Spring, twenty by year 3's and fifty by year 4's Summer.
-`SCALE=1` prints the tables below.
+or **50**: two in its first Spring, then ten by year 2's Spring, twenty by year 3's and fifty by year 4's Summer. Each
+comes on her **farm days**, the eight of each season's twelve her default schedule leaves free, so about two thirds of
+them are on the farm a day (the night reads a pack of the fifty, `castPack`). `SCALE=1` prints the tables below.
 
 - **The farmer** is a plain bot. Each morning he builds what the Farm Rank offers (the stations, the Coop and the Barn,
   the Kitchen, the Mine and the Quarry, the Dock and the Boat), clears **a plot for every five Umas** as the Farm Rank
-  opens them, buys each station's next level and the Dorm's (and the Kitchen's while the staff meal takes more dishes
-  than a play makes), keeps the Coop and the Barn full and the silo fed, buys each plot's seeds in town (a different crop
-  a plot), **plays the Kitchen** once it stands (every day he can, as the casual bot: the menu its known recipes can make)
-  and **serves the staff meal** when the dishes are there, chops logs for the next build while it's short of them (up to
+  opens them, buys each station's next level (and the Kitchen's while the staff meal takes more dishes than a play
+  makes), keeps the Coop and the Barn full and the silo fed, buys each plot's seeds in town (a different crop a plot),
+  **plays the Kitchen** once it stands (every day he can, as the casual bot: the menu its known recipes can make) and
+  **serves the staff meal** when the dishes are there, chops logs for the next build while it's short of them (up to
   four a day), tends the field by hand with what his day leaves, ships a crate of everything the farm can spare (keeping
   the next builds' goods, tonight's loads, the cook's batches and tomorrow's menu back), buys a recipe in town for what the
-  farm ships most of, and spends the rest of his day with the people. Every purchase keeps six nights' bill in hand.
-- **The plain rule** sets the farmhands' boards every morning, in the order they came: **the field's plots** (harvest,
-  plant, water), **the animals**, **the stations' loads**, **the kitchen** (Cook), then **gathering and mining**: an
-  area's, a spot's or a dig's four full hauls a day each, the deepest first, one place each; then the field's **new
-  ground** (a row of each plot a day, cleared and tilled). While the next build is short of logs, the nearest area's
-  full hauls are chops, and the Sawmill's logs wait for it. Each farmhand takes what her actions fill of the first jobs
-  with work left, by her aptitudes (a station's loads as its goods allow; an area's full hauls less what the farmer took),
-  and the next takes what's left. Past every job, she gathers where it's thin.
+  farm ships most of, and spends the rest of his day with the people. Every purchase keeps six nights' bill in hand
+  (counting every farmhand's meals, a farm day or not).
+- **The plain rule** sets the boards of the farmhands **on the farm today** every morning, in the order they came: **the
+  field's plots** (harvest, plant, water), **the animals**, **the stations' loads**, **the kitchen** (Cook), then
+  **gathering and mining**: an area's, a spot's or a dig's four full hauls a day each, the deepest first, one place each;
+  then the field's **new ground** (a row of each plot a day, cleared and tilled). While the next build is short of logs,
+  the nearest area's full hauls are chops, and the Sawmill's logs wait for it. Each farmhand takes what her actions fill
+  of the first jobs with work left, by her aptitudes (a station's loads as its goods allow; an area's full hauls less
+  what the farmer took), and the next takes what's left. Past every job, she gathers where it's thin.
 - **How it counts an Uma's night:** her **real work** is the field, the animals, a load, the kitchen, a full haul and a
   full face; **thin** is a haul or a face past its place's four (half a haul: idle-ish); **idle** is an action with
-  nothing to do. She's **in a real job** when real work is at least half her actions; else she's **idle-ish**. **Real work
-  on offer** is what the jobs needed that day at the farm's levels, taken and still waiting (some waits on days the plain
-  rule can't fit it: one place to gather or dig an Uma). Phase 2's employers (expeditions, the Restaurant, the Forge)
-  aren't built: they're the work to come.
+  nothing to do. She's **in a real job** when real work is at least half her actions; else she's **idle-ish**, each of
+  the Umas on the farm that day. **Real work on offer** is what the jobs needed that day at the farm's levels, taken and
+  still waiting (some waits on days the plain rule can't fit it: one place to gather or dig an Uma). Phase 2's employers
+  (expeditions, the Restaurant, the Forge) aren't built: they're the work to come.
 
-It checks: never a short night at any stage; 10 Umas by year 2, 20 by year 3, 50 by year 4; **10 and 20 fully in real
-jobs** in year 4 with real work still waiting and under a tenth of their actions thin or idle; **50 past the farm's real
-jobs**, some idle-ish and over a tenth of their actions thin; two plots at 10, four at 20 and eight at 50, the five
-stations at level 5 and the Dorm's 20 beds; **the Kitchen built at every stage, played over a quarter of year 4's days
-and its staff meal served over half of them**, Good on average; and every season's save parses as v5.
+It checks: never a short night at any stage; 10 Umas by year 2, 20 by year 3, 50 by year 4; **10 and 20 in real jobs on
+their farm days** in year 4, two thirds of them on the farm a day (7 and 13), with real work still waiting and under a
+tenth of their actions thin or idle; **50 two thirds a day too** (over 30 on the farm, fewer than 50), nearly all in real
+jobs, real work still waiting, under a tenth thin or idle; two plots at 10, four at 20 and six at 50, the five stations
+at level 5; **the Kitchen built at every stage, played over a quarter of year 4's days and its staff meal served over half
+of them**, Good on average; and every season's save parses as v5.
 
 Each stage in its last year (year 4), a day's actions on average:
 
 |  | 10 Umas | 20 Umas | 50 Umas |
 |---|---|---|---|
 | Umas working the farm, at the year’s end | 10 | 20 | 50 |
-| Their actions a day | 49 | 98 | 237 |
-| Real work on offer a day (taken, and waiting) | 104 (48, 56) | 154 (95, 59) | 229 (191, 38) |
-| The field: tending and new ground | 18 | 48 | 107 |
-| The animals | 15 | 16 | 20 |
-| The stations’ loads | 8 | 13 | 18 |
-| The kitchen | 1 | 1 | 3 |
-| Full hauls (an area’s or a spot’s first four) | 1 | 11 | 31 |
-| Faces (a dig’s first four) | 3 | 4 | 6 |
-| **Thin** hauls and faces (past the four) | 1 | 3 | 48 |
-| **Idle** actions (nothing to do) | 2 | 3 | 5 |
-| **Umas in real jobs** · idle-ish | **10** · 0 | **20** · 0 | **35** · 14 |
-| The bin, the year | 580,230g | 815,920g | 1,529,210g |
-| Upkeep, the year | 14,175g | 22,140g | 35,805g |
-| Takeout, the year | 1,125g | 3,150g | 1,890g |
-| Meals from the pantry, the year | 277 | 210 | 844 |
-| Well fed, a night | 9 of 10 | 18 of 20 | 47 of 50 |
-| The Kitchen: plays (their average score) · dishes made, the year | 20 (59) · 154 | 32 (59) · 308 | 35 (60) · 637 |
-| Staff meals served, the year | 32 | 38 | 38 |
-| Gold at the year’s end | 612,190g | 665,715g | 1,188,820g |
-| Farm Rank · plots · station levels | 8 · 2 · 25 | 9 · 4 · 25 | 10 · 8 · 25 |
-| Housing: Dorm beds · home · in town | 11 · 10 · 0 | 20 · 20 · 0 | 20 · 20 · 30 |
+| On the farm a day (their farm days) | 7 | 13 | 32 |
+| Their actions a day | 31 | 61 | 140 |
+| Real work on offer a day (taken, and waiting) | 100 (30, 70) | 170 (60, 110) | 232 (138, 94) |
+| The field: tending and new ground | 14 | 42 | 95 |
+| The animals | 13 | 11 | 16 |
+| The stations’ loads | 2 | 4 | 9 |
+| The kitchen | 0 | 1 | 2 |
+| Full hauls (an area’s or a spot’s first four) | 1 | 2 | 13 |
+| Faces (a dig’s first four) | 0 | 0 | 1 |
+| **Thin** hauls and faces (past the four) | 0 | 0 | 2 |
+| **Idle** actions (nothing to do) | 1 | 1 | 2 |
+| **Umas in real jobs** · idle-ish | **6** · 0 | **13** · 0 | **32** · 0 |
+| The bin, the year | 194,705g | 265,485g | 443,110g |
+| Upkeep, the year | 5,760g | 7,485g | 8,385g |
+| Takeout, the year | 1,875g | 3,375g | 10,470g |
+| Meals from the pantry, the year | 91 | 203 | 560 |
+| Well fed, a night | 6 of 7 | 11 of 13 | 25 of 32 |
+| The Kitchen: plays (their average score) · dishes made, the year | 17 (60) · 132 | 24 (61) · 186 | 24 (62) · 341 |
+| Staff meals served, the year | 34 | 33 | 29 |
+| Gold at the year’s end | 142,090g | 192,190g | 237,845g |
+| Farm Rank · plots · station levels | 6 · 2 · 20 | 7 · 4 · 25 | 7 · 6 · 25 |
 | Goods eased by a flood, a day | 0 | 0 | 0 |
 
 The three farms year by year:
@@ -4023,28 +4000,28 @@ The three farms year by year:
 |  | Year 1 | Year 2 | Year 3 | Year 4 |
 |---|---|---|---|---|
 | Umas working the farm, at the year’s end | 8 | 10 | 10 | 10 |
-| Their actions a day | 20 | 46 | 47 | 49 |
-| Real work on offer a day (taken, and waiting) | 36 (19, 17) | 75 (43, 32) | 108 (46, 62) | 104 (48, 56) |
-| The field: tending and new ground | 11 | 20 | 22 | 18 |
-| The animals | 0 | 13 | 13 | 15 |
-| The stations’ loads | 1 | 2 | 4 | 8 |
-| The kitchen | 1 | 2 | 1 | 1 |
-| Full hauls (an area’s or a spot’s first four) | 5 | 5 | 2 | 1 |
-| Faces (a dig’s first four) | 0 | 0 | 3 | 3 |
-| **Thin** hauls and faces (past the four) | 2 | 3 | 1 | 1 |
-| **Idle** actions (nothing to do) | 0 | 1 | 2 | 2 |
-| **Umas in real jobs** · idle-ish | **5** · 0 | **9** · 1 | **10** · 0 | **10** · 0 |
-| The bin, the year | 29,345g | 131,485g | 317,380g | 580,230g |
-| Upkeep, the year | 3,655g | 8,930g | 13,175g | 14,175g |
-| Takeout, the year | 3,120g | 5,625g | 4,650g | 1,125g |
-| Meals from the pantry, the year | 364 | 679 | 350 | 277 |
-| Well fed, a night | 2 of 8 | 6 of 10 | 7 of 10 | 9 of 10 |
-| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 10 (60) · 76 | 20 (59) · 154 |
-| Staff meals served, the year | 0 | 0 | 18 | 32 |
+| On the farm a day (their farm days) | 3 | 7 | 7 | 7 |
+| Their actions a day | 12 | 28 | 29 | 31 |
+| Real work on offer a day (taken, and waiting) | 40 (13, 27) | 82 (28, 54) | 85 (29, 56) | 100 (30, 70) |
+| The field: tending and new ground | 6 | 15 | 12 | 14 |
+| The animals | 0 | 9 | 13 | 13 |
+| The stations’ loads | 1 | 1 | 2 | 2 |
+| The kitchen | 1 | 1 | 0 | 0 |
+| Full hauls (an area’s or a spot’s first four) | 5 | 2 | 1 | 1 |
+| Faces (a dig’s first four) | 0 | 0 | 0 | 0 |
+| **Thin** hauls and faces (past the four) | 0 | 0 | 0 | 0 |
+| **Idle** actions (nothing to do) | 0 | 0 | 1 | 1 |
+| **Umas in real jobs** · idle-ish | **3** · 0 | **7** · 0 | **6** · 0 | **6** · 0 |
+| The bin, the year | 22,945g | 70,220g | 156,965g | 194,705g |
+| Upkeep, the year | 825g | 2,550g | 5,130g | 5,760g |
+| Takeout, the year | 1,020g | 4,410g | 3,765g | 1,875g |
+| Meals from the pantry, the year | 348 | 382 | 147 | 91 |
+| Well fed, a night | 1 of 3 | 3 of 7 | 4 of 7 | 6 of 7 |
+| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 2 (57) · 14 | 9 (59) · 68 | 17 (60) · 132 |
+| Staff meals served, the year | 0 | 4 | 22 | 34 |
 | Short nights | 0 | 0 | 0 | 0 |
-| Gold at the year’s end | 4,090g | 19,715g | 77,330g | 612,190g |
-| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 2 · 10 | 6 · 2 · 25 | 8 · 2 · 25 |
-| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 9 · 9 · 1 | 11 · 10 · 0 | 11 · 10 · 0 |
+| Gold at the year’s end | 7,970g | 16,290g | 56,470g | 142,090g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 4 · 2 · 9 | 5 · 2 · 16 | 6 · 2 · 20 |
 | Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
 
 **The farm of 20:**
@@ -4052,28 +4029,28 @@ The three farms year by year:
 |  | Year 1 | Year 2 | Year 3 | Year 4 |
 |---|---|---|---|---|
 | Umas working the farm, at the year’s end | 8 | 17 | 20 | 20 |
-| Their actions a day | 20 | 59 | 94 | 98 |
-| Real work on offer a day (taken, and waiting) | 38 (20, 18) | 83 (55, 28) | 153 (92, 61) | 154 (95, 59) |
-| The field: tending and new ground | 11 | 29 | 51 | 48 |
-| The animals | 0 | 10 | 17 | 16 |
-| The stations’ loads | 1 | 2 | 8 | 13 |
-| The kitchen | 1 | 3 | 2 | 1 |
-| Full hauls (an area’s or a spot’s first four) | 6 | 9 | 10 | 11 |
-| Faces (a dig’s first four) | 0 | 0 | 3 | 4 |
-| **Thin** hauls and faces (past the four) | 0 | 4 | 2 | 3 |
-| **Idle** actions (nothing to do) | 1 | 1 | 1 | 3 |
-| **Umas in real jobs** · idle-ish | **5** · 0 | **12** · 1 | **20** · 0 | **20** · 0 |
-| The bin, the year | 26,985g | 143,685g | 418,730g | 815,920g |
-| Upkeep, the year | 3,675g | 10,745g | 18,530g | 22,140g |
-| Takeout, the year | 1,560g | 6,795g | 6,975g | 3,150g |
-| Meals from the pantry, the year | 462 | 903 | 623 | 210 |
-| Well fed, a night | 2 of 8 | 8 of 17 | 15 of 20 | 18 of 20 |
-| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 18 (59) · 176 | 32 (59) · 308 |
-| Staff meals served, the year | 0 | 0 | 22 | 38 |
+| On the farm a day (their farm days) | 3 | 9 | 13 | 13 |
+| Their actions a day | 13 | 37 | 58 | 61 |
+| Real work on offer a day (taken, and waiting) | 39 (12, 27) | 94 (36, 58) | 141 (58, 83) | 170 (60, 110) |
+| The field: tending and new ground | 5 | 13 | 30 | 42 |
+| The animals | 0 | 15 | 16 | 11 |
+| The stations’ loads | 1 | 2 | 5 | 4 |
+| The kitchen | 1 | 2 | 2 | 1 |
+| Full hauls (an area’s or a spot’s first four) | 6 | 4 | 5 | 2 |
+| Faces (a dig’s first four) | 0 | 0 | 0 | 0 |
+| **Thin** hauls and faces (past the four) | 0 | 0 | 0 | 0 |
+| **Idle** actions (nothing to do) | 0 | 0 | 1 | 1 |
+| **Umas in real jobs** · idle-ish | **3** · 0 | **9** · 0 | **13** · 0 | **13** · 0 |
+| The bin, the year | 24,150g | 109,635g | 223,165g | 265,485g |
+| Upkeep, the year | 855g | 2,670g | 6,090g | 7,485g |
+| Takeout, the year | 990g | 4,110g | 4,575g | 3,375g |
+| Meals from the pantry, the year | 350 | 670 | 611 | 203 |
+| Well fed, a night | 2 of 3 | 6 of 9 | 10 of 13 | 11 of 13 |
+| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 12 (58) · 90 | 24 (61) · 186 |
+| Staff meals served, the year | 0 | 0 | 16 | 33 |
 | Short nights | 0 | 0 | 0 | 0 |
-| Gold at the year’s end | 2,810g | 16,140g | 34,355g | 665,715g |
-| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 3 · 12 | 7 · 4 · 25 | 9 · 4 · 25 |
-| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 9 · 9 · 8 | 17 · 14 · 6 | 20 · 20 · 0 |
+| Gold at the year’s end | 9,655g | 38,800g | 21,640g | 192,190g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 4 · 3 · 10 | 6 · 4 · 24 | 7 · 4 · 25 |
 | Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
 
 **The farm of 50:**
@@ -4081,51 +4058,47 @@ The three farms year by year:
 |  | Year 1 | Year 2 | Year 3 | Year 4 |
 |---|---|---|---|---|
 | Umas working the farm, at the year’s end | 8 | 17 | 38 | 50 |
-| Their actions a day | 20 | 57 | 131 | 237 |
-| Real work on offer a day (taken, and waiting) | 38 (20, 18) | 101 (56, 45) | 171 (122, 49) | 229 (191, 38) |
-| The field: tending and new ground | 11 | 36 | 74 | 107 |
-| The animals | 0 | 10 | 17 | 20 |
-| The stations’ loads | 1 | 2 | 8 | 18 |
-| The kitchen | 1 | 2 | 2 | 3 |
-| Full hauls (an area’s or a spot’s first four) | 6 | 5 | 15 | 31 |
-| Faces (a dig’s first four) | 0 | 0 | 2 | 6 |
-| **Thin** hauls and faces (past the four) | 0 | 1 | 10 | 48 |
-| **Idle** actions (nothing to do) | 0 | 1 | 2 | 5 |
-| **Umas in real jobs** · idle-ish | **5** · 0 | **13** · 0 | **26** · 3 | **35** · 14 |
-| The bin, the year | 30,405g | 141,520g | 529,915g | 1,529,210g |
-| Upkeep, the year | 3,520g | 10,590g | 23,110g | 35,805g |
-| Takeout, the year | 1,545g | 10,005g | 12,675g | 1,890g |
-| Meals from the pantry, the year | 467 | 695 | 829 | 844 |
-| Well fed, a night | 2 of 8 | 7 of 17 | 20 of 38 | 47 of 50 |
-| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 16 (61) · 200 | 35 (60) · 637 |
-| Staff meals served, the year | 0 | 0 | 18 | 38 |
+| On the farm a day (their farm days) | 3 | 9 | 19 | 32 |
+| Their actions a day | 13 | 36 | 82 | 140 |
+| Real work on offer a day (taken, and waiting) | 39 (13, 26) | 85 (35, 50) | 152 (82, 70) | 232 (138, 94) |
+| The field: tending and new ground | 5 | 14 | 42 | 95 |
+| The animals | 0 | 14 | 20 | 16 |
+| The stations’ loads | 1 | 2 | 6 | 9 |
+| The kitchen | 1 | 1 | 3 | 2 |
+| Full hauls (an area’s or a spot’s first four) | 6 | 4 | 9 | 13 |
+| Faces (a dig’s first four) | 0 | 0 | 0 | 1 |
+| **Thin** hauls and faces (past the four) | 0 | 0 | 0 | 2 |
+| **Idle** actions (nothing to do) | 0 | 0 | 2 | 2 |
+| **Umas in real jobs** · idle-ish | **3** · 0 | **9** · 0 | **19** · 0 | **32** · 0 |
+| The bin, the year | 25,035g | 82,405g | 280,320g | 443,110g |
+| Upkeep, the year | 840g | 3,015g | 6,165g | 8,385g |
+| Takeout, the year | 1,125g | 6,675g | 8,265g | 10,470g |
+| Meals from the pantry, the year | 341 | 499 | 931 | 560 |
+| Well fed, a night | 1 of 3 | 4 of 9 | 14 of 19 | 25 of 32 |
+| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 9 (55) · 89 | 24 (62) · 341 |
+| Staff meals served, the year | 0 | 0 | 10 | 29 |
 | Short nights | 0 | 0 | 0 | 0 |
-| Gold at the year’s end | 9,675g | 14,295g | 58,180g | 1,188,820g |
-| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 4 · 9 | 7 · 6 · 25 | 10 · 8 · 25 |
-| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 9 · 9 · 8 | 14 · 14 · 24 | 20 · 20 · 30 |
+| Gold at the year’s end | 10,930g | 9,385g | 28,405g | 237,845g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 4 · 3 · 11 | 6 · 5 · 23 | 7 · 6 · 25 |
 | Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
-- **10 and 20 Umas hold, with work to spare.** In year 4 every Uma at 10 and 20 is in a real job, and real work still
-  waits (56 and 59 actions a day): the shallow areas and spots, the field's new ground, more of the field. Ten Umas keep
-  two plots, the ranch, the stations and the kitchen going; twenty keep four.
-- **50 Umas run past the farm's real jobs.** In year 4, with all eight plots, both buildings full, the five stations at
-  level 5, every area and spot open and both digs, 35 are in real jobs and 14 are idle-ish: about 53 actions a day go to
-  thin hauls and faces (48) or nothing (5). The staff meal takes most of the cooks' batches off them (F92: 38 were in
-  real jobs before it). **What 50 still needs from Phase 2:** work for about fifteen Umas, some 55 actions a day, which
-  is what its employers bring: expeditions (parties of four away for days), the Restaurant's service and the Forge's
-  crew.
-- **The Kitchen feeds the farm at scale.** Each farm builds it in year 3 (its 40 logs and 20 vegetables kept back from
-  the bin), and in year 4 plays it 20, 32 and 35 days of 48 (about 60, Good: two burners can't keep the 60 s rail) and
-  serves the staff meal 32, 38 and 38 nights. Takeout falls to 1,125g, 3,150g and 1,890g a year, and nearly everyone is
-  well fed every night (9 of 10, 18 of 20, 47 of 50, from 6, 14 and 37). It plays only when the Warehouse holds the
-  whole base of one good and one star an ingredient: on the other days the cooks feed the farm as before.
-- **Gold grows with the farm's places, not its people.** Upkeep and takeout are a few percent of the bin at every stage,
-  and every farm ends year 4 rich (612K, 666K and 1.2M) with little left to buy; the Kitchen's recipes, levels and the
-  goods its dishes take are its first new spending. Thin hauls make each Uma past the jobs
-  worth half a haul, and the market eases any good shipped by the crate, so a fifty-first Uma adds little. Phase 2's
-  workshops are what's left to buy and to staff.
-- **Housing:** the Dorm tops out at 20 beds (level 8, Farm Rank 7); the 50-Uma farm's other 30 live in town and work the
-  farm by day, as any farmhand may, at the same 10g a night. Spouses live in the homestead's houses (up to six, with the
-  weddings), which the test doesn't play.
+
+- **Farm days hold every farm to two thirds of its Umas a day.** Ten Umas put 7 on the farm a day, twenty 13, fifty
+  about 32 (44 in year 4's Spring, 50 from Summer): each Uma works eight days of a season's twelve. Their actions a day
+  are about two thirds of what they were (31, 61 and 140, from 49, 98 and 237).
+- **Every stage now holds, with work to spare.** In year 4 those on the farm are in real jobs at every stage (6 or 7 of
+  7, 13 of 13, 32 of 32), real work still waits (70, 110 and 94 actions a day), and thin and idle actions are a few a
+  day. **50 Umas no longer run past the farm's real jobs:** before farm days, 35 of 50 were in real jobs and 14 idle-ish;
+  now the farm's own jobs take the third of them on the farm a day. Phase 2's employers (expeditions, the Restaurant,
+  the Forge) are what more Umas, or more days, would need.
+- **The farms grow slower:** year 4 ends on Farm Rank 6, 7 and 7 (8, 9 and 10 before), with two, four and six plots
+  (eight before at 50), and the bin pays 195K, 265K and 443K in year 4 (580K, 816K and 1.53M before). Upkeep and takeout
+  stay a few percent of the bin, and every farm ends year 4 rich (142K, 192K and 238K).
+- **The Kitchen feeds the farm at scale.** Each farm builds it in year 2 or 3, and in year 4 plays it 17, 24 and 24
+  days of 48 (about 60, Good) and serves the staff meal 34, 33 and 29 nights. Nearly everyone on the farm is well fed
+  every night (6 of 7, 11 of 13, 25 of 32).
+- **Nobody lives on the farm** at any stage: the farmhands live in town and come on their farm days, at their meals'
+  cost (the Dorm's 20 beds and the 10g a night each are gone). Spouses live in the homestead's houses (up to six, with
+  the weddings), which the test doesn't play.
 - **The market barely moves here:** the bot plants a different crop a plot and ships every day, so no good passes a crate
   a night (0 eased a day). A farm that plants one crop across its plots, or dumps a season's stock at once, feels it
   ([the market](#the-market-feels-a-flood)).
@@ -4153,33 +4126,36 @@ night and farming with what's left. `MARRIAGE=1` prints the tables below.
   season (the first in the cast: days 1, 4, 7 and 10). A second way gives her cast entry **a home in town** (a
   `town.json` home on the map), so she's out every day.
 - **She's met only by meeting her:** introducing yourself in town, on a day she's out. Talks, gifts, Praise, her evening
-  and the invitation to work need her **in front of you**: on the farm when she lives there or works it by day (a
+  and the invitation to work need her **in front of you**: on the farm when she lives there or it's her farm day (a
   farmhand), else in town where she is today, where the bot asks her out. The bot never forces her into town: a day
   she's at home it farms instead, and those days are counted. Her events play from anywhere.
 - **Each day,** while she's in front of you (going into town for her when she's out there): a talk, a gift, Praise when
-  she's earned it, and from Friendship 3 **the invitation to work** (a farmhand from then, on the farm by day, watering
-  the field and foraging the woods overnight); her morning invitation said yes; **her evening** when it's open (2
-  actions); **her event** when Ready (the warmest reply, Yes at her confession); from Romance 8 **a ring** at the bench
-  from three refined goods the Mill made (the bot keeps the Mill's goods from Romance 5); then the proposal and the
-  wedding. Then the farm, as the first year's bot plays it: harvest, water what she won't, the Mill on a loan once its
-  logs are held, the season's quickest seeds, a crate shipped, and the rest at the woods and the water.
+  she's earned it, and from Friendship 3 **the invitation to work** (a farmhand from then, on the farm on her farm days,
+  watering the field and foraging the woods those nights, and in town on her town days, where he goes to find her); her
+  morning invitation said yes; **her evening** when it's open (2 actions); **her event** when Ready (the warmest reply,
+  Yes at her confession); from Romance 8 **a ring** at the bench from three refined goods the Mill made (the bot keeps
+  the Mill's goods from Romance 5); then the proposal and the wedding. Then the farm, as the first year's bot plays it:
+  harvest, water what she won't, the Mill on a loan once its logs are held, the season's quickest seeds, a crate
+  shipped, and the rest at the woods and the water.
 - **Two profiles.** **Devoted:** her loved gift whenever it's held, else a liked one; **Great** evenings in her favourite
   kind. **Casual:** a liked gift; **Fine** evenings, the first kind offered. A default-story Uma loves her line's good
   and likes nothing in particular, so her tastes for the run are a synthetic bible's: loved her line's default (a
   farming Uma: Carrot, the season's quickest seed in Spring), liked four goods of the woods. Her favourite kind is the
   walk, which both profiles take.
-- **Two homes.** She **stays in town** (a farmhand from Friendship 3, still living there), or the bot **invites her to
-  the farm** (a free Dorm bed) the day she's met.
+- **One home.** She lives in town until the wedding: nobody moves to the farm before it (the Dorm and its Invite to the
+  farm are retired). From Friendship 3 she's a farmhand, on the farm on her farm days: the default schedule's other
+  eight days of each season's twelve, or every day with a home in town (a day at her home is free).
 - **Seven farms each:** the account seeds every draw (stars, hauls, her lines, her invitations), never where she is, so
   every farm meets her on day 1. Each cell is the median of the seven, with their range. A day is the farm's (48 to a
   year).
 
 It checks that **every run reaches the wedding night**, that **nothing dead-ends** (her event only ever waits on her
-bar, the day after, a ring or one a day), that the farm is no slower than town and devoted no slower than casual, that
-a farmhand and an Uma on the farm are in front of you every day, that every farm meets her the same day, that a home in
-town brings her out every day and weds no later, and that living in town she weds inside the second year.
+bar, the day after, a ring or one a day), that devoted is no slower than casual, that a farmhand is in front of you every
+day (on the farm on her farm days, two thirds of them on the default schedule and all of them with a home in town; in
+town on the rest), that every farm meets her the same day, that a home in town brings her out every day and weds no
+later, and that living in town she weds inside the second year.
 
-**She stays in town:**
+**She lives in town, a farmhand on her farm days:**
 
 |  | Devoted, the default schedule | Devoted, a home in town | Casual, the default schedule | Casual, a home in town |
 |---|---|---|---|---|
@@ -4187,69 +4163,46 @@ town brings her out every day and weds no later, and that living in town she wed
 | Out of her reach, days | 16 | 0 | 22 | 0 |
 | In front of you, before she's a farmhand | 36% of days | 100% of days | 35% of days | 100% of days |
 | In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
+| On the farm, once she's a farmhand (her farm days) | 68% of days | 100% of days | 67% of days | 100% of days |
 | Friendship 3, day | 22 | 10 | 31 | 14 (14–16) |
 | A farmhand, day | 25 | 11 | 34 | 15 (15–17) |
-| The confession, day | 36 | 22 | 51 | 32 (32–34) |
-| The proposal, day | 49 (49–55) | 35 (35–36) | 70 (69–74) | 54 (51–58) |
-| **The wedding**, day | **50 (50–56): Spring 2, year 2** | **36 (36–37): Autumn 12, year 1** | **71 (70–75): Summer 11, year 2** | **55 (52–59): Spring 7, year 2** |
-| Meeting her to the wedding, days | 49 (49–55) | 35 (35–36) | 70 (69–74) | 54 (51–58) |
-| Actions spent on her | 153 (153–177) | 159 (159–163) | 210 (206–226) | 231 (219–245) |
-| Evenings | 26 (26–32) | 26 (26–27) | 38 (37–42) | 41 (37–44) |
-| Gifts: loved, liked | 9, 23 | 8, 22 | 0, 46 | 0, 45 |
-| Gold at the wedding | 6,965g (6,600–9,200) | 4,685g (3,450–5,825) | 9,795g (8,575–11,205) | 9,775g (7,785–11,215) |
-| Days her event waited on her bar | 27 | 13 | 47 | 28 (28–30) |
-| Days it waited on a ring | 0 (0–6) | 0 (0–1) | 1 (0–5) | 4 (0–7) |
-| Short nights | 1 (1–2) | 2 (2–6) | 1 (1–2) | 6 (2–16) |
-| Real time, at 3–5 minutes a day | 3 h–4 h | 108 min–3 h | 4 h–6 h | 3 h–5 h |
+| The confession, day | 36 (36–37) | 22 | 51 | 32 (32–34) |
+| The proposal, day | 49 (49–69) | 35 (35–36) | 78 (70–78) | 55 (51–58) |
+| **The wedding**, day | **50 (50–70): Spring 2, year 2** | **36 (36–37): Autumn 12, year 1** | **79 (71–79): Autumn 7, year 2** | **56 (52–59): Spring 8, year 2** |
+| Meeting her to the wedding, days | 49 (49–69) | 35 (35–36) | 78 (70–78) | 55 (51–58) |
+| Actions spent on her | 161 (161–248) | 159 (159–163) | 257 (222–257) | 235 (219–245) |
+| Evenings | 26 (26–46) | 26 (26–27) | 46 (38–46) | 42 (38–44) |
+| Gifts: loved, liked | 10, 22 | 8, 22 | 0, 53 | 0, 47 |
+| Gold at the wedding | 5,490g (4,855–9,995) | 5,235g (3,900–6,210) | 7,770g (6,730–9,330) | 10,635g (9,790–13,010) |
+| Days her event waited on her bar | 27 (27–28) | 13 | 48 (47–48) | 28 (28–30) |
+| Days it waited on a ring | 0 (0–19) | 0 (0–1) | 8 (1–8) | 5 (1–7) |
+| Short nights | 1 (1–2) | 1 (1–2) | 1 (1–2) | 7 (1–14) |
+| Real time, at 3–5 minutes a day | 3 h–4 h | 108 min–3 h | 4 h–7 h | 3 h–5 h |
 
-**Invited to the farm the day she's met:**
-
-|  | Devoted, the default schedule | Devoted, a home in town | Casual, the default schedule | Casual, a home in town |
-|---|---|---|---|---|
-| Met her, day | 1 | 1 | 1 | 1 |
-| Out of her reach, days | 0 | 0 | 0 | 0 |
-| In front of you, before she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
-| In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
-| Friendship 3, day | 10 | 10 | 15 (14–15) | 15 (14–15) |
-| A farmhand, day | 11 | 11 | 16 (15–16) | 16 (15–16) |
-| The confession, day | 21 | 21 | 31 (30–31) | 31 (30–31) |
-| The proposal, day | 35 (33–36) | 35 (33–36) | 48 (47–48) | 48 (47–48) |
-| **The wedding**, day | **36 (34–37): Autumn 12, year 1** | **36 (34–37): Autumn 12, year 1** | **49 (48–49): Spring 1, year 2** | **49 (48–49): Spring 1, year 2** |
-| Meeting her to the wedding, days | 35 (33–36) | 35 (33–36) | 48 (47–48) | 48 (47–48) |
-| Actions spent on her | 149 (141–153) | 149 (141–153) | 191 (187–193) | 191 (187–193) |
-| Evenings | 26 (24–27) | 26 (24–27) | 34 (33–35) | 34 (33–35) |
-| Gifts: loved, liked | 9, 20 | 9, 20 | 0, 37 | 0, 37 |
-| Gold at the wedding | 3,135g (2,240–5,915) | 3,135g (2,240–5,915) | 7,050g (6,125–8,610) | 7,050g (6,125–8,610) |
-| Days her event waited on her bar | 11 | 11 | 24 (24–25) | 24 (24–25) |
-| Days it waited on a ring | 2 (0–3) | 2 (0–3) | 1 (0–2) | 1 (0–2) |
-| Short nights | 12 (6–18) | 12 (6–18) | 12 (9–21) | 12 (9–21) |
-| Real time, at 3–5 minutes a day | 108 min–3 h | 108 min–3 h | 2 h–4 h | 2 h–4 h |
-
-- **Living in town, the wedding comes in the first year or early in the second**, no longer in years 4–7: devoted on
-  the default schedule, **day 50 (Spring 2, year 2), 49 days after meeting her**, some 3–4 hours of play; casual, day 71
-  (Summer 11, year 2). With a home in town, devoted weds on day 36, the farm's own pace.
+- **The wedding comes in the first year or early in the second,** as before: devoted on the default schedule, **day 50
+  (Spring 2, year 2), 49 days after meeting her**, some 3–4 hours of play; casual, day 79 (Autumn 7, year 2: 71 before
+  farm days). With a home in town, devoted weds on day 36, the farm's own pace, and casual on day 56.
 - **The default schedule brings her out a third of the days** (36% before she's a farmhand: four days of each season's
   twelve), the same days every season and on every farm, so you can plan for them: her profile and the calendar show
   them. Those days are the whole of her wait before Friendship 3 (16 days out of reach, devoted).
-- **The farmhand is the turn.** Once she's invited to work (day 25, devoted), she's on the farm by day and in front of
-  you every day (100%), so from then the town route runs like the farm's: the confession 11 days later (on the farm,
-  10), the wedding 25 days after she's a farmhand (on the farm, 25).
-- **Her evening now plays in town.** She has 26 evenings before the wedding, devoted, living in town as on the farm,
-  where she used to have none: asked out where she is on her days, then every day once she's a farmhand.
-- **Invited to the farm** (free, the day she's met, with a bed free), she's in front of you every day and the wedding
-  comes on **day 36 (Autumn 12, year 1), 35 days after meeting her, devoted, or 48 casual**, some 2–4 hours of play. A
-  schedule changes nothing for an Uma on the farm (both columns alike).
+- **The farmhand is the turn.** Once she's invited to work (day 25, devoted), she's in front of you every day: on the
+  farm on her farm days (68% of them on the default schedule), and in town on the rest, where the bot goes in to find
+  her. The confession comes 11 days later and the wedding 25 days after she's a farmhand, as when she was on the farm
+  every day; the casual farm, spending more of its day on her town days, is slower (the wedding 45 days after, from 37).
+- **Her evening plays in town and on the farm.** She has 26 evenings before the wedding, devoted: asked out where she is
+  on her days, then every day once she's a farmhand.
 - **A home in town** (or any fuller schedule the story writes) is the story's lever for the first weeks: out every day,
-  she reaches Friendship 3 on day 10, as on the farm, and the town route matches the farm's (devoted 35 days, casual 54).
-- **Her loved gift is early now:** a farming Uma loves Carrot, the first season's quickest seed, so devoted gives it on
-  nine days before the wedding (in town and on the farm). Every default loved good can be had in Spring of year 1
-  ([her favourite line and tastes](#her-favourite-line-and-tastes)).
-- **The ring never holds her long:** the bench opens the night after Romance 8, and the Mill's goods kept from Romance
-  5 make a ring there; the proposal waited on it 0–4 days at the median, 7 at most.
-- **Food bites while she lives on the farm:** invited to the farm on day 1, she eats from the first night, and the farm's
-  first weeks run short of the night's bill on about twelve nights (living in town, one to six). The bot cooks only for
-  its tight nights; a player who cooks or gathers a little more pays it ([food](#food)). Thin hauls change little: the
-  farmer leaves her the Woods' forages and fishes the Pond ([thin](#thin-four-full-hauls-a-place-a-day)).
+  she reaches Friendship 3 on day 10, and as a farmhand every day is her farm day, so she's on the farm every day.
+- **Her loved gift is early:** a farming Uma loves Carrot, the first season's quickest seed, so devoted gives it on ten
+  days before the wedding. Every default loved good can be had in Spring of year 1 ([her favourite line and
+  tastes](#her-favourite-line-and-tastes)).
+- **The ring rarely holds her long:** the bench opens the night after Romance 8, and the Mill's goods kept from Romance
+  5 make a ring there; the proposal waited on it 0–8 days at the median.
+- **Food bites little:** she eats on the farm only on her farm days once she's a farmhand, and costs nothing before; the
+  farm runs short of the night's bill on one night at the median (seven, casual with a home in town). The bot cooks
+  only for its tight nights; a player who cooks or gathers a little more pays it ([food](#food)). Thin hauls change
+  little: the farmer leaves her the Woods' forages on her farm days and fishes the Pond
+  ([thin](#thin-four-full-hauls-a-place-a-day)).
 - **No retune:** the owner decides the pace after reading it.
 
 #### The night's goals check
@@ -4257,13 +4210,12 @@ town brings her out every day and weds no later, and that living in town she wed
 Night step 8 runs, in order:
 
 1. **The places paid for yesterday stand** (`raiseBuildings`), each a line of news.
-2. **The Dorm settles** (see [the roster](#the-roster)).
-3. **The Diary pays** every milestone and row reached and not yet paid.
-4. **The Farm Rank's points** are recomputed; **the ranks reached tonight** are noted, lowest first.
-5. **The ring bench** opens the night after the first Romance 8.
+2. **The Diary pays** every milestone and row reached and not yet paid.
+3. **The Farm Rank's points** are recomputed; **the ranks reached tonight** are noted, lowest first.
+4. **The ring bench** opens the night after the first Romance 8.
 
 The morning's New today then lists, in order: the season and festivals, each place built, each Farm Rank reached, each
-milestone and row paid, then the household's milestones and the Dorm's news.
+milestone and row paid, then the household's milestones.
 
 #### The town's people
 
@@ -4568,7 +4520,7 @@ so it needs no release and is replaced the moment her portraits are published.
 
 Wherever an Uma's face shows small, as an avatar, it's **her picture**, in a rounded square. One avatar shows it
 everywhere: the town's map, who's here and its keepers, People in town, the calendar's cells and its day, the Hearts
-list, her profile's heading and its ties, the roster's cards, the work board, the Dorm and its pickers, Tonight, the
+list, her profile's heading and its ties, the roster's cards, the work board, Tonight, the
 evenings, the household, the farm map's houses, a scene's guests, the pair talks and the memories. Her picture is the
 first she has of:
 
@@ -4623,7 +4575,7 @@ first she has of:
   | Autumn | `fall`, else `spring` | Pale orange | Orange, a russet collar |
   | Winter | `winter`, else `spring` | Pale blue | Navy, a white collar |
 
-- **uma-kit's own pickers** (the Dorm's) show the same: master data's face as before for an Uma without portraits, and
+- **uma-kit's own pickers** show the same: master data's face as before for an Uma without portraits, and
   her picture for one with them.
 - **Her bust stays master data's** on the cards and sheets that show a bust; a bust that hasn't loaded shows her
   picture until it has.
@@ -4715,7 +4667,7 @@ The moments, in story order: `meeting`, `beach`, `confession`, `confession-yes`,
 ### The cast and the story pack
 
 Everyone you've met is one of **the cast**: one character each, keyed by her character id everywhere the save names an
-Uma (the roster, her route, the Dorm, work, bonds, Memories and meeting scenes). She plays one outfit, is met when you
+Uma (the roster, her route, work, bonds, Memories and meeting scenes). She plays one outfit, is met when you
 introduce yourself, and has a route of her own. One you meet whom the pack doesn't hold joins the cast bare, on the
 default story.
 
@@ -5187,22 +5139,22 @@ A farm whose opening was already read never plays it again, and keeps everyone i
 Every Uma is in town from day 1, and you meet her by **introducing yourself**: one of the day's actions, in town, where
 she is now. From then on she has the whole romance: her ladders, heart events, perks, evenings, the proposal, the wedding
 and married life, in [her own chapters](#her-chapters); she shows on the People page. There's no cap on how many you
-meet: the Dorm's beds cap only who lives on the farm.
+meet, and nobody moves to the farm by meeting her: only a spouse lives there.
 
 ```
  the farm ──► Go into town · 1 ──► walk to her (free) ──► her menu: Introduce yourself · 1 ──► met: her meeting scene
                                                                                                   │
                                                        she lives in town ◄─────────────────────────┘
-                                                         └── Invite to the farm (her profile), a bed free ──► the Dorm
+                                                         └── Friendship 3: Invite her to work ──► on the farm on her farm days
 ```
 
 - **Introduce yourself** is on her menu while you haven't met: you're in town today, she's out there now, and an action
   is left ("Go into town first.", "She isn't out in town now.", "No actions left today." otherwise). One of the town's
   people is never met: she keeps her role.
 - **Met:** she joins the roster that day (`roster[id].joined`) at Friendship 0 with 0 points and **lives in town**,
-  where you find her on her days for a talk, a gift, her evening and her events; **Invite to the farm** on her profile
-  moves her into a free Dorm bed at once, in front of you every day (the farm's work is the invitation to work's,
-  wherever she lives). Each of her ties with someone met starts at its seed.
+  where you find her on her days for a talk, a gift, her evening and her events. Once she's a friend, the invitation to
+  work makes her a farmhand, on the farm on her farm days ([farmhands](#farmhands)); after the wedding she moves into her
+  room. Each of her ties with someone met starts at its seed.
 - **Her meeting scene** plays at once, over the town, after the introduction.
 - **Retired with the welcome week:** the Gate's visitor one a morning, Say hello, her trigger to meet (talks on three
   days, a gift, a spot, a season, a festival, what the farm holds) and the night's meetings. The pack's `welcome` and
@@ -5284,8 +5236,9 @@ invitation to work, the evenings at two actions, moving in, the household's meal
  meet ─► acquaintance ─► friend ─────► farmhand ─────► sweetheart ─► engaged ─► married
  (town)  talks, gifts    hangouts · 2   invited to      dates · 2     the        the wedding night, moving in;
          (1 each)        invite to      work · 1        Dinner in     wedding    meals · 1; the night's companion,
-                         work · 1       (on the farm    town (R3),               who greets you in the morning
-                                        by day)         A night in (R6)
+                         work · 1       (on the farm    town (R3),               who greets you in the morning;
+                                        on her farm     A night in (R6)          only a spouse lives on the farm,
+                                        days)                                    in her room
 ```
 
 #### The stages
@@ -5295,26 +5248,29 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 |---|---|---|
 | Acquaintance | Met (you introduced yourself), Friendship 0–2 | Talks and gifts, an action each |
 | Friend | Friendship 3 and up | Hangouts (2 actions); the invitation to work (1 action) |
-| Farmhand | A friend you’ve invited to work | She’s on the farm by day, in front of you every day, and works it part-time (the farmhands’ work); her farmhand talks |
+| Farmhand | A friend you’ve invited to work | She’s on the farm on her farm days (the days her town schedule leaves free), in front of you there, and works it those nights (the farmhands’ work); her farmhand talks |
 | Sweetheart | From her confession’s yes (Romance 0) | Dates (2 actions) from Romance 1; Dinner in town from Romance 3, A night in from Romance 6 |
 | Engaged | After the proposal | The wedding |
-| Married | After the wedding | The wedding night and moving in; the household’s meals; the night’s companion |
+| Married | After the wedding | The wedding night and moving in: only a spouse lives on the farm, in her room; the household’s meals; the night’s companion |
 <!-- /live -->
 
 - **Her stage** shows on her profile, by her level ("Farmhand" beside "Friend · F5"), and on her menu in town ("Farmhand ·
   F5"). It's read from her ladders and one flag, never stored on its own: her ladder's stage, and `roster[id].farmhand`,
   the day you invited her to work.
 - **A farmhand** is a farmhand while she's a friend; from her confession on, her ladder's stage shows, and she keeps
-  working the farm. Her talks follow her stage ([what plays without the story](#what-plays-without-the-story)).
+  working the farm on her farm days. **Only Stage 3 works the farm:** nobody else does, and nothing else lets an Uma
+  work it (the work board takes a farmhand only).
+- **Living on the farm** is the married stage's: a spouse in her room. Until then she lives in town, a farmhand coming
+  on her farm days. Her talks follow her stage ([what plays without the story](#what-plays-without-the-story)).
 - **Hangouts open at Friend**, Friendship 3, her "Hangouts" perk; **dates at Romance 1**, her "Dates" perk. A sweetheart
   at Romance 0 (the day after her confession's yes) still has hangouts.
 
 #### The invitation to work
 
 - **Invite her to work · 1**, on her menu in town or her profile, once she's a friend and where you meet her; once.
-- She's a **farmhand** from today and keeps her life in town (the Dorm is only where she sleeps if you invite her to the
-  farm), but she's **on the farm by day**, after her part-time job: in front of you every day for talks, gifts and her
-  evening. From tonight she works the tasks you set her on the work board, and her aptitudes grow
+- She's a **farmhand** from today and keeps her life in town, and she's **on the farm on her farm days**, the days her
+  town schedule leaves free: in front of you there for talks, gifts and her evening, and in town on her town days. On a
+  farm day she works the tasks you set her on the work board overnight and eats on the farm, and her aptitudes grow
   ([farmhands](#farmhands)). The flag is also her stage and her talks.
 - **Her scene** plays as soon as the action is spent, over her menu or her profile (`?life=invited-to-work:<id>`): her
   route's `invited-to-work`, else the default story's, a short scene at the farm gate in the day's outfit (her everyday
@@ -5326,7 +5282,7 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 |  | Married life |
 |---|---|
 | A meal | Breakfast or Dinner: 1 action, each once a day, from your first wedding |
-| Who eats | Everyone on the farm (the Dorm and the houses) and every farmhand |
+| Who eats | Everyone who lives on the farm (the spouses in their rooms) and every farmhand |
 | What a meal does | Everyone it feeds well fed for 2 days (today and tomorrow; a meal running longer is never shortened), and +10 to each (`addLove`, an anniversary’s ×2 applies); and a batch for the pantry, 6 meals from 2 goods of food by the plain rule, when the Warehouse holds them |
 | Its scene | One spouse’s meal line (`draw(uid, day, 'meal:<meal>', 0)`): her bible’s `meals`, else the default story’s, on the dialogue engine |
 | The night’s companion | At Tonight, one spouse with a room: free. Her house is tonight’s house, so its morning is as built |
@@ -5447,7 +5403,7 @@ while you've talked today, paying nothing): her greeting, then her line or a sma
 
 | Piece | What plays | Without hers |
 |---|---|---|
-| **Her greeting** | On her birthday, her birthday's alone (when she has them). Otherwise one drawn from every set that applies now, their lines together, so each plays over time: the place where you're talking, `places.<id>` (in town her location today, else `places.town`; on the farm the place of her work board's first task, else the Dorm when she lives there); the season's; and the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after a night in with her or once she's tonight's companion | None: the talk opens on her line |
+| **Her greeting** | On her birthday, her birthday's alone (when she has them). Otherwise one drawn from every set that applies now, their lines together, so each plays over time: the place where you're talking, `places.<id>` (in town her location today, else `places.town`; on the farm the place of her work board's first task, else none); the season's; and the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after a night in with her or once she's tonight's companion | None: the talk opens on her line |
 | **Her line or a small talk** | One drawn from her stage's lines and her small talks that fit the moment together. A small talk fits when every tag it carries matches: `at` the place (or `town` anywhere in town), `season`, `stage` her chat set. It plays as its lines on the dialogue engine, hers and yours (`you`, under your name), she on the stage throughout | Her line alone |
 | **Her gift line** | On her birthday her `giftLines.birthday`; else her `giftLines` for the gift's taste | The default story's reactions for the taste |
 
@@ -5609,11 +5565,10 @@ default) and **Work**, the roster's album with **her level in words** ("F7", "R4
 
 #### Her profile
 
-Her profile is a side panel over the page, opened from her row, a Work card, the morning's lines, the Dorm's list and
-the town.
-Each part shows only what exists; nothing says "Soon". One who lives in town has, under her face, **Where to find her**,
-then **Lives in town** and **Invite to the farm** while a bed is free (she moves in at once), else "No bed free." and
-**The Dorm ›**.
+Her profile is a side panel over the page, opened from her row, a Work card, the morning's lines and the town.
+Each part shows only what exists; nothing says "Soon". One who lives in town (everyone but a spouse in her room) has,
+under her face, **Where to find her**, then **Lives in town · moves to the farm after your wedding** (a spouse waiting
+for a room: "… once a room is free"). There's no Invite to the farm: nobody moves in before her wedding.
 
 ```
 ┌──────────────────────────────────────────┐
@@ -5625,7 +5580,8 @@ then **Lives in town** and **Invite to the farm** while a bed is free (she moves
 │ Today · The Café              Find her › │  (or "At home · next out Spring 4")
 │ Spring · The Café · 1, 4, 7, 10          │  this season's days and places
 │ At home · the other days                 │
-│ Lives in town   [ Invite to the farm ]   │
+│ Lives in town · moves to the farm after  │
+│ your wedding                             │
 │ ▣□□□□□□□□□◇□□□□□□□□□□◇◇□□□□□             │  the route as one track
 │ ┌ Next: Friendship 1 ────────────────────┐│
 │ │ Perk · Her loved gift shown; her own chats
@@ -5707,7 +5663,8 @@ then **Lives in town** and **Invite to the farm** while a bed is free (she moves
   on the row under them while she's a friend not yet working the farm, and **Praise +20** while she's earned it. What an
   act pays floats up from her face, and a note says it ("She likes it. +36").
 - **Where you meet her:** Chat, Gift, her evening and Invite her to work need her in front of you ([where you meet
-  her](#her-menu)): she lives on the farm or works it by day, or you've gone into town today and she's out there.
+  her](#her-menu)): she lives on the farm (a spouse in her room) or it's her farm day (a farmhand), or you've gone into
+  town today and she's out there.
   Otherwise a line above them says where she is, "In town today, at the Café. Talks and gifts are in person." with
   **Find her ›** (her menu where she is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home
   today. Find her in town on her days.". **Play · 1 action ›** (her Ready event) works from anywhere.
@@ -5715,8 +5672,9 @@ then **Lives in town** and **Invite to the farm** while a bed is free (she moves
   where](#whos-where)): **Today**, her place ("The Café", with **Find her ›**), or "At home · next out
   Spring 4"; then this season's days and places in short words, one line a place in the order of its first day: "Spring
   · The Café · 1, 4, 7, 10", her job's "The Bakery, at work · 1–6", and home "At home · the other days" (her story's
-  home on the map by its name). A farmhand reads "Today · On the farm" and "Every day · On the farm by day, after her
-  job: Helps out at the Café".
+  home on the map by its name). A farmhand reads "Today · On the farm" on a farm day (her place in town on a town day),
+  then the season's farm days, "Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12", and her town days by place, "The
+  Café · 1, 4, 7, 10"; a spouse in her room, "Every day · She lives on the farm".
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, "Farmhand
   since Spring 3 · her tasks" (a tap to the work board) once she works the farm, her fourteen aptitudes (each level, a bar to
   the next and the trick it opened; "where she'd start" before she's a farmhand: see [aptitude](#aptitude)), and her
@@ -5890,8 +5848,8 @@ does, cooking once the Kitchen stands (its +10% as the Kitchen's assistant, and 
 Restaurant's and the Forge's lines wait for their games, and a workshop line's morning item is a crop of the season
 meanwhile (a cook's dish comes later). **Her
 line** is her favourite (her bible's, else her calling's, else master data's), as for every line; her +10% acts where
-her work is that line's place (the board's task she's set, at night), and her chores and morning items wherever she
-lives on the farm.
+her work is that line's place (the board's task she's set, at night), and her chores and morning items while she's on
+the farm: a spouse in her room every day, a farmhand on her farm days.
 
 <!-- live:perk-lines -->
 | Her line | +10% at her line (F2, R5) | A night chore (F6, R7, S4) | A morning item (R2, S2) | Acts |
@@ -5902,7 +5860,7 @@ lives on the farm.
 | Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from the Mine’s deepest floor reached, at a face’s stars (step 4) | A ★2+ ore of the Mine’s deepest floor reached | Yes, once the Mine stands |
 | Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4) | A ★2+ stone or gem of the Quarry’s deepest floor reached | Yes, once the Quarry stands |
 | Ranch | The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars | +5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3) | A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none) | Yes, once the Coop or the Barn stands |
-| Cooking | As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes | +1 dish on every Kitchen play while she lives on the farm (the chores don’t bank: a day without a play makes none) | A ★2+ dish (a crop of the season for now: the dishes come to the morning items later) | Yes, once the Kitchen stands: its +10% and its chores (the morning item later) |
+| Cooking | As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes | +1 dish on every Kitchen play while she’s on the farm: a spouse in her room, or a farmhand on her farm day (the chores don’t bank: a day without a play makes none) | A ★2+ dish (a crop of the season for now: the dishes come to the morning items later) | Yes, once the Kitchen stands: its +10% and its chores (the morning item later) |
 | Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Restaurant’s game is built |
 | Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season meanwhile) | Not yet: once the Forge’s game is built |
 <!-- /live -->
@@ -5951,8 +5909,10 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 
 #### Night chores
 
-- **1 from Friendship 6, 2 from Romance 7, 3 from Spouse 4,** never more, for an Uma on the farm (home in the Dorm, or a
-  spouse in her house) whose line's place is open. **One in town does none.** Each chore is its own seeded pick.
+- **1 from Friendship 6, 2 from Romance 7, 3 from Spouse 4,** never more, for an Uma on the farm that night (a spouse in
+  her room, or a farmhand on her farm day, who works the farm overnight) whose line's place is open. **One in town does
+  none** (a farmhand on a town day, a friend who isn't a farmhand, a spouse waiting for a room). Each chore is its own
+  seeded pick.
 - **Farming** (at night, as crops grow): each chore waters one dry growing tile, a seeded pick, so it grows a stage
   tonight; with none dry, the chore does nothing. The morning says "Night chores · 2 tiles watered".
 - **The ranch** (at night, after the animals' night, step 3): each chore gives **every animal in her building +5
@@ -5972,7 +5932,8 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 
 - **From Romance 2** she leaves **a ★2+ good of her line every 4th morning,** counted from the day she reached Romance 2.
   **From Spouse 2** it's **every 2nd morning at ★3+,** counted from the day she reached Spouse 2.
-- **One a day by her count, on the farm only.** A morning in her house brings one more (see the house's morning, below).
+- **One a day by her count, on the farm only:** a spouse in her room, or a farmhand on the morning of her farm day. A
+  morning in her house brings one more (see the house's morning, below).
 - **The good** is her line's (as her anniversary item, with its own draw): a miner's a find of the dig's deepest floor
   reached, a rancher's the good of an animal the farm keeps (its kinds alike). **Its stars** are a seeded draw of a day's
   work at her line, keepsake included (a miner's a face's, a rancher's her building's animals' hearts on average), held at
@@ -6021,8 +5982,8 @@ Her loved good, when it’s a dish, is her signature dish as it is. The recipe j
 
 - **Her dream** is her Spouse 3 event. Once it's in her Memories it acts: **+5% for anyone at her line's place,** in the
   crew's term. Two dreams at one place count once.
-- **Breakfast** is a spouse's Spouse 1 perk, served on a morning in her house: every Uma on the farm with no well-fed days
-  left starts the day **well fed for one day** (a Rough meal, so that day's work speeds up and earns more rank points). A
+- **Breakfast** is a spouse's Spouse 1 perk, served on a morning in her house: every Uma who lives on the farm (the
+  spouses in their rooms) with no well-fed days left starts the day **well fed for one day** (a Rough meal, so that day's work speeds up and earns more rank points). A
   meal already running is never shortened or extended, and a breakfast isn't a staff meal (no staff-meal count moves). Each
   pair it feeds earns +5 bond.
 
@@ -6253,7 +6214,7 @@ The event also gives:
     ready; her ring and its bonus once you're married; a better ring any day, from her profile.
   - **Married** (the wedding): "Your wedding is done. Her bar turns gold."; the spouse ladder; her ring's bonus at her
     line; every evening kind her ladders opened; Spouse 1's breakfast; "Your anniversary: Summer 9, each year"; her room
-    ("Her room: Farmhouse", or none free yet, so she keeps her Dorm bed) with buttons to move her to another house with a
+    ("Her room: Farmhouse", or none free yet, so she lives in town until one frees) with buttons to move her to another house with a
     free room; "House mornings: +30 for her each morning you sleep there"; and "Married 1/20 · next household scene at 5"
     ("household scene 1 tomorrow" on a milestone's own wedding, "the Great Harvest tomorrow" on the 20th).
 - **A night level** (Spouse 2 or 4) plays from the morning's line (`?level=<id>:<s2|s4>`): first her level's scene, her
@@ -6341,9 +6302,8 @@ failed, that pays well, and more in her favourite kind; then **her scene for it*
 
 - **Who:** a **hangout** with a friend, an Uma at Friendship 3 or more (her confession's wait and Romance 0 included), a
   **date** with a sweetheart from Romance 1 (the proposal's and the wedding's waits included), and **every kind** with a
-  spouse ("An evening at home"). She must be **in front of you** (`eveningHere`): home on the farm (on the Dorm's list,
-  or a spouse in her house), a farmhand on the farm by day, or out in town today with you there, where her menu asks her
-  out. The kinds, their scenes and their points are the same wherever you ask her.
+  spouse ("An evening at home"). She must be **in front of you** (`eveningHere`): home on the farm (a spouse in her
+  room), a farmhand on the farm on her farm day, or out in town today with you there, where her menu asks her out. The kinds, their scenes and their points are the same wherever you ask her.
 - **The kinds** are the ten date games and two evenings of their own, opened by her ladder and by their game:
   **Dinner in town** (a date from Romance 3, in the dinner dress) and **A night in** (a date from Romance 6, in pajamas;
   at home once married), each played as a Pick. **Cooking together** and **the footrace** wait for their games, so they
@@ -6375,7 +6335,7 @@ The kinds, the rung that opens each, and how each plays:
 | A footrace | — | R9 | Rhythm with the track (the fallback until its game ships) | `date-footrace` | Not yet: waits for the footrace | “Race me tonight?” |
 | Festival night | Festival days, F3 | Festival days, R1 | Walk, at the festival ground | `hangout-festival`, `date-festival` (`festival-night`) | Yes | — (never asked for) |
 
-Who: a hangout from Friendship 3 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“An evening at home”); she must be in front of you: home on the farm, a farmhand there by day, or out in town today with you there. Each takes 2 of the day’s actions. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
+Who: a hangout from Friendship 3 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“An evening at home”); she must be in front of you: home on the farm (a spouse in her room), a farmhand there on her farm day, or out in town today with you there. Each takes 2 of the day’s actions. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
 <!-- /live -->
 
 #### The points
@@ -6578,7 +6538,8 @@ worth a little less keeps the bench a ring maker, not a mint (an Iron Ring: 180g
 - **Play ›** asks **the place** first: her bible's wedding places (any number), else her wedding beat's place and the farm's
   defaults (the chapel bell, the Fields, the Overlook, the orchard bench), three different. Her event then plays on that
   place's card.
-- **The guests** are every spouse on the farm (the cast's order), then her two closest friends on the farm. Their faces
+- **The guests** are every spouse on the farm, in her room (the cast's order), then her two closest friends among
+  everyone you've met, wherever they live: where an Uma is never gates an occasion. Their faces
   line the top, they have no lines, and one line of narration comes first ("Stand-in 2 and Stand-in 3 came, in their
   best."; with none, "Just the two of you, and the whole farm quiet around you.").
 - **The vows** are its last choice point, paying as any choice. Your words and the place are kept as flags for later
@@ -6587,7 +6548,7 @@ worth a little less keeps the bench a ring maker, not a mint (an Iron Ring: 180g
   the town's bakery send a cake. The dish is used. What it feeds:
 
 <!-- live:reception -->
-| The reception | Well fed from tomorrow, everyone on the farm |
+| The reception | Well fed from tomorrow, everyone who lives on the farm (the spouses in their rooms) |
 |---|---|
 | A ★1 dish | 1 day |
 | A ★2 dish | 1 day |
@@ -6596,7 +6557,7 @@ worth a little less keeps the bench a ring maker, not a mint (an Iron Ring: 180g
 | A ★5 dish | 3 days |
 | No dish in the Warehouse: the town’s bakery sends a cake | 1 day (a Rough meal) |
 
-A meal already running is never shortened. **The guests:** every spouse on the farm, then her 2 closest friends on the farm (by bond); they have no lines. **The places:** her bible’s `wedding.places`, else her wedding beat’s place and `chapel-bell`, `fields`, `overlook`, `orchard-bench`, three different. **Household milestones** at 5, 10, 15, 20 married.
+A meal already running is never shortened. **The guests:** every spouse on the farm (in her room), then her 2 closest friends among everyone you’ve met, wherever they live (by bond); they have no lines. **The places:** her bible’s `wedding.places`, else her wedding beat’s place and `chapel-bell`, `fields`, `overlook`, `orchard-bench`, three different. **Household milestones** at 5, 10, 15, 20 married.
 <!-- /live -->
 
 - **She becomes your spouse** at Spouse 0, her wedding day noted (her anniversaries follow a year on), and takes **her
@@ -6614,8 +6575,8 @@ A meal already running is never shortened. **The guests:** every spouse on the f
   farm: into the room she took at the wedding, in your home or a house built for her (rooms and moves below). One with
   no room free waits for one and moves in the morning a room is free; that morning's "⌂ ‹her name› moved into ‹house›"
   (**Play**) plays her moving in. It pays nothing and saves nothing; Skip ends it. Living on the farm, she's in the
-  night's upkeep like any Uma there, spouses included (10g a night, [upkeep](#upkeep)); one who lived in town adds it
-  as she moves in.
+  night's upkeep as a resident (10g a night, [upkeep](#upkeep)), from the night she has her room; waiting for one, she
+  lives in town and costs nothing.
 
 #### The homestead
 
@@ -6683,15 +6644,16 @@ The homestead's rows on the map:
   room, else the first house with room, **the Farmhouse first.** An **own-house wisher** takes an empty house first, and
   everyone else's default passes over a house she lives in while another has room. The Married screen names her room and
   offers the other houses with a free room.
-- **With no room free** she keeps her Dorm bed, and her profile and Hearts row say **"Needs a room"**. Each night, once a
-  room is free (a house built or extended, or a room moved out of), every spouse home in the Dorm who waits takes one,
-  **in wedding order,** by the same default, and the morning says so ("⌂ Stand-in 2 moved into Rose Cottage"). One who
-  lives in town waits until she's home. You can also move her into a free room by hand at once.
+- **With no room free** she **lives in town**, and her profile and Hearts row say **"Needs a room"**. She keeps her town
+  schedule, and her farm days if she's a farmhand. A wedding never waits for a room. Each night, once a room is free (a
+  house built or extended, or a room moved out of), every spouse who waits takes one, **in wedding order,** by the same
+  default, and moves in that morning ("⌂ Stand-in 2 moved into Rose Cottage", and her moving-in scene). You can also move
+  her into a free room by hand at once.
 - **Moves are at once and free,** any time: on the homestead's sheet tap a face, then a free room in another house (a
-  move) or another house's face (a swap). A spouse leaving or arriving by a Dorm swap waits for the morning.
-- **A spouse in her house has no Dorm bed,** so her bed is free for the next arrival, and **she's on the farm:** she
-  takes jobs and tends, plays her events, spends evenings, does her chores, leaves her morning items, and eats breakfast
-  and the reception with everyone.
+  move) or another house's face (a swap).
+- **A spouse in her room lives on the farm,** the only Uma who does: she's on the farm every day (and, a farmhand, works
+  it every day), plays her events, spends evenings, does her chores, leaves her morning items, and eats breakfast and the
+  reception with the household.
 - **Her own house:** an own-house wisher is happiest alone in a house; while she shares or waits her profile says, softly,
   **"She'd love her own house"**. Nothing is lost while she waits.
 
@@ -6942,7 +6904,7 @@ flows are unchanged:
 | `?event=<id>` | Her heart event | Ready (`readiness`); with no action left it says so and plays nothing |
 | `?ask=<id>` | Ask her | She said “Not yet” at her confession, and you haven’t asked today |
 | `?memory=<id>:<rung>` | A Memory, paying nothing | A Memory already played: her meeting scene, or a rung of her route |
-| `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now: in front of you (home on the farm, a farmhand there by day, or out in town today with you there), a hangout or a date her ladder opened, a slot free |
+| `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now: in front of you (home on the farm, a farmhand there on her farm day, or out in town today with you there), a hangout or a date her ladder opened, a slot free |
 | `?evening=pick` | Tonight’s picker | Someone can spend an evening now, and the day has its 2 actions |
 | `?occasion=<id>` | An occasion scene | Her next occasion today (the day’s, then a festival’s night), with an Uma you’ve met, not yet played |
 | `?household=<id>` | A household scene or the finale | Ready (the night saw its count) and not yet read; with `&replay=1`, once read |
@@ -7064,7 +7026,8 @@ sits outside the opening screens, so it shows even when the app stopped while op
   one card: **"Your farm starts over"**, "This version of the game begins a new farm on day 1.", and **Start the new
   farm**. Nothing changes until the button is tapped.
 - **The new farm** is day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for its cleared patch of nine, no
-  station loads, ten actions, the Dorm at level 1, the Farmhouse, nobody on the roster and the farmer's name empty.
+  station loads, ten actions, the Farmhouse, nobody on the roster and the farmer's name empty (the retired Dorm kept in
+  its shape: level 1, nobody in it).
   Only the account carries over, its "last changed" time with it, so the farmer's name is the new farm's first change.
   Then the opening runs as on any new farm.
 - **v5 reads what v4 grew into:** a save with no `diary.notes` loads with no Town notes unlocked, a morning's "New story
@@ -7087,6 +7050,10 @@ sits outside the opening screens, so it shows even when the app stopped while op
   (the night she was last your companion; none, never) and the morning's "☾ Morning with" line (`morning`); and an
   evening may be Dinner in town (`dinner`) or A night in (`night-in`). Nothing migrates, and `updatedAt` never moves for
   it.
+- **v5 keeps the retired Dorm in its shape:** `dorm` and `buildings.dorm` stay, `dorm.home` and `dorm.swaps` are
+  cleared as the save loads (everyone who lived there lives in town), a morning's Dorm news is read and dropped, and a
+  `dorm:<level>` loan still parses and repays ([the retired Dorm](#the-retired-dorm)). Nothing else changes, and
+  `updatedAt` never moves for it.
 - **v5 grows in place with the illustrations:** `gallery` (her illustrations seen, by her id: the scenes' ids in the
   order first seen) is new; a save without it has seen none. Nothing migrates, and `updatedAt` never moves for it.
 - **v5 grows in place with the farmhands:** `roster[id].tasks` (her board; none, no tasks), `roster[id].practice` (her

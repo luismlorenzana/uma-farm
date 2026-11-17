@@ -1,7 +1,8 @@
-// The roster's cards: the Umas on the farm with their best rank, and how many are away; their
+// The roster's cards: the Umas who live on the farm (the spouses in their rooms) with their best rank, and how many are
+// away in town; their
 // talents and ranks as album rows, the filters and sorts, a card's words and her sheet's nine activities. Invented outfits
 // with chosen stats (`album/testing.ts`), and a cast naming each one's calling, her favourite line.
-import { newRosterUma, newSave, type SaveV4, type StoryPack } from '@farm/domain'
+import { newLove, newRosterUma, newSave, type SaveV4, type StoryPack } from '@farm/domain'
 import { runAlbumQuery } from '@luismlorenzana/uma-kit/roster'
 import { describe, expect, it } from 'vitest'
 import { albumFixture, type Five } from '../album/testing'
@@ -25,15 +26,20 @@ const STORY = { cast: { umas: IDS.map((characterId, i) => ({ characterId, callin
 
 async function rows(save?: SaveV4) {
   const { view } = await albumFixture(undefined, STATS)
-  const farm = save ?? { ...newSave('u1', AT), roster: Object.fromEntries(IDS.map((id, i) => [id, newRosterUma(i + 1)])), dorm: { level: 2, home: IDS, swaps: [] } }
-  return { view, farm, rows: umaRows(farm, farm.dorm.home, view.album, talentTable(view), STORY) }
+  const farm = save ?? { ...newSave('u1', AT), roster: Object.fromEntries(IDS.map((id, i) => [id, newRosterUma(i + 1)])) }
+  return { view, farm, rows: umaRows(farm, IDS, view.album, talentTable(view), STORY) }
 }
 
 describe('the roster page', () => {
-  it('lists the Umas on the farm with their best rank, and counts those away', () => {
+  it('lists the Umas who live on the farm (a spouse in her room) with their best rank, and counts those in town', () => {
     const miner = newRosterUma(1)
     miner.ranks.mining = { points: 160, rank: 2, challenge: 0 }
-    const save: SaveV4 = { ...newSave('u1', AT), roster: { 101: miner, 202: newRosterUma(1), 303: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
+    const wed = (house: number) => ({ ...newLove(), stage: 'spouse' as const, level: 1, wed: 1, house })
+    // 303 is a spouse waiting for a room: she lives in town.
+    const save: SaveV4 = {
+      ...newSave('u1', AT), roster: { 101: miner, 202: newRosterUma(1), 303: newRosterUma(1) },
+      love: { 101: wed(0), 202: wed(0), 303: { ...newLove(), stage: 'spouse', level: 1, wed: 1 } },
+    }
     expect(rosterView(save)).toEqual({ away: 1, home: [{ outfitId: '101', rank: 'Skilled · Mining' }, { outfitId: '202', rank: 'Novice' }] })
   })
 

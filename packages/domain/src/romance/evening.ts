@@ -3,7 +3,7 @@
 // games at its evening length (the heart events' plays), graded and never failed, then her scene for it (`eveningScene`:
 // the story's, else the default's). It takes **2 of the day's actions**. Two evenings of their own join the date games:
 // **Dinner in town** (a date from Romance 3) and **A night in** (a date from Romance 6, at home once married). **She's in
-// front of you** (`eveningHere`): home on the farm, a farmhand there by day, or out in town today with you there, where
+// front of you** (`eveningHere`): home on the farm (a spouse in her room), a farmhand there on her farm day, or out in town today with you there, where
 // her menu asks her out.
 //
 //   Fine 60 · Great 100 · Perfect 150, × 1.5 in her favourite kind, × 1.5 on her birthday, × 1.5 on her anniversary
@@ -156,19 +156,19 @@ export function kindOpens(love: Pick<Love, 'stage' | 'level'>, k: EveningKind): 
   return role === 'date' ? def.date <= romance : def.hangout !== null && def.hangout <= friendship
 }
 
-/** Whether she's home tonight: on the Dorm's list, or a spouse in her house. */
-export function homeTonight(save: Pick<SaveV4, 'dorm' | 'love'>, id: string): boolean {
+/** Whether she's home tonight: a spouse in her room, the one who lives on the farm. */
+export function homeTonight(save: Pick<SaveV4, 'love'>, id: string): boolean {
   const love = save.love[id]
-  return save.dorm.home.includes(id) || (love?.stage === 'spouse' && love.house !== undefined)
+  return love?.stage === 'spouse' && love.house !== undefined
 }
 
 /** The pack an evening reads: the cast (her place, her schedule in town), the town, master data and the year's
  * festivals. */
 export type EveningPack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world' | 'town' | 'master'>>
 
-/** Whether she's in front of you for an evening: home tonight, a farmhand on the farm by day, or out in town today with
- * you there (`whereYouMeet`). */
-export const eveningHere = (save: Pick<SaveV4, 'calendar' | 'roster' | 'dorm' | 'love' | 'today'>, pack: EveningPack, id: string): boolean =>
+/** Whether she's in front of you for an evening: home tonight (a spouse in her room), a farmhand on the farm on her farm
+ * day, or out in town today with you there (`whereYouMeet`). */
+export const eveningHere = (save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'>, pack: EveningPack, id: string): boolean =>
   homeTonight(save, id) || whereYouMeet(save, pack, id).here
 
 // --- Her favourite kind ---------------------------------------------------------------------------
@@ -363,7 +363,7 @@ export function inviteWeight(save: Pick<SaveV4, 'calendar' | 'love' | 'roster'>,
   return 1 + Math.min(INVITE_WEIGHT_DAYS, Math.max(0, save.calendar.day - since))
 }
 
-/** Who may invite you this morning: home, at Friendship 3 or more, her favourite kind open to her and built.
+/** Who may invite you this morning: home (a spouse in her room), at Friendship 3 or more, her favourite kind open to her and built.
  * In the cast's order. */
 export function inviteCandidates(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>): string[] {
   return byCast(pack, Object.keys(save.roster)).filter((id) => {

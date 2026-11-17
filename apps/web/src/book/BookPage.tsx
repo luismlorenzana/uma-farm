@@ -5,11 +5,11 @@
 // farmhouse's), a short night's warning or half pace, and the loans with what's owed
 // and when each clears. Then the cards,
 // each a tap to its place: the gold (the bin), the Farm Rank (its sheet), the goods held (the Warehouse), who lives and
-// works on the farm (the People page's Work view, and the Dorm's beds) and what can be built now (the Diary's projects).
+// is on the farm today (the People page's Work view) and what can be built now (the Diary's projects).
 // Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
 // Loaded on demand.
 import {
-  averageIncome, bedsAt, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, type FarmSave,
+  atHome, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
@@ -50,8 +50,9 @@ function Book({ save }: { save: FarmSave }) {
   const location = useLocation()
   const rank = farmRankOf(save.farm.points)
   const goods = stockTotal(save.items)
-  const home = save.dorm.home.length
-  const beds = bedsAt(save.dorm.level)
+  const pack = useStory()
+  // On the farm today: the spouses in their rooms, and the farmhands on their farm day.
+  const here = Object.keys(save.roster).filter((id) => atHome(save, id) || worksOn(save, pack, id)).length
   const met = Object.keys(save.roster).length
   const now = farmProjects(save).now.length
   return (
@@ -59,8 +60,8 @@ function Book({ save }: { save: FarmSave }) {
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Book</h1>
         <HelpButton title="The farm’s book" label="About the book">
-          <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who lives on it and what you can build.</p>
-          <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, each Dorm bed past the first three, and each Uma living on the farm or working it.</p>
+          <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who’s on it today and what you can build.</p>
+          <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, and each spouse living on the farm. A farmhand costs her meals on her farm days.</p>
           <p>Everyone who eats on the farm eats twice a night, from the pantry first. What it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep. Cook in the farmhouse kitchen, or set a farmhand to Cook.</p>
           <p>Short of it, the rest is owed. The first short night warns you; from the second, the farmhands work at half pace until it’s paid. Nobody leaves, and nothing is lost.</p>
           <p>The mayor’s office in town lends toward a build. Each night’s income repays a little, before the upkeep.</p>
@@ -73,8 +74,7 @@ function Book({ save }: { save: FarmSave }) {
         <Card to={withParam(location, 'sheet', 'bin')} title="Gold" figure={`${n(save.gold)}g`} line="The bin pays tonight" data="gold" />
         <Card to={withParam(location, 'sheet', 'rank')} title="Farm Rank" figure={rank} line={`${n(save.farm.points)} points`} data="rank" />
         <Card to="/warehouse" title="Goods" figure={n(goods)} line="In the Warehouse" data="goods" />
-        <Card to="/hearts?view=work" title="Umas on the farm" figure={home} line={`${n(met)} met`} data="work" />
-        <Card to="/dorm" title="Dorm" figure={`${home}/${beds}`} line="Beds used" data="dorm" />
+        <Card to="/hearts?view=work" title="On the farm today" figure={here} line={`${n(met)} met`} data="work" />
         <Card to="/diary" title="To build" figure={now} line="At this Farm Rank" data="projects" />
       </ul>
     </main>

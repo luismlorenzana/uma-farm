@@ -1,10 +1,8 @@
 // Save v5: the new farm over an older save keeps the account whole, the strict parse round-trips and refuses what v5
-// doesn't hold, and the Dorm for 20. Invented ids only (the stand-ins 9000001–9000003 and 9000004 onward).
+// doesn't hold, and the retired Dorm kept in its shape. Invented ids only (the stand-ins 9000001–9000003 and 9000004 onward).
 import { describe, expect, it } from 'vitest'
-import { BEDS, bedsAt } from '../farm/farm'
-import { DORM_LEVELS, buyDorm, freeBeds, nextDorm, settleDormNight } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
-import { inviteToFarm, meet } from '../romance/meeting'
+import { meet } from '../romance/meeting'
 import { parseSave, parseStored, type OlderSave } from './save'
 import { parseSaveV5 } from './parse-v4'
 import { FIELD_TILES, fieldTiles, freshV5, newLove, newSave, START_CLEAR, startField, type SaveV4 } from './v4'
@@ -15,10 +13,10 @@ const AT = '2026-11-11T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const account = { uid: 'u1', createdAt: CREATED, updatedAt: UPDATED }
 
-/** A v5 farm on `day` with the stand-ins home and their routes begun. */
+/** A v5 farm on `day` with the stand-ins met and their routes begun. */
 function farm(day = 3): SaveV4 {
   let save: SaveV4 = { ...newSave('u1', AT), calendar: { day }, farmer: { name: 'Robin' } }
-  for (const id of ['9000001', '9000002', '9000003']) save = inviteToFarm(meet(save, id).save, id)
+  for (const id of ['9000001', '9000002', '9000003']) save = meet(save, id).save
   return save
 }
 
@@ -39,7 +37,6 @@ describe('the new farm over an older save', () => {
     })
     expect(fieldTiles(fresh)).toHaveLength(FIELD_TILES)
     expect(fieldTiles(fresh).every((t) => t.crop === null)).toBe(true)
-    expect(bedsAt(fresh.dorm.level)).toBe(3)
     expect(fresh).not.toHaveProperty('start')
     expect(fresh).not.toHaveProperty('visitors')
     expect(fresh).not.toHaveProperty('work')
@@ -169,7 +166,6 @@ describe('the v5 parse', () => {
     // A spouse may hold all of them.
     const save = farm()
     save.love['9000001'] = { ...newLove(), stage: 'spouse', level: 2, ring: 7, wed: 2, house: 0 }
-    save.dorm.home = save.dorm.home.filter((id) => id !== '9000001') // a spouse in her house has no Dorm bed
     expect(parseSaveV5(json(save)).love['9000001']).toEqual(save.love['9000001'])
   })
 
@@ -179,11 +175,12 @@ describe('the v5 parse', () => {
     refuse((s) => { s.farmer.name = 'A'.repeat(17) }, /save.farmer.name/)
   })
 
-  it('refuses the Dorm off its eight levels, and home past its beds', () => {
+  it('keeps the retired Dorm on its eight levels, and clears who was home', () => {
     refuse((s) => { s.dorm.level = 9; s.buildings.dorm = 9 }, /save.buildings.dorm: expected 0–8/)
     refuse((s) => { s.buildings.dorm = 8; s.dorm.level = 9 }, 'save.dorm.level: expected 1–8')
-    refuse((s) => { s.dorm.home = ['9000001', '9000002', '9000003', '9000004']; s.roster['9000004'] = s.roster['9000001']; s.love['9000004'] = newLove() },
-      'save.dorm.home: expected 0–3 entries')
+    const save = farm()
+    save.dorm.home = ['9000001', '9000002', '9000003']
+    expect(parseSaveV5(json(save)).dorm).toEqual({ level: 1, home: [], swaps: [] })
   })
 
   it('refuses memories and arrivals off the roster', () => {
@@ -194,14 +191,14 @@ describe('the v5 parse', () => {
 
   it('takes the morning\'s Hearts and refuses roster news in §5', () => {
     const save = farm()
-    save.summary = { day: 3, bin: [], work: [], ranks: [], hearts: [{ kind: 'arrived', id: '9000002', home: true }], news: [{ kind: 'dorm', level: 2 }], nudges: [] }
+    save.summary = { day: 3, bin: [], work: [], ranks: [], hearts: [{ kind: 'arrived', id: '9000002', home: true }], news: [{ kind: 'farm-rank', rank: 2 }], nudges: [] }
     expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
     refuse((s) => { s.summary = { ...json(save.summary), news: [{ kind: 'joined', outfitId: '9000002', home: true }] } }, /save.summary.news.0.kind: expected one of/)
     refuse((s) => { s.summary = { ...json(save.summary), hearts: [{ kind: 'arrived', id: '9000009', home: true }] } }, 'save.summary.hearts.0.id: expected an Uma on the roster')
     refuse((s) => { s.summary = { ...json(save.summary), hearts: [{ kind: 'arrived', id: '9000002', home: true, words: 'Hi' }] } }, 'save.summary.hearts.0: unknown keys words')
     refuse((s) => { s.summary = { ...json(save.summary), bonds: [] } }, 'save.summary: unknown keys bonds')
     // A new story release's line: its ship's number only, never the story's words.
-    const story = { ...json(save.summary!), news: [{ kind: 'story', number: 2 }, { kind: 'dorm', level: 2 }] }
+    const story = { ...json(save.summary!), news: [{ kind: 'story', number: 2 }, { kind: 'farm-rank', rank: 2 }] }
     expect(parseSaveV5(json({ ...save, summary: story })).summary).toEqual(story)
     refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 0 }] } }, 'save.summary.news.0.number: expected 1–9007199254740991')
     refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 2, note: 'Invented.' }] } }, 'save.summary.news.0: unknown keys note')
@@ -209,27 +206,8 @@ describe('the v5 parse', () => {
   })
 })
 
-describe('the Dorm for 20', () => {
-  it('has eight levels at its beds, costs and Farm Ranks', () => {
-    expect(DORM_LEVELS.map((l) => [l.level, l.beds, l.cost, l.farmRank])).toEqual([
-      [1, 3, 0, 0], [2, 5, 1000, 1], [3, 7, 3000, 2], [4, 9, 8000, 3], [5, 11, 15000, 4], [6, 14, 28000, 5], [7, 17, 50000, 6], [8, 20, 85000, 7],
-    ])
-    expect(DORM_LEVELS.reduce((n, l) => n + l.cost, 0)).toBe(190_000)
-    expect(DORM_LEVELS.map((l) => l.beds)).toEqual([...BEDS])
-  })
-
-  it('buys, settles and frees beds', () => {
-    let save: SaveV4 = { ...farm(), gold: 200_000, farm: { ...farm().farm, points: 22_000 } }
-    expect(freeBeds(save)).toBe(0)
-    for (let level = 2; level <= 8; level++) save = buyDorm(save)
-    expect(nextDorm(save)).toBeNull()
-    expect(() => buyDorm(save)).toThrow('The Dorm is at its top level.')
-    const settled = settleDormNight(save)
-    expect(settled.raised).toBe(8)
-    expect(freeBeds(settled.save)).toBe(17)
-  })
-
-  it('names the Dorm\'s levels a Farm Rank opens', () => {
-    expect(farmRankOpens(3)).toContain('Dorm level 4 (9 beds)')
+describe('the retired Dorm', () => {
+  it('is offered by no Farm Rank', () => {
+    for (let rank = 1; rank <= 10; rank++) expect(farmRankOpens(rank).join(' ')).not.toContain('Dorm')
   })
 })

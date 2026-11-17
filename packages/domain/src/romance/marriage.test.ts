@@ -8,12 +8,13 @@
 // the default schedule: her favourite spot on four days a season (the first in the cast, on days 1, 4, 7 and 10); in the
 // "home" runs her cast entry gives her a home on the map, so she's in town every day. She's met only by introducing
 // yourself in town, where she is, and talks, gifts, her evening and the invitation to work need her in front of you: on
-// the farm when she lives there or works it by day, else in town where she is today. The bot never forces her into town:
+// the farm on her farm days once she's a farmhand, else in town where she is today. The bot never forces her into town:
 // a day she's at home it farms instead, and the run counts those days. Her events play from anywhere.
 //
 // **Each day:** the morning's invitation, if she asked, said yes; then, while she's in front of you (going into town for
 // her when she's out there), a talk and a gift, Praise when she's earned it, and from Friendship 3 the invitation to work
-// (she's a farmhand from then, on the farm by day, watering the field and foraging the woods overnight); her evening when
+// (she's a farmhand from then, on the farm on her farm days, watering the field and foraging the woods those nights, and
+// in town on her town days, where he goes to find her); her evening when
 // it's open (a hangout from Friendship 3, a date from Romance 1: 2 actions, asked out in town or on the farm); her event
 // when Ready (the warmest reply, Yes at her confession); a ring at the bench once it opens, from three refined goods the
 // Mill made; then the proposal with it, and the wedding. Then the farm: harvest, water what she won't, the Mill on a loan
@@ -24,9 +25,10 @@
 // nothing in particular, so her tastes for the run are set by a synthetic bible: loved her line's default (a farming
 // Uma's Carrot, from the first season's seeds), liked four common goods of the woods. Her story is the default story's.
 //
-// **Two homes:** she stays in town (a farmhand from Friendship 3, still living there), or the bot invites her to the farm
-// (a free Dorm bed) the day she's met. Each runs with the default schedule and with a home in town: eight runs. Retunes
-// nothing. `MARRIAGE=1` prints the table.
+// **One home:** she lives in town until the wedding (a farmhand from Friendship 3, on the farm on her farm days: the
+// default schedule's eight of a season's twelve, or every day with a home in town, which leaves every day free). Each
+// profile runs with the default schedule and with a home in town: four runs. Retunes nothing. `MARRIAGE=1` prints the
+// table.
 import { describe, expect, it } from 'vitest'
 import { actionCost, actionsLeft, canSpendForEvent, GAME_DAYS, goToTown } from '../farm/actions'
 import { payBuild } from '../farm/builds'
@@ -43,12 +45,12 @@ import { runNight, type NightContext } from '../night/end-day'
 import { shipCrate, type CrateLine } from '../save/bin'
 import { parseSaveV5 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
-import { fieldTiles, atHome, EVENING_KINDS, FIELD_TILES, isOvergrown, newSave, type EveningKind, type SaveV4 } from '../save/v4'
+import { fieldTiles, EVENING_KINDS, FIELD_TILES, isOvergrown, newSave, type EveningKind, type SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { Step } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { eventOf, favouriteGoodOf, festivalsOf, masterCastFrom, storyOf, weddingPlaces, type MasterOutfit } from '../story/placeholders'
-import { whereYouMeet } from '../town/town'
+import { whereYouMeet, worksOn, type SchedulePack } from '../town/town'
 import { canPraise, chatV4, giftV4, praiseV4 } from './acts'
 import { benchGrades, benchOpen, benchPick, heldRings, makeRing } from './bench'
 import { birthdaysOf } from './days'
@@ -56,7 +58,7 @@ import { answerInvite, favouriteKind, isFestivalNight, kindsNow, spendEvening } 
 import { playEvent } from './events'
 import { inviteToWork, isFarmhand } from './loop'
 import { authoredGain, finishArrival, pathFlags, walkScene } from './love'
-import { introduce, inviteToFarm } from './meeting'
+import { introduce } from './meeting'
 import { readiness, type Wait } from './ready'
 import { receptionDishes } from './wedding'
 
@@ -99,9 +101,8 @@ const PACKS = {
 // --- The bot -----------------------------------------------------------------------------------------------------------
 
 type Profile = 'devoted' | 'casual'
-type Home = 'town' | 'farm'
 type Place = keyof typeof PACKS
-interface Run { profile: Profile; home: Home; place: Place }
+interface Run { profile: Profile; place: Place }
 
 /** Great and Fine evenings: a play's score. */
 const SCORE: Readonly<Record<Profile, number>> = { devoted: 75, casual: 40 }
@@ -124,6 +125,8 @@ interface Result {
   met: number | null
   friend3: number | null
   farmhand: number | null
+  /** The days she was on the farm once she's a farmhand: her farm days. */
+  farmDays: number
   confession: number | null
   proposal: number | null
   wedding: number | null
@@ -145,21 +148,21 @@ interface Result {
 
 const left = actionsLeft
 const growing = (save: SaveV4): number[] => fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready ? [i] : []))
-/** Whether a place is thin for him today: its four full hauls taken, less the three she forages there tonight once
- * she's a farmhand (he leaves them to her). */
-const thinFor = (save: SaveV4, where: string): boolean =>
-  haulsToday(save, where) + (where === 'woods' && save.roster[HER]?.farmhand !== undefined ? 3 : 0) >= FULL_HAULS
+/** Whether a place is thin for him today: its four full hauls taken, less the three she forages there tonight on her
+ * farm day once she's a farmhand (he leaves them to her). */
+const thinFor = (save: SaveV4, where: string, pack: SchedulePack): boolean =>
+  haulsToday(save, where) + (where === 'woods' && worksOn(save, pack, HER) ? 3 : 0) >= FULL_HAULS
 /** Where he gathers: the nearest area or spot in his reach that isn't thin for him yet today, else the nearest. */
-const fresh = (save: SaveV4, place: 'forest' | 'fishery'): string => {
+const fresh = (save: SaveV4, place: 'forest' | 'fishery', pack: SchedulePack): string => {
   const open = reachList(save, place).filter((r) => r.lock === null)
-  return (open.find((r) => !thinFor(save, r.id)) ?? open[0]!).id
+  return (open.find((r) => !thinFor(save, r.id, pack)) ?? open[0]!).id
 }
 /** A haul, by turns: a catch, a forage, a chop, each where it isn't thin; the next by turn when its place is thin and
  * another's isn't. */
-function haul(save: SaveV4, k: number): SaveV4 {
+function haul(save: SaveV4, k: number, pack: SchedulePack): SaveV4 {
   const kinds = [0, 1, 2].map((n) => (k + n) % 3)
-  const pick = kinds.find((n) => !thinFor(save, fresh(save, n === 0 ? 'fishery' : 'forest'))) ?? k % 3
-  return pick === 0 ? fish(save, fresh(save, 'fishery')).save : pick === 1 ? forage(save, fresh(save, 'forest')).save : chop(save, fresh(save, 'forest')).save
+  const pick = kinds.find((n) => !thinFor(save, fresh(save, n === 0 ? 'fishery' : 'forest', pack), pack)) ?? k % 3
+  return pick === 0 ? fish(save, fresh(save, 'fishery', pack)).save : pick === 1 ? forage(save, fresh(save, 'forest', pack)).save : chop(save, fresh(save, 'forest', pack)).save
 }
 const romanceLevel = (save: SaveV4): number => {
   const love = save.love[HER]
@@ -225,12 +228,12 @@ function quickestSeed(save: SaveV4) {
 }
 
 /** The farm with what's left of the day. */
-function farm(start: SaveV4): SaveV4 {
+function farm(start: SaveV4, pack: (typeof PACKS)[Place]): SaveV4 {
   let save = start
   const daysLeft = 12 - dateOf(save.calendar.day).day + 1
   for (const [i, t] of fieldTiles(save).entries()) if (t.ready && left(save) > 0) save = harvestTile(save, i).save
-  // Her watering tonight, as a farmhand: the bot waters only what she won't.
-  const hers = isFarmhand(save, HER) ? fieldTiles(handsTonight(save, save, talentsD, null).save) : null
+  // Her watering tonight, as a farmhand on her farm day: the bot waters only what she won't.
+  const hers = isFarmhand(save, HER) ? fieldTiles(handsTonight(save, save, talentsD, pack).save) : null
   for (const i of growing(save)) if (!fieldTiles(save)[i]!.watered && !hers?.[i]!.watered && left(save) > 0) save = waterTile(save, i)
   // The Mill, once its logs are held: his own gold, else a loan in town.
   const mill = buildOrders({ ...save, today: { ...save.today, town: true } }).find((o) => o.project === 'mill')
@@ -265,8 +268,8 @@ function farm(start: SaveV4): SaveV4 {
   // seed in Spring, so the field grows it.)
   for (let k = 0; left(save) > 0; k++) {
     const logs = goodCount(save.items, 'pine-log') + goodCount(save.items, 'birch-log')
-    if (!placeBuilt(save, 'mill') && !save.farm.builds.includes('mill') && logs < MILL_LOGS) save = chop(save, fresh(save, 'forest')).save
-    else save = haul(save, k)
+    if (!placeBuilt(save, 'mill') && !save.farm.builds.includes('mill') && logs < MILL_LOGS) save = chop(save, fresh(save, 'forest', pack)).save
+    else save = haul(save, k, pack)
   }
   return save
 }
@@ -279,7 +282,7 @@ async function simulate(run: Run, seed: string): Promise<Result> {
   const favourite = favouriteKind(pack, HER)
   let save: SaveV4 = { ...newSave(seed, AT), farmer: { name: 'Sim' } }
   const r: Result = {
-    run, seed, met: null, friend3: null, farmhand: null, confession: null, proposal: null, wedding: null, unmetDays: 0, unreachable: 0,
+    run, seed, met: null, friend3: null, farmhand: null, confession: null, proposal: null, wedding: null, unmetDays: 0, unreachable: 0, farmDays: 0,
     reach: { before: 0, beforeDays: 0, after: 0, afterDays: 0 }, actions: 0, evenings: 0, gifts: { loved: 0, liked: 0, other: 0 }, gold: 0, waits: {}, shortNights: 0, stuck: null,
   }
   const spent = (before: SaveV4, after: SaveV4) => { r.actions += after.today.actions - before.today.actions + (after.today.eventActions - before.today.eventActions) }
@@ -297,7 +300,6 @@ async function simulate(run: Run, seed: string): Promise<Result> {
         const arrival = await eventOf(pack, HER, 'arrival')
         const path = walkScene(arrival.steps, picksFor(arrival.steps, []))
         save = finishArrival(save, HER, { choice: 30, flags: pathFlags(path.steps) })
-        if (run.home === 'farm') save = inviteToFarm(save, HER)
         spent(before, save)
         r.met = day
       } else r.unmetDays++
@@ -307,7 +309,7 @@ async function simulate(run: Run, seed: string): Promise<Result> {
       const farmToday = now.farm
       const here = farmToday || now.at !== null
       const farmhand = isFarmhand(save, HER)
-      if (farmhand) { r.reach.afterDays++; if (here) r.reach.after++ } else { r.reach.beforeDays++; if (here) r.reach.before++ }
+      if (farmhand) { r.reach.afterDays++; if (here) r.reach.after++; if (farmToday) r.farmDays++ } else { r.reach.beforeDays++; if (here) r.reach.before++ }
       if (!here) r.unreachable++
       const before = save
       if (here) {
@@ -367,7 +369,7 @@ async function simulate(run: Run, seed: string): Promise<Result> {
       r.gold = save.gold
       return r
     }
-    save = farm(save)
+    save = farm(save, pack)
     save = runNight(save, context)
     if (save.summary?.money?.some((m) => m.kind === 'short')) r.shortNights++
     if (n % 24 === 0) expect(parseSaveV5(json(save))).toEqual(save)
@@ -380,9 +382,9 @@ async function simulate(run: Run, seed: string): Promise<Result> {
 /** Seven farms: the account seeds every draw (stars, hauls, her lines, her invitations), never where she is. */
 const SEEDS = ['marriage-1', 'marriage-2', 'marriage-3', 'marriage-4', 'marriage-5', 'marriage-6', 'marriage-7']
 const PLACES = ['default', 'home'] as const
-const RUNS: Run[] = (['town', 'farm'] as const).flatMap((home) => PLACES.flatMap((place) => (['devoted', 'casual'] as const).map((profile) => ({ profile, home, place }))))
+const RUNS: Run[] = PLACES.flatMap((place) => (['devoted', 'casual'] as const).map((profile) => ({ profile, place })))
 const results = await Promise.all(RUNS.flatMap((run) => SEEDS.map((seed) => simulate(run, seed))))
-const all = (profile: Profile, home: Home, place: Place) => results.filter((x) => x.run.profile === profile && x.run.home === home && x.run.place === place)
+const all = (profile: Profile, place: Place) => results.filter((x) => x.run.profile === profile && x.run.place === place)
 const median = (values: readonly number[]): number => {
   const sorted = [...values].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
@@ -405,15 +407,16 @@ if (process.env.MARRIAGE) {
     return `${range(v)}: ${at.season.charAt(0).toUpperCase()}${at.season.slice(1)} ${at.day}, year ${at.year}`
   }
   const cols = (['devoted', 'casual'] as const).flatMap((profile) => PLACES.map((place) => ({ profile, place })))
-  for (const home of ['town', 'farm'] as const) {
-    console.log(`\n${home === 'town' ? 'She stays in town' : 'Invited to the farm the day she\'s met'}`)
+  {
+    console.log('\nShe lives in town, a farmhand on her farm days')
     console.log(`|  | ${cols.map((c) => `${c.profile === 'devoted' ? 'Devoted' : 'Casual'}, ${c.place === 'default' ? 'the default schedule' : 'a home in town'}`).join(' | ')} |`)
     console.log(`|---|${cols.map(() => '---').join('|')}|`)
-    const row = (label: string, cell: (xs: Result[]) => string) => console.log(`| ${label} | ${cols.map((c) => cell(all(c.profile, home, c.place))).join(' | ')} |`)
+    const row = (label: string, cell: (xs: Result[]) => string) => console.log(`| ${label} | ${cols.map((c) => cell(all(c.profile, c.place))).join(' | ')} |`)
     row('Met her, day', (xs) => range(stat(xs, (x) => x.met!)))
     row('Out of her reach, days', (xs) => range(stat(xs, (x) => x.unmetDays + x.unreachable)))
     row('In front of you, before she\'s a farmhand', (xs) => `${Math.round(100 * reachShare(xs, 'before'))}% of days`)
     row('In front of you, once she\'s a farmhand', (xs) => `${Math.round(100 * reachShare(xs, 'after'))}% of days`)
+    row('On the farm, once she\'s a farmhand (her farm days)', (xs) => `${Math.round((100 * xs.reduce((n, x) => n + x.farmDays, 0)) / Math.max(1, xs.reduce((n, x) => n + x.reach.afterDays, 0)))}% of days`)
     row('Friendship 3, day', (xs) => range(stat(xs, (x) => x.friend3!)))
     row('A farmhand, day', (xs) => range(stat(xs, (x) => x.farmhand!)))
     row('The confession, day', (xs) => range(stat(xs, (x) => x.confession!)))
@@ -436,10 +439,10 @@ if (process.env.MARRIAGE) {
 }
 
 describe('a route to marriage, simulated', () => {
-  it('reaches the wedding night in every run, devoted and casual, in town and on the farm, on the default schedule and with a home', () => {
+  it('reaches the wedding night in every run, devoted and casual, on the default schedule and with a home', () => {
     expect(results).toHaveLength(RUNS.length * SEEDS.length)
     for (const x of results) {
-      const name = `${x.run.profile} ${x.run.home} ${x.run.place} ${x.seed}`
+      const name = `${x.run.profile} ${x.run.place} ${x.seed}`
       expect(x.stuck, name).toBeNull()
       expect(x.met, name).not.toBeNull()
       expect([x.met!, x.friend3!, x.confession!, x.proposal!, x.wedding!].every((d, i, list) => i === 0 || d > list[i - 1]!), name).toBe(true)
@@ -447,31 +450,30 @@ describe('a route to marriage, simulated', () => {
   })
 
   it('never dead-ends: her event waits only on her bar, the day after, the ring, or one a day', () => {
-    for (const x of results) for (const kind of Object.keys(x.waits)) expect(['bar', 'day', 'ring', 'today'], `${x.run.profile} ${x.run.home} ${x.run.place} ${x.seed}`).toContain(kind)
+    for (const x of results) for (const kind of Object.keys(x.waits)) expect(['bar', 'day', 'ring', 'today'], `${x.run.profile} ${x.run.place} ${x.seed}`).toContain(kind)
   })
 
-  it('courts no slower on the farm than in town, and devoted no slower than casual', () => {
+  it('courts devoted no slower than casual', () => {
     const span = (xs: readonly Result[]) => median(xs.map((x) => x.wedding! - x.met!))
-    for (const place of PLACES) {
-      for (const profile of ['devoted', 'casual'] as const) expect(span(all(profile, 'farm', place))).toBeLessThanOrEqual(span(all(profile, 'town', place)))
-      for (const home of ['town', 'farm'] as const) expect(span(all('devoted', home, place))).toBeLessThanOrEqual(span(all('casual', home, place)))
-    }
+    for (const place of PLACES) expect(span(all('devoted', place))).toBeLessThanOrEqual(span(all('casual', place)))
   })
 
-  it('a farmhand is in front of you every day, and so is an Uma on the farm; nobody is placed at random', () => {
+  it('a farmhand is in front of you every day: on the farm on her farm days, in town on her town days; nobody is placed at random', () => {
     for (const place of PLACES) {
-      for (const x of all('devoted', 'town', place)) expect(x.reach.after).toBe(x.reach.afterDays)
-      for (const y of all('devoted', 'farm', place)) expect(y.reach.before + y.reach.after).toBe(y.reach.beforeDays + y.reach.afterDays)
+      for (const x of all('devoted', place)) expect(x.reach.after).toBe(x.reach.afterDays)
       // Every farm meets her the same day: where she is never depends on the player.
-      expect(new Set(all('devoted', 'town', place).map((x) => x.met)).size).toBe(1)
+      expect(new Set(all('devoted', place).map((x) => x.met)).size).toBe(1)
     }
     // Before she's a farmhand, the default schedule has her in town on four days of the season's twelve.
-    expect(reachShare(all('devoted', 'town', 'default'), 'before')).toBeCloseTo(1 / 3, 1)
+    expect(reachShare(all('devoted', 'default'), 'before')).toBeCloseTo(1 / 3, 1)
+    // Once she's one, she's on the farm on her farm days: the default schedule's other eight, or every day with a home.
+    for (const x of all('devoted', 'default')) expect(x.farmDays / x.reach.afterDays).toBeCloseTo(2 / 3, 1)
+    for (const x of all('devoted', 'home')) expect(x.farmDays).toBe(x.reach.afterDays)
   })
 
   it('a home in town brings her out every day, and weds no later; living in town, the wedding comes inside the second year', () => {
-    expect(reachShare(all('devoted', 'town', 'home'), 'before')).toBe(1)
-    expect(median(all('devoted', 'town', 'home').map((x) => x.wedding!))).toBeLessThanOrEqual(median(all('devoted', 'town', 'default').map((x) => x.wedding!)))
-    for (const profile of ['devoted', 'casual'] as const) expect(median(all(profile, 'town', 'default').map((x) => x.wedding!))).toBeLessThanOrEqual(2 * DAYS_PER_YEAR)
+    expect(reachShare(all('devoted', 'home'), 'before')).toBe(1)
+    expect(median(all('devoted', 'home').map((x) => x.wedding!))).toBeLessThanOrEqual(median(all('devoted', 'default').map((x) => x.wedding!)))
+    for (const profile of ['devoted', 'casual'] as const) expect(median(all(profile, 'default').map((x) => x.wedding!))).toBeLessThanOrEqual(2 * DAYS_PER_YEAR)
   })
 })

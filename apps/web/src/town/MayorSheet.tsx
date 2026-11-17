@@ -1,17 +1,17 @@
 // The mayor's office (`/town?at=mayor&sheet=mayor`, from **Order a build** or **Borrow or repay** at her post), a wide
 // side panel in two columns: **Order a build**, every build the office can order today (the places offered at your Farm
-// Rank, the Dorm's next level, the next house once its wedding has come), each with **Build** when the gold and goods are
+// Rank, the next house once its wedding has come), each with **Build** when the gold and goods are
 // there, else **Borrow 400g · Build** when only gold is short and the office lends, else why not; and **Loans**, the
 // office's terms at your Farm Rank and each loan with what's owed, its share a night, when it clears, and **Repay**.
 // Ordering with your own gold is the Build card's rule and needs no town; the office is where you borrow, free once
 // you're in town. Loaded on demand with the town.
 import {
-  buildCostWords, buildOrders, DORM_LEVELS, farmRankOf, HOUSE_NAME_MAX, houseNameIssue, LOAN_FEE, loanFee, LOAN_NIGHTS, loanLimit, loanLockWords, loanSlots, TWO_LOANS_FROM, type BuildOrder,
+  buildCostWords, buildOrders, farmRankOf, HOUSE_NAME_MAX, houseNameIssue, LOAN_FEE, loanFee, LOAN_NIGHTS, loanLimit, loanLockWords, loanSlots, TWO_LOANS_FROM, type BuildOrder,
   type FarmSave,
 } from '@farm/domain'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
-import { borrowAndBuild, buildPlace, buyDormLevel, repayTheLoan } from '../loop/actions'
+import { borrowAndBuild, buildPlace, repayTheLoan } from '../loop/actions'
 import { buildHouseNamed } from '../loop/homestead-actions'
 import { HOMESTEAD_TEXT } from '../loop/homestead-view'
 import { gold, loanWords, projectInSentence, projectName, projectNames, type ProjectNames } from '../loop/money-words'
@@ -48,11 +48,9 @@ export default function MayorSheet({ title, onClose }: { title: string; onClose:
 
 type Run = (job: () => Promise<unknown>, done: string) => void
 
-/** What a build costs, in words: a place's gold and goods, a Dorm level's beds, a house's gold. */
+/** What a build costs, in words: a place's gold and goods, a house's gold. */
 function costWords(order: BuildOrder): string {
-  if (order.place) return buildCostWords(order.place)
-  const level = DORM_LEVELS.find((l) => `dorm:${l.level}` === order.project)
-  return level ? `${gold(order.cost)} · ${level.beds} beds` : `${gold(order.cost)} · 2 rooms`
+  return order.place ? buildCostWords(order.place) : `${gold(order.cost)} · 2 rooms`
 }
 
 /** Order a build: each build with Build, Borrow and build, or why not. */
@@ -65,7 +63,7 @@ function Orders({ save, names, busy, run }: { save: FarmSave; names: ProjectName
         <HelpButton title="Ordering a build" label="How ordering works">
           <p>Build anything the Farm Rank offers with your own gold and goods, here or at its place on the farm.</p>
           <p>Short of gold? The office lends what it’s short, rounded up to 100g, with a {Math.round(LOAN_FEE * 100)}% fee, and orders it at once. You bring the goods.</p>
-          <p>A place stands tomorrow morning; a Dorm level’s beds come tomorrow; a house stands at once.</p>
+          <p>A place stands tomorrow morning; a house stands at once.</p>
         </HelpButton>
       </div>
       {orders.length === 0 ? <p className="py-2 text-[14px] text-ink-soft" data-no-orders>Nothing to build at this rank.</p> : (
@@ -83,8 +81,8 @@ function OrderRow({ save, order, names, busy, run }: { save: FarmSave; order: Bu
   const issue = house ? houseNameIssue(name) : null
   const what = projectName(order.project, names)
   const tonight = order.place !== null && save.farm.builds.includes(order.place.id)
-  const done = (lent: boolean) => `${upper(projectInSentence(order.project, names))} ${house ? 'stands' : order.kind === 'dorm' ? 'is ready tomorrow' : 'stands tomorrow'}${lent ? ', on a loan' : ''}.`
-  const own = () => run(() => (order.kind === 'place' ? buildPlace(order.place!.id) : order.kind === 'dorm' ? buyDormLevel() : buildHouseNamed(name)), done(false))
+  const done = (lent: boolean) => `${upper(projectInSentence(order.project, names))} ${house ? 'stands' : 'stands tomorrow'}${lent ? ', on a loan' : ''}.`
+  const own = () => run(() => (order.kind === 'place' ? buildPlace(order.place!.id) : buildHouseNamed(name)), done(false))
   const borrow = () => run(() => borrowAndBuild(order.project, name), done(true))
   // Why borrowing can't help now: the build's own lock, else the office's.
   const why = order.own !== null && order.lock !== null && order.lock.by !== 'enough' ? (order.lock.by === 'build' ? order.own : loanLockWords(order.lock)) : null

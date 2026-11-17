@@ -1,6 +1,6 @@
 // Meeting her: introducing yourself in town (one action, in town today, where she is now), she keeps living in town,
 // her meeting scene due at once, her ties seeded; the retired welcome list and trigger to meet (read, noted, acting on
-// nothing); the trigger menu as her chapters and the Town notes read it; beds and the invite to the farm; a sister met;
+// nothing); the trigger menu as her chapters and the Town notes read it; nobody moves to the farm by meeting; a sister met;
 // and an older save's roster counting as met. Invented ids only: a master data of 60 characters, 9400001–9400060, and a
 // cast of eight with a welcome list of two.
 import { describe, expect, it } from 'vitest'
@@ -15,14 +15,15 @@ import { readStoryPack, type StoryPack } from '../story/pack'
 import { eventOf, openingOf, placeholderEvent, storyOf, townOf, writtenOf } from '../story/placeholders'
 import { sceneDue } from '../story/scenes'
 import { townDay } from '../town/town'
-import { eventPlayed, introduce, introduceBlock, inviteBlock, inviteToFarm, meet, triggerHolds } from './meeting'
+import { eventPlayed, introduce, introduceBlock, meet, triggerHolds } from './meeting'
+import * as meeting from './meeting'
 
 const AT = '2026-11-13T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const ids = (n: number, from = 9_400_001) => Array.from({ length: n }, (_, i) => String(from + i))
 const EVERYONE = ids(60)
 const MASTER = { outfits: new Map(EVERYONE.map((id) => [id, `${id}01`])), lines: new Map<string, never>() }
-const [W1, W2, A, B, C] = ids(5) as [string, string, string, string, string]
+const [W1, W2, A, B] = ids(4) as [string, string, string, string]
 const SISTER = 's940000902'
 
 /** A cast of eight and a sister, with a (retired) welcome list of two and a (retired) trigger to meet. */
@@ -152,24 +153,17 @@ describe('the trigger menu, for her chapters and the Town notes', () => {
   })
 })
 
-describe('Invite to the farm', () => {
-  it('moves one met into a free Dorm bed now; refused with none free, for one not met, and once she lives there', () => {
-    const three = [W1, W2, B].reduce((s, id) => inviteToFarm(meet(s, id, PACK).save, id), save(2))
-    expect(three.dorm.home).toEqual([W1, W2, B])
-    const met = meet(three, A, PACK).save
-    expect(inviteBlock(met, A)).toBe('No bed free.')
-    expect(() => inviteToFarm(met, A)).toThrow(SaveRuleError)
+describe('nobody moves to the farm by meeting her', () => {
+  it('has no Invite to the farm: met, she lives in town and keeps her days, whoever else you\'ve met', () => {
+    expect(Object.keys(meeting)).not.toContain('inviteToFarm')
+    expect(Object.keys(meeting)).not.toContain('inviteBlock')
+    const four = [W1, W2, B, A].reduce((s, id) => meet(s, id, PACK).save, save(2))
+    expect(four.dorm).toEqual({ level: 1, home: [], swaps: [] })
     // She's out in town on her days, like anyone not on the farm.
-    expect(outOn(met, A).place).toBeTruthy()
-    // A bed frees (the Dorm's level 2): invited, she moves in now, and isn't seen in town.
-    const more: SaveV4 = { ...met, dorm: { ...met.dorm, level: 2 }, buildings: { ...met.buildings, dorm: 2 } }
-    expect(inviteBlock(more, A)).toBeNull()
-    const invited = inviteToFarm(more, A)
-    expect(invited.dorm.home).toEqual([W1, W2, B, A])
-    expect(inviteBlock(invited, A)).toBe('She lives on the farm.')
-    expect(inviteBlock(invited, C)).toBe('You haven’t met her yet.')
-    for (let day = 2; day < 30; day++) expect(townDay({ ...invited, calendar: { day } }, PACK).where.has(A)).toBe(false)
-    expect(parseSaveV5(json(invited))).toEqual(invited)
+    expect(outOn(four, A).place).toBeTruthy()
+    const out = Array.from({ length: 28 }, (_, i) => i + 2).filter((day) => townDay({ ...four, calendar: { day } }, PACK).where.has(A))
+    expect(out.length).toBeGreaterThan(0)
+    expect(parseSaveV5(json(four))).toEqual(four)
   })
 })
 

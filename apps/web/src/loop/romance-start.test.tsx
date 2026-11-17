@@ -1,7 +1,7 @@
 // The lean start as rendered: a fresh account's name sheet, then the opening's lines with `{farmer}` filled (the pack's
 // four, or the game's two in two taps), Skip from the first line, then Home on day 1 with nobody met; introducing yourself
 // in town meets her, and her meeting scene plays (Skip landing on the choice, the gains on the buttons, +50 and the
-// choice paid once); the Gate's words (everyone lives in town), and the Dorm for 20. The stand-ins aren't in master data: their
+// choice paid once); the Gate's words (everyone lives in town), and no Dorm: its route is gone. The stand-ins aren't in master data: their
 // faces are blank profiles. Invented outfits (the album fixture) and the invented stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
 import { meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
@@ -31,7 +31,6 @@ const { Shell } = await import('../shell/Shell')
 const { storyReady } = await import('../story/story')
 const { castLens } = await import('../story/load')
 const { GatePeek } = await import('./GatePeek')
-const { default: DormPage } = await import('./DormPage')
 
 const AT = '2026-11-11T10:00:00.000Z'
 const save = (): SaveV4 => useGame.getState().save as SaveV4
@@ -244,7 +243,7 @@ describe('a face master data lacks', () => {
   })
 })
 
-describe('the Gate and the Dorm', () => {
+describe('the Gate, and the retired Dorm', () => {
   it('nobody comes to the Gate: its quick look says everyone lives in town', async () => {
     const pack = await storyReady()
     const named: SaveV4 = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open')
@@ -255,13 +254,10 @@ describe('the Gate and the Dorm', () => {
     expect($('[data-everyone]')?.textContent).toBe('Meet everyone else in town.')
   })
 
-  it('shows the Dorm for 20\'s eight levels', async () => {
-    useGame.setState({ save: { ...newSave('u1', AT), farmer: { name: 'Robin' } } })
-    await render(<DormPage />, '/dorm')
-    expect($$('[data-ladder-level]').map((li) => li.dataset.ladderLevel)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8'])
-    expect($('[data-ladder-level="8"]')?.textContent).toContain('20 beds')
-    expect($('[data-dorm-ladder]')?.textContent).not.toContain('arrive')
-    expect($('[data-next-level]')?.textContent).toBe('Level 2 · 5 beds')
+  it('has no Dorm page: its route is gone, and /dorm lands on the farm', async () => {
+    const { ROUTES } = await import('../app/router')
+    expect(ROUTES.map((r) => r.path)).not.toContain('dorm')
+    expect(ROUTES.find((r) => r.path === '*')).toBeTruthy()
   })
 })
 

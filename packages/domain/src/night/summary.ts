@@ -13,7 +13,7 @@ import type { InviteKind } from '../save/v4'
  * season's demand lifted their price. Its gold is the night's, never checked again: a price changing later can't break
  * an old morning. */
 export interface BinSale {
-  kind: 'sold'
+kind: 'sold'
   id: string
   stars: number
   count: number
@@ -66,7 +66,7 @@ export interface LoadLine {
   count: number
 }
 
-/** §2 Work done, first: a farmhand's day, after her part-time job (its words the pack's, read as the card shows): her
+/** §2 Work done, first: a farmhand's farm day (her job's words the pack's, read as the card shows): her
  * actions today and how many she spent, whether at half pace and whether well fed (+1), the tasks on her board, what she
  * did by task (tiles harvested, watered, planted, cleared or tilled; loads started; hauls, logs chopped and catches) and
  * the goods it brought into the Warehouse. */
@@ -147,8 +147,8 @@ export interface StoryNews {
 /** §5 New today: a new story release; the season's first day; New Year's, a festival (one of the game's five, or of the
  * story's own, by its id: its name is the pack's, read as the card shows) and the story's holidays and minor days (by id),
  * today or tomorrow; the Town notes the night unlocked;
- * the goals' news: a place built overnight, a Farm Rank reached, a Diary milestone or row paid; the household's
- * milestones; and the Dorm's news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
+ * the goals' news: a place built overnight, a Farm Rank reached, a Diary milestone or row paid; and the household's
+ * milestones. Arrivals are §4's. */
 export type NewsLine =
   | StoryNews
   | { kind: 'season'; season: Season }
@@ -162,8 +162,6 @@ export type NewsLine =
   | { kind: 'built'; place: FarmPlaceId; level?: number }
   | { kind: 'farm-rank'; rank: number }
   | { kind: 'milestone'; id: string }
-  | { kind: 'dorm'; level: number }
-  | { kind: 'home'; umas: OutfitId[] }
   | HouseholdNews
 
 /** §6 Today's nudges: growing tiles to water this morning. */
@@ -182,8 +180,8 @@ export type Nudge = WaterNudge | SeedsNudge
 
 // --- §4 Hearts ------------------------------------------------------------------------
 
-/** §4 Hearts: someone the night met, home in the Dorm or living in town; her meeting scene waits for the farm to
- * open. The app orders and draws the section. */
+/** §4 Hearts: someone the night met (she lives in town; `home` is true only for one who lives on the farm, a spouse in
+ * her room); her meeting scene waits for the farm to open. The app orders and draws the section. */
 export interface ArrivedLine {
   kind: 'arrived'
   /** Her character id. */
@@ -324,7 +322,7 @@ export interface MorningSummary {
   ranks: RankLine[]
   /** §4 Hearts: invitations, birthdays and anniversaries, then arrivals, then side by side and bond hearts. */
   hearts: HeartLine[]
-  /** §5 New today: a new story release, the season and festivals, the goals' news, the household's, then the Dorm's. */
+  /** §5 New today: a new story release, the season and festivals, the goals' news, then the household's. */
   news: NewsLine[]
   /** §6 Today's nudges: tiles to water, tiles to plant. */
   nudges: Nudge[]

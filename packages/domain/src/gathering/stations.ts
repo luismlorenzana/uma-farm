@@ -3,7 +3,7 @@
 // the Warehouse now, and it's ready the next morning, straight into the Warehouse (night step 4, `finishLoads`).
 //
 //   its level   level n takes n loads a day, up to level 5 (`STATION_LEVELS`). Level 1 is the station built; each later
-//               level is bought at the station as the Dorm's are: its gold now, from its Farm Rank, and the level the
+//               level is bought at the station: its gold now, from its Farm Rank, and the level the
 //               next morning (night step 8, `raiseBuilds`). One level a day
 //   a load      an action each, up to the day's loads; each its own good and stars
 //
@@ -34,7 +34,7 @@ export interface StationLevel {
   farmRank: number
 }
 /** A station's levels, the same for every station: level n takes n loads a day; levels 2–5 at Farm Rank 3, 4, 5 and 6,
- * for 2,000g, 5,000g, 10,000g and 20,000g, gold only, as the Dorm's levels are. A load pays about 200–700g over its goods
+ * for 2,000g, 5,000g, 10,000g and 20,000g, gold only. A load pays about 200–700g over its goods
  * (a refined good sells for half again its input), so a level pays its way in a week or a few. */
 export const STATION_LEVELS: readonly StationLevel[] = [
   { level: 1, loads: 1, cost: 0, farmRank: 1 },

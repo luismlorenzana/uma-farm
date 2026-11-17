@@ -1,5 +1,5 @@
 // A run with no story pack at all: days 1 to 60 on placeholders alone. The opening plays the game's lines, and the first
-// five of master data are met here, as introducing yourself in town meets each (and invited to the farm). Each
+// five of master data are met here, as introducing yourself in town meets each (living in town until each weds). Each
 // meets you with the game's two lines and a hello, and every rung after plays the game's own card: friendship, a
 // confession (one "Not yet", then Ask her), romance, the proposal with a ring, the wedding with its vows, married life at
 // night and in its events, and the household's first scene at five married. Nothing waits on the story, and every save
@@ -50,15 +50,15 @@ function picksFor(steps: readonly Step[], id: string, rung: string): number[] {
 
 describe('a farm with no story pack', () => {
   it('plays days 1 to 60 on placeholders: arrivals, events, a confession, a wedding and the household\'s first scene', async () => {
-    // Day 1: the farmer's name, the Dorm's second level bought (five beds), the opening read (the game's two lines), and
-    // master data's first five met here, as introducing yourself meets each, and invited to the farm.
-    let save: SaveV4 = nameFarmer({ ...newSave('u1', AT), buildings: { ...newSave('u1', AT).buildings, dorm: 2 }, dorm: { level: 2, home: [], swaps: [] } }, 'Robin')
+    // Day 1: the farmer's name, the opening read (the game's two lines), and master data's first five met here, as
+    // introducing yourself meets each; they live in town.
+    let save: SaveV4 = nameFarmer(newSave('u1', AT), 'Robin')
     expect(openingOf(STORY)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
     save = readScene(save, 'scene:1:open')
     expect(Object.keys(save.roster)).toEqual([])
     save = joinCast(save, STORY)
     expect(Object.keys(save.roster).sort()).toEqual(FIVE)
-    expect(save.dorm.home).toEqual(FIVE)
+    expect(save.dorm.home).toEqual([])
     expect(FIVE.map((id) => outfitOf(STORY, id))).toEqual(['910000101', '910000201', '910000301', '910000401', '910000501'])
     expect(FIVE.map((id) => favouriteOf(STORY, id))).toEqual(['farming', 'foraging', 'fishing', 'mining', 'ranch'])
     expect(chaptersOf(STORY, SHY)).toBe(DEFAULT_CHAPTERS)

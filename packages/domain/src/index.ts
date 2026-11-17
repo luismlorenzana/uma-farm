@@ -59,9 +59,6 @@ export * from './gathering/stations'
 export * from './gathering/digs'
 export * from './ranch/ranch'
 
-// The roster: the Dorm's levels, beds and swaps.
-export * from './farm/dorm'
-
 // The farm's progress: the Diary's milestones and rows, the Farm Rank's points and what each rank opens, the night's
 // goals check; building (each place's cost, paying, standing the next morning), the milestones with the Umas and the
 // farm's projects; the town's roles, and which scene plays now (the opening's lines are the pack's, `openingOf`).
@@ -81,7 +78,7 @@ export * from './kitchen/recipes'
 export * from './kitchen/levels'
 export * from './kitchen/kitchen'
 export * from './kitchen/contest'
-// Farmhands: her day's actions after her part-time job, the work board's tasks, her aptitudes and their tricks, and the
+// Farmhands: her day's actions on her farm days, the work board's tasks, her aptitudes and their tricks, and the
 // night's run of their work.
 export * from './farm/farmhands'
 export * from './story/cast'

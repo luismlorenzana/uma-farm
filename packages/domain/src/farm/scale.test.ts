@@ -1,9 +1,10 @@
 // The farm at scale: three farms play four years on the game's own rules, each bringing in its Umas over years 1–4 as
-// farmhands, until it works with **10**, **20** or **50** of them. A plain bot is the farmer: each morning he builds what
+// farmhands, until it works with **10**, **20** or **50** of them. Each comes on her farm days, the eight of a season's
+// twelve her default schedule leaves free, and works and eats on the farm those days. A plain bot is the farmer: each morning he builds what
 // the Farm Rank offers (the plan below), clears a plot for every five Umas and buys the stations' next levels once their
 // rank comes, keeps the Coop and the Barn stocked, buys each plot's seeds in town, tends the field by hand with what his
 // day leaves, ships a crate of all the farm has to spare, and spends the rest of his day with the people. The farmhands
-// are set to work by **a plain rule**, every morning, in the order they came: **the field's plots** (harvest, plant,
+// on the farm today are set to work by **a plain rule**, every morning, in the order they came: **the field's plots** (harvest, plant,
 // water), **the animals**, **the stations' loads**, **the kitchen** (Cook), **gathering and mining** (four full hauls at
 // every area, spot and dig, one place each), then the plots' **new ground** (a row a plot a day); each takes what its work
 // needs today, as her aptitudes count it, and the next takes what's left. Past every job, an Uma gathers where it's thin.
@@ -13,16 +14,16 @@
 // nothing to do with. She's **in a real job** when real work is at least half her actions; else she's **idle-ish**. Phase
 // 2's employers (expeditions, the Restaurant, the Forge) aren't built: they're counted as to come.
 //
-// `SCALE=1` prints the three farms' tables, year by year. No story pack (the night runs the farm's steps), everyone a D
-// talent.
+// `SCALE=1` prints the three farms' tables, year by year. The night reads a pack of the fifty alone (`castPack`: invented,
+// on the default schedule, no bible), for their farm days; everyone a D talent.
 import { describe, expect, it } from 'vitest'
 import { actionsLeft, goToTown, spendActions } from './actions'
 import { buildLock, heldFor, payBuild, pickFor } from './builds'
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS } from './calendar'
 import { upkeepOf } from './economy'
-import { buyDorm, nextDorm } from './dorm'
-import { bedsAt, farmRankOf } from './farm'
-import { aptitudeOf, handDay, handsInOrder, handsTonight, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
+import { farmRankOf } from './farm'
+import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
+import { castPack } from '../story/authored.fixture'
 import { addBatch, cookBatchAt, foodHeld, MEALS_A_DAY, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
 import { kitchenBase, kitchenLevelLock, nextKitchenLevel, staffTable, upgradeKitchen } from '../kitchen/kitchen'
 import { buyRecipe, recipeLock, recipeOf } from '../kitchen/recipes'
@@ -64,6 +65,11 @@ const SCHEDULE: Readonly<Record<Stage, readonly number[]>> = {
 }
 /** The farmhands' ids: invented, in the order they come. */
 const handId = (n: number): string => String(9_500_001 + n)
+/** The fifty's pack, in the order they come: each on the default schedule, out in town every third day of a season (from
+ * day 1, 2 or 3 by her place), on the farm the other eight. */
+const PACK = castPack(Array.from({ length: 50 }, (_, n) => handId(n)))
+/** The farmhands on the farm today, in the order they came. */
+const working = (save: SaveV4): string[] => handsWorking(save, PACK)
 
 /** What he builds, in order, each once the Farm Rank offers it and its gold and goods are there: the stations, the ranch,
  * the Kitchen, the digs and the sea. (The Restaurant, the Expedition post and the Forge have no game yet.) */
@@ -129,8 +135,8 @@ interface Day {
   eased: number
   gold: number
   rank: number
-  beds: number
-  home: number
+  /** The farmhands on the farm today: on their farm days. */
+  today: number
   plots: number
 }
 
@@ -154,17 +160,6 @@ const bill = (save: SaveV4): number => upkeepOf(save).gold + save.farm.owed + ME
 const reserve = (save: SaveV4): number => 6 * bill(save)
 const spare = (save: SaveV4): number => save.gold - reserve(save)
 
-/** The Dorm: its next level once the Farm Rank opens it and the gold is spare, while there are farmhands to house; then
- * the farmhands live in its beds, the rest in town. */
-function house(start: SaveV4): SaveV4 {
-  let save = start
-  const hands = handsInOrder(save)
-  const next = nextDorm(save)
-  if (next && next.open && hands.length > bedsAt(next.level - 1) && spare(save) >= next.cost) save = buyDorm(save)
-  const home = hands.slice(0, bedsAt(save.dorm.level))
-  return home.length === save.dorm.home.length && home.every((id, i) => save.dorm.home[i] === id) ? save : { ...save, dorm: { ...save.dorm, home } }
-}
-
 /** The places he builds, the plots he clears and the stations' levels he buys: in the plan's order, then the next plot
  * (a plot for every five Umas), then each station's next level, each with spare gold. */
 function grow(start: SaveV4, room: boolean): SaveV4 {
@@ -182,7 +177,7 @@ function grow(start: SaveV4, room: boolean): SaveV4 {
   }
   // The Kitchen's next level, while the staff meal takes more dishes than a play's base.
   const kitchen = nextKitchenLevel(save)
-  if (kitchen && kitchenLevelLock(save) === null && spare(save) >= kitchen.cost && staffTable(save).dishes > kitchenBase(save)) save = upgradeKitchen(save)
+  if (kitchen && kitchenLevelLock(save) === null && spare(save) >= kitchen.cost && staffTable(save, PACK).dishes > kitchenBase(save)) save = upgradeKitchen(save)
   return save
 }
 
@@ -389,7 +384,7 @@ function loadJob(save: SaveV4, station: typeof STATIONS[number]): Job {
 /** The kitchen's batches tonight: the meals everyone eats, less the pantry's, a batch an action by her Cooking, while the
  * Warehouse holds food. */
 function cookJob(save: SaveV4): Job {
-  const mouths = new Set([...handsInOrder(save), ...save.dorm.home]).size + 1 - (save.today.staff?.mouths ?? 0)
+  const mouths = working(save).length + 1 - (save.today.staff?.mouths ?? 0)
   let meals = Math.max(0, MEALS_A_DAY * mouths - pantryMeals(save))
   let batches = Math.floor(foodHeld(save).reduce((n, r) => n + r.count, 0) / 2)
   const acts = (id: string | null) => Math.min(batches, Math.ceil(meals / cookBatchAt(id ? levelOf(save, id, 'cook') : 2)))
@@ -457,7 +452,7 @@ function assign(start: SaveV4): { save: SaveV4; offered: number; unfilled: numbe
   const jobs = jobsToday(save)
   const open = jobs.filter(isOpen)
   let filled = 0
-  for (const [n, id] of handsInOrder(save).entries()) {
+  for (const [n, id] of working(save).entries()) {
     let actions = handDay(save, id)!.actions
     const tasks: FarmTask[] = []
     let gathers = false
@@ -511,7 +506,7 @@ function keeps(save: SaveV4): Map<string, number> {
   // Tomorrow's play at the Kitchen.
   for (const [key, n] of botKitchenKeeps(save)) add(key, n)
   let kitchen = save
-  const mouths = new Set([...handsInOrder(save), ...save.dorm.home]).size + 1 - (save.today.staff?.mouths ?? 0)
+  const mouths = working(save).length + 1 - (save.today.staff?.mouths ?? 0)
   for (let n = Math.ceil(Math.max(0, MEALS_A_DAY * mouths - pantryMeals(save)) / 6); n > 0; n--) {
     const two = plainBatch(kitchen)
     if (!two) break
@@ -543,7 +538,7 @@ const PLACE_OF: Readonly<Record<string, keyof Work>> = {
 /** Tonight's work by kind, each farmhand's from her practice tonight, her hauls split full and thin by the hauls at her
  * places; and who's in a real job. */
 function measure(save: SaveV4): { work: Work; real: number; idleish: number; actions: number } {
-  const night = handsTonight(save, save, talentsD, null)
+  const night = handsTonight(save, save, talentsD, PACK)
   const hauls = night.save.today.hauls ?? {}
   const work = noWork()
   let real = 0
@@ -576,7 +571,7 @@ function measure(save: SaveV4): { work: Work; real: number; idleish: number; act
 
 function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
   const season = Math.floor((start.calendar.day - 1) / DAYS_PER_SEASON)
-  let save = house(hire(start, SCHEDULE[stage][season]!))
+  let save = hire(start, SCHEDULE[stage][season]!)
   save = grow(save, save.fields.plots.length < Math.ceil(handsInOrder(save).length / UMAS_A_PLOT))
   // The stairs the faces found, taken (free).
   for (const dig of ['mine', 'quarry'] as const) while (stairsLock(save, dig) === null) save = takeStairs(save, dig)
@@ -584,7 +579,7 @@ function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
   save = seeds(save)
   // The Kitchen, once it stands: his play (the casual bot), then the staff meal; and a recipe for the goods the farm holds
   // most of, bought in town at the day's end with spare gold. Then logs for the next build, by his own hand.
-  const kitchen = botKitchen(save)
+  const kitchen = botKitchen(save, 'casual', PACK)
   save = chopForBuilds(kitchen.save)
   const recipe = botRecipe(save, spare(save))
   save = tendByHand(save)
@@ -593,7 +588,7 @@ function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
   if (actionsLeft(save) > 0) save = spendActions(goToTown(save), actionsLeft(goToTown(save)))
   if (recipe && save.today.town && recipeLock(save, recipe) === null && spare(save) >= recipeOf(recipe)!.price) save = buyRecipe(save, recipe)
   const night = measure(save)
-  const morning = runNight(save, {})
+  const morning = runNight(save, { story: PACK })
   const money = morning.summary?.money ?? []
   const pantry = money.find((m) => m.kind === 'pantry')
   // Well fed tonight: a ★2+ meal from the pantry, or the staff meal (every Uma who eats it).
@@ -605,7 +600,7 @@ function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
     upkeep: sum(money.map((m) => (m.kind === 'upkeep' ? m.paid : 0))),
     takeout: sum(money.map((m) => (m.kind === 'takeout' ? m.due : 0))), pantry: pantry?.kind === 'pantry' ? pantry.meals : 0, fed: (pantry?.kind === 'pantry' ? pantry.fed : 0) + staffFed,
     short: money.some((m) => m.kind === 'short'), eased: Object.keys(morning.farm.market).length, gold: morning.gold, rank: farmRankOf(morning.farm.points),
-    beds: bedsAt(morning.dorm.level), home: morning.dorm.home.length, plots: morning.fields.plots.length,
+    today: working(save).length, plots: morning.fields.plots.length,
   })
   return morning
 }
@@ -634,8 +629,8 @@ interface Year {
   gold: number
   rank: number
   plots: number
-  beds: number
-  home: number
+  /** The farmhands on the farm a day, on average: on their farm days. */
+  today: number
   eased: number
   levels: number
   sources: Record<Source, number>
@@ -663,7 +658,7 @@ function simulate(stage: Stage): { log: Day[]; years: Year[]; end: SaveV4; morni
         plays: days.filter((d) => d.score !== null).length,
         score: Math.round(sum(days.map((d) => d.score ?? 0)) / Math.max(1, days.filter((d) => d.score !== null).length)),
         short: days.filter((d) => d.short).length, gold: save.gold, rank: farmRankOf(save.farm.points), plots: save.fields.plots.length,
-        beds: bedsAt(save.dorm.level), home: save.dorm.home.length, eased: avg((d) => d.eased), levels: sum(STATIONS.map((s) => stationLevel(save, s))),
+        today: avg((d) => d.today), eased: avg((d) => d.eased), levels: sum(STATIONS.map((s) => stationLevel(save, s))),
         built: PLAN.filter((id) => placeBuilt(save, id)),
       })
     }
@@ -680,6 +675,7 @@ if (process.env.SCALE) {
   const row = (label: string, pick: (y: Year) => string | number) => (years: readonly Year[]) => `| ${label} | ${years.map((y) => pick(y)).join(' | ')} |`
   const ROWS = [
     row('Umas working the farm, at the year’s end', (y) => y.umas),
+    row('On the farm a day (their farm days)', (y) => y.today),
     row('Their actions a day', (y) => y.actions),
     row('Real work on offer a day (taken, and waiting)', (y) => `${y.offered} (${y.offered - y.unfilled}, ${y.unfilled})`),
     row('The field: tending and new ground', (y) => y.work.field),
@@ -695,13 +691,12 @@ if (process.env.SCALE) {
     row('Upkeep, the year', (y) => g(y.upkeep)),
     row('Takeout, the year', (y) => g(y.takeout)),
     row('Meals from the pantry, the year', (y) => y.pantry.toLocaleString('en-US')),
-    row('Well fed, a night', (y) => `${y.fed} of ${y.umas}`),
+    row('Well fed, a night', (y) => `${y.fed} of ${y.today}`),
     row('The Kitchen: plays (their average score) · dishes made, the year', (y) => `${y.plays} (${y.score}) · ${y.dishes.toLocaleString('en-US')}`),
     row('Staff meals served, the year', (y) => y.staff),
     row('Short nights', (y) => y.short),
     row('Gold at the year’s end', (y) => g(y.gold)),
     row('Farm Rank · plots · station levels', (y) => `${y.rank} · ${y.plots} · ${y.levels}`),
-    row('Housing: Dorm beds · home · in town', (y) => `${y.beds} · ${y.home} · ${y.umas - y.home}`),
     row('Goods eased by a flood, a day', (y) => y.eased),
   ]
   for (const stage of STAGES) {
@@ -723,28 +718,31 @@ describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', ()
     expect(STAGES.map((stage) => STAGE_YEARS[stage].map((y) => year(stage, y).umas))).toEqual([[10, 10, 10], [20, 20], [50]])
   })
 
-  it('keeps 10 and 20 Umas fully in real jobs, with real work still waiting', () => {
+  it('keeps 10 and 20 Umas fully in real jobs on their farm days, with real work still waiting', () => {
     for (const stage of [10, 20] as const) {
       const last = year(stage, 4)
-      expect(last.real, `${stage}`).toBe(stage)
+      // Two thirds of them on the farm a day, each on her farm day, every one in a real job.
+      expect(last.today, `${stage}`).toBe(Math.round((stage * 2) / 3))
+      expect(last.real, `${stage}`).toBeGreaterThanOrEqual(last.today - 1)
       expect(last.unfilled, `${stage}`).toBeGreaterThan(0)
       expect(last.work.thin + last.work.idle, `${stage}`).toBeLessThan(last.actions / 10)
     }
   })
 
-  it('runs 50 Umas past the farm\'s real jobs: some only gather where it\'s thin, the employers Phase 2 brings', () => {
+  it('brings 50 Umas to the farm two thirds a day, on their farm days, nearly all in real jobs, with real work still waiting', () => {
     const last = year(50, 4)
-    // The staff meal frees most of the cooks' work (F92): about 34 of 50 in real jobs, from 38.
-    expect(last.real).toBeGreaterThanOrEqual(30)
-    expect(last.idleish).toBeGreaterThan(0)
-    expect(last.work.thin).toBeGreaterThan(last.actions / 10)
-    expect(last.plots).toBe(8)
+    // Farm days hold the fifty to about 33 a day (from 44 in Spring, 50 from Summer): the farm's real jobs still take them.
+    expect(last.today).toBeGreaterThan(30)
+    expect(last.today).toBeLessThan(last.umas)
+    expect(last.real).toBeGreaterThanOrEqual(last.today - 1)
+    expect(last.unfilled).toBeGreaterThan(0)
+    expect(last.work.thin + last.work.idle).toBeLessThan(last.actions / 10)
+    expect(last.plots).toBe(6)
   })
 
-  it('grows the work with the people: plots, station levels and the Dorm as the Farm Rank comes', () => {
-    expect([year(10, 4).plots, year(20, 4).plots, year(50, 4).plots]).toEqual([2, 4, 8])
+  it('grows the work with the people: plots and station levels as the Farm Rank comes', () => {
+    expect([year(10, 4).plots, year(20, 4).plots, year(50, 4).plots]).toEqual([2, 4, 6])
     expect(year(50, 4).levels).toBe(25)
-    expect(year(50, 4).beds).toBe(20)
   })
 
   it('builds the Kitchen once the Farm Rank offers it, plays it most days and serves the staff meal', () => {
