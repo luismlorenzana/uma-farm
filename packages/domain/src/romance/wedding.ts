@@ -55,7 +55,7 @@ export function receptionOf(save: Pick<SaveV4, 'items'>, reception: Reception): 
   return receptionDays(reception.stars)
 }
 
-/** Night step 9: today's reception feeds everyone on the farm (home, or a spouse in her house) for its days,
+/** Night step 9: today's reception feeds everyone who lives on the farm (a spouse in her room) for its days,
  * never shortening a meal already running. Who it fed, in id order. */
 export function serveReception(save: SaveV4, days: number): { save: SaveV4; fed: string[] } {
   if (days <= 0) return { save, fed: [] }
@@ -68,15 +68,16 @@ export function serveReception(save: SaveV4, days: number): { save: SaveV4; fed:
 
 /** Her closest friends who come to her wedding: two. */
 export const WEDDING_FRIENDS = 2
-/** Who attends her wedding: every spouse on the farm in the cast's order, then her two closest friends
- * among the Umas on the farm (by closeness). Never her; each once. They have no lines. */
+/** Who attends her wedding: every spouse on the farm (in her room) in the cast's order, then her two closest friends
+ * among everyone you've met (by closeness), wherever they live: where an Uma is never gates an occasion. Never her; each
+ * once. They have no lines. */
 export function weddingGuests(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>, id: string): string[] {
-  const here = (other: string) => other !== id && !!save.roster[other] && homeOrHoused(save, other)
+  const met = (other: string) => other !== id && !!save.roster[other]
   const order = castOrder(pack)
   const rank = (x: string) => (order.includes(x) ? order.indexOf(x) : order.length)
-  const spouses = Object.keys(save.love).filter((other) => here(other) && save.love[other]!.stage === 'spouse')
+  const spouses = Object.keys(save.love).filter((other) => met(other) && homeOrHoused(save, other))
     .sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
-  const friends = tiesOf(pack, save, id).map((t) => t.with).filter(here).slice(0, WEDDING_FRIENDS)
+  const friends = tiesOf(pack, save, id).map((t) => t.with).filter(met).slice(0, WEDDING_FRIENDS)
   return [...new Set([...spouses, ...friends])]
 }
 

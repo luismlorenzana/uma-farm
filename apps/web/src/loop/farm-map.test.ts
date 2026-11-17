@@ -22,10 +22,12 @@ describe('the farm map', () => {
     // The field is a sign a lot's size; the forty tiles' room went back to the map, which is six columns narrower.
     expect(FIELD).toEqual({ col: 2, row: 0, cols: 2, rows: 2 })
     expect(POND).toEqual({ col: 2, row: 2, cols: 2, rows: 5 })
-    // Day 1: the yard, the homestead's first column, the other five columns, then the road.
+    // Day 1: the yard (the bin and the Warehouse: the retired Dorm's lot is open ground), the homestead's first column,
+    // the other five columns, then the road.
     const { lots, road, cols } = mapLots(homesteadShown(day1))
     expect(lots).toHaveLength(LOT_COLUMNS.flat().length + 3)
-    expect(lots.slice(0, 6).map((l) => (l.kind === 'place' ? l.id : l.place.id))).toEqual(['bin', 'warehouse', 'dorm', 'farmhouse', 'house-1', 'house-2'])
+    expect(lots.slice(0, 5).map((l) => (l.kind === 'place' ? l.id : l.place.id))).toEqual(['bin', 'warehouse', 'farmhouse', 'house-1', 'house-2'])
+    expect(lots[2]!.area).toEqual({ col: 7, row: 0, cols: 2, rows: 2 })
     expect(lots[0]!.area).toEqual({ col: 5, row: 0, cols: 2, rows: 2 })
     expect(road).toEqual({ col: 5 + 7 * 2, row: 0, cols: 1, rows: 7 })
     expect(cols).toBe(road.col + 1)
@@ -49,9 +51,10 @@ describe('the farm map', () => {
     expect(lock('mill', { ...day1, farm: { ...day1.farm, builds: ['mill'] } })).toBe('Builds tonight')
     expect(lock('dock', { ...day1, buildings: { ...day1.buildings, dock: 1 } })).toBeNull()
     expect(lockOf(day1, farmPlace('festival')!, new Set(['festival']))).toBe('Soon')
-    // The Dorm opens its page, the Gate its quick look, the town its screen.
-    expect([lock('dorm'), lock('gate')]).toEqual([null, null])
-    expect(placeLink(day1, farmPlace('dorm')!)).toBe('/dorm')
+    // The Dorm is retired: no place, no lot, no page. The Gate opens its quick look, the town its screen.
+    expect(farmPlace('dorm')).toBeUndefined()
+    expect(LOT_COLUMNS.flat()).not.toContain('dorm')
+    expect(lock('gate')).toBeNull()
     expect(placeLink(day1, farmPlace('gate')!)).toBe('/?peek=gate')
     expect(placeLink(day1, farmPlace('town')!)).toBe('/town')
     // The woods' edge and the pond's open their menus; the field's sign opens the field's own screen.

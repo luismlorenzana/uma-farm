@@ -3,6 +3,7 @@
 // invented stand-in with invented talk (`occasions.fixture.ts`); no original-game content.
 import { describe, expect, it } from 'vitest'
 import { farmDay, type Season } from '../farm/calendar'
+import { farmDayOn } from '../town/town'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
 import { YOU, type SmallTalk } from '../story/authored'
 import { DEFAULT_GIFT_REACTIONS } from '../story/default-story'
@@ -84,14 +85,18 @@ describe('her greeting', () => {
     expect(greetingOf(spring, PACK, ONE, here('fields'), true)).toBe('A birthday hello.')
   })
 
-  it('knows where you are: her board’s first task, else the Dorm; in town her location; and the hour', () => {
+  it('knows where you are: on the farm her board’s first task, else no place; in town her location; and the hour', () => {
     const save = farm(on('spring', 3))
-    expect(farmPlaceOf(save, ONE)).toBe(save.dorm.home.includes(ONE) ? 'dorm' : null)
+    expect(farmPlaceOf(save, ONE)).toBeNull()
+    // A farmhand on her farm day (Spring 3: her town days are 1, 4, 7 and 10) is on the farm, at her first task's place.
+    expect(farmDayOn(PACK, ONE, save.calendar.day)).toBe(true)
     const working = { ...save, roster: { ...save.roster, [ONE]: { ...save.roster[ONE]!, farmhand: 1, tasks: [{ kind: 'fish' as const, spot: 'pond' as never }] } } }
     expect(farmPlaceOf(working, ONE)).toBe('fishery')
-    const home = { ...save, dorm: { ...save.dorm, home: [ONE] } }
-    expect(farmPlaceOf(home, ONE)).toBe('dorm')
-    expect(talkAt(home, PACK, ONE)).toEqual({ place: 'dorm', town: false, hour: 'morning' })
+    expect(talkAt(working, PACK, ONE)).toEqual({ place: 'fishery', town: false, hour: 'morning' })
+    const idle = { ...save, roster: { ...save.roster, [ONE]: { ...save.roster[ONE]!, farmhand: 1 } } }
+    expect(talkAt(idle, PACK, ONE)).toEqual({ place: null, town: false, hour: 'morning' })
+    // On her town day she's at her spot in town.
+    expect(talkAt({ ...idle, calendar: { day: on('spring', 4) } }, PACK, ONE)).toMatchObject({ town: true })
     expect(talkHour({ ...save, today: { ...save.today, evenings: [{ with: ONE, kind: 'walk' }] } }, ONE)).toBe('evening')
     expect(talkHour({ ...save, today: { ...save.today, evenings: [{ with: ONE, kind: 'night-in' }] } }, ONE)).toBe('night')
     expect(talkHour({ ...save, homestead: { ...save.homestead, companion: ONE } }, ONE)).toBe('night')

@@ -77,7 +77,6 @@ uma-platform, never in a copy here.
 |---|---|
 | `/` | Home: the farm's tile map (`loop/FarmMap.tsx`; `?tile=<n>` a tile's panel) |
 | `/warehouse` | The Warehouse; `?pick=bin` picks a crate to ship |
-| `/dorm` | The Dorm |
 | `/diary` | The Diary |
 | `/hearts` | People, the Umas' page (`?view=work` the roster's album, `?uma=<id>` her profile) |
 | `/roster` | Redirects to `/hearts?view=work`, keeping `?uma=` |

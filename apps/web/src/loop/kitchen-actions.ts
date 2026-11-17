@@ -11,7 +11,7 @@ import {
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
-import { specialDays, storyReady } from '../story/story'
+import { specialDays, storyPack, storyReady } from '../story/story'
 import { holdPlay } from './stove-session'
 import { talentsFor } from './talents'
 
@@ -70,8 +70,9 @@ export async function settleLeftPlay(): Promise<void> {
   if (!fresh?.workshops.current) return
   await commit(settleUnfinished(fresh, ctx))
 }
-/** The staff meal, served: its dishes (the plain rule's when none are chosen) out of the Warehouse. */
-export const serveTheStaffMeal = (picks: readonly string[] | null): Promise<SaveV4> => change((s) => serveStaffMeal(s, picks))
+/** The staff meal, served: its dishes (the plain rule's when none are chosen) out of the Warehouse, for tonight's table
+ * (the farmhands on their farm day: the story pack reads their schedules). */
+export const serveTheStaffMeal = (picks: readonly string[] | null): Promise<SaveV4> => change((s) => serveStaffMeal(s, picks, storyPack()))
 /** The Kitchen's next level: its gold now, the level the next morning. */
 export const upgradeTheKitchen = (): Promise<SaveV4> => change(upgradeKitchen)
 /** A recipe from the shop's Recipes shelf, in town. */

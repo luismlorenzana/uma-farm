@@ -28,14 +28,14 @@ const STORY: NonNullable<NightContext['story']> = {
 const CONTEXT: NightContext = { story: STORY }
 const night = (save: SaveV4) => endDay(save, CONTEXT, LATER)
 
-/** The farmer named and the three home on `day`, their arrivals and the opening scene read, with `counts`. */
+/** The farmer named and the three met (living in town) on `day`, their arrivals and the opening scene read, with `counts`. */
 function farm(day = 1, counts: Record<string, number> = {}): SaveV4 {
   const save = newSave('u1', AT)
   const ids = ['1001', '1002', '1003']
   return {
     ...save, farmer: { name: 'Robin' }, calendar: { day }, roster: Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])),
     love: Object.fromEntries(ids.map((id) => [id, newLove()])), arrivals: ids,
-    dorm: { level: 1, home: ids, swaps: [] }, diary: { ...save.diary, read: ['scene:1:open'] }, farm: { ...save.farm, counts },
+    diary: { ...save.diary, read: ['scene:1:open'] }, farm: { ...save.farm, counts },
   }
 }
 const ranked = (save: SaveV4, id: string, activity: Activity, rank: Rank): SaveV4 => ({
@@ -65,30 +65,30 @@ describe('the Farm Rank', () => {
     expect(farmPointsOf(newSave('u1', AT)).total).toBe(0)
   })
 
-  it('opens what the rules gate on it: the places to build, the farmer\'s reach, beds and seeds', () => {
-    expect(farmRankOpens(1)).toEqual(['The Mill to build (1,000g · 20 logs)', 'Dorm level 2 (5 beds)']) // tier-1 seeds, the Woods and the Pond are the start's
+  it('opens what the rules gate on it: the places to build, the farmer\'s reach and seeds', () => {
+    expect(farmRankOpens(1)).toEqual(['The Mill to build (1,000g · 20 logs)']) // tier-1 seeds, the Woods and the Pond are the start's
     expect(farmRankOpens(2)).toEqual([
-      'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s', 'Dorm level 3 (7 beds)',
+      'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s',
       'New seeds at the shop',
     ])
     expect(farmRankOpens(3)).toEqual([
       'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (3,500g · 30 logs · 20 vegetables)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)',
       'The Kitchen to build (3,000g · 40 logs · 20 vegetables)', 'Plot 2 to clear (2,500g)', 'Station level 2 (2 loads a day)',
-      'Ducks, Cows and Sheep at the rancher’s', 'Dorm level 4 (9 beds)',
+      'Ducks, Cows and Sheep at the rancher’s',
     ])
     expect(farmRankOpens(4)).toEqual([
       'The Mine to build (10,000g · 60 planks)', 'The Smelter to build (8,000g · 40 planks · 40 logs)', 'Plot 3 to clear (5,000g)', 'Station level 3 (3 loads a day)',
       'Kitchen level 2 (8 dishes a play)',
       'The Old Forest', 'The Lake', 'Goats at the rancher’s',
-      'The Mine’s and the Quarry’s floors to 15', 'Dorm level 5 (11 beds)', 'New seeds at the shop',
+      'The Mine’s and the Quarry’s floors to 15', 'New seeds at the shop',
     ])
     expect(farmRankOpens(6)).toEqual([
       'The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'Plot 5 to clear (15,000g)', 'Station level 5 (5 loads a day)',
       'Kitchen level 4 (12 dishes a play)',
       'The Mountain', 'The Falls', 'Cashmere Goats at the rancher’s',
-      'The Mine’s and the Quarry’s floors to 20', 'Dorm level 7 (17 beds)',
+      'The Mine’s and the Quarry’s floors to 20',
     ])
-    expect(farmRankOpens(8).some((o) => o.startsWith('Dorm'))).toBe(false) // the Dorm for 20 tops out at level 8, Farm Rank 7
+    for (let rank = 1; rank <= 10; rank++) expect(farmRankOpens(rank).some((o) => o.startsWith('Dorm'))).toBe(false) // the Dorm is retired
     expect(farmRankOpens(9)).toEqual(['Plot 8 to clear (50,000g)'])
     expect(farmRankOpens(10)).toEqual(['The World Tree', 'The Moon Pool', 'The Mine’s and the Quarry’s floors to 30', 'The farm’s gold crest'])
   })
@@ -170,9 +170,9 @@ describe('the Diary', () => {
 describe('the night\'s goals', () => {
   it('pays the Diary and recomputes the Farm Rank, with no chapter to complete', () => {
     const morning = night(ready())
-    // 10,000g's and Hand's milestones (300g each) reach Farm Rank 2 (100 + 25 + 25 = 150); three Umas home cost 30g, and
-    // four mouths with nothing cooked 120g of takeout.
-    expect(morning.gold).toBe(500 - 120 - 30 + 300 + 300)
+    // 10,000g's and Hand's milestones (300g each) reach Farm Rank 2 (100 + 25 + 25 = 150); the three live in town and cost
+    // nothing, and the farmer with nothing cooked eats 30g of takeout.
+    expect(morning.gold).toBe(500 - 30 + 300 + 300)
     expect(morning.farm.points).toBe(150)
     expect(morning.buildings.mill).toBeUndefined()
     expect(Object.keys(morning.roster)).toEqual(['1001', '1002', '1003'])

@@ -5,7 +5,7 @@
 //   while offline or paused; at its right end the farm's own pair, the day's actions left and End the day, then the
 //   kit's Menu. The actions left open nothing and grey at 0, so they aren't one of the kit's chips, which are links. When
 //   the day's last action is spent, End the day opens by itself ("Out of actions").
-// - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse, the Dorm …)
+// - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse …)
 //   keeps Farm lit.
 import { actionsLeft, dateOf, dayActions, daySetState, eventActionsLeft, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
 import { AccountBar, BottomBar, withParam, type AccountBarProps, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'

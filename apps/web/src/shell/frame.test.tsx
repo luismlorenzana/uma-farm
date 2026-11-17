@@ -32,8 +32,10 @@ const AT = '2026-11-14T10:00:00.000Z'
 function farm(): SaveV4 {
   const save = newSave('u1', AT)
   return {
-    ...save, farmer: { name: 'Robin' }, calendar: { day: 3 }, gold: 1_240, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, love: { 101: newLove(), 202: newLove() },
-    dorm: { level: 1, home: ['101', '202'], swaps: [] }, diary: { ...save.diary, read: ['scene:1:open'] },
+    ...save, farmer: { name: 'Robin' }, calendar: { day: 3 }, gold: 1_240, roster: { 101: newRosterUma(1), 202: newRosterUma(1) },
+    // Two spouses in their rooms in the Farmhouse: the Umas who live on the farm.
+    love: { 101: { ...newLove(), stage: 'spouse', level: 1, wed: 1, house: 0 }, 202: { ...newLove(), stage: 'spouse', level: 1, wed: 2, house: 0 } },
+    diary: { ...save.diary, read: ['scene:1:open'] },
   }
 }
 
@@ -151,17 +153,17 @@ describe('Account', () => {
 })
 
 describe('the Book', () => {
-  it('gathers the gold, the Farm Rank, the goods, the Umas, the Dorm and what can be built, each a tap to its place', async () => {
+  it('gathers the gold, the Farm Rank, the goods, who\'s on the farm today and what can be built, each a tap to its place; no Dorm', async () => {
     await render(<BookPage />, '/book')
     const cards = $$('[data-book-cards] a').map((a) => [a.getAttribute('data-book'), a.getAttribute('href'), a.querySelector('[data-figure]')?.textContent])
     expect(cards).toEqual([
       ['gold', '/book?sheet=bin', '1,240g'], ['rank', '/book?sheet=rank', '1'], ['goods', '/warehouse', '9'],
-      ['work', '/hearts?view=work', '2'], ['dorm', '/dorm', '2/3'], ['projects', '/diary', '1'],
+      ['work', '/hearts?view=work', '2'], ['projects', '/diary', '1'],
     ])
   })
 
   it('sets the daily upkeep beside the last seven nights\' income, with what the upkeep counts, a short night and the loans', async () => {
-    // Two Umas home and the Mill: 35g a night; three mouths and an empty pantry: 90g of takeout tonight. Five nights of
+    // Two spouses on the farm and the Mill: 35g a night; three mouths and an empty pantry: 90g of takeout tonight. Five nights of
     // income; a loan for the Mill; 40g owed after two short nights.
     const save = farm()
     useGame.setState({ save: {
@@ -174,7 +176,7 @@ describe('the Book', () => {
       ['upkeep', '35g', 'After the bin pays'], ['food', '90g', 'Takeout · 6 meals'], ['income', '120g', 'Average of the last 5 nights'], ['left', '−50g', 'Less food, upkeep and loans'],
     ])
     expect($('[data-table]')?.textContent).toBe('3 at the table · 6 meals · 0 from the pantryKitchen ›')
-    expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 Umas on or working the farm20g'])
+    expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 spouses on the farm20g'])
     expect($$('[data-night]').map((b) => b.getAttribute('data-night'))).toEqual(['0', '300', '200', '0', '100'])
     expect($('[data-upkeep-line]')).not.toBeNull()
     expect($('[data-short]')?.textContent).toBe('Short of upkeep · 40g owed · farmhands at half pace until it’s paid')
@@ -182,11 +184,11 @@ describe('the Book', () => {
   })
 
   it('shows a new farm\'s money: nothing to keep up, the farmer\'s takeout and no nights yet', async () => {
-    useGame.setState({ save: { ...farm(), roster: {}, love: {}, dorm: { level: 1, home: [], swaps: [] } } })
+    useGame.setState({ save: { ...farm(), roster: {}, love: {} } })
     await render(<BookPage />, '/book')
     expect($$('[data-money] [data-figure]').map((f) => f.textContent)).toEqual(['0g', '30g', '0g', '−30g'])
     // With tonight's meals in the pantry, no takeout.
-    useGame.setState({ save: { ...farm(), roster: {}, love: {}, dorm: { level: 1, home: [], swaps: [] }, farm: { ...farm().farm, pantry: [{ day: farm().calendar.day, stars: 1, meals: 2 }] } } })
+    useGame.setState({ save: { ...farm(), roster: {}, love: {}, farm: { ...farm().farm, pantry: [{ day: farm().calendar.day, stars: 1, meals: 2 }] } } })
     await render(<BookPage />, '/book')
     expect($('[data-money="food"]')?.textContent).toBe('Food tonight0gFrom the pantry')
     expect($('[data-nights]')?.textContent).toBe('Each night’s income shows here after the bin pays.')

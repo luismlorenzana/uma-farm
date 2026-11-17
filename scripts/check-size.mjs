@@ -10,8 +10,7 @@ export const MAIN_JS_BUDGET = 180_000
 /** Modules that must load on demand: the Hub map's Phaser scene, which uma-kit imports only when a map mounts; the
  * farm's pages, its sheets, its actions and the night; the Fields' page, rules and crop table, and the morning's words;
  * the talents, the rank rules and their table, the roster's rows and the Umas' marks; the work operations and their
- * env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens; the Dorm's rules
- * and page, the Gate's quick look and the chats' fallback lines; and the Diary's counts, building and the farm's
+ * env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens; the Gate's quick look and the chats' fallback lines; and the Diary's counts, building and the farm's
  * projects with the Build card, the scene player and the goals' words; and the name sheet, the story pack with its default story (the opening's lines among them), the format
  * and validator, arrivals and her points; and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
@@ -54,9 +53,7 @@ export const LAZY_MODULES = [
   'domain/src/gathering/stations.ts',
   'src/loop/WorkPlace.tsx',
   'src/loop/work-view.ts',
-  'domain/src/farm/dorm.ts',
   'domain/src/romance/chats.ts',
-  'src/loop/DormPage.tsx',
   'src/loop/GatePeek.tsx',
   'domain/src/farm/diary.ts',
   'domain/src/farm/builds.ts',

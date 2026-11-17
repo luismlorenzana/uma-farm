@@ -18,7 +18,7 @@ export const FARM_PLACE_IDS = [
   'fishery', 'smokehouse', 'kitchen',
   'mine', 'smelter', 'restaurant',
   'quarry', 'cutter', 'forge',
-  'bin', 'warehouse', 'dorm',
+  'bin', 'warehouse',
   'board', 'gate', 'dock',
   'shop', 'festival', 'expeditions',
   'town',
@@ -63,8 +63,7 @@ export interface FarmPlace {
   /** Its row on the map, 1–8, and its column, 0–2. */
   row: number
   col: number
-  /** uma-art's building, or one it borrows until its own ships; the Dorm and shipping bin are uma-art
-   * 2.25.0's. */
+  /** uma-art's building, or one it borrows until its own ships; the shipping bin is uma-art 2.25.0's. */
   frame: string
   borrowed: boolean
   /** One short line for its quick look. */
@@ -88,7 +87,7 @@ const build = (rank: number, gold: number, list: readonly BuildGoods[], game: bo
 const place = (id: FarmPlaceId, name: string, group: FarmPlaceGroup, row: number, col: number, frame: string, blurb: string, opens: PlaceOpens,
   borrowed = false, on?: FarmPlaceId): FarmPlace => ({ id, name, group, row, col, frame, borrowed, blurb, opens, ...(on ? { on } : {}) })
 
-/** The 26 places in map order: rows top to bottom, columns left to right, then the boat, drawn at the dock. The builds'
+/** The 25 places in map order: rows top to bottom, columns left to right, then the boat, drawn at the dock. The builds'
  * costs are tuned by the pacing's simulation (`pacing.test.ts`): the farm's own goods (logs, planks, fish, fillets,
  * vegetables) and gold, each affordable within about a season of its offer. */
 export const FARM_PLACES: readonly FarmPlace[] = [
@@ -109,7 +108,6 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'The ring bench: a ring from three refined goods of one grade, one a day.', build(8, 60000, [planks(120), logs(60)], false)),
   place('bin', 'Shipping bin', 'yard', 6, 0, 'shipping-bin', 'What goes in pays tonight.', START),
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
-  place('dorm', 'Dorm', 'yard', 6, 2, 'dorm', 'Beds for the Umas on the farm.', START),
   place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'met', umas: 5 }, true),
   place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'The farm’s gate. Everyone you meet lives in town.', START),
   place('dock', 'Dock', 'yard', 7, 2, 'ley-spring', 'A pier on the sea: the Sea Pier’s fish.', build(6, 20000, [planks(80)], true), true),

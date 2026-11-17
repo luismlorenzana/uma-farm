@@ -1,9 +1,11 @@
-// Farmhands and aptitudes. A friend you invite to work (`roster[id].farmhand`) is a farmhand: after her part-time job in
-// town (the story's `job`, else the game's default), she's on the farm by day, in front of you for talks, gifts and her
-// evening, and gives the farm a few actions a day on the tasks you set on the work board. She works them overnight,
-// before the crops grow, so the morning reports her work.
+// Farmhands and aptitudes. A friend you invite to work (`roster[id].farmhand`) is a farmhand. She keeps her life in
+// town, and comes to the farm on her **farm days**, the days her town schedule (her routine, her part-time job, or the
+// default schedule's spot) doesn't put her out in town (`town/town.ts`'s `farmDaysIn`): in front of you there for talks,
+// gifts and her evening, she gives the farm a few actions on the tasks you set on the work board. She works them
+// overnight, before the crops grow, so the morning reports her work, and eats her two meals on the farm. On her town
+// days she's in town, and doesn't work, eat on the farm or cost anything. A spouse in her room is on the farm every day.
 //
-//   her day      3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
+//   her day      on her farm day: 3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
 //                +1 when she's well fed this morning (a household meal the day before, a reception, a spouse's
 //                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1).
 //                The Kitchen's assistant gives one of them to its play (`kitchen/kitchen.ts`)
@@ -50,7 +52,7 @@ import {
 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
 import { herJobOf } from '../story/placeholders'
-import { defaultSpot } from '../town/town'
+import { defaultSpot, worksOn, type SchedulePack } from '../town/town'
 import type { LoopPlaceId } from '../save/parse-v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
@@ -100,9 +102,13 @@ export function handsInOrder(save: Pick<FarmSave, 'roster'>): string[] {
   return farmhands(save).sort((a, b) => save.roster[a]!.farmhand! - save.roster[b]!.farmhand! || Number(a) - Number(b))
 }
 
+/** The farmhands who work the farm on a day, in the order they work (`worksOn`). */
+export const handsWorking = (save: Pick<FarmSave, 'roster' | 'love' | 'calendar'>, pack: SchedulePack | null, day = save.calendar.day): string[] =>
+  handsInOrder(save).filter((id) => worksOn(save, pack, id, day))
+
 /** Her part-time job: the story's (`what` its words, `at` its location), else the game's default, a job in town at her
  * favourite spot (her default schedule's, `defaultSpot`). The words are the app's: "Works at the Bakery", "Helps out at
- * the Café". She does it first, then she's on the farm by day (`town/town.ts`'s `onFarmToday`). */
+ * the Café". Her job is her town days: the days it holds, she's in town (`town/town.ts`'s `farmDaysIn`). */
 export interface HandJob {
   own: boolean
   what: string | null
@@ -462,7 +468,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
     case 'care': return careStep(save, id, task.home, level, story)
     case 'cook': {
       // A batch from two goods of food, by her level, until the pantry holds tonight's meals for everyone.
-      if (pantryMeals(save) >= mealsNeeded(save)) return null
+      if (pantryMeals(save) >= mealsNeeded(save, story)) return null
       const goods = plainBatch(save)
       if (!goods) return null
       const meals = cookBatchAt(level)
@@ -483,8 +489,9 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
 }
 
 /**
- * The farmhands' night (step 2, before the crops grow): each farmhand, in the order you invited them, after her part-time
- * job, spends her actions today (`handDay`, read from the day as it was left: `day`) on her board's tasks: the field's
+ * The farmhands' night (step 2, before the crops grow): each farmhand who worked the farm today (`handsWorking`: on her
+ * farm day, the day being settled; on a town day she's in town and doesn't work), in the order you invited them, spends
+ * her actions today (`handDay`, read from the day as it was left: `day`) on her board's tasks: the field's
  * and the loads first, in your order, each until it's done; then her gathering shares what's left, a turn each. Each
  * action is a point of practice in its aptitude; her goods go into the Warehouse at once (a load's the next morning, at
  * step 4); her harvests, hauls and catches count toward her challenges.
@@ -492,7 +499,7 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
 export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 'today' | 'farm'>, talentOf: TalentOf, story: PerkPack | null): HandsTonight {
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
-  for (const id of handsInOrder(save)) {
+  for (const id of handsWorking(save, story)) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
     let left = hand.actions - hand.kitchen
@@ -571,7 +578,7 @@ export interface TableTonight {
 export function tableTonight(save: FarmSave, talentOf: TalentOf, story: PerkPack | null): TableTonight {
   const night = handsTonight(save, save, talentOf, story)
   const cooked = night.lines.reduce((n, l) => n + (l.done.cook ?? 0), 0)
-  const eaten = eatTonight(night.save, night.lines.filter((l) => l.spent > 0).map((l) => l.id))
+  const eaten = eatTonight(night.save, night.lines.map((l) => l.id))
   return { mouths: eaten.mouths, pantry: eaten.pantry, cooked, takeout: eaten.takeout, gold: eaten.takeout * TAKEOUT_PRICE, fed: eaten.fed.length }
 }
 

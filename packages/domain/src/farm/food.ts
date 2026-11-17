@@ -1,8 +1,9 @@
 // Food: everyone who eats on the farm eats twice a day, from day one. What isn't cooked is bought in as takeout, at a
 // price you feel from the first night; cooking turns the Warehouse's goods into meals in batches.
 //
-//   who eats     the farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who
-//                works that day (spends an action tonight); two meals each, at night
+//   who eats     the farmer, every spouse in her room (who lives on the farm) and every farmhand on her farm day (on the
+//                farm that day, `town/town.ts`'s `worksOn`); two meals each, at night. A farmhand on a town day eats in
+//                town, and costs the farm nothing
 //   the pantry   cooked meals wait here, by the day they were cooked and their stars (`farm.pantry`). A meal keeps three
 //                days: cooked today, it's eaten tonight, tomorrow night or the night after, then it spoils; so a farmer
 //                alone eats all six of a batch
@@ -31,6 +32,7 @@ import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
 import { farmHome, MEAL_KEEPS, type FarmSave, type PantryLot } from '../save/v4'
 import { MAX_STARS, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
+import { worksOn, type SchedulePack } from '../town/town'
 
 /** Each mouth eats two meals a night. */
 export const MEALS_A_DAY = 2
@@ -71,22 +73,23 @@ export function addMeals(pantry: readonly PantryLot[], day: number, stars: numbe
   return lots.sort((a, b) => a.day - b.day || b.stars - a.stars)
 }
 
-/** The Umas who eat tonight, in the order they eat: the farmhands who work tonight in their order, then everyone else
- * living on the farm. The farmer eats last. */
-export function umasAtTable(save: Pick<FarmSave, 'dorm' | 'love' | 'roster'>, working: readonly string[]): string[] {
+/** The Umas who eat tonight, in the order they eat: the farmhands on the farm today in their order (`working`), then
+ * everyone else who lives there (the spouses in their rooms). The farmer eats last. */
+export function umasAtTable(save: Pick<FarmSave, 'love' | 'roster'>, working: readonly string[]): string[] {
   return [...new Set([...working, ...farmHome(save)])].filter((id) => save.roster[id])
 }
 /** The mouths tonight: the Umas at the table and the farmer. */
-export const mouthsTonight = (save: Pick<FarmSave, 'dorm' | 'love' | 'roster'>, working: readonly string[]): number => umasAtTable(save, working).length + 1
+export const mouthsTonight = (save: Pick<FarmSave, 'love' | 'roster'>, working: readonly string[]): number => umasAtTable(save, working).length + 1
 
-/** The farmhands who'll work tonight as the board stands: every one with a task on it. A cook reads her table by them. */
-export const handsWithTasks = (save: Pick<FarmSave, 'roster'>): string[] =>
-  Object.keys(save.roster).filter((id) => save.roster[id]!.farmhand !== undefined && (save.roster[id]!.tasks ?? []).length > 0)
+/** The farmhands on the farm today, who eat there tonight: each on her farm day (`worksOn`; every one with no pack to read
+ * their schedules). A cook reads her table by them. */
+export const handsAtTable = (save: Pick<FarmSave, 'roster' | 'love' | 'calendar'>, pack: SchedulePack | null): string[] =>
+  Object.keys(save.roster).filter((id) => worksOn(save, pack, id))
 
-/** The meals tonight's table needs, as the board stands (a cook stops once the pantry holds them): two a mouth, but for
- * the mouths a staff meal feeds tonight. */
-export const mealsNeeded = (save: Pick<FarmSave, 'dorm' | 'love' | 'roster'> & Partial<Pick<FarmSave, 'today'>>): number =>
-  MEALS_A_DAY * Math.max(0, mouthsTonight(save, handsWithTasks(save)) - (save.today?.staff?.mouths ?? 0))
+/** The meals tonight's table needs (a cook stops once the pantry holds them): two a mouth, but for the mouths a staff
+ * meal feeds tonight. */
+export const mealsNeeded = (save: Pick<FarmSave, 'love' | 'roster' | 'calendar'> & Partial<Pick<FarmSave, 'today'>>, pack: SchedulePack | null): number =>
+  MEALS_A_DAY * Math.max(0, mouthsTonight(save, handsAtTable(save, pack)) - (save.today?.staff?.mouths ?? 0))
 
 /** What the farm ate tonight. */
 export interface Eaten<S extends FarmSave> {
@@ -107,7 +110,7 @@ export interface Eaten<S extends FarmSave> {
 
 /**
  * Night step 2, after the farmhands work: **the farm eats.** Each mouth eats two meals from the pantry: the Umas first
- * (`working`, the farmhands who worked tonight in their order, then the rest of the farm), the farmer last; the oldest
+ * (`working`, the farmhands on the farm today in their order, then the spouses who live there), the farmer last; the oldest
  * meals first and the best of those. An Uma who eats a ★2+ meal is well fed through tomorrow (never shortened). What's
  * short is takeout, charged with the upkeep. Meals cooked today or yesterday keep for tomorrow night; older ones left over
  * spoil. **Tonight's staff meal** (`today.staff`, served at the Kitchen) feeds its mouths first, in place of their two

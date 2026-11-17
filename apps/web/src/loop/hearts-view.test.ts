@@ -21,7 +21,7 @@ const ALL: HeartsPack = { ...PACK, scripted: new Map([ONE, TWO, THREE].map((id) 
 const NAMES: Record<string, string> = { [ONE]: 'Stand-in 1', [TWO]: 'Stand-in 2', [THREE]: 'Stand-in 3' }
 const nameOf = (id: string) => NAMES[id] ?? 'An Uma'
 
-/** The three stand-ins home on `day`, each with her love as given. */
+/** The three stand-ins met, living in town, on `day`, each with her love as given. */
 function farm(loves: Partial<Record<string, Partial<Love>>> = {}, day = 5): SaveV4 {
   const save = newSave('u1', '2026-11-11T10:00:00.000Z')
   const ids = [ONE, TWO, THREE]
@@ -29,9 +29,11 @@ function farm(loves: Partial<Record<string, Partial<Love>>> = {}, day = 5): Save
     ...save, calendar: { day }, farmer: { name: 'Robin' },
     roster: Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])),
     love: Object.fromEntries(ids.map((id) => [id, { ...newLove(), ...loves[id] }])),
-    dorm: { ...save.dorm, home: ids },
   }
 }
+/** Farmhands from day 1: on the farm on their farm days (the default schedule's free days: 9000001 is out on Spring 1, 4,
+ * 7 and 10, 9000002 on 2, 5, 8 and 11, 9000003 on 3, 6, 9 and 12). */
+const hands = (save: SaveV4, ids: readonly string[]): SaveV4 => ({ ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, { ...save.roster[id]!, farmhand: 1 }])) } })
 const segments = (love: Pick<Love, 'stage' | 'level' | 'points'>, state: Pick<Readiness, 'ready' | 'waits'> = { ready: false, waits: { kind: 'bar' } }) => {
   const heart = heartBar(love, state)
   return heart.segments.map((s) => (s.state === 'full' ? '■' : s.state === 'filling' ? '▣' : '□')).join('')
@@ -51,12 +53,15 @@ describe('the rows', () => {
   })
 
   it('puts each Uma in her filters and counts them', () => {
-    const base = farm({ [ONE]: { level: 1, points: 240 }, [TWO]: { stage: 'proposal', level: 10 }, [THREE]: { stage: 'spouse', level: 2, wed: 3 } })
-    const save: SaveV4 = { ...base, dorm: { ...base.dorm, home: [ONE, TWO] } }
+    // Only a spouse in her room lives on the farm: everyone else is away, in town.
+    const save = farm({ [ONE]: { level: 1, points: 240 }, [TWO]: { stage: 'proposal', level: 10 }, [THREE]: { stage: 'spouse', level: 2, wed: 3, house: 0 } })
     const rows = heartRows(save, ALL, nameOf)
     const of = (id: string) => rows.find((r) => r.id === id)!.filters
-    expect([of(ONE), of(TWO), of(THREE)]).toEqual([['ready', 'friends'], ['partners'], ['married', 'away']])
-    expect(filterCounts(rows)).toEqual({ ready: 1, friends: 1, partners: 1, married: 1, away: 1 })
+    expect([of(ONE), of(TWO), of(THREE)]).toEqual([['ready', 'friends', 'away'], ['partners', 'away'], ['married']])
+    expect(filterCounts(rows)).toEqual({ ready: 1, friends: 1, partners: 1, married: 1, away: 2 })
+    // A spouse waiting for a room lives in town.
+    const waiting = heartRows(farm({ [THREE]: { stage: 'spouse', level: 2, wed: 3 } }), ALL, nameOf)
+    expect(waiting.find((r) => r.id === THREE)!.filters).toEqual(['married', 'away'])
     // Her confession's wait is a friend's; the wedding's a partner's.
     const waits = heartRows(farm({ [ONE]: { stage: 'confession', level: 10 }, [TWO]: { stage: 'wedding', level: 10 } }), ALL, nameOf)
     expect(waits.find((r) => r.id === ONE)!.filters).toContain('friends')
@@ -89,12 +94,13 @@ describe('the rows', () => {
   })
 
   it('says the most useful line under the bar', () => {
-    const save = farm({ [ONE]: { level: 1, points: 240 }, [TWO]: { level: 1, points: 30 } })
-    const away: SaveV4 = { ...save, dorm: { ...save.dorm, home: [ONE, THREE] } }
+    // Spring 5: 9000002's town day, 9000003's farm day.
+    const away = hands(farm({ [ONE]: { level: 1, points: 240 }, [TWO]: { level: 1, points: 30 } }), [TWO, THREE])
     const rows = heartRows(away, PACK, nameOf)
     const note = (id: string) => rows.find((r) => r.id === id)!.note
     expect(note(ONE)).toBe('Ready · Friendship 2 · the Fields')
-    // 9000002 is away; 9000003's short bar says it all, her unscripted route playing the game's cards.
+    // 9000002 is in town today; 9000003, on the farm, has her short bar say it all, her unscripted route playing the
+    // game's cards.
     expect(note(TWO)).toBe('Lives in town: find her there')
     expect(note(THREE)).toBeNull()
     const scripted = heartRows(away, ALL, nameOf)

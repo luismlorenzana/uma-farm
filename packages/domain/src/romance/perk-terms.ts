@@ -18,6 +18,7 @@ import type { FarmPlaceId } from '../farm/places'
 import { marriedCount, type Love, type SaveV4 } from '../save/v4'
 import { type StoryPack } from '../story/pack'
 import { linePlaces } from '../story/placeholders'
+import { worksOn } from '../town/town'
 import { nextRung, ROUTE_RUNGS } from './love'
 import { perkLineOpen, perkLineOf } from './perks'
 
@@ -37,11 +38,17 @@ export const routeIndex = (love: Pick<Love, 'stage' | 'level'>): number => {
 export const hasPerk = (love: Pick<Love, 'stage' | 'level'> | undefined, rung: string): boolean =>
   !!love && ROUTE_RUNGS.indexOf(rung) >= 0 && ROUTE_RUNGS.indexOf(rung) < routeIndex(love)
 
-/** Whether she's on the farm tonight: home in the Dorm, or a spouse in her house. Away does nothing. */
-export const homeOrHoused = (save: Pick<SaveV4, 'dorm' | 'love'>, id: string): boolean => {
+/** Whether she lives on the farm: a spouse in her room. A farmhand goes home to town at night, and a spouse waiting for a
+ * room lives there. A breakfast and a reception feed those who live on the farm. */
+export const homeOrHoused = (save: Pick<SaveV4, 'love'>, id: string): boolean => {
   const love = save.love[id]
-  return save.dorm.home.includes(id) || (love?.stage === 'spouse' && love.house !== undefined)
+  return love?.stage === 'spouse' && love.house !== undefined
 }
+/** Whether she's on the farm for her perks on the save's day (her night chores, her morning item, a cook's dishes): she
+ * lives there (`homeOrHoused`), or she's a farmhand on her farm day, who works the farm that night (`worksOn`). Anyone
+ * else, in town that day, does nothing. */
+export const onFarmForPerks = (save: Pick<SaveV4, 'love' | 'roster' | 'calendar'>, pack: PerkPack, id: string): boolean =>
+  homeOrHoused(save, id) || worksOn(save, pack, id)
 
 /** Whether her line's place is open on this farm: open from the start, or built (the ranch's, the Coop or the Barn). */
 export function linePlaceOpen(save: Pick<SaveV4, 'buildings'>, pack: PerkPack, id: string): boolean {

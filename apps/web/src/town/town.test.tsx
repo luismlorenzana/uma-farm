@@ -193,8 +193,8 @@ describe('the town', () => {
     await click(await find('[data-post-item="build"]'))
     expect(path).toBe('/town?at=mayor&sheet=mayor')
     await find('[data-mayor]')
-    // The Mill, short 360g: the office lends 400g. The Dorm's level 2 too, short 360g.
-    expect($$('[data-order]').map((o) => [o.dataset.order, o.dataset.borrow])).toEqual([['mill', '400'], ['dorm:2', '400']])
+    // The Mill, short 360g: the office lends 400g. The retired Dorm's levels are no order.
+    expect($$('[data-order]').map((o) => [o.dataset.order, o.dataset.borrow])).toEqual([['mill', '400']])
     expect($('[data-order="mill"] [data-order-terms]')?.textContent).toBe('Need 360g more · 440g owed, a tenth a night from income')
     expect($('[data-terms]')?.textContent).toContain('Up to 1,000g at Farm Rank 1')
     expect($('[data-no-loans]')?.textContent).toBe('No loans.')
@@ -204,8 +204,6 @@ describe('the town', () => {
     expect(save().today.actions).toBe(0)
     await until(() => $('[data-mayor-note]')?.textContent === 'The Mill stands tomorrow, on a loan.')
     expect($('[data-order="mill"]')?.textContent).toContain('Builds tonight')
-    // One loan at a time: the Dorm waits.
-    expect($('[data-order="dorm:2"] [data-order-why]')?.textContent).toBe('One loan at a time: this one first.')
     expect($('[data-office-loan="mill"]')?.textContent).toContain('440g owed · 45g a night · clears in about 10 nights (Summer 3)')
     expect($('[data-office-loan="mill"] [data-action="repay"]')?.textContent).toBe('Repay · need 400g more')
     // With the gold, repay it all.
@@ -288,7 +286,9 @@ describe('the town', () => {
   })
 
   it('lists everyone in People, met or not, with where she is today, and finds anyone by name', async () => {
-    const met = { ...farm(), roster: { 90001: newRosterUma(1) }, dorm: { level: 1, home: ['90001'], swaps: [] } }
+    // Aster is a farmhand. Her schedule has her out every day, so her farm days are the default schedule's other days
+    // (Spring 2, 3, 5, 6, 8, 9, 11 and 12): Spring 5 is one.
+    const met = { ...farm(), roster: { 90001: { ...newRosterUma(1), farmhand: 1 } } }
     useGame.setState({ uid: 'u1', status: 'ready', save: met })
     await render(<TownPage />, '/town?view=people')
     await find('[data-people]')
@@ -296,7 +296,10 @@ describe('the town', () => {
     expect($('[data-people]')?.dataset.people).toBe('7')
     const rows = $$('[data-person-row]')
     expect(rows[0]?.dataset.personRow).toBe('90001')
-    expect(words(rows[0])).toBe('AsterOn the farmMet')
+    expect(words(rows[0])).toBe('AsterOn the farm todayMet')
+    // On her town day (Spring 4) she's in town, where her schedule puts her.
+    const fourth = peopleRows({ ...met, calendar: { day: 4 } }, fixture.pack!, townDay({ ...met, calendar: { day: 4 } }, fixture.pack!), namer(fixture.view!, fixture.pack!))
+    expect(fourth.find((r) => r.id === '90001')).toMatchObject({ farm: false, at: 'bakery', where: 'At Invented Bakery today' })
     expect(words($(`[data-person-row="${SISTER}"]`))).toMatch(/^Invented SisterAt [A-Za-z ’]+ today$/)
     expect(words($('[data-person-row="90006"]'))).toBe('FableAt Invented Café, most days · The smith')
     expect(words($('[data-person-row="90002"]'))).toBe('BerylAt the Rancher’s, most days · The rancher')
@@ -330,7 +333,7 @@ describe('the town', () => {
     expect(path).toBe(`/town?at=${at}&uma=90001`)
   })
 
-  it('invites a friend to work from her menu, an action: on the farm by day from then, in front of you every day', async () => {
+  it('invites a friend to work from her menu, an action: on the farm on her farm days from then, in town on her town days', async () => {
     const love = { stage: 'friendship' as const, level: 3, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] }
     const met: SaveV4 = { ...farm(), roster: { 90001: newRosterUma(1) }, love: { 90001: love }, arrivals: ['90001'] }
     const at = townDay(met, fixture.pack!).where.get('90001')!
@@ -353,10 +356,10 @@ describe('the town', () => {
     await until(() => !path.includes('life='))
     await until(() => $('[data-standing]')?.textContent === 'Farmhand · F3')
     expect($('[data-item="work"]')?.dataset.why).toBe('Works the farm ✓')
-    // A farmhand is on the farm by day: off the town's map, and her menu says so.
-    expect($('[data-on-farm]')?.textContent).toBe('On the farm by day, after her job. Her profile ›')
+    // Spring 5 is her farm day: she's on the farm, off the town's map, and her menu says so.
+    expect($('[data-on-farm]')?.textContent).toBe('On the farm today, her farm day. Her profile ›')
     expect($(`[data-place-panel="${at}"] [data-person="90001"]`)).toBeNull()
-    // Her profile: on the farm, she's in front of you every day, in town or not, so Chat is open.
+    // Her profile: on the farm today, she's in front of you, in town or not, so Chat is open.
     useGame.setState({ save: { ...save(), today: { ...save().today, town: false } } })
     await render(<HeartsPage />, '/hearts?uma=90001')
     const chat = await find('[data-profile-actions] [data-action="chat"]') as HTMLButtonElement
@@ -364,13 +367,19 @@ describe('the town', () => {
     expect($('[data-stage-name]')?.textContent).toBe('Farmhand')
     expect($('[data-meet]')).toBeNull()
     expect($('[data-find-today]')?.textContent).toBe('Today · On the farm')
-    expect($('[data-find-line]')?.textContent).toBe('Every day · On the farm by day, after her job: Helps out at Invented Café')
+    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12', 'Invented Café · 1, 7, 10', 'Invented Bakery · 4'])
     expect($('[data-profile-actions] [data-action="evening"]')?.textContent).toContain('Evening · 2 ›')
+    // Spring 7, her town day: she's in town at the café, and the town shows her there.
+    useGame.setState({ save: { ...save(), calendar: { day: 7 }, today: { ...save().today, town: true } } })
+    await render(<TownPage />, '/town?at=cafe')
+    await find('[data-place-panel="cafe"] [data-person="90001"]')
+    await render(<HeartsPage />, '/hearts?uma=90001')
+    await until(() => $('[data-find-today]')?.textContent === 'Today · Invented CaféFind her ›')
   })
 
-  it('says one who lives on the farm is there, with her profile', async () => {
-    const love = { stage: 'friendship' as const, level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] }
-    const met = { ...farm(), roster: { 90001: newRosterUma(1) }, dorm: { level: 1, home: ['90001'], swaps: [] }, love: { 90001: love } }
+  it('says one who lives on the farm (a spouse in her room) is there, with her profile', async () => {
+    const love = { stage: 'spouse' as const, level: 1, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [], wed: 2, house: 0 }
+    const met = { ...farm(), roster: { 90001: newRosterUma(1) }, love: { 90001: love } }
     useGame.setState({ uid: 'u1', status: 'ready', save: met })
     await render(<TownPage />, '/town?uma=90001')
     await find('[data-on-farm]')

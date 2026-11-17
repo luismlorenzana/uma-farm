@@ -9,7 +9,7 @@
 // card comes first (`Contest.tsx`); before the Kitchen stands, the sheet shows only that card and "Build the Kitchen
 // first", the morning's Contest lines opening it either way. Loaded on demand.
 import {
-  actionCost, actionsLeft, aptitudeOf, APTITUDE_NAMES, assistantLock, assistantTerm, defaultMenu, dishesHeld, dishName, handDay, handsInOrder, ingredientName, kitchenBase, kitchenBuilt,
+  actionCost, actionsLeft, aptitudeOf, APTITUDE_NAMES, assistantLock, assistantTerm, defaultMenu, dishesHeld, dishName, handDay, handsWorking, ingredientName, kitchenBase, kitchenBuilt,
   kitchenLevel, kitchenLevelLock, kitchenPlayBlock, kitchenPlayedToday, knownRecipes, KITCHEN_LEVELS, levelLockWords, mainsHeld, MEALS_A_DAY, MENU_RECIPES, menuLine, MOUTHS_A_DISH,
   nextKitchenLevel, recipeWords, shareEvenly, sidesHeld, staffBlock, staffDays, staffPicks, staffTable, stoveSeed, type MenuLine, type SaveV4,
 } from '@farm/domain'
@@ -105,9 +105,10 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
   const menu = chosen ?? defaultMenu(save)
   const known = knownRecipes(save)
   const made = menu.reduce((n, l) => n + l.count, 0)
-  const helper = assistant && assistantLock(save, assistant) === null ? assistant : null
+  const helper = assistant && assistantLock(save, assistant, pack) === null ? assistant : null
   const why = kitchenPlayBlock(save, menu, helper)
-  const hands = handsInOrder(save).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
+  // The assistant: a farmhand on the farm today (her farm day) with an action tonight.
+  const hands = handsWorking(save, pack).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
   const set = (next: MenuLine[]) => setChosen(next)
   const reshare = (lines: MenuLine[]) => {
     const shares = shareEvenly(base, lines.length)
@@ -245,11 +246,13 @@ export function pickDish(picks: readonly string[], key: string, held: number, ne
 }
 
 function StaffMeal({ save, busy, onServe }: { save: SaveV4; busy: boolean; onServe: (picks: string[] | null) => void }) {
-  const table = staffTable(save)
+  // Tonight's table: the farmhands on their farm day, as the story pack's schedules say.
+  const pack = useStory()
+  const table = staffTable(save, pack)
   const held = dishesHeld(save)
   const [chosen, setChosen] = useState<string[] | null>(null)
-  const picks = chosen ?? staffPicks(save) ?? []
-  const why = staffBlock(save, picks.length === table.dishes ? picks : null)
+  const picks = chosen ?? staffPicks(save, pack) ?? []
+  const why = staffBlock(save, picks.length === table.dishes ? picks : null, pack)
   const served = save.today.staff
   return (
     <section className="space-y-1.5" aria-label="The staff meal" data-staff>

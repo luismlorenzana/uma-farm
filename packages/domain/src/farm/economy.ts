@@ -4,40 +4,34 @@
 //   the night, step 1   the bin pays
 //   the night, step 2   the farmhands work ──► the farm eats (`farm/food.ts`) ──► the bill: each loan takes its share of
 //                       the night's income ──► the takeout, then the upkeep, with anything owed
-//   upkeep a night      15g each place built and each house · 5g each Dorm bed past the first three · 10g each Uma
-//                       living on the farm (the Dorm's and the spouses in their houses) or working it (the farmhands,
-//                       wherever they live), once each. The start's own places are free.
+//   upkeep a night      15g each place built and each house · 10g each spouse living on the farm (in her room). The
+//                       start's own places are free. A farmhand's cost is her meals on her farm days (`farm/food.ts`).
 //   takeout             15g a meal the pantry was short, from the first night: a new farm's farmer eats two (30g)
 //   short of it         what gold there is pays, takeout first; the rest is owed, takeout and upkeep alike; the first
 //                       short night warns in the morning, and from the second the farmhands work at half pace (`halfPace`)
 //                       until it's paid. Nobody leaves, nobody goes hungry, and nothing is lost: gold never goes below 0.
-//   loans               at the mayor's office, in town: borrow what a place, the Dorm's next level or a house is short
-//                       of gold (rounded up to 100g), up to the Farm Rank's limit; one loan at a time, two from Farm
+//   loans               at the mayor's office, in town: borrow what a place or a house is short of gold (rounded up to 100g), up to the Farm Rank's limit; one loan at a time, two from Farm
 //                       Rank 4; a 10% fee; each night's income repays up to a tenth of it, before upkeep; repay the
 //                       rest at the office any time.
 //
 // The book keeps the bin's pay on each of the last seven nights, so the Book can set an average day's income beside the
 // daily upkeep. Ordering a build stays where it is (its Build card, free, no town needed): the office adds the loan.
 // Pure; never stamps. Loaded with the night, the Book, the projects and the town.
-import { farmRankOf, bedsAt } from './farm'
+import { farmRankOf } from './farm'
 import { BUILD_PLACES, farmPlace, placeBuilt, type BuildPlace, type FarmPlaceId } from './places'
 import { buildLock, buildLockWords, payBuild } from './builds'
 import { buildHouse, houseOpensWords, nextLot } from '../romance/homestead'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { DORM_LOAN, farmHome, HOUSE_LOAN, INCOME_NIGHTS, MAX_LOANS, type FarmSave, type Loan } from '../save/v4'
-import { buyDorm, nextDorm } from './dorm'
 import type { MoneyLine } from '../night/summary'
 import { TAKEOUT_PRICE } from './food'
 
 // --- Upkeep ----------------------------------------------------------------------------------------------------------
 
-/** Upkeep a night: each place built and each house; each Dorm bed past the first three; each Uma living on the farm. */
+/** Upkeep a night: each place built and each house; each spouse living on the farm, in her room. */
 export const UPKEEP_BUILDING = 15
-export const UPKEEP_BED = 5
 export const UPKEEP_RESIDENT = 10
-/** The Dorm's beds that come with the farm, free: level 1's. */
-export const FREE_BEDS = bedsAt(1)
 
 /** What the farm's upkeep counts tonight, and its gold. */
 export interface Upkeep {
@@ -45,20 +39,15 @@ export interface Upkeep {
   places: number
   /** Houses built on the homestead (the Farmhouse is free). */
   houses: number
-  /** The Dorm's beds past the first three, at the level in effect. */
-  beds: number
-  /** The Umas living on the farm (the Dorm's, and the spouses in their houses) or working it (the farmhands, wherever
-   * they live), each once. */
+  /** The spouses living on the farm, each in her room. A farmhand isn't one: her meals on her farm days are her cost. */
   residents: number
   gold: number
 }
-export function upkeepOf(save: Pick<FarmSave, 'buildings' | 'homestead' | 'dorm' | 'love' | 'roster'>): Upkeep {
+export function upkeepOf(save: Pick<FarmSave, 'buildings' | 'homestead' | 'love' | 'roster'>): Upkeep {
   const places = BUILD_PLACES.filter((p) => placeBuilt(save, p.id)).length
   const houses = Math.max(0, save.homestead.houses.length - 1)
-  const beds = Math.max(0, bedsAt(save.dorm.level) - FREE_BEDS)
-  const hands = Object.keys(save.roster).filter((id) => save.roster[id]!.farmhand !== undefined)
-  const residents = new Set([...farmHome(save), ...hands]).size
-  return { places, houses, beds, residents, gold: (places + houses) * UPKEEP_BUILDING + beds * UPKEEP_BED + residents * UPKEEP_RESIDENT }
+  const residents = farmHome(save).filter((id) => save.roster[id]).length
+  return { places, houses, residents, gold: (places + houses) * UPKEEP_BUILDING + residents * UPKEEP_RESIDENT }
 }
 
 /** An average night's income: the bin's pay over the nights the book keeps (the last seven, fewer on a new farm),
@@ -79,8 +68,8 @@ export const atPace = (actions: number, save: Pick<FarmSave, 'farm'>): number =>
 
 // --- Loans -----------------------------------------------------------------------------------------------------------
 
-/** The most the office lends at each Farm Rank, 1–10: every place at its rank, and the Dorm's levels and the houses with
- * some gold of your own. */
+/** The most the office lends at each Farm Rank, 1–10: every place at its rank, and the houses with some gold of your
+ * own. */
 export const LOAN_LIMITS: readonly number[] = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000, 50_000, 80_000, 120_000, 160_000]
 /** Two loans at once from this Farm Rank; one before. */
 export const TWO_LOANS_FROM = 4
@@ -98,7 +87,8 @@ export const loanNightly = (owed: number): number => Math.ceil(owed / LOAN_NIGHT
 /** What a build short of `short` gold borrows: rounded up to 100g, never past its cost. */
 export const loanFor = (short: number, cost: number): number => Math.min(cost, Math.ceil(short / LOAN_STEP) * LOAN_STEP)
 
-/** The words for a loan's project: the place's own name (the app swaps in the world's), "Dorm level 2" or "House 2". */
+/** The words for a loan's project: the place's own name (the app swaps in the world's) or "House 2"; a loan a save still
+ * holds toward the retired Dorm, "Dorm level 2". */
 export function loanName(project: string): string {
   const house = HOUSE_LOAN.exec(project)
   if (house) return `House ${house[1]}`
@@ -115,13 +105,12 @@ export type LoanLock =
   | { by: 'slots'; slots: number }
   | { by: 'limit'; limit: number; rank: number }
 
-/** One build the office can order: a place offered at your Farm Rank (its game built), the Dorm's next level at its
- * rank, or the next house once its wedding has come. Its cost, what you'd borrow, and what stands in the way of each way
- * to pay. */
+/** One build the office can order: a place offered at your Farm Rank (its game built), or the next house once its
+ * wedding has come. Its cost, what you'd borrow, and what stands in the way of each way to pay. */
 export interface BuildOrder {
-  /** A place's id, `dorm:<level>` or `house:<n>`. */
+  /** A place's id, or `house:<n>`. */
   project: string
-  kind: 'place' | 'dorm' | 'house'
+  kind: 'place' | 'house'
   /** The place, for a place. */
   place: BuildPlace | null
   cost: number
@@ -150,15 +139,14 @@ function loanLock(save: FarmSave, build: string | null, borrow: number): LoanLoc
   return null
 }
 
-/** A build paid with gold only (the Dorm's level, a house): its order. */
-function goldOrder(save: FarmSave, project: string, kind: 'dorm' | 'house', cost: number): BuildOrder {
+/** A build paid with gold only (a house): its order. */
+function goldOrder(save: FarmSave, project: string, kind: 'house', cost: number): BuildOrder {
   const borrow = loanFor(Math.max(0, cost - save.gold), cost)
   return { project, kind, place: null, cost, own: needGold(cost - save.gold), borrow, lock: loanLock(save, null, borrow) }
 }
 
 /** The builds the office can order today, in the Diary's order: the places offered at your Farm Rank whose games are
- * built and that don't stand yet (one paid today says "Builds tonight"), the Dorm's next level once its Farm Rank comes,
- * then the next house once its wedding has come. */
+ * built and that don't stand yet (one paid today says "Builds tonight"), then the next house once its wedding has come. */
 export function buildOrders(save: FarmSave): BuildOrder[] {
   const rank = farmRankOf(save.farm.points)
   const places = BUILD_PLACES.filter((p) => p.opens.game && p.opens.rank <= rank && !placeBuilt(save, p.id)).map((place): BuildOrder => {
@@ -167,11 +155,9 @@ export function buildOrders(save: FarmSave): BuildOrder[] {
     const borrow = build ? 0 : loanFor(Math.max(0, cost - save.gold), cost)
     return { project: place.id, kind: 'place', place, cost, own: buildLockWords(buildLock(save, place.id)), borrow, lock: loanLock(save, build, borrow) }
   })
-  const level = nextDorm(save)
-  const dorm = level && level.open ? [goldOrder(save, `dorm:${level.level}`, 'dorm', level.cost)] : []
   const lot = nextLot(save)
   const house = lot && lot.open ? [goldOrder(save, `house:${lot.n}`, 'house', lot.cost)] : []
-  return [...places, ...dorm, ...house]
+  return [...places, ...house]
 }
 
 /** A loan's lock in the player's words, or null when the office lends now. */
@@ -193,22 +179,18 @@ export function newLoan(project: string, day: number, lent: number): Loan {
 }
 
 /** Why a project isn't among today's orders, in words: not offered at this Farm Rank, its game not built, built
- * already, the Dorm's or the house's turn. */
+ * already, the house's turn; the retired Dorm's levels are built no more. */
 function notAnOrder(save: FarmSave, project: string): string {
   const house = HOUSE_LOAN.exec(project)
   if (house) return nextLot(save)?.n === Number(house[1]) ? houseOpensWords(Number(house[1])) : 'Not the next house.'
-  const dorm = DORM_LOAN.exec(project)
-  if (dorm) {
-    const next = nextDorm(save)
-    return next?.level === Number(dorm[1]) ? `Opens at Farm Rank ${next.farmRank}.` : 'Not the Dorm’s next level.'
-  }
+  if (DORM_LOAN.test(project)) return 'The Dorm is retired.'
   const place = farmPlace(project)
   return place && BUILD_PLACES.some((p) => p.id === place.id) ? `${buildLockWords(buildLock(save, place.id)) ?? 'Built'}.` : 'Not something to build.'
 }
 
 /** Borrows toward a build and orders it, in one: the office lends what it's short of gold (rounded up to 100g), and
- * the build is paid at once (a place with the farm's own goods too, standing the next morning; the Dorm's level, its
- * beds the next morning; a house, standing at once, named `name`). Free once you're in town. Refused out of town
+ * the build is paid at once (a place with the farm's own goods too, standing the next morning; a house, standing at
+ * once, named `name`). Free once you're in town. Refused out of town
  * (`locked`), for the build's own lock (`locked`), with the gold already there and with the loans held (`bad-job`), and
  * past the Farm Rank's limit (`locked`). Never stamps. */
 export function borrowFor<S extends FarmSave>(save: S, project: string, name = ''): S {
@@ -219,7 +201,6 @@ export function borrowFor<S extends FarmSave>(save: S, project: string, name = '
   const lent: S = { ...save, gold: save.gold + order.borrow, farm: { ...save.farm, loans: [...save.farm.loans, newLoan(project, save.calendar.day, order.borrow)] } }
   switch (order.kind) {
     case 'place': return payBuild(lent, order.place!.id)
-    case 'dorm': return buyDorm(lent)
     case 'house': return buildHouse(lent, name) as S
   }
 }

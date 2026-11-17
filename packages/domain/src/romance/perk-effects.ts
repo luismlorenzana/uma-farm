@@ -40,7 +40,7 @@ import { castOrder, type StoryPack } from '../story/pack'
 import { favouriteOf, giftsOf } from '../story/placeholders'
 import { deepestOpen, lineGood } from './days'
 import { perkLineOf, type PerkLine } from './perks'
-import { atHerLine, choresOf, hasPerk, homeOrHoused, keepsakeQuality, linePlaceOpen, morningDue, morningRule, routeIndex, type PerkPack } from './perk-terms'
+import { atHerLine, choresOf, hasPerk, homeOrHoused, keepsakeQuality, linePlaceOpen, morningDue, morningRule, onFarmForPerks, routeIndex, type PerkPack } from './perk-terms'
 
 /** Umas in the cast's order, then by id: the order the night's perks go in. */
 function inCastOrder(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): string[] {
@@ -57,11 +57,11 @@ function inCastOrder(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): str
  * places' games. */
 export const CHORE_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing', 'mining', 'quarry', 'ranch']
 
-/** Her chores tonight: the F6, R7 and S4 perks' (`choresOf`, at most 3) while she's on the farm, her line's chores
- * act and its place is open; else none. */
+/** Her chores tonight: the F6, R7 and S4 perks' (`choresOf`, at most 3) while she's on the farm (a spouse in her room, or a
+ * farmhand on her farm day: `onFarmForPerks`), her line's chores act and its place is open; else none. */
 export function choresTonight(save: SaveV4, pack: PerkPack, id: string): number {
   const line = perkLineOf(pack, id)
-  if (!line || !CHORE_LINES.includes(line) || !save.roster[id] || !homeOrHoused(save, id) || !linePlaceOpen(save, pack, id)) return 0
+  if (!line || !CHORE_LINES.includes(line) || !save.roster[id] || !onFarmForPerks(save, pack, id) || !linePlaceOpen(save, pack, id)) return 0
   return choresOf(save.love[id])
 }
 
@@ -227,7 +227,8 @@ export function lineQuality(save: SaveV4, pack: PerkPack, id: string, talentOf: 
 }
 
 /**
- * Night step 9's morning items, the date already turned: each Uma on the farm whose morning it is by her
+ * Night step 9's morning items, the date already turned: each Uma on the farm this morning (a spouse in her room, or a
+ * farmhand on her farm day: `onFarmForPerks`) whose morning it is by her
  * count (`morningRule`: every 4th morning from R2, every 2nd from S2) leaves one good of her line (`lineGood`, n = 1) in
  * the Warehouse, its stars her line's quality draw (`draw(uid, day, 'perk:<id>:item', 0)`) held at ★2 (★3 from S2). In
  * the cast's order. The house adds +1 on a morning in it.
@@ -238,7 +239,7 @@ export function leaveMorningItems(save: SaveV4, pack: PerkPack, talentOf: Talent
   const lines: ItemLine[] = []
   for (const id of inCastOrder(pack, Object.keys(save.roster))) {
     const rule = morningRule(save.love[id])
-    if (!rule || !homeOrHoused(save, id) || !morningDue(rule, day)) continue
+    if (!rule || !onFarmForPerks(save, pack, id) || !morningDue(rule, day)) continue
     const stars = Math.max(rule.stars, drawStars(lineQuality(save, pack, id, talentOf), draw(save.account.uid, day, `perk:${id}:item`, 0)))
     const good = lineGood(save, pack, id, stars, MORNING_ITEM_N)
     items = addGoods(items, good.id, good.stars, 1)
@@ -365,8 +366,8 @@ export function giveSignatureDish(save: SaveV4, pack: PerkPack, id: string): { s
 export const BREAKFAST_DAYS = 1
 
 /**
- * Breakfast, a spouse's S1 perk on a morning in her house (the house morning calls it): every Uma on
- * the farm (home or housed) with no well-fed days left starts the day well fed for one day. A meal running is never
+ * Breakfast, a spouse's S1 perk on a morning in her house (the house morning calls it): every Uma who
+ * lives on the farm (a spouse in her room) with no well-fed days left starts the day well fed for one day. A meal running is never
  * shortened or extended, and a breakfast isn't a staff meal (no count moves: the staff meal stays the Kitchen's). Each
  * pair it feeds earns +5 bond (`addBond`, Romance 4's ×1.5 inside). Pure; never stamps.
  */

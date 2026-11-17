@@ -3,7 +3,7 @@
 // staying on the stage; her own gift line; and a festival day's two occasions from the calendar, its day then its night.
 // The invented stand-in with invented greetings, small talk, gift lines and occasion scenes; the server is a stub.
 import 'fake-indexeddb/auto'
-import { farmDay, inviteToFarm, meet, newSave, readScene, readStoryPack, STAND_IN_FILES, storyOf, todaysTalk, type PackFiles, type SaveV4, type StoryPack } from '@farm/domain'
+import { farmDay, farmDayOn, meet, newSave, readScene, readStoryPack, STAND_IN_FILES, storyOf, todaysTalk, type PackFiles, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -42,7 +42,7 @@ const FILES: PackFiles = {
     ...STAND_IN_FILES.umas,
     [ONE]: {
       ...(STAND_IN_FILES.umas[ONE] as object),
-      greetings: { places: { dorm: ['An invented hello at the Dorm.'] } },
+      greetings: { places: { fields: ['An invented hello in the Fields.'] } },
       smallTalk: [{ lines: [[ONE, 'An invented small talk.'], ['you', 'Your invented answer.'], [ONE, 'Her invented last word.']] }],
       giftLines: { loved: ['An invented loved line.'], liked: ['An invented liked line.'], neutral: ['An invented neutral line.'], disliked: ['An invented disliked line.'] },
     },
@@ -54,12 +54,17 @@ const FILES: PackFiles = {
 }
 
 const save = (): SaveV4 => useGame.getState().save as SaveV4
-/** A named farm on `day`, the stand-in's three home in the Dorm, with a carrot to give. */
+/** A named farm on `day`, the stand-in's three farmhands from day 1, each watering the Fields (so her farm place is the
+ * Fields), with a carrot to give. On her farm day she's on the farm, in front of you. */
 function farm(day: number): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, fixture.pack!).save, id)), readScene(fresh, 'scene:1:open'))
-  return { ...joined, today: { ...joined.today, bonds: {} }, arrivals: ['9000001', '9000002', '9000003'], items: { ...joined.items, carrot: [1, 0, 0, 0, 0] } }
+  const joined = ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, fixture.pack!).save), readScene(fresh, 'scene:1:open'))
+  const roster = Object.fromEntries(Object.entries(joined.roster).map(([id, uma]) => [id, { ...uma, farmhand: 1, tasks: [{ kind: 'water' as const, tiles: [0] }] }]))
+  return { ...joined, roster, today: { ...joined.today, bonds: {} }, arrivals: ['9000001', '9000002', '9000003'], items: { ...joined.items, carrot: [1, 0, 0, 0, 0] } }
 }
+/** Her farm days in spring: the days she's on the farm, in front of you. */
+const springFarmDays = (id: string): number[] =>
+  Array.from({ length: 12 }, (_, i) => farmDay({ year: 1, season: 'spring', day: i + 1 })).filter((d) => farmDayOn(fixture.pack!, id, d))
 
 let host: HTMLDivElement
 let root: Root
@@ -114,9 +119,9 @@ afterEach(async () => {
 })
 
 describe('talk that knows the day', () => {
-  it('a chat plays today’s talk: her greeting for the Dorm, then a small talk, your line under your name with her on the stage', async () => {
-    // A spring day whose talk draws her small talk (the draw is the account's and the day's).
-    const day = Array.from({ length: 12 }, (_, i) => farmDay({ year: 1, season: 'spring', day: i + 1 })).find((d) => todaysTalk(farm(d), fixture.pack!, ONE, 'steady').small !== null)!
+  it('a chat plays today’s talk: her greeting for the Fields, then a small talk, your line under your name with her on the stage', async () => {
+    // A spring farm day of hers whose talk draws her small talk (the draw is the account's and the day's).
+    const day = springFarmDays(ONE).find((d) => todaysTalk(farm(d), fixture.pack!, ONE, 'steady').small !== null)!
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(day) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await click(await find('[data-action="chat"]'))
@@ -129,7 +134,7 @@ describe('talk that knows the day', () => {
       for (let i = 0; i < 4 && line() !== want; i++) await click($('[data-life="talk"] [data-beat]'))
       expect(line()).toBe(want)
     }
-    expect(line()).toBe('An invented hello at the Dorm.')
+    expect(line()).toBe('An invented hello in the Fields.')
     await tapTo('An invented small talk.')
     await tapTo('Your invented answer.')
     // Your line, under your name; she stays on the stage.
@@ -140,18 +145,17 @@ describe('talk that knows the day', () => {
     await until(() => !path.includes('life='))
     // The talk stays on her profile, yours under your name.
     expect($$('[data-talk-line]').map((p) => `${p.dataset.talkLine}:${p.textContent}`)).toEqual([
-      'her:An invented hello at the Dorm.', 'her:An invented small talk.', 'you:Robin: Your invented answer.', 'her:Her invented last word.',
+      'her:An invented hello in the Fields.', 'her:An invented small talk.', 'you:Robin: Your invented answer.', 'her:Her invented last word.',
     ])
   })
 
   it('a default talk fills in her name, as her profile does', async () => {
-    // An Uma and a spring day whose talk opens on a default line naming her (`{name}`).
-    const days = Array.from({ length: 12 }, (_, i) => farmDay({ year: 1, season: 'spring', day: i + 1 }))
+    // An Uma and a spring farm day of hers whose talk opens on a default line naming her (`{name}`).
     const named = (d: number, id: string) => {
       const first = todaysTalk(farm(d), fixture.pack!, id, 'steady').steps[0]
       return first && 'say' in first && first.line.includes('{name}') ? first.line : null
     }
-    const [id, day] = ['9000002', '9000003'].flatMap((id) => days.map((d) => [id, d] as const)).find(([id, d]) => named(d, id) !== null)!
+    const [id, day] = ['9000002', '9000003'].flatMap((id) => springFarmDays(id).map((d) => [id, d] as const)).find(([id, d]) => named(d, id) !== null)!
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(day) })
     await render(<HeartsPage />, `/hearts?uma=${id}`)
     await click(await find('[data-action="chat"]'))
@@ -172,6 +176,7 @@ describe('talk that knows the day', () => {
 
 describe('every occasion on its day', () => {
   it('on the Fishing Derby, the calendar plays her day’s scene, then its night’s, each an action', async () => {
+    // Summer 10 is her town day: where she is never gates an occasion.
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(farmDay({ year: 1, season: 'summer', day: 10 })) })
     await render(<div />, '/?sheet=calendar')
     const row = () => $(`[data-face="${ONE}"]`)

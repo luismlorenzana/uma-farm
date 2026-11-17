@@ -11,7 +11,7 @@ import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
 import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type BuildPlace, type FarmPlace, type PlaceOpens } from '../farm/places'
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
-import { FREE_BEDS, HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
+import { HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
 import { NIGHT_STEPS } from '../night/end-day'
 import { ARRIVALS, BURNERS, GREEN_MS, MOST_A_PART, PERFECT_FROM_MS, PERFECT_TO_MS, PLAY_TIERS, SMOKE_MS, STOVE_POINTS, STOVE_SECONDS, TICKET_SHAPES, tierCount } from '../kitchen/stove'
 import { KITCHEN_LEVELS } from '../kitchen/levels'
@@ -52,7 +52,6 @@ import {
   ANIMALS, CARE_FONDNESS, FED_FONDNESS, FODDER_PRICE, FONDNESS_A_HEART, GRASS_CUT, HOME_NAMES, HUNGRY_FONDNESS, MAX_FODDER,
 } from '../ranch/ranch'
 import { FACE_FINDS, floorFinds, floorRank, floorTopGrade, FLOORS_A_GRADE, gradeAt, stairsAfter } from '../gathering/digs'
-import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, FESTIVAL_PLACE_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
@@ -517,23 +516,21 @@ function stationRecipes(): string {
 
 // --- The roster -----------------------------------------------------------------------------------------------
 
-/** The Dorm for 20: its eight levels, their beds, costs and Farm Ranks. */
 /** Upkeep: what it counts and its gold a night, and a short night's rule. */
 function upkeepBlock(): string {
   return table(['Counts', 'A night', 'Not counted'], [
     ['Each place built (the stations, the Coop and the Barn, the Mine and the Quarry, the Dock, the Boat, and each later one)', g(UPKEEP_BUILDING), 'The start’s own places; the animals, whose cost is their feed'],
     ['Each house built on the homestead', g(UPKEEP_BUILDING), 'The Farmhouse'],
-    [`Each Dorm bed past the first ${FREE_BEDS}, at the level in effect`, g(UPKEEP_BED), `Level 1’s ${FREE_BEDS} beds`],
-    ['Each Uma living on the farm or working it: home in the Dorm, a spouse in her house, or a farmhand wherever she lives; once each', g(UPKEEP_RESIDENT), 'Those who live in town and don’t work the farm'],
+    ['Each spouse living on the farm, in her room', g(UPKEEP_RESIDENT), 'Everyone who lives in town: a farmhand’s cost is her meals on her farm days, and a spouse waiting for a room costs nothing until she moves in'],
     ['Short of it', 'What gold there is pays; the rest is owed with tomorrow’s', `The first short night warns; from night ${HALF_PACE_FROM} in a row, half pace until it’s paid`],
   ])
 }
 /** Food: who eats, the pantry, takeout and cooking. */
 function foodBlock(): string {
   return table(['', 'The rule'], [
-    ['Who eats', `The farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who works that day (spends an action tonight): ${MEALS_A_DAY} meals each, at night`],
+    ['Who eats', `The farmer, every spouse in her room (who lives on the farm) and every farmhand on her farm day (on the farm that day, with work or without): ${MEALS_A_DAY} meals each, at night. A farmhand on a town day eats in town, and costs the farm nothing`],
     ['The pantry', `Cooked meals wait here, by the day cooked and their stars. A meal keeps ${MEAL_KEEPS} days: cooked today, it’s eaten tonight, tomorrow night or the night after, then it spoils`],
-    ['The night’s meals', 'Night step 2, after the farmhands work: the Umas eat first (the farmhands who worked, in their order, then the rest of the farm), the farmer last; the oldest meals first, the best of those'],
+    ['The night’s meals', 'Night step 2, after the farmhands work: the Umas eat first (the farmhands on the farm, in their order, then the spouses in their rooms), the farmer last; the oldest meals first, the best of those'],
     ['Takeout', `${g(TAKEOUT_PRICE)} a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats ${MEALS_A_DAY}: ${g(MEALS_A_DAY * TAKEOUT_PRICE)} a night`],
     ['Short of it', 'Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s'],
     ['Cook a batch', `The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, ${BATCH_MEALS} meals from ${BATCH_GOODS} goods of food you choose`],
@@ -555,7 +552,7 @@ function cookBatchBlock(): string {
 /** A farmhand's actions a day, by why, and half pace. */
 function farmhandDay(): string {
   return table(['', 'Her actions'], [
-    ['A farmhand’s day, after her part-time job (she’s on the farm by day; she works her actions overnight)', String(HAND_ACTIONS)],
+    ['A farmhand’s farm day (she’s on the farm by day, and works her actions overnight; on a town day she doesn’t work)', String(HAND_ACTIONS)],
     [`Settled in: from ${SETTLED_AFTER} days after you invited her (a season)`, `+${SETTLED_ACTIONS}`],
     ['Once she’s your spouse', `+${SPOUSE_ACTIONS}`],
     [`Well fed this morning: a ★${WELL_FED_STARS}+ meal last night, a household meal the day before, a wedding’s reception, a spouse’s breakfast`, `+${FED_ACTIONS}`],
@@ -620,18 +617,11 @@ function loansBlock(): string {
     ['Loans at once', ...ranks.map((r) => (Number(r) >= TWO_LOANS_FROM ? '2' : '1'))],
   ]) + `\n\n${table(['Term', 'The rule'], [
     ['What it lends', `What the build is short of gold, rounded up to ${g(LOAN_STEP)}, never past its cost; you bring the goods`],
-    ['Toward', 'A place offered at your Farm Rank (its game built), the Dorm’s next level at its Farm Rank, or the next house once its wedding has come'],
+    ['Toward', 'A place offered at your Farm Rank (its game built), or the next house once its wedding has come'],
     ['The fee', `${Math.round(LOAN_FEE * 100)}% of the loan, rounded up to 10g, owed with it`],
     ['Each night', `A ${LOAN_NIGHTS === 10 ? 'tenth' : `1/${LOAN_NIGHTS}`} of what’s owed when it’s taken (rounded up to 5g), from the night’s income only, before the upkeep`],
     ['Repay', 'At the office, in full, any time you’re in town; the fee isn’t returned'],
   ])}`
-}
-function dormLevels(): string {
-  let total = 0
-  return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative'], DORM_LEVELS.map((l) => {
-    total += l.cost
-    return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total)]
-  }))
 }
 // --- The Farm Rank, the Diary and the cast ---------------------------------------------------------------------
 
@@ -679,7 +669,7 @@ function townSchedule(): string {
     ['The default schedule', `An Uma the story hasn’t scheduled (no \`routine\`, \`job\` or \`home\` on the map): at her favourite spot on every ${DEFAULT_EVERY === 3 ? 'third' : `${DEFAULT_EVERY}th`} day of each season, by her place in the cast (the 1st, 4th, 7th… on ${days[0]}; the 2nd, 5th, 8th… on ${days[1]}; the 3rd, 6th, 9th… on ${days[2]}); at home, off the map, the other days`],
     ['Her favourite spot', `Her cast entry’s \`spot\`; else the ${SPOT_IDS.length} in turn by her place in the cast, ${DEFAULT_EVERY} Umas each (the 1st to 3rd at \`${SPOT_IDS[0]}\`, the 4th to 6th at \`${SPOT_IDS[1]}\`…, the 19th starting again)`],
     ['A spot', 'Holds everyone the schedules put there, with no cap; nobody is placed at random'],
-    ['On the farm', 'An Uma living on the farm (the Dorm, a spouse’s house) is at the farm, never in town; so is a farmhand by day, after her part-time job'],
+    ['On the farm', 'A spouse in her room lives at the farm, never in town. A farmhand is at the farm on her farm days, the days the rows above don’t put her out in town (a day at her `home` or at home off the map is one); a season with none, the default schedule’s other days (8 of 12). On her town days she’s in town by her schedule'],
     ['The town’s people', 'Each at her post: her role’s shop or office, else the spot she keeps'],
     ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],
   ])
@@ -929,7 +919,7 @@ const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
   fishing: 'One fish from her deepest spot this season, at a day’s haul’s stars (step 4)',
   mining: 'One ore from the Mine’s deepest floor reached, at a face’s stars (step 4)', quarry: 'One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4)',
   ranch: '+5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3)',
-  cooking: '+1 dish on every Kitchen play while she lives on the farm (the chores don’t bank: a day without a play makes none)', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
+  cooking: '+1 dish on every Kitchen play while she’s on the farm: a spouse in her room, or a farmhand on her farm day (the chores don’t bank: a day without a play makes none)', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
 }
 /** What "her line" means for each template, and whether it acts yet. */
 function perkLines(): string {
@@ -1125,7 +1115,7 @@ function eveningKinds(): string {
     own(d.kind) ? '— (no one’s favourite)' : d.question ? `“${d.question}”` : '— (never asked for)',
   ])) + `
 
-Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“${ROLE_WORDS.spouse}”); she must be in front of you: home on the farm, a farmhand there by day, or out in town today with you there. Each takes ${eveningCost()} of the day’s actions. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
+Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“${ROLE_WORDS.spouse}”); she must be in front of you: home on the farm (a spouse in her room), a farmhand there on her farm day, or out in town today with you there. Each takes ${eveningCost()} of the day’s actions. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
 }
 
 /** The Uma loop's stages: how you reach each and what it opens. */
@@ -1136,7 +1126,7 @@ function umaStagesBlock(): string {
 function marriedLifeBlock(): string {
   return table(['', 'Married life'], [
     ['A meal', `${MEALS.map((m) => MEAL_NAMES[m]).join(' or ')}: ${actionWords('cook')}, each once a day, from your first wedding`],
-    ['Who eats', 'Everyone on the farm (the Dorm and the houses) and every farmhand'],
+    ['Who eats', 'Everyone who lives on the farm (the spouses in their rooms) and every farmhand'],
     ['What a meal does', `Everyone it feeds well fed for ${MEAL_DAYS} days (today and tomorrow; a meal running longer is never shortened), and +${MEAL_POINTS} to each (\`addLove\`, an anniversary’s ×2 applies); and a batch for the pantry, ${BATCH_MEALS} meals from ${BATCH_GOODS} goods of food by the plain rule, when the Warehouse holds them`],
     ['Its scene', 'One spouse’s meal line (`draw(uid, day, \'meal:<meal>\', 0)`): her bible’s `meals`, else the default story’s, on the dialogue engine'],
     ['The night’s companion', 'At Tonight, one spouse with a room: free. Her house is tonight’s house, so its morning is as built'],
@@ -1216,10 +1206,10 @@ function benchScene(): string {
 }
 /** The reception's well-fed days, and the wedding's guests and places. */
 function receptionBlock(): string {
-  return table(['The reception', 'Well fed from tomorrow, everyone on the farm'], [
+  return table(['The reception', 'Well fed from tomorrow, everyone who lives on the farm (the spouses in their rooms)'], [
     ...[1, 2, 3, 4, 5].map((stars) => [`A ★${stars} dish`, `${receptionDays(stars)} day${receptionDays(stars) === 1 ? '' : 's'}`]),
     ['No dish in the Warehouse: the town’s bakery sends a cake', `${CAKE_DAYS} day (a Rough meal)`],
-  ]) + `\n\nA meal already running is never shortened. **The guests:** every spouse on the farm, then her ${WEDDING_FRIENDS} closest friends on the farm (by bond); they have no lines. **The places:** her bible’s \`wedding.places\`, else her wedding beat’s place and ${WEDDING_DEFAULTS.map((p) => `\`${p}\``).join(', ')}, three different. **Household milestones** at ${HOUSEHOLD_AT.join(', ')} married.`
+  ]) + `\n\nA meal already running is never shortened. **The guests:** every spouse on the farm (in her room), then her ${WEDDING_FRIENDS} closest friends among everyone you’ve met, wherever they live (by bond); they have no lines. **The places:** her bible’s \`wedding.places\`, else her wedding beat’s place and ${WEDDING_DEFAULTS.map((p) => `\`${p}\``).join(', ')}, three different. **Household milestones** at ${HOUSEHOLD_AT.join(', ')} married.`
 }
 
 // --- Married life --------------------------------------------------------------------------------------------
@@ -1401,7 +1391,7 @@ export function renderBlock(key: string): string | null {
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
     stations, 'station-recipes': stationRecipes, animals: animalsBlock, 'ranch-rules': ranchRules, 'dig-floors': digFloors,
-    'dorm-levels': dormLevels, 'station-levels': stationLevels, thinning: thinningBlock, market: marketBlock, upkeep: upkeepBlock, loans: loansBlock, food: foodBlock, 'cook-batch': cookBatchBlock,
+    'station-levels': stationLevels, thinning: thinningBlock, market: marketBlock, upkeep: upkeepBlock, loans: loansBlock, food: foodBlock, 'cook-batch': cookBatchBlock,
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock,

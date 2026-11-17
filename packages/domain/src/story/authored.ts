@@ -26,9 +26,10 @@ import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type Sto
 import { ILLUSTRATION_ID } from '../save/gallery'
 import { NO_ILLUSTRATION } from './illustrations'
 
-/** The farm's places plus the romance's own backdrops. */
+/** The farm's places plus the romance's own backdrops. `dorm` is the retired Dorm's: off the farm map, and still a
+ * backdrop a scene may name. */
 export const STORY_PLACES = [
-  ...FARM_PLACE_IDS, 'pond-night', 'overlook', 'orchard-bench', 'dorm-porch', 'harbour-wall', 'chapel-bell', 'town', 'hilltop-track', 'sea-pier',
+  ...FARM_PLACE_IDS, 'dorm', 'pond-night', 'overlook', 'orchard-bench', 'dorm-porch', 'harbour-wall', 'chapel-bell', 'town', 'hilltop-track', 'sea-pier',
 ] as const
 export const FESTIVALS = ['flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
@@ -1757,6 +1758,8 @@ export function checkWorld(raw: unknown, ctx: Pick<StoryContext, 'isGood'> = {})
     else {
       places = Object.fromEntries(Object.entries(p).flatMap(([id, v]): [string, WorldPlace][] => {
         const at = `Place ${id}`
+        // The retired Dorm is off the farm map (a scene may still name it as a backdrop): its words are read and not shown.
+        if (id === 'dorm') { f.notes.push(`${at}: the Dorm is retired, so its name and line aren't shown`); return [] }
         if (!oneOf(FARM_PLACE_IDS, id)) { f.errors.push(`${at}: not one of the farm’s places (${FARM_PLACE_IDS.join(', ')}); skipped`); return [] }
         if (!isObject(v)) { f.errors.push(`${at}: an object with a name and a line; skipped`); return [] }
         return [[id, kept<WorldPlace>(v, {

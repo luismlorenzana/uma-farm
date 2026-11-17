@@ -17,12 +17,12 @@ const LATER = '2026-11-09T21:30:00.000Z'
 const CONTEXT: NightContext = {}
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-/** Three Umas home on `day`, with five Wheat, the Mill built. */
+/** Three Umas met (living in town) on `day`, with five Wheat, the Mill built. */
 function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
   return {
     ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() },
-    dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, items: { ...save.items, wheat: [5, 0, 0, 0, 0] }, buildings: { ...save.buildings, mill: 1 },
+    items: { ...save.items, wheat: [5, 0, 0, 0, 0] }, buildings: { ...save.buildings, mill: 1 },
   }
 }
 /** A day of work: a tile tilled, planted and watered, a forage, a load at the Mill. */
@@ -39,7 +39,7 @@ describe('the night', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
       '1 settleThePlay', '1 noteTonight', '1 payTheBin', '2 farmhandsWork', '2 theFarmEats', '2 settleTheAccounts', '2 growCrops', '3 tendAnimals', '3 ranchNightChores', '4 finishTheLoads', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
       '6 tickRanks', '6 tickBonds', '6 payLine', '6 shareTheHouses', '6 levelAtNight', '6 countWellFed', '7 witherCrops', '7 turnCalendar',
-      '8 raiseBuildings', '8 settleDorm', '8 checkGoals', '8 unlockTownNotes', '8 openRingBench', '8 householdMilestones',
+      '8 raiseBuildings', '8 checkGoals', '8 unlockTownNotes', '8 openRingBench', '8 householdMilestones',
       '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 noteTheFed', '9 buildSummary',
     ])
   })
@@ -113,8 +113,9 @@ describe('the morning summary', () => {
   it('lists the loads and the field\'s growth, the news and the tiles to water, in section order, hiding empty sections', () => {
     const morning = night(worked(farm(12)))
     expect(morning.summary).toEqual({
-      // Three Umas home and the Mill: 45g of upkeep a night, after the bin; four mouths and nothing cooked: 120g of takeout.
-      day: 13, bin: [], money: [{ kind: 'takeout', meals: 8, paid: 120, due: 120 }, { kind: 'upkeep', paid: 45, due: 45 }], ranks: [], hearts: [],
+      // The Mill: 15g of upkeep a night, after the bin (the three Umas live in town); the farmer alone eats, nothing cooked:
+      // 30g of takeout.
+      day: 13, bin: [], money: [{ kind: 'takeout', meals: 2, paid: 30, due: 30 }, { kind: 'upkeep', paid: 15, due: 15 }], ranks: [], hearts: [],
       // Spring's last night: the watered Carrot grows a stage, then withers out of season.
       work: [{ kind: 'load', station: 'mill', item: 'wheat-flour@1', count: 5 }, { kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'withered', crop: 'carrot', tiles: 1 }],
       news: [{ kind: 'season', season: 'summer' }],
@@ -150,8 +151,8 @@ describe('the bin pays at night (step 1)', () => {
       { kind: 'sold', id: 'salmon', stars: 2, count: 1, gold: 165, demand: true },
     ])
     expect(summarySections(morning.summary!)[0]).toBe('bin')
-    // The bin's 295g, less the night's takeout (four mouths, 120g) and upkeep (three Umas home and the Mill).
-    expect(morning.gold).toBe(shipped.gold + 295 - 120 - 45)
+    // The bin's 295g, less the night's takeout (the farmer's, 30g) and upkeep (the Mill's 15g).
+    expect(morning.gold).toBe(shipped.gold + 295 - 30 - 15)
     expect(morning.farm.income).toEqual([295])
     expect(morning.farm.counts[GOLD_SHIPPED]).toBe(295)
     expect(morning.diary.shipped).toEqual({ salmon: 2 })
@@ -170,7 +171,7 @@ describe('the bin pays at night (step 1)', () => {
   it('pays once: the next night\'s bin is empty and its summary has no bin', () => {
     const morning = night(ship(stocked(15), 'carrot', 1, 1))
     const next = night(morning)
-    expect(next.gold).toBe(morning.gold - 120 - 45)
+    expect(next.gold).toBe(morning.gold - 30 - 15)
     expect(next.summary!.bin).toEqual([])
     expect(next.farm.income).toEqual([60, 0])
   })

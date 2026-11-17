@@ -4,7 +4,7 @@
 // End the day's fade to the morning. The invented stand-in pack (9000001–9000003) and invented outfits; master data and
 // the server are stubs.
 import 'fake-indexeddb/auto'
-import { inviteToFarm, meet, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -37,7 +37,7 @@ const { setAskBeforeEnd } = await import('./ask')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
@@ -49,6 +49,9 @@ function farm(loves: Record<string, Partial<Love>> = {}, day = 3): SaveV4 {
   const love = Object.fromEntries(Object.entries(joined.love).map(([id, l]) => [id, { ...l, ...loves[id] }]))
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love }
 }
+/** The day each is out in town on the default schedule (9000001 on Spring 1, 4, 7 and 10, 9000002 on 2, 5, 8 and 11):
+ * gone into town, she's in front of you there. */
+const inTown = (s: SaveV4): SaveV4 => ({ ...s, today: { ...s.today, town: true } })
 
 let host: HTMLDivElement
 let root: Root
@@ -133,7 +136,8 @@ afterEach(async () => {
 
 describe('an evening from her profile', () => {
   it('shows her kinds with her numbers, plays a Walk at its evening length, and pays it on the card once', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 3 } }) })
+    // Spring 5: she's out in town, and you've gone in.
+    useGame.setState({ uid: 'u1', status: 'ready', save: inTown(farm({ [TWO]: { level: 3 } }, 5)) })
     const before = save().account.updatedAt
     await render(<HeartsPage />, `/hearts?uma=${TWO}`)
     expect($('[data-evening-marks]')?.dataset.eveningMarks).toBe('○')
@@ -174,7 +178,7 @@ describe('an evening from her profile', () => {
     expect($('[data-card-invite]')).toBeNull()
     expect($('[data-card-total]')?.textContent).toBe('= +225 toward Friendship 4')
     expect($('[data-card-bar]')?.dataset.cardBar).toBe('225/320')
-    expect(save().love[TWO]).toMatchObject({ points: 225, evening: 3 })
+    expect(save().love[TWO]).toMatchObject({ points: 225, evening: 5 })
     expect(save().today.evenings).toEqual([{ with: TWO, kind: 'walk' }])
     expect(save().account.updatedAt).not.toBe(before)
     await click($('[data-action="evening-done"]'))
@@ -185,7 +189,9 @@ describe('an evening from her profile', () => {
   })
 
   it('says why not on her profile: below Friendship 3, and once the evening is spent with someone else', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm({ [TWO]: { level: 3 } }), today: { ...farm().today, evenings: [{ with: TWO, kind: 'walk' }] } } })
+    // Spring 4: 9000001 is out in town, and you've gone in.
+    const fourth = inTown(farm({ [TWO]: { level: 3 } }, 4))
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...fourth, today: { ...fourth.today, evenings: [{ with: TWO, kind: 'walk' }] } } })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     expect((await find('[data-profile-actions] [data-action="evening"]')).textContent).toBe('Evening · F3')
     useGame.setState({ save: { ...save(), love: { ...save().love, [ONE]: { ...save().love[ONE]!, level: 3 } } } })
@@ -198,7 +204,8 @@ describe('the morning\'s invitation', () => {
   it('words her line, and Yes makes her Tonight\'s evening with +20; the row\'s ✉ stands until it\'s spent', async () => {
     expect(heartsLines([{ kind: 'invite', id: TWO, evening: 'walk' }, { kind: 'birthday', id: ONE, when: 'today' }], [], (id) => (id === TWO ? 'Stand-in 2' : 'Stand-in 1'))
       .map((l) => [l.text, l.invite ?? null])).toEqual([['✉ Stand-in 2: “Walk at dusk tonight?”', TWO], ['★ Stand-in 1’s birthday today', null]])
-    const morning = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } })
+    // Spring 5, in town: she's in front of you there for her evening.
+    const morning = inTown(farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } }, 5))
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...morning, today: { ...morning.today, invites: [{ id: TWO, kind: 'walk', answer: null }] } } })
     await render(<><InviteAnswer id={TWO} /><HeartsPage /></>, '/hearts')
     expect($(`[data-heart-row="${TWO}"] [data-invite-chip]`)).not.toBeNull()
@@ -251,9 +258,10 @@ describe('Tonight', () => {
   })
 
   it('opens with a free slot: Pick someone › to her evening, then back on Tonight with "with … ✓"; End the day fades to the morning', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 3 } }) })
+    // Spring 5: she's out in town, and you've gone in.
+    useGame.setState({ uid: 'u1', status: 'ready', save: inTown(farm({ [TWO]: { level: 3 } }, 5)) })
     await render(<p />, '/?sheet=end')
-    await find('[data-tonight="3"]')
+    await find('[data-tonight="5"]')
     expect($('[data-end-line]')?.textContent).toBe('10 actions left')
     const free = $('[data-evening-row="evening"]')!
     expect(free.dataset.state).toBe('free')
@@ -275,14 +283,14 @@ describe('Tonight', () => {
     const spent = await find('[data-evening-row="evening"][data-state="spent"]')
     expect(spent.textContent).toContain('with Stand-in 2 · Picnic ✓')
     expect($('[data-end-line]')?.textContent).toBe('8 actions left')
-    expect(save().calendar.day).toBe(3)
+    expect(save().calendar.day).toBe(5)
     // End the day: the dusk comes down, the night runs under it, the morning comes up.
     await click($('[data-action="end-day"]'))
     await until(() => $('[data-night-fade]') !== null)
-    await until(() => save().calendar.day === 4, 300)
+    await until(() => save().calendar.day === 6, 300)
     await until(() => $('[data-night-fade]') === null, 300)
     expect(path).toBe('/')
-    expect(save().summary?.day).toBe(4)
+    expect(save().summary?.day).toBe(6)
     expect(save().today.evenings).toEqual([])
   }, 20_000)
 
@@ -295,7 +303,9 @@ describe('Tonight', () => {
   })
 
   it('on a festival day, shows festival night beside a spent evening, and the header\'s marks', async () => {
-    const day = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } }, 10)
+    // Spring 10 is 9000003's farm day: a farmhand, she's on the farm, in front of you for festival night.
+    const tenth = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } }, 10)
+    const day: SaveV4 = { ...tenth, roster: { ...tenth.roster, [THREE]: { ...tenth.roster[THREE]!, farmhand: 1 } } }
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...day, today: { ...day.today, evenings: [{ with: TWO, kind: 'walk' }] } } })
     await render(<p />, '/?sheet=end')
     await find('[data-tonight="10"]')

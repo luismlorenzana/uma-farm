@@ -128,7 +128,7 @@ export interface WeddingCard {
   days: number
   /** Who attended (every spouse, her two closest friends). */
   guests: string[]
-  /** Her room: the house she took at once, or null with no room free (she keeps her Dorm bed). */
+  /** Her room: the house she took at once, or null with no room free (she lives in town until one frees). */
   house: number | null
 }
 
@@ -282,7 +282,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   }
   // Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
   const dish = rung === 'f4' ? giveSignatureDish(played, pack, id) : null
-  // The wedding gives her a room at once (her default), or she keeps her Dorm bed with none free.
+  // The wedding gives her a room at once (her default), or with none free she lives in town until one frees.
   const roomed = wedding ? takeRoom(dish?.save ?? played, pack, id) : null
   if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
   const next = spendForEvent(roomed?.save ?? dish?.save ?? played, actionCost('event'), days)

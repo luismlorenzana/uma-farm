@@ -30,19 +30,20 @@ import { actionCost, actionsLeft, spend, spendForEvent, type SpecialDays } from 
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { aptitudeOf, aptitudeYield, handDay } from '../farm/farmhands'
-import { addMeals, BATCH_MEALS, batchBlock, batchStars, foodHeld, handsWithTasks, mouthsTonight, plainBatch, type FoodHeld } from '../farm/food'
+import { addMeals, BATCH_MEALS, batchBlock, batchStars, foodHeld, handsAtTable, mouthsTonight, plainBatch, type FoodHeld } from '../farm/food'
 import { placeBuilt } from '../farm/places'
 import { countChallenge, rankBenefits, type PlayGrade } from '../farm/rank-rules'
 import { talentsD, type TalentOf } from '../farm/talents'
 import { itemNameOf } from '../items/lines'
 import { levelLockWords, type LevelLock } from '../gathering/stations'
-import { atHerLine, choresOf, hasPerk, homeOrHoused, LINE_BONUS, type PerkPack } from '../romance/perk-terms'
+import { atHerLine, choresOf, hasPerk, LINE_BONUS, onFarmForPerks, type PerkPack } from '../romance/perk-terms'
 import { perkLineOf } from '../romance/perks'
 import { receptionDays } from '../romance/wedding'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { isDishId, MENU_RECIPES, type FarmSave, type MenuLine, type PlayInProgress, type StaffMeal, type StovePlay } from '../save/v4'
 import { addGoods, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
+import { worksOn, type SchedulePack } from '../town/town'
 import { CONTEST_ACTIONS, contestBlock, judgeContest, type ContestBoard, type ContestEntry } from './contest'
 import { dishStars, isMainOf, isSideOf, kitchenBuilt, knownRecipes, knowsRecipe, MAINS_A_DISH, recipeOf, SIDES_A_DISH } from './recipes'
 import { KITCHEN_LEVELS, KITCHEN_MAX_LEVEL, type KitchenLevel } from './levels'
@@ -245,18 +246,21 @@ export function assistantTerm(save: FarmSave, id: string, talentOf: TalentOf = t
   const level = aptitudeOf(uma, 'cook', (a) => talentOf(id, a)).level
   return round6(aptitudeYield(level) * rankBenefits(uma.ranks.cooking.rank).workshopYield * (1 + kitchenPerk(save, pack, id)))
 }
-/** Why she can't assist today's play, or null: a farmhand with an action tonight. */
-export function assistantLock(save: FarmSave, id: string): string | null {
+/** Why she can't assist today's play, or null: a farmhand on the farm today (her farm day: `pack` reads her schedule) with
+ * an action tonight. */
+export function assistantLock(save: FarmSave, id: string, pack: SchedulePack | null = null): string | null {
   const day = handDay(save, id)
   if (!day) return 'Only a farmhand assists.'
+  if (!worksOn(save, pack, id)) return 'She’s in town today.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
 }
 
-/** A cook's night chores on the Kitchen's play: each cook on the farm (her line cooking, home or in her house) adds a dish
+/** A cook's night chores on the Kitchen's play: each cook on the farm today (her line cooking; a spouse in her room, or a
+ * farmhand on her farm day) adds a dish
  * for each of her chores (1 from F6, 2 from R7, 3 from S4), once the Kitchen stands. They don't bank. */
 export function cooksDishes(save: FarmSave, pack: PerkPack | null): number {
   if (!pack || !kitchenBuilt(save)) return 0
-  return Object.keys(save.roster).filter((id) => perkLineOf(pack, id) === 'cooking' && homeOrHoused(save, id)).reduce((n, id) => n + choresOf(save.love[id]), 0)
+  return Object.keys(save.roster).filter((id) => perkLineOf(pack, id) === 'cooking' && onFarmForPerks(save, pack, id)).reduce((n, id) => n + choresOf(save.love[id]), 0)
 }
 
 // --- The Kitchen's play -----------------------------------------------------------------------------------------------
@@ -420,16 +424,16 @@ export function dishesHeld(save: Pick<FarmSave, 'items'>): DishHeld[] {
     .sort((a, b) => b.stars - a.stars || b.count - a.count || a.id.localeCompare(b.id))
 }
 
-/** Tonight's table as the board stands: its mouths (the farmer and every Uma who eats tonight) and the dishes a staff
- * meal takes for them. */
-export function staffTable(save: Pick<FarmSave, 'dorm' | 'love' | 'roster'>): { mouths: number; dishes: number } {
-  const mouths = mouthsTonight(save, handsWithTasks(save))
+/** Tonight's table: its mouths (the farmer, the spouses in their rooms and the farmhands on their farm day: `pack` reads
+ * their schedules, and with none every farmhand counts) and the dishes a staff meal takes for them. */
+export function staffTable(save: Pick<FarmSave, 'love' | 'roster' | 'calendar'>, pack: SchedulePack | null = null): { mouths: number; dishes: number } {
+  const mouths = mouthsTonight(save, handsAtTable(save, pack))
   return { mouths, dishes: Math.ceil(mouths / MOUTHS_A_DISH) }
 }
 /** The staff meal's dishes by the plain rule: the most stars first, then the most held; null when the Warehouse holds too
  * few. */
-export function staffPicks(save: Pick<FarmSave, 'items' | 'dorm' | 'love' | 'roster'>): string[] | null {
-  const { dishes } = staffTable(save)
+export function staffPicks(save: Pick<FarmSave, 'items' | 'love' | 'roster' | 'calendar'>, pack: SchedulePack | null = null): string[] | null {
+  const { dishes } = staffTable(save, pack)
   const units = dishesHeld(save).flatMap((r) => Array.from({ length: Math.min(r.count, dishes) }, () => r.key))
   return units.length >= dishes ? units.slice(0, dishes) : null
 }
@@ -437,11 +441,11 @@ export function staffPicks(save: Pick<FarmSave, 'items' | 'dorm' | 'love' | 'ros
 export const staffDays = (keys: readonly string[]): number => receptionDays(Math.min(...keys.map((k) => parseStockKey(k)?.stars ?? 1)))
 
 /** Why the staff meal can't be served now, or null: the Kitchen built, once a day, dishes enough (the picks, held). */
-export function staffBlock(save: FarmSave, picks: readonly string[] | null = null): string | null {
+export function staffBlock(save: FarmSave, picks: readonly string[] | null = null, pack: SchedulePack | null = null): string | null {
   if (!kitchenBuilt(save)) return 'Build the Kitchen first.'
   if (save.today.staff) return 'Served today.'
-  const { dishes } = staffTable(save)
-  const keys = picks ?? staffPicks(save)
+  const { dishes } = staffTable(save, pack)
+  const keys = picks ?? staffPicks(save, pack)
   if (!keys) {
     const held = dishesHeld(save).reduce((n, r) => n + r.count, 0)
     return `Short ${dishes - held} dish${dishes - held === 1 ? '' : 'es'}.`
@@ -459,16 +463,16 @@ export function staffBlock(save: FarmSave, picks: readonly string[] | null = nul
  * when none are chosen) out of the Warehouse, and `today.staff` holds its mouths and well-fed days; `farm.counts.meals`
  * one more. Tonight those mouths eat it in place of their two meals (`eatTonight`). Refused with its block's words: not
  * built (`locked`), served today (`busy`), dishes short (`no-items`), the wrong count (`bad-count`). Never stamps. */
-export function serveStaffMeal<S extends FarmSave>(save: S, picks: readonly string[] | null = null): S {
-  const block = staffBlock(save, picks)
+export function serveStaffMeal<S extends FarmSave>(save: S, picks: readonly string[] | null = null, pack: SchedulePack | null = null): S {
+  const block = staffBlock(save, picks, pack)
   if (block) throw new SaveRuleError(block.startsWith('Build') ? 'locked' : block === 'Served today.' ? 'busy' : block.startsWith('The table') ? 'bad-count' : 'no-items', block)
-  const keys = picks ?? staffPicks(save)!
+  const keys = picks ?? staffPicks(save, pack)!
   let items = save.items
   for (const key of keys) {
     const at = parseStockKey(key)!
     items = takeGoods(items, at.id, at.stars, 1)
   }
-  const staff: StaffMeal = { mouths: staffTable(save).mouths, days: staffDays(keys) }
+  const staff: StaffMeal = { mouths: staffTable(save, pack).mouths, days: staffDays(keys) }
   const counts = { ...save.farm.counts, [STAFF_MEALS]: (save.farm.counts[STAFF_MEALS] ?? 0) + 1 }
   return { ...save, items, today: { ...save.today, staff }, farm: { ...save.farm, counts } }
 }

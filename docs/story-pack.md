@@ -371,7 +371,7 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Retired** (no welcome week): you meet her by introducing yourself in town ([meeting her](game-mechanics.md#meeting-her)). A `meet` is still read (an error in it is still an error) and noted once, as retired; it acts on nothing | — |
 | `chapters` | **Her chapters,** below: they frame her route on her profile, the People page and the morning ([her chapters](game-mechanics.md#her-chapters)) | The four default chapters |
-| `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm's levels bring beds only | — |
+| `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm is retired | — |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
 
 ### Sisters
@@ -527,7 +527,7 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | `petName` | What she calls you from Romance 1, on her profile. No placeholder | Your name |
 | `wedding.places` | Where your wedding may be held, any number, the first first: the game's places | Her wedding beat's place and the farm's: the chapel bell, the Fields, the overlook |
 | `wishes` | `own-house` (she's happiest alone in her house) and `birthday-alone` (her birthday morning is hers) | Neither |
-| `greetings` | Her greeting, opening a chat and a talk in town. On her birthday, one of her `birthday` lines alone. Otherwise one drawn from every set that applies now, their lines together: `places.<id>` (where you're talking: her location in town, else `places.town`; on the farm her work's place or the Dorm), `seasons.<season>`, and `times.morning`, `times.evening` (after an evening with her) or `times.night` (after a night in with her, or as tonight's companion), so every set plays over time. Each a list of lines; one drawn a day. `weather.rain` and `weather.snow` are read and kept: they play once the game has weather ([talk that knows the day](game-mechanics.md#talk-that-knows-the-day)) | None: the talk opens on her line |
+| `greetings` | Her greeting, opening a chat and a talk in town. On her birthday, one of her `birthday` lines alone. Otherwise one drawn from every set that applies now, their lines together: `places.<id>` (where you're talking: her location in town, else `places.town`; on the farm her work's place), `seasons.<season>`, and `times.morning`, `times.evening` (after an evening with her) or `times.night` (after a night in with her, or as tonight's companion), so every set plays over time. Each a list of lines; one drawn a day. `weather.rain` and `weather.snow` are read and kept: they play once the game has weather ([talk that knows the day](game-mechanics.md#talk-that-knows-the-day)) | None: the talk opens on her line |
 | `smallTalk` | Short exchanges a chat may play instead of her line: a list of `{ "lines": [["<her id>", "…"], ["you", "…"], ["<her id>", "…"]], "at", "season", "stage" }`. A chat draws from her stage's lines and the small talks that fit together; one fits when every tag it carries matches: `at` the place (a farm place, a town spot or location, or `town` anywhere in town), `season`, `stage` her chat set (`friend`, `partner`, `spouse`). It plays on the dialogue engine, `you` under your name | Her line alone |
 | `giftLines` | Her line at a gift: `loved`, `liked`, `neutral`, `disliked` by its taste, and `birthday` first on her birthday, each a list of lines | The default story's reactions for the taste |
 | `voice` | The story's own notes on how she talks: never shown | Nothing |
@@ -869,9 +869,10 @@ Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a seaso
 ### The places
 
 `places` is an object by place id: `fields`, `mill`, `coop`, `forest`, `sawmill`, `barn`, `fishery`, `smokehouse`,
-`kitchen`, `mine`, `smelter`, `restaurant`, `quarry`, `cutter`, `forge`, `bin`, `warehouse`, `dorm`, `board`, `gate`,
+`kitchen`, `mine`, `smelter`, `restaurant`, `quarry`, `cutter`, `forge`, `bin`, `warehouse`, `board`, `gate`,
 `dock`, `shop`, `festival`, `expeditions`, `town` and `boat`. Each holds an optional `name` and an optional `line`; one
-it leaves out keeps the game's own. The Town's name falls back on `names.town`, then "Town".
+it leaves out keeps the game's own. `dorm`, the retired Dorm's, is read and not shown (a note, not an error); a scene
+may still name `dorm` as its backdrop. The Town's name falls back on `names.town`, then "Town".
 
 ### Town notes
 

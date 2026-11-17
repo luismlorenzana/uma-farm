@@ -12,7 +12,7 @@
 // (`fields/plots.ts`). A save from before plots holds one field's tiles (`fields.tiles`) and reads as plot 1, exactly as
 // it was (`parseFields`), so nothing moves and `updatedAt` stays where it was.
 //
-// The roster, the Dorm, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
+// The roster, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -40,7 +40,7 @@ export interface RankState {
   challenge: number
 }
 
-/** A swap at the Dorm, arriving the next morning. */
+/** A swap at the retired Dorm: the save keeps its shape, and loading clears every one (`dorm.swaps`). */
 export interface DormSwap {
   out: OutfitId
   in: OutfitId
@@ -177,7 +177,8 @@ export const DIGS = ['mine', 'quarry'] as const
 export type DigId = typeof DIGS[number]
 
 /** The buildings with levels: absent or 0 is not built (the Forge's 0 is its ring bench, its fire not lit), 1 or more
- * is built. Every place you build is one (`farm/builds.ts`); the Dorm's is the level bought. */
+ * is built. Every place you build is one (`farm/builds.ts`); `dorm` is the retired Dorm's level bought, kept and never
+ * read. */
 export const BUILDING_IDS = [
   'dorm', 'coop', 'barn', 'kitchen', 'restaurant', 'forge', 'mill', 'sawmill', 'smokehouse', 'smelter', 'cutter', 'boat', 'mine', 'quarry', 'dock', 'expeditions',
 ] as const
@@ -275,20 +276,17 @@ export interface FestivalResult {
   place: 1 | 2 | 3
 }
 
-/** She leaves the farm tomorrow: a swap at the Dorm takes her out. */
-export const leaving = (save: { dorm: { swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
-/** A spouse in her house: on the farm with no Dorm bed. */
+/** A spouse in her room (`love.house`, the homestead's house of that number). */
 export const housed = (save: Pick<SaveV4, 'love'>, id: CharacterId): boolean => save.love[id]?.house !== undefined
-type HomeOf = { dorm: { home: readonly CharacterId[]; swaps: readonly DormSwap[] }; love: SaveV4['love'] }
-/** She's home and staying: who may take a job or tend a block. An Uma leaving tomorrow may do neither. A spouse in her
- * house is on the farm too. */
-export const onFarm = (save: HomeOf, id: CharacterId): boolean => (save.dorm.home.includes(id) && !leaving(save, id)) || housed(save, id)
-/** Who's on the farm: the Dorm's home in its order, then the spouses in their houses by id. */
-export function farmHome(save: Pick<SaveV4, 'dorm' | 'love'>): CharacterId[] {
-  return [...save.dorm.home, ...Object.keys(save.love).filter((id) => housed(save, id) && !save.dorm.home.includes(id)).sort((a, b) => Number(a) - Number(b))]
+/** She lives on the farm: a spouse in her room, and nobody else. A farmhand comes on her farm days and goes home to town
+ * at night (`town/town.ts`'s `onFarmToday`); a spouse waiting for a room lives in town. */
+export const onFarm = (save: Pick<SaveV4, 'love'>, id: CharacterId): boolean => housed(save, id)
+/** Who lives on the farm: the spouses in their rooms, by id. */
+export function farmHome(save: Pick<SaveV4, 'love'>): CharacterId[] {
+  return Object.keys(save.love).filter((id) => housed(save, id)).sort((a, b) => Number(a) - Number(b))
 }
-/** Whether she's on the farm today: home in the Dorm (leaving tomorrow or not), or in her house. */
-export const atHome = (save: Pick<SaveV4, 'dorm' | 'love'>, id: CharacterId): boolean => save.dorm.home.includes(id) || housed(save, id)
+/** Whether she's home on the farm: a spouse in her room. */
+export const atHome = (save: Pick<SaveV4, 'love'>, id: CharacterId): boolean => housed(save, id)
 
 /** A bond's key: the two ids in numeric order, joined by a colon. A sister's id (`s<outfitId>`) sorts by its number, and
  * after a plain id of the same number. */
@@ -492,7 +490,7 @@ export interface House {
   extended: boolean
 }
 /** The homestead. **Who lives where is one source, `love.house`**: a spouse's
- * room is in the house of that number, and she has no Dorm bed. */
+ * room is in the house of that number, and she lives on the farm. Nobody else does. */
 export interface Homestead {
   houses: House[]
   /** Tonight's house (Sleep at), or null before a pick: the night takes the default then. */
@@ -554,7 +552,8 @@ export const TOWN_ID = /^s?[1-9]\d{0,11}$/
 /** A loan from the mayor's office, toward one build: what it paid for, the day it was taken, the gold lent and its fee,
  * what's still owed, and the most one night's income repays. It goes once nothing is owed. */
 export interface Loan {
-  /** A place you build (its id), a Dorm level (`dorm:<level>`, 2–8), or a house on the homestead (`house:<n>`, 1–6). */
+  /** A place you build (its id), a house on the homestead (`house:<n>`, 1–6), or a level of the retired Dorm
+   * (`dorm:<level>`, 2–8), which a save may still owe on. */
   for: string
   day: number
   lent: number
@@ -580,7 +579,8 @@ export interface PantryLot {
   stars: number
   meals: number
 }
-/** A loan's project as the save names it, besides a place's id: a house, `house:<n>`, or a Dorm level, `dorm:<level>`. */
+/** A loan's project as the save names it, besides a place's id: a house, `house:<n>`, or a level of the retired Dorm,
+ * `dorm:<level>`, which the office no longer offers and a save may still owe on. */
 export const HOUSE_LOAN = /^house:([1-6])$/
 export const DORM_LOAN = /^dorm:([2-8])$/
 
@@ -597,7 +597,8 @@ export interface SaveV5 {
   roster: Record<CharacterId, RosterUma>
   /** One per roster Uma, from the day she joins. */
   love: Record<CharacterId, Love>
-  /** Levels 1–8: the level in effect, who's on the farm (≤ its beds) and swaps arriving tomorrow. */
+  /** The retired Dorm, kept in its shape: its level (1–8, read by nothing), and `home` and `swaps`, which loading always
+   * clears (everyone who lived there lives in town). */
   dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }
   items: Warehouse
   bin: Warehouse
@@ -665,7 +666,7 @@ export function newRosterUma(day: number): RosterUma {
 /** The Farmhouse: house 0, there from day 1 (its rule amended). */
 export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
-/** Day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for a cleared patch of nine, a day of actions, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines; everyone is in town, to meet by introducing yourself. */
+/** Day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for a cleared patch of nine, a day of actions, the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines; everyone is in town, to meet by introducing yourself. The retired Dorm keeps its shape: level 1, nobody in it. */
 export function newSave(uid: string, now: string): SaveV5 {
   return {
     version: 5,

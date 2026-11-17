@@ -13,6 +13,7 @@ import { MENU_RECIPES, type FarmSave, type MenuLine } from '../save/v4'
 import { parseStockKey } from '../save/warehouse'
 import { canMake, finishPlay, kitchenBase, kitchenPlayedToday, menuBlock, menuLine, serveStaffMeal, staffBlock, startKitchenPlay } from './kitchen'
 import { kitchenBuilt, knownRecipes, MAINS_A_DISH, recipeOf, recipeShelf, SIDES_A_DISH } from './recipes'
+import type { SchedulePack } from '../town/town'
 import { BURNERS, burnerView, focusTicket, GREEN_MS, newStove, stoveAt, stoveTap, type StoveTap } from './stove'
 
 export type StoveBot = 'careful' | 'casual'
@@ -76,8 +77,9 @@ export function botMenu(save: FarmSave): MenuLine[] | null {
 }
 
 /** A bot's day at the Kitchen, once it stands: the play (its menu, an action, the bot's taps), then the staff meal when
- * the dishes are there. What it made, its score, and whether it served. */
-export function botKitchen(save: FarmSave, bot: StoveBot = 'casual'): { save: FarmSave; dishes: number; score: number | null; served: boolean } {
+ * the dishes are there (its mouths tonight's: `pack` reads the farmhands' farm days). What it made, its score, and whether
+ * it served. */
+export function botKitchen(save: FarmSave, bot: StoveBot = 'casual', pack: SchedulePack | null = null): { save: FarmSave; dishes: number; score: number | null; served: boolean } {
   let next = save
   let dishes = 0
   let score: number | null = null
@@ -90,8 +92,8 @@ export function botKitchen(save: FarmSave, bot: StoveBot = 'casual'): { save: Fa
     dishes = done.result.dishes.reduce((n, d) => n + d.count, 0)
     score = done.result.score
   }
-  const served = kitchenBuilt(next) && staffBlock(next) === null
-  if (served) next = serveStaffMeal(next)
+  const served = kitchenBuilt(next) && staffBlock(next, null, pack) === null
+  if (served) next = serveStaffMeal(next, null, pack)
   return { save: next, dishes, score, served }
 }
 

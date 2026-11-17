@@ -218,7 +218,7 @@ test('releases the world: world.json as the game reads it, a broken part skipped
   const { index, errors, summary } = await buildRelease({ from, out, builtAt: BUILT_AT })
   assert.deepEqual(errors, [
     'world.json: Festival harvest-cup: Winter 10 holds another festival; its move is skipped, so it keeps the game’s day, Winter 12',
-    'world.json: Place orchard: not one of the farm’s places (fields, mill, coop, forest, sawmill, barn, fishery, smokehouse, kitchen, mine, smelter, restaurant, quarry, cutter, forge, bin, warehouse, dorm, board, gate, dock, shop, festival, expeditions, town, boat); skipped',
+    'world.json: Place orchard: not one of the farm’s places (fields, mill, coop, forest, sawmill, barn, fishery, smokehouse, kitchen, mine, smelter, restaurant, quarry, cutter, forge, bin, warehouse, board, gate, dock, shop, festival, expeditions, town, boat); skipped',
   ])
   assert.ok(index.files.world, 'world.json is in the release')
   const released = JSON.parse(await readFile(join(out, index.files.world.path), 'utf8'))

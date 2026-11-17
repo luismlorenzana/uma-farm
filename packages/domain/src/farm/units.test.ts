@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { dateOf, DAY_MS, workNow } from './calendar'
 import { draw, fnv1a, mulberry32 } from './draw'
-import { BEDS, bedsAt, DORM_MAX_LEVEL, farmRankOf, FARM_RANK_POINTS } from './farm'
+import { DORM_MAX_LEVEL, farmRankOf, FARM_RANK_POINTS } from './farm'
 import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, RANKS } from './ranks'
 import { countRound, round10, round5 } from './round'
 
@@ -84,12 +84,8 @@ describe('ranks', () => {
 })
 
 describe('the farm', () => {
-  it("gives the Dorm for 20's beds by level, held to its eight levels", () => {
-    expect(BEDS).toEqual([3, 5, 7, 9, 11, 14, 17, 20])
+  it("keeps the retired Dorm's eight levels for the save to read", () => {
     expect(DORM_MAX_LEVEL).toBe(8)
-    expect(bedsAt(1)).toBe(3)
-    expect(bedsAt(8)).toBe(20)
-    expect([0, 9].map(bedsAt)).toEqual([3, 20])
   })
 
   it("reads the Farm Rank from its points", () => {

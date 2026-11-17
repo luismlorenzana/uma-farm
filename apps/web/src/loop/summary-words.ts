@@ -7,7 +7,7 @@
 // ‹name› · Together", its title the pack's, read live); side by side's extras and bond hearts with
 // Read. A Ready line plays her event over the morning (`?event=`); the rest open her profile on the
 // Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
-// by side the Warehouse; the Dorm's beds are the Dorm for 20's. It also has the house's morning (with its house line,
+// by side the Warehouse. It also has the house's morning (with its house line,
 // read live), a move-in, a house that misses you (Tonight › and Another night under it), a night level (her level-up
 // card at `?level=`), the Festival of Vows, the household's Ready offers (live, after the Ready lines) and §5's
 // household milestones. §5 opens with "New story arrived" once a release, its note the release's (read live by its
@@ -15,7 +15,7 @@
 // season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
 // name where she's met in town.
 import {
-  ACTIVITY_NAMES, bedsAt, CONTEST_ID, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
+  ACTIVITY_NAMES, CONTEST_ID, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
   SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
   type SummarySection,
 } from '@farm/domain'
@@ -96,8 +96,6 @@ const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The field: the farm map, where its tiles are. */
 export const FIELDS = '/field'
 
-/** The Dorm's page. */
-export const DORM = '/dorm'
 /** The work board, in the Book. */
 export const BOARD = '/book'
 /** The farm's book: its money. */
@@ -299,7 +297,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
     case 'news':
       // A story release new to the device, with its note; the season (its line under it) and festivals; the Town notes
       // the night unlocked; a place built overnight, a Farm Rank and what it opens, the Diary's milestones; the
-      // household's milestones; the Dorm's beds and swaps home.
+      // household's milestones.
       return summary.news.map((line): SummaryLine => {
         switch (line.kind) {
           case 'story': return { key: 'story', text: storyNewsWords(noteOf(line.number)), to: '/hearts', tag: 'New' }
@@ -319,10 +317,6 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           case 'built': return { key: `built:${line.place}`, text: builtWords(line.place, line.level), to: peek(farmPlace(line.place)?.on ?? line.place), tag: line.level ? 'Level' : 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
-          case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsAt(line.level)} beds`, to: DORM }
-          case 'home': return {
-            key: 'home', to: DORM, text: line.umas.length === 1 ? `${nameOf(line.umas[0]!)} is home` : `${line.umas.length} Umas are home`,
-          }
           case 'household': return { key: `household:${line.married}`, ...householdNews(line.married), tag: 'Household' }
         }
       })

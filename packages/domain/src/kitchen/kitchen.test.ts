@@ -45,11 +45,16 @@ function farm(gold = 500, items: SaveV4['items'] = {}, day = 20): SaveV4 {
 }
 /** A farm whose Kitchen stands, at `level`, at Farm Rank 3 (250 points) unless `points` say otherwise. */
 const withKitchen = (save: SaveV4, level = 1, points = 300): SaveV4 => ({ ...save, buildings: { ...save.buildings, kitchen: level }, farm: { ...save.farm, points } })
-/** Umas home in the Dorm. */
-const home = (save: SaveV4, ids: string[]): SaveV4 => ({
-  ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) }, love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, newLove()])) },
-  dorm: { ...save.dorm, home: [...save.dorm.home, ...ids] },
-})
+/** Spouses home on the farm, each in her room: the Farmhouse's two, then houses of four (extended) as they fill. */
+const home = (save: SaveV4, ids: string[]): SaveV4 => {
+  const houseOf = (i: number) => (i < 2 ? 0 : 1 + Math.floor((i - 2) / 4))
+  const houses = Array.from({ length: houseOf(ids.length - 1) + 1 }, (_, n) => (n === 0 ? save.homestead.houses[0]! : { name: `Invented House ${'ABCDEF'[n - 1]}`, extended: true }))
+  return {
+    ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
+    love: { ...save.love, ...Object.fromEntries(ids.map((id, i) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1, house: houseOf(i) }])) },
+    homestead: { ...save.homestead, houses, slept: houses.map(() => 0) },
+  }
+}
 /** Friends from town invited to work on day 1. */
 const hands = (save: SaveV4, ids: string[]): SaveV4 => ({
   ...save, roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, { ...newRosterUma(1), farmhand: 1 }])) },
@@ -329,18 +334,24 @@ describe('the Kitchen\'s play', () => {
   })
 
   it('adds a cook\'s night chores as dishes, and her line\'s +10% (+20% from R5) as the assistant', () => {
-    // A cook: an invented Uma whose favourite line is cooking, home on the farm.
+    // A cook: an invented Uma whose favourite line is cooking, a spouse home on the farm.
     const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: COOK, outfitId: '900000401', calling: 'farming', paragraph: 'Invented.' }] }
     const pack = storyPackFrom({ ...STAND_IN_FILES, cast, umas: { ...STAND_IN_FILES.umas, [COOK]: { favouriteLine: 'cooking' } } })
-    const at = (stage: 'friendship' | 'romance', level: number) => ({ ...newLove(), stage, level })
+    const at = (stage: 'friendship' | 'romance' | 'spouse', level: number) => ({ ...newLove(), stage, level, ...(stage === 'spouse' ? { wed: 1, house: 0 } : {}) })
     const cook = (love: ReturnType<typeof at>) => ({ ...home(stocked(), [COOK]), love: { [COOK]: love } })
-    expect(cooksDishes(cook(at('friendship', 5)), pack)).toBe(0)
-    expect(cooksDishes(cook(at('friendship', 6)), pack)).toBe(1)
-    expect(cooksDishes(cook(at('romance', 7)), pack)).toBe(2)
-    expect(cooksDishes({ ...cook(at('friendship', 6)), buildings: { dorm: 1 } }, pack)).toBe(0)
-    expect(kitchenMakes(menu, tierByGrade('rough'), 1, cooksDishes(cook(at('friendship', 6)), pack)).reduce((n, d) => n + d.count, 0)).toBe(7)
+    // On the farm is a spouse in her room, or a farmhand on her farm day: a friend or a sweetheart in town does no chores.
+    expect(cooksDishes(cook(at('friendship', 6)), pack)).toBe(0)
+    expect(cooksDishes(cook(at('romance', 7)), pack)).toBe(0)
+    expect(cooksDishes(cook(at('spouse', 0)), pack)).toBe(2)
+    expect(cooksDishes(cook(at('spouse', 4)), pack)).toBe(3)
+    expect(cooksDishes(cook({ ...at('spouse', 0), house: undefined }), pack)).toBe(0)
+    expect(cooksDishes({ ...cook(at('spouse', 0)), buildings: { dorm: 1 } }, pack)).toBe(0)
+    expect(kitchenMakes(menu, tierByGrade('rough'), 1, cooksDishes(cook(at('spouse', 0)), pack)).reduce((n, d) => n + d.count, 0)).toBe(8)
     // As the assistant, her line's bonus at the Kitchen.
     const hand = (love: ReturnType<typeof at>) => ({ ...hands(stocked(), [COOK]), love: { [COOK]: love } })
+    // A farmhand on her farm day (Summer 8: her default days are 1, 4, 7 and 10) cooks; on her town day (Summer 7) she's in town.
+    expect(cooksDishes(hand(at('friendship', 6)), pack)).toBe(1)
+    expect(cooksDishes({ ...hand(at('friendship', 6)), calendar: { day: 19 } }, pack)).toBe(0)
     expect(kitchenPerk(hand(at('friendship', 2)), pack, COOK)).toBeCloseTo(0.1)
     expect(kitchenPerk(hand(at('romance', 5)), pack, COOK)).toBeCloseTo(0.2)
     expect(assistantTerm(hand(at('friendship', 2)), COOK, talentsD, pack)).toBeCloseTo(1.05 * 1.1)
@@ -358,7 +369,7 @@ describe('the Kitchen\'s play', () => {
 
 describe('the staff meal', () => {
   const twelve = (dishes: SaveV4['items']) => {
-    // The farmer, eight Umas home and three farmhands with tasks: 12 mouths.
+    // The farmer, eight spouses home and three farmhands on their farm day: 12 mouths.
     const ids = Array.from({ length: 8 }, (_, i) => String(9001 + i))
     let save = hands(home(withKitchen(farm(5000, dishes)), ids), [A, B, C])
     for (const id of [A, B, C]) save = setTasks(save, id, [{ kind: 'forage', area: 'woods' }])
@@ -374,7 +385,7 @@ describe('the staff meal', () => {
     expect(served.today.staff).toEqual({ mouths: 12, days: 2 })
     expect(served.items['dish-vegetables-1']).toEqual(row(1, 4))
     expect(served.farm.counts.meals).toBe(1)
-    expect(mealsNeeded(served)).toBe(0)
+    expect(mealsNeeded(served, null)).toBe(0)
     expect(staffBlock(served)).toBe('Served today.')
     const morning = runNight(served, {})
     expect(morning.farm.pantry).toEqual([{ day: 20, stars: 2, meals: 10 }])

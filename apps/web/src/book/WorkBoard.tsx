@@ -1,12 +1,14 @@
-// The work board, in the Book: each farmhand's card with her part-time job and her actions today (3, more settled in,
-// married and well fed; half pace when the upkeep's short), what she'll do tonight as the farm stands, and her tasks in
+// The work board, in the Book: each farmhand's card with her part-time job and this season's farm days (the days her
+// life in town leaves free; a spouse in her room, every day), and on a farm day her actions today (3, more settled in,
+// married and well fed; half pace when the upkeep's short) and what she'll do tonight as the farm stands; on a town day
+// "In town today · back Spring 5" (her next farm day), and nothing tonight. Then her tasks in
 // your order, each with her aptitude's level. **Add a task** opens a side panel (`?task=<id>`): what (harvest, water,
 // plant, clear and till over a plot's rows, each plot listed with its rows and a plot not cleared greyed; a station's load; a forest area's forage or chop; a fishing spot's catch;
 // the Coop's or the Barn's animals; a face at the Mine or the Quarry; Cook, in the farmhouse kitchen, with nowhere to
 // choose) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
-  aptitudeOf, APTITUDE_NAMES, CROPS, farmPlace, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
+  aptitudeOf, APTITUDE_NAMES, atHome, CROPS, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
   plotLock, plotLockWords, plotName,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   type CropId, type DigId, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
@@ -20,10 +22,13 @@ import { setHandTasks } from '../loop/actions'
 import { useTalents } from '../loop/talents'
 import { plural, shortDate } from '../loop/words'
 import { useMaster } from '../master/master'
+import { daysWords } from '../loop/schedule-words'
 import { useStory } from '../story/story'
 import { dayChips, jobWords, KITCHEN, nightWords, rowTiles, runsOn, taskWords } from './board-words'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
+/** A season's farm days in words: "2, 3, 5, 6, 8, 9, 11, 12", "1–6, 9", "every day". */
+const daysList = (days: readonly number[]): string => (days.length === 12 ? 'every day' : daysWords(days))
 
 /** The board: a card for each farmhand, in the order they work. */
 export function WorkBoard({ save }: { save: FarmSave }) {
@@ -41,11 +46,12 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-display text-[18px] font-bold text-ink">Work board</h2>
         <HelpButton title="The work board" label="About the work board">
-          <p>A friend you invite to work is a farmhand. After her part-time job in town, she gives the farm 3 actions a day: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
+          <p>A friend you invite to work is a farmhand. She keeps her life in town, and comes to the farm on her farm days, the days it leaves free. There she gives the farm 3 actions: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
           <p>She works your tasks overnight, before the crops grow: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The morning says what she did.</p>
           <p>Every task has an aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
-          <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid. Each farmhand costs 10g a night.</p>
+          <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
+          <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
         </HelpButton>
       </div>
       {hands.length === 0 ? (
@@ -73,8 +79,12 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
   const uma = save.roster[id]!
   const day = handDay(save, id)!
   const tasks = uma.tasks ?? []
-  const tonight = handTonight(save, id, talentOf, pack)
-  const chips = dayChips(day)
+  // On a town day she's in town: she doesn't work tonight, and she's back on her next farm day.
+  const working = worksOn(save, pack, id)
+  const back = !working && pack ? nextFarmDay(pack, id, save.calendar.day) : null
+  const tonight = working ? handTonight(save, id, talentOf, pack) : null
+  const chips = working ? dayChips(day) : []
+  const farmDays = !pack ? null : atHome(save, id) ? 'every day' : daysList(farmDaysIn(pack, id, dateOf(save.calendar.day).season))
   const plots = save.fields.plots.length
   const edit = (next: FarmTask[]) => { setError(null); setHandTasks(id, next).catch((e: unknown) => setError(errorWords(e))) }
   const move = (i: number) => edit(tasks.map((t, k) => (k === i - 1 ? tasks[i]! : k === i ? tasks[i - 1]! : t)))
@@ -84,19 +94,24 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
         <Avatar id={id} size={44} label={name} />
         <span className="min-w-0 flex-1">
           <Link to={`/hearts?view=work&uma=${id}`} state={{ back: true }} className="block truncate text-[15px] font-semibold text-ink">{name}</Link>
-          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{pack ? jobWords(pack, id) : 'A job in town'}, then the farm</span>
+          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{pack ? jobWords(pack, id) : 'A job in town'}</span>
+          {farmDays && <span className="block truncate text-[12px] text-ink-soft" data-farm-days>Farm days · {farmDays}</span>}
         </span>
-        <span className="shrink-0 text-right" data-actions={day.actions}>
-          <span className="font-display block text-[20px] leading-none font-bold tabular-nums">{day.actions}</span>
-          <span className="text-[11px] text-ink-soft">actions</span>
-        </span>
+        {working && (
+          <span className="shrink-0 text-right" data-actions={day.actions}>
+            <span className="font-display block text-[20px] leading-none font-bold tabular-nums">{day.actions}</span>
+            <span className="text-[11px] text-ink-soft">actions</span>
+          </span>
+        )}
       </div>
       {chips.length > 0 && (
         <p className="flex flex-wrap gap-1" data-day-chips>
           {chips.map((c) => <span key={c} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${c === 'half pace' ? 'bg-danger/15 text-danger' : 'bg-success/15 text-success'}`}>{c}</span>)}
         </p>
       )}
-      <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
+      {working
+        ? <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
+        : <p className="text-[13px] font-semibold" data-in-town>In town today{back ? ` · back ${shortDate(back)}` : ''}</p>}
       {tasks.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-no-tasks>No tasks yet: add one, and she starts tonight.</p>
       ) : (

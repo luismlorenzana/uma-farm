@@ -13,10 +13,11 @@
 //
 // A house stands at once and is named there (1–20 characters, the farmer's letters rule); an extension adds two rooms at
 // once. At her wedding a spouse takes a free room (her closest friend's house when it has room, else the first with room,
-// the Farmhouse first; an own-house wisher an empty house first); with none free she keeps her Dorm bed ("Needs a room") and
-// moves in the morning after a house is built. Moves are at once and free: a spouse to a free room, or two spouses
-// swapped. A spouse in her house has no Dorm bed but is on the farm (`onFarm`). Never a gate: a wedding never waits for a
-// room. Pure; never stamps. Loaded with the night and the romance's screens.
+// the Farmhouse first; an own-house wisher an empty house first); with none free she lives in town ("Needs a room"),
+// keeping her town schedule (and her farm days, if she's a farmhand), and moves in the morning after a room frees. Moves
+// are at once and free: a spouse to a free room, or two spouses swapped. Only a spouse in her room lives on the farm
+// (`onFarm`). Never a gate: a wedding never waits for a room. Pure; never stamps. Loaded with the night and the romance's
+// screens.
 import { closestFriend } from '../farm/bonds'
 import { TOWN_FIRST_ROW, type PlaceOpens } from '../farm/places'
 import { spendGold } from '../save/gold'
@@ -163,13 +164,9 @@ export function roomFor(save: Pick<SaveV4, 'homestead' | 'love' | 'bonds'>, pack
   return open[0] ?? free[0]!
 }
 
-/** Why a spouse can't move now, or null: she must be a spouse, and one leaving or arriving tomorrow by a swap
- * waits for the morning. */
+/** Why a spouse can't move now, or null: she must be a spouse. */
 function moveBlock(save: SaveV4, id: string): string | null {
-  if (save.love[id]?.stage !== 'spouse' || !save.roster[id]) return 'Only a spouse has a room.'
-  if (save.dorm.swaps.some((s) => s.out === id)) return 'She leaves tomorrow.'
-  if (save.dorm.swaps.some((s) => s.in === id)) return 'She arrives tomorrow.'
-  return null
+  return save.love[id]?.stage !== 'spouse' || !save.roster[id] ? 'Only a spouse has a room.' : null
 }
 
 /** Her room tonight is hers only while she's in tonight's house, and so is tonight's companion: a move clears either
@@ -182,19 +179,17 @@ function keepAlone(homestead: SaveV4['homestead'], moved: readonly string[]): Sa
   return { ...(companion ? rest : homestead), alone: alone ? null : homestead.alone }
 }
 
-/** Moves a spouse to a free room in another house, at once and free; from her Dorm bed, she leaves the Dorm and
- * frees it. Refused for someone not a spouse, a swap waiting, her own house, a house not built or one with no room free. */
+/** Moves a spouse to a free room in another house, at once and free; one waiting for a room moves in from town.
+ * Refused for someone not a spouse, her own house, a house not built or one with no room free. */
 export function moveSpouse(save: SaveV4, id: string, house: number): SaveV4 {
   const block = moveBlock(save, id)
   if (block) throw new SaveRuleError('locked', block)
   if (!save.homestead.houses[house]) throw new SaveRuleError('bad-job', 'That house isn’t built.')
   if (save.love[id]!.house === house) throw new SaveRuleError('bad-job', 'She lives there already.')
   if (freeRooms(save, house) <= 0) throw new SaveRuleError('busy', 'No room free there.')
-  const home = save.dorm.home.filter((x) => x !== id)
   return {
     ...save,
     love: { ...save.love, [id]: { ...save.love[id]!, house } },
-    dorm: home.length === save.dorm.home.length ? save.dorm : { ...save.dorm, home },
     homestead: keepAlone(save.homestead, [id]),
   }
 }
@@ -215,15 +210,15 @@ export function swapRooms(save: SaveV4, a: string, b: string): SaveV4 {
   }
 }
 
-/** Her room at her wedding (the wedding's step): her default room, at once; with none free (or a swap
- * waiting) she keeps her Dorm bed. The house she took, or null. */
+/** Her room at her wedding (the wedding's step): her default room, at once; with none free she lives in town until one
+ * frees. The house she took, or null. */
 export function takeRoom(save: SaveV4, pack: RoomPack, id: string): { save: SaveV4; house: number | null } {
   const house = roomFor(save, pack, id)
   if (house === null || moveBlock(save, id) !== null) return { save, house: null }
   return { save: moveSpouse(save, id, house), house }
 }
 
-/** A spouse in the Dorm waiting for a room: "Needs a room". */
+/** A spouse waiting for a room, living in town until one frees: "Needs a room". */
 export const needsRoom = (save: Pick<SaveV4, 'love'>, id: string): boolean => save.love[id]?.stage === 'spouse' && save.love[id]?.house === undefined
 
 /** The spouses waiting for a room, in wedding order (her wedding's day, then her id). */
@@ -232,13 +227,12 @@ export function waitingForRooms(save: Pick<SaveV4, 'love' | 'roster'>): string[]
     .sort((a, b) => (save.love[a]!.wed ?? 0) - (save.love[b]!.wed ?? 0) || Number(a) - Number(b))
 }
 
-/** Night step 9: spouses home in the Dorm who wait for a room take one, in wedding order, by the same
- * default, once a house stands. An away spouse waits until she's swapped home. Who moved, and where. */
+/** Night step 9: the spouses waiting for a room (living in town) take one the morning one frees, in wedding order, by
+ * the same default as a wedding's. Who moved, and where. */
 export function moveInWaiting(save: SaveV4, pack: RoomPack): { save: SaveV4; moved: { id: string; house: number }[] } {
   let next = save
   const moved: { id: string; house: number }[] = []
   for (const id of waitingForRooms(save)) {
-    if (!next.dorm.home.includes(id)) continue
     const took = takeRoom(next, pack, id)
     if (took.house === null) continue
     next = took.save
@@ -297,11 +291,11 @@ export function defaultHouse(save: Pick<SaveV4, 'homestead' | 'love'>): number {
 export const tonightsHouse = (save: Pick<SaveV4, 'homestead' | 'love'>): { house: number; alone: string | null } =>
   save.homestead.tonight === null ? { house: defaultHouse(save), alone: null } : { house: save.homestead.tonight, alone: save.homestead.alone }
 
-/** Whether her breakfast is on tomorrow in a house: a resident at S1 or more, and someone on the farm whose
- * meal ends tonight, with no reception feeding everyone. */
-export function breakfastTomorrow(save: Pick<SaveV4, 'homestead' | 'love' | 'roster' | 'dorm' | 'today'>, house: number): boolean {
+/** Whether her breakfast is on tomorrow in a house: a resident at S1 or more, and someone who lives on the farm (a spouse
+ * in her room) whose meal ends tonight, with no reception feeding everyone. */
+export function breakfastTomorrow(save: Pick<SaveV4, 'homestead' | 'love' | 'roster' | 'today'>, house: number): boolean {
   if (save.today.reception > 0 || !residentsOf(save, house).some((r) => hasPerk(save.love[r], 's1'))) return false
-  return Object.keys(save.roster).some((id) => (save.dorm.home.includes(id) || save.love[id]?.house !== undefined) && save.roster[id]!.wellFed <= 1)
+  return Object.keys(save.roster).some((id) => save.love[id]?.house !== undefined && save.roster[id]!.wellFed <= 1)
 }
 
 /** One of Sleep at's rows: a house, its residents, ☕ for tomorrow's breakfast and the nights since you slept

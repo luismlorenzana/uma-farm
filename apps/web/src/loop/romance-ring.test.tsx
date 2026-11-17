@@ -4,7 +4,7 @@
 // ring and better ring, and the Forge before the bench. The invented stand-in pack
 // (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { dateOf, farmPlace, inviteToFarm, meet, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { dateOf, farmPlace, meet, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -39,7 +39,7 @@ const { warehouseTabs } = await import('./goods-view')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const DAY = 21
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']

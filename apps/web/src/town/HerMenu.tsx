@@ -12,7 +12,7 @@
 //   (`?life=invited-to-work:<id>`: her route's, else the default story's at the farm gate);
 // - **Her event · 1** once it's Ready (the event player, over the town).
 // One of the town's people gets her post instead: her role, what she does, her ties, and her post's menu. One not out now
-// says so; one on the farm (she lives there, or works it by day) links her profile. A talk, a gift or an introduction
+// says so; one on the farm (she lives there, or it's her farm day) links her profile. A talk, a gift or an introduction
 // that unlocks a Town note says so. Loaded with the town's screen.
 import {
   atHome, birthdaysOf, CAST, GAME_DAYS, giftLineV4, herMenu, isBirthday, nextOut, onFarmToday, stageWords, todaysTalk, townLineOf, townLocation, townLocations, townOf, YOU, type Expression,
@@ -91,8 +91,8 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
   const [giving, setGiving] = useState(false)
   const met = !!save.roster[id]
   const love = save.love[id]
-  // On the farm today: she lives there, or she's a farmhand there by day.
-  const onFarm = met && onFarmToday(save, id)
+  // On the farm today: she lives there (a spouse in her room), or it's her farm day (a farmhand).
+  const onFarm = met && onFarmToday(save, pack, id)
   const livesOnFarm = met && atHome(save, id)
   const temperament = talentTable(master).get(outfitFor(id))?.temperament ?? 'steady'
   const fillName = (line: string) => line.split('{name}').join(name)
@@ -159,7 +159,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       {error && <p role="status" className="text-[13px] font-semibold text-danger" data-menu-error>{error}</p>}
       <NoteFound ids={notes} pack={pack} />
       {onFarm ? (
-        <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm by day, after her job.'} <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
+        <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm today, her farm day.'} <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
       ) : !at ? (
         <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar.day)}{met && <> <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></>}</p>
       ) : null}

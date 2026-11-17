@@ -65,7 +65,7 @@ export default function HeartsPage() {
               <p>Each Uma has a talent, G to S, in each activity, from her stats. Talent lifts her yield, her stars and how fast she ranks up.</p>
               <p>She climbs six ranks in each: Novice, Hand, Skilled, Expert, Master, Legend. A day of work earns rank points; a rank comes when its points are reached and its challenge is met, at night.</p>
               <p>Her favourite line (the mark on her face) earns ×1.2 rank points; from Friendship 5 she earns 5% more, from Friendship 10, 10%.</p>
-              <p>Umas beyond the Dorm’s beds live in town. Invite one to the farm on her profile when a bed is free, or swap at the Dorm.</p>
+              <p>Everyone you meet lives in town. A farmhand comes to work on her farm days, the days her life in town leaves free; only a spouse moves onto the farm, into her room.</p>
             </HelpButton>
           )}
         </span>
