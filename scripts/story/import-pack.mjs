@@ -3,19 +3,19 @@
 // authored story's files: the newest pack uma-quest made from the Studio's tier export, and the images it lists (never
 // downloaded again).
 //
-//   node tools/story-sandbox/import-pack.mjs [uma-quest's content/stories folder]
+//   node scripts/story/import-pack.mjs [uma-quest's content/stories folder]
 //
 // The default source is ../uma-quest/content/stories (or UMA_QUEST_STORIES); the target is content/story/pack/ here (or
 // UMA_FARM_CONTENT). Both are ignored by git.
 import { copyFile, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseCastPack } from './lib/pack.mjs'
+import { parseCastPack } from './cast-pack.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../..')
-const source = resolve(process.argv[2] ?? process.env.UMA_QUEST_STORIES ?? join(repo, '../uma-quest/content/stories'))
-const target = resolve(process.env.UMA_FARM_CONTENT ?? join(repo, 'content/story'))
+const source = resolve(process.argv[2] ?? process.env.UMA_QUEST_STORIES ?? join(repo, '../uma-story-authoring/content/quest/stories'))
+const target = resolve(process.env.UMA_FARM_CONTENT ?? join(repo, '../uma-story-authoring/content/farm/story'))
 
 const packs = []
 for (const name of await readdir(join(source, 'packs')).catch(() => [])) {

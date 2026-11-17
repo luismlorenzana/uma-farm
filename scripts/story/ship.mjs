@@ -7,7 +7,7 @@
 //   3. publish: numbers the index (one more than the bucket's `story.json`, or 1), dates it and gives it its note, then
 //      uploads the hash-named files first and `story.json` last (`story:publish`'s rule), so a phone never reads an index
 //      naming a file that isn't there. A pack the bucket already plays is not published again;
-//   4. back up: `pnpm story:push farm` in the sibling ../uma-platform checkout when it's there, skipped with a note when
+//   4. back up: `pnpm publish farm` in the sibling ../uma-story-authoring checkout when it's there, skipped with a note when
 //      it isn't;
 //   5. says the release's number and what's new.
 //
@@ -35,8 +35,8 @@ import { statusLines, withRoute } from './status.mjs'
 import { herName, masterDir, readMaster } from './umas.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
-/** The sibling uma-platform checkout, where `story:push farm` backs the drafts up. */
-export const PLATFORM = resolve(ROOT, '..', 'uma-platform')
+/** The sibling uma-platform checkout, where `publish farm` backs the drafts up. */
+export const PLATFORM = resolve(process.env.UMA_STORY_AUTHORING_ROOT ?? resolve(ROOT, '..', 'uma-story-authoring'))
 /** The pack's file whose first line is the ship's note when `--note` gives none. */
 export const NOTE_FILE = 'ship.md'
 /** `story:publish`'s headers: the hash-named files cached for good, the index revalidated on every read. */
@@ -164,20 +164,20 @@ function nextNumber(store, current) {
   return highest + 1
 }
 
-/** Step 4: the drafts backed up to uma-platform (`story:push farm`), when its checkout is here. */
+/** Step 4: the drafts backed up to uma-platform (`publish farm`), when its checkout is here. */
 function backUp({ from, platform, dryRun, pnpm, log }) {
   if (!existsSync(join(platform, 'package.json'))) {
-    log(`  Skipped: no uma-platform checkout at ${platform}. Back the drafts up where there is one: pnpm story:push farm`)
+    log(`  Skipped: no uma-story-authoring checkout at ${platform}. Back the drafts up where there is one: pnpm publish farm`)
     return 'skipped'
   }
   if (dryRun) {
-    log(`  Would run pnpm story:push farm in ${platform}, for the drafts in ${shown(from)}`)
+    log(`  Would run pnpm publish farm in ${platform}, for the drafts in ${shown(from)}`)
     return 'dry-run'
   }
-  log(`  pnpm story:push farm in ${platform}`)
-  const r = pnpm(['story:push', 'farm'], { cwd: platform, env: { ...gcloudEnv(), STORY_FARM_DIR: from } })
+  log(`  pnpm publish farm in ${platform}`)
+  const r = pnpm(['publish', 'farm'], { cwd: platform, env: { ...gcloudEnv(), STORY_FARM_DIR: from } })
   if (r.ok) return 'done'
-  log(`  The backup didn't finish${r.stderr ? ` (${firstLine(r.stderr)})` : ''}. The release is published; ship again (nothing new is published twice) or run pnpm story:push farm in ${platform}.`)
+  log(`  The backup didn't finish${r.stderr ? ` (${firstLine(r.stderr)})` : ''}. The release is published; ship again (nothing new is published twice) or run pnpm publish farm in ${platform}.`)
   return 'failed'
 }
 

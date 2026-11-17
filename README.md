@@ -39,3 +39,8 @@ day of actions on a tile farm.
 - **uma-quest:** the HD-2D travelers RPG; it shares the story's way of working.
 - **uma-rpg:** the party RPG, frozen. Its GCP project hosts the farm's cloud.
 - **uma-racer:** the racing game.
+
+## Local Story Sandbox
+
+Run `pnpm start` in the sibling [uma-story-authoring](https://github.com/luismlorenzana/uma-story-authoring) repo.
+Choose this game in the Story Sandbox at http://127.0.0.1:4322. Private drafts and verdicts live with the Story authoring checkout.

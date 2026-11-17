@@ -1,7 +1,7 @@
 // The cast pack, on invented records only: no real names.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { packUmas, parseCastPack } from './pack.mjs'
+import { packUmas, parseCastPack } from './cast-pack.mjs'
 
 const pack = {
   schemaVersion: 1, kind: 'story-pack', id: 'ss-2026-01-02', franchises: [{ id: 'umas' }, { id: 'sea' }],
