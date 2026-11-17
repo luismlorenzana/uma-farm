@@ -29,13 +29,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const DOMAIN = join(ROOT, 'packages/domain/src')
 /** The private pack, and where its release goes (both ignored by git). */
-export const SOURCE = join(ROOT, 'content/story')
+export const SOURCE = resolve(process.env.UMA_FARM_CONTENT ?? join(ROOT, '../uma-story-authoring/content/farm/story'))
 export const OUT = join(ROOT, 'content/story-release')
 /** The invented stand-in in git (9000001–9000003), in the pack's layout. */
 export const STAND_IN = join(DOMAIN, 'story/stand-in')
 
 if (!process.features?.typescript) throw new Error('This Node reads no TypeScript: the release needs Node 22.18 or later (type stripping).')
-register(pathToFileURL(join(ROOT, 'tools/story-sandbox/lib/resolve-ts.mjs')))
+register(pathToFileURL(join(ROOT, 'scripts/story/resolve-ts.mjs')))
 const { readStoryPack } = await import(pathToFileURL(join(DOMAIN, 'story/pack.ts')).href)
 const { parseStoryIndex, releasedStoryPack, shippedIndex, STORY_INDEX, STORY_NAME, STORY_NOTE_MAX, storyFileName, storyFilePath } = await import(pathToFileURL(join(DOMAIN, 'story/release.ts')).href)
 // The marker's check (a piece marked "draft": "default" whose words changed): notes, beside the reader's.

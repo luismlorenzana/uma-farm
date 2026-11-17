@@ -22,16 +22,6 @@
       "port": 5194
     },
     {
-      "name": "farm-story-sandbox",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        "--experimental-strip-types",
-        "--no-warnings",
-        "tools/story-sandbox/server.mjs"
-      ],
-      "port": 4321
-    },
-    {
       "name": "docs-pages",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
