@@ -101,11 +101,15 @@ and the Book's work board show her farm days ("In town today · back Spring 5").
 Invite to the farm, beds, swaps and upkeep are gone, and your farm's Uma in the Dorm lives in town, everything else
 kept ([farmhands](../game-mechanics.md#farmhands), [the retired Dorm](../game-mechanics.md#the-retired-dorm)).
 
-**Now: the sea and expeditions** (Phase 2.4), its packet numbered from F97 ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
+**Now: expeditions** (Phase 2.4; F97): the expedition post in town from Farm Rank 7, parties of up to four farmhands
+away two to five days in seven regions, and loot, ranks, bonds and a log when they're back. The sea's half of 2.4 is
+already in: the Dock's Sea Pier and the Boat's Deep Sea ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
 
 ## Open packets
 
-None open: the next, the sea and expeditions (Phase 2.4), is written from the roadmap as it starts, numbered from F97.
+| Packet | What | Who |
+|---|---|---|
+| [F97](tasks/F97-expeditions.md) | **Expeditions:** the post in town, seven regions, a party's power against each region's need, Great, Success or Retreat, the loot, and the post's log | Claude |
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
