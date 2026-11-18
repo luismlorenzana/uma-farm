@@ -397,7 +397,7 @@ export const noteTonight: NightStep = (night) => {
  * the pack pays none. */
 export const shareTheHouses: NightStep = (night) => {
   if (!night.context.story) return night
-  return { ...night, save: shareHouses(night.save, night.context.story).save }
+  return { ...night, save: shareHouses(night.save, night.context.story, night.before).save }
 }
 
 /** Step 6: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event;
@@ -593,11 +593,11 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 4, name: 'nightExtras', run: nightExtras, what: 'Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies' },
   { step: 4, name: 'nightChores', run: nightChores, what: 'Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, a miner’s one find each from the Mine’s or the Quarry’s deepest floor, at a face’s, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only' },
   { step: 5, name: 'resetWorkshops', run: resetWorkshops, what: 'Each workshop may be played again tomorrow' },
+  { step: 6, name: 'returnTheExpeditions', run: returnTheExpeditions, what: 'Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return' },
+  { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met' },
   { step: 6, name: 'tickBonds', run: tickBonds, what: 'Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend' },
   { step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each farmhand who worked today at one of her line’s places, once a night' },
   { step: 6, name: 'shareTheHouses', run: shareTheHouses, what: 'Shared houses: +10 bond a night to each pair of spouses with rooms in the same house' },
-  { step: 6, name: 'returnTheExpeditions', run: returnTheExpeditions, what: 'Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return' },
-  { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met' },
   { step: 6, name: 'levelAtNight', run: levelAtNight, what: 'Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5' },
   { step: 6, name: 'countWellFed', run: countWellFed, what: 'The well-fed days count down' },
   { step: 7, name: 'witherCrops', run: witherCrops, what: 'On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait' },

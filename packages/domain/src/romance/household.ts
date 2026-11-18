@@ -68,11 +68,11 @@ export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | 
 
 /** Step 6: +10 bond a night to each pair of residents sharing a house, through `addBond` (Romance 4's
  * ×1.5 inside). Every house, every night. */
-export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
+export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>, trips: Pick<SaveV4, 'expeditions'> = save): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
   let next = save
   const paid: { a: string; b: string; points: number }[] = []
   save.homestead.houses.forEach((_, house) => {
-    const here = residentsOf(save, house).filter((id) => save.roster[id] && !awayForNight(save, id, save.calendar.day)).sort((a, b) => Number(a) - Number(b))
+    const here = residentsOf(save, house).filter((id) => save.roster[id] && !awayForNight(trips, id, save.calendar.day)).sort((a, b) => Number(a) - Number(b))
     for (let i = 0; i < here.length; i++) {
       for (let j = i + 1; j < here.length; j++) {
         const pay = addBond(next, pack, here[i]!, here[j]!, BOND_POINTS.house)

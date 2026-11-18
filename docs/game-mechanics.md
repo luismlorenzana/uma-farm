@@ -442,11 +442,11 @@ The steps as the game lists them:
 | 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies |
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, a miner’s one find each from the Mine’s or the Quarry’s deepest floor, at a face’s, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow |
+| 6 | `returnTheExpeditions` | Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return |
+| 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
 | 6 | `tickBonds` | Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend |
 | 6 | `payLine` | Her line: +10 to each farmhand who worked today at one of her line’s places, once a night |
 | 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house |
-| 6 | `returnTheExpeditions` | Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return |
-| 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
 | 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
