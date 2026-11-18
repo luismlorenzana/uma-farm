@@ -177,6 +177,49 @@ describe('the field\'s screen', () => {
     expect(await note()).toMatch(/^\+1 Carrot/)
   })
 
+  it('keeps a harvested tree on its tile until the player confirms removal', async () => {
+    const ripe = withTile(farm(), 0, { ...bareTile('tilled'), crop: 'apple', growth: 6, ready: true, fruitSeason: 2 })
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...ripe, calendar: { ...ripe.calendar, day: 49 } } })
+    await render(<FieldRoute />, '/field?tile=0')
+    await click('[data-action="harvest"]')
+    await until(() => !fieldTiles(save())[0]!.ready)
+    expect(save().items.apple?.reduce((a, b) => a + b)).toBe(3)
+    expect(fieldTiles(save())[0]!.crop).toBe('apple')
+    expect($('[data-action="water"]')).toBeNull()
+    await click('[data-action="remove-orchard"]')
+    expect(save().today.actions).toBe(1)
+    await click('[data-action="confirm-remove-orchard"]')
+    await until(() => fieldTiles(save())[0]!.crop === null)
+    expect(fieldTiles(save())[0]).toEqual(bareTile('tilled'))
+    expect(save().today.actions).toBe(2)
+  })
+
+  it('saves an Autumn orchard plan without replacing the Spring rotation', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    await render(<FieldRoute />, '/field?row=1')
+    const select = async (index: number, value: string) => {
+      const el = $$('[data-row-panel] select')[index] as HTMLSelectElement
+      await act(async () => {
+        el.value = value
+        el.dispatchEvent(new Event('change', { bubbles: true }))
+      })
+      await settle()
+    }
+    await select(1, 'carrot')
+    await until(() => save().farm.fieldPlans?.['0:0:spring']?.crop === 'carrot')
+    await select(0, 'autumn')
+    expect($('[data-row-panel] option[value="carrot"]')).toBeNull()
+    await select(1, 'apple')
+    await until(() => save().farm.fieldPlans?.['0:0:autumn']?.crop === 'apple')
+    await select(2, '2')
+    await until(() => {
+      const plan = save().farm.fieldPlans?.['0:0:autumn']
+      return plan?.crop === 'apple' && plan.grade === 2
+    })
+    expect(save().farm.fieldPlans?.['0:0:spring']).toEqual({ crop: 'carrot', grade: 1, harvestNext: false })
+    expect(save().today.actions).toBe(0)
+  })
+
   it('greys every button once the day\'s ten are spent', async () => {
     const spent = farm()
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...spent, today: { ...spent.today, actions: 10 } } })

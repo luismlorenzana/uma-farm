@@ -1,13 +1,13 @@
 // The Warehouse's ids. The web's test checks each good is on uma-art's atlas.
 import { describe, expect, it } from 'vitest'
-import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
+import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, LEGACY_CROP_IDS, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
 
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
 
 describe('the goods', () => {
-  it('holds 284 goods, each once', () => {
-    expect(GOOD_IDS).toHaveLength(286)
-    expect(new Set(GOOD_IDS).size).toBe(286)
+  it('holds 390 goods, each once', () => {
+    expect(GOOD_IDS).toHaveLength(390)
+    expect(new Set(GOOD_IDS).size).toBe(390)
   })
 
   it('counts 27 crops and 10 flours, the forest 113, mining 60, fishing 20, expeditions 30, the ranch 24', () => {
@@ -15,10 +15,10 @@ describe('the goods', () => {
     expect(of(['eggs-milk']).map((g) => [g.id, g.grade, g.price])).toEqual([['egg', 1, 60], ['milk', 2, 80], ['duck-egg', 3, 100], ['goat-milk', 4, 130]])
     expect(['wool', 'alpaca-fleece', 'cashmere-fleece', 'wool-cloth'].map((id) => goodOf(id)!.price)).toEqual([100, 130, 170, 150])
     expect(refinedOf('egg')).toBeNull()
-    expect(CROP_IDS).toHaveLength(27)
-    expect(GOODS.filter((g) => g.crop).map((g) => g.id).sort()).toEqual([...CROP_IDS].sort())
+    expect(CROP_IDS).toHaveLength(51)
+    expect(GOODS.filter((g) => g.crop && g.family !== 'fruits').map((g) => g.id).sort()).toEqual([...LEGACY_CROP_IDS].sort())
     expect(of(['grains']).filter((g) => g.refined)).toHaveLength(10)
-    expect(of(['woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets']).filter((g) => !g.crop)).toHaveLength(113)
+    expect(of(['woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets']).filter((g) => !g.crop || g.family === 'fruits')).toHaveLength(113)
     expect(of(['ores', 'stones', 'crystals'])).toHaveLength(60)
     expect(of(['fish'])).toHaveLength(20)
     expect(of(['hides-scales', 'bones-horns', 'essences'])).toHaveLength(30)
@@ -41,7 +41,7 @@ describe('the goods', () => {
 
 describe('seeds', () => {
   it('names a shop seed and an own seed for each crop', () => {
-    expect(SEED_IDS).toHaveLength(56)
+    expect(SEED_IDS).toHaveLength(192)
     expect(seedId('carrot')).toBe('seed-carrot')
     expect(seedId('carrot', true)).toBe('seed-carrot-own')
     expect(seedOf('seed-wild-rice-own')).toEqual({ crop: 'wild-rice', own: true })

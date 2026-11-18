@@ -55,7 +55,7 @@ import { stairsLock, takeStairs } from '../gathering/digs'
 import { chop, fish, forage, reachList, thinToday } from '../gathering/hauls'
 import { HOME_COUNT } from '../gathering/kinds'
 import { LOAD_SIZE, startLoad, stationOptions } from '../gathering/stations'
-import { goodOf, type CropId } from '../goods/ids'
+import { goodOf, LEGACY_CROP_IDS, type CropId } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { animalsIn, ANIMALS, buyAnimal, buyFodder, FODDER_PRICE, siloRoom } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
@@ -304,6 +304,7 @@ function build(start: SaveV4, run: Run): { save: SaveV4; built: string | null } 
  * vegetables. */
 function quickestSeed(save: SaveV4, daysLeft: number, run: Run) {
   const all = shopLines(save).filter((l) => lineOpen(save, l)).map((l) => ({ line: l, crop: l.id.slice('seed-'.length) as CropId }))
+    .filter(({ crop }) => (LEGACY_CROP_IDS as readonly CropId[]).includes(crop))
     .map((s) => ({ ...s, stages: stagesOf(s.crop, false) })).filter((s) => s.stages < daysLeft).sort((a, b) => a.stages - b.stages || a.line.price - b.line.price)
   const vegetables = keep(save, 'carrot', run) > heldFor(save.items, { family: 'vegetables', refined: false })
   return (vegetables ? all.find((s) => goodOf(s.crop)?.family === 'vegetables') : undefined)?.line ?? all[0]?.line ?? null

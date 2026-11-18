@@ -15,6 +15,7 @@
 // The roster, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
 import { DAYS_PER_YEAR } from '../farm/calendar'
+import { needsWater } from '../fields/plantables'
 import { draw } from '../farm/draw'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import type { FarmPlaceId } from '../farm/places'
@@ -74,8 +75,10 @@ export interface Tile {
   regrowing: boolean
   /** Planted from own seeds. */
   own: boolean
-  /** Higher carrot seed planted here. Omitted at the original grade. */
-  grade?: 2 | 3
+  /** Higher seed planted here. Omitted at the original grade. */
+  grade?: number
+  /** Global season index in which the orchard tile last set aside a fruit pick. */
+  fruitSeason?: number
   watered: boolean
 }
 
@@ -123,7 +126,7 @@ export const fieldIndex = (plot: number, tile: number): number => plot * FIELD_T
 /** Ready tiles in the field, every plot's: the sign's count and the Menu's. */
 export const readyTiles = (save: Pick<SaveV5, 'fields'>): number => fieldTiles(save).filter((t) => t.ready).length
 /** Tiles growing a crop that aren't watered today, every plot's. */
-export const dryTiles = (save: Pick<SaveV5, 'fields'>): number => fieldTiles(save).filter((t) => t.crop !== null && !t.ready && !t.watered).length
+export const dryTiles = (save: Pick<SaveV5, 'fields'>): number => fieldTiles(save).filter(needsWater).length
 
 // --- The stations' loads -----------------------------------------------------------------------------------------
 
@@ -370,7 +373,7 @@ export type TileTaskKind = typeof TILE_TASKS[number]
 export type FarmTask =
   | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[]; plot?: number }
   | { kind: 'plant'; tiles: number[]; crop?: CropId; plot?: number }
-  | { kind: 'save-seed'; grade: CarrotGrade; improve: boolean; target: number }
+  | { kind: 'save-seed'; crop?: CropId; grade: number; improve: boolean; target: number }
   | { kind: 'load'; station: StationId }
   | { kind: 'forage' | 'chop'; area: ForestAreaId }
   | { kind: 'fish'; spot: FishingSpotId }
@@ -379,6 +382,7 @@ export type FarmTask =
   | { kind: 'cook' }
 /** The most tasks one farmhand's board holds. */
 export const MAX_TASKS = 6
+export type FieldPlan = { crop: null; harvestNext: boolean } | { crop: CropId; grade: number; harvestNext: boolean }
 /** Her aptitudes: one for each task, a station's load one for each station; the Coop's and the Barn's care are one, and
  * so are the faces at either dig; cooking is the Cook task's. */
 export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter', 'cook'] as const
@@ -653,9 +657,11 @@ export interface SaveV5 {
     pantry: PantryLot[]; market: Record<string, number>
     /** First production day by exact stock ID. Legacy crop evidence can be read without stamping the save. */
     discoveries?: Record<string, number>
+    cropProofs?: true
     reserves?: Record<string, number>
     /** A Spring carrot plan by zero-based plot and row. */
     carrotRows?: Record<string, { grade: CarrotGrade; harvestNext: boolean }>
+    fieldPlans?: Record<string, FieldPlan>
   }
   homestead: Homestead
   /** Her route's event ids played, in order. */

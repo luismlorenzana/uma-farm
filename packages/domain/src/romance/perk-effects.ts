@@ -24,7 +24,7 @@ import { draw } from '../farm/draw'
 import { opened } from '../farm/places'
 import { rankQuality } from '../farm/rank-rules'
 import { talentQuality, talentsD, type TalentOf } from '../farm/talents'
-import { CROPS, SHOP_SEEDS } from '../fields/crops'
+import { CROPS, needsWater, SHOP_SEEDS } from '../fields/crops'
 import { harvestQuality } from '../fields/fields'
 import { DIG_TOOL, digBuilt, digFloor, findOn, floorTopGrade } from '../gathering/digs'
 import { GATHER_TOOL, gatherQuality, pickShare, sharesOn, termsOf } from '../gathering/kinds'
@@ -86,7 +86,7 @@ export interface ChoresDone {
 export function fieldChores(save: SaveV4, pack: PerkPack): { tiles: Set<number>; chores: ChoresDone[] } {
   const tiles = new Set<number>()
   const chores: ChoresDone[] = []
-  const dry = fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready && !t.watered ? [i] : []))
+  const dry = fieldTiles(save).flatMap((t, i) => needsWater(t) ? [i] : [])
   for (const id of inCastOrder(pack, Object.keys(save.roster))) {
     if (perkLineOf(pack, id) !== 'farming') continue
     const n = choresTonight(save, pack, id)

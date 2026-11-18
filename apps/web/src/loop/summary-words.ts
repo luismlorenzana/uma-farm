@@ -299,7 +299,8 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
             text: `The ${line.home === 'coop' ? 'Coop' : 'Barn'} · ${line.ready > 0 ? `${plural(line.ready, 'good')} to collect` : 'nothing to collect'}${line.hungry > 0 ? ` · ${line.hungry} went hungry` : ''}`,
             ...(line.hungry > 0 ? { tag: 'Feed them', warn: true } : {}),
           }
-          case 'discovery': return { key: `discovery:${line.id}`, to: '/warehouse', text: `Discovered · ${line.id === 'carrot' ? 'Carrot G1' : goodName(line.id)}` }
+          case 'discovery': return { key: `discovery:${line.id}`, to: '/warehouse', text: `Discovered · ${goodName(line.id)}` }
+          case 'seed-prize': return { key: `seed-prize:${line.crop}`, to: '/warehouse', text: `Seasonal seed prize · ${itemNameOf(line.crop)}` }
           case 'grew': return { key: 'grew', to: FIELDS, text: `The field · ${plural(line.tiles, 'crop')} grew${line.ripe > 0 ? ` · ${line.ripe} ripe` : ''}` }
           case 'withered': return { key: `withered:${line.crop}`, to: FIELDS, text: `The field · ${line.tiles} ${itemNameOf(line.crop)} withered` }
         }

@@ -1,6 +1,6 @@
 // The shop, in town: lines of things to buy, each with a price and an optional gate, bought
-// with gold into the Warehouse at ★1, free once you've gone into town today. The season's seeds come by tier: the first three from Farm
-// Rank 1, the next two from Farm Rank 2, the last from Farm Rank 4. The list changes on a season's first day and never
+// with gold into the Warehouse at ★1, free once you've gone into town today. The season's seeds open by Farm Rank.
+// The list changes on a season's first day and never
 // runs out; land, beds and stations are bought at their own places. Like `spendGold`, `buy` doesn't stamp `updatedAt`.
 import { seedLines } from '../fields/fields'
 import { opened, type PlaceOpens } from '../farm/places'
@@ -20,7 +20,7 @@ export interface ShopLine {
   opens: PlaceOpens
 }
 
-/** What the shop sells on this save, in its order: the season's six seeds, each at its tier's Farm Rank. A line
+/** What the shop sells on this save, in its order: the season's seeds, each at its tier's Farm Rank. A line
  * shut by its rank still shows, with its gate. */
 export function shopLines(save: Pick<FarmSave, 'calendar' | 'farm'>): ShopLine[] {
   return seedLines(save)

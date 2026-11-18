@@ -97,7 +97,7 @@ describe('shipping', () => {
     await settle()
     expect(save().items).toMatchObject({ carrot: [2, 0, 0, 0, 0], 'seed-carrot-grade-2-own': [1, 0, 0, 0, 0] })
     expect(save().today.actions).toBe(1)
-    expect($('[data-carrot-discovery="2"]')?.textContent).toBe('G2 · Undiscovered')
+    expect($('[data-crop-discovery="2"]')?.textContent).toBe('G2 · Undiscovered')
     function Tile() {
       const active = useLoopSave()
       return active ? <TilePanel save={active} index={0} /> : null
@@ -118,7 +118,7 @@ describe('shipping', () => {
     await tileClick('[data-action="harvest"]')
     expect($('[data-note]')?.textContent).toContain('+1 Carrot G2')
     await render(<WarehousePage />, '/warehouse')
-    expect($('[data-carrot-discovery="2"]')?.textContent).toBe('G2 · Discovered')
+    expect($('[data-crop-discovery="2"]')?.textContent).toBe('G2 · Discovered')
   })
 
   it('picks a crate in pick mode, ships it for one action, takes a line back in the bin, and the night pays the rest into the morning', async () => {
@@ -230,6 +230,7 @@ describe('the shop', () => {
     expect($('[data-shop-empty]')).toBeNull()
     expect([...document.body.querySelectorAll('[data-row]')].map((b) => b.getAttribute('data-row'))).toEqual([
       'seed-carrot', 'seed-potato', 'seed-mint', 'seed-onion', 'seed-cabbage', 'seed-asparagus',
+      'seed-radish', 'seed-lettuce', 'seed-green-peas', 'seed-strawberry', 'seed-raspberry', 'seed-plum',
     ])
     expect(($('[data-row="seed-onion"]') as HTMLButtonElement).disabled).toBe(true)
     expect($('[data-row="seed-onion"]')?.textContent).toContain('From Farm Rank 2')

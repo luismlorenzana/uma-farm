@@ -1,14 +1,19 @@
 import type { FarmSave } from '../save/v4'
+import { LEGACY_CROP_IDS, type CropId } from './ids'
 
-/** The old crop counter starts at zero on planting and only harvests can increment it. */
+/** Older crop counters proved only base produce. The carrot pilot kept its own exact proof. */
+function legacyCropProof(save: Pick<FarmSave, 'farm' | 'crops'>, crop: string): boolean {
+  return !save.farm.cropProofs && (crop !== 'carrot' || !save.farm.discoveries)
+    && (LEGACY_CROP_IDS as readonly string[]).includes(crop) && (save.crops[crop as CropId] ?? 0) > 0
+}
+
 export function discovered(save: Pick<FarmSave, 'farm' | 'crops'>, id: string): boolean {
-  if (save.farm.discoveries) return Object.hasOwn(save.farm.discoveries, id)
-  return id === 'carrot' && (save.crops.carrot ?? 0) > 0
+  return Object.hasOwn(save.farm.discoveries ?? {}, id) || legacyCropProof(save, id)
 }
 
 /** Call with the completed output and the crop counter as it stood before production. */
 export function discoverOutput<S extends FarmSave>(save: S, id: string): S {
   if (discovered(save, id)) return save
-  const prior = save.farm.discoveries ?? (discovered(save, 'carrot') ? { carrot: 0 } : {})
-  return { ...save, farm: { ...save.farm, discoveries: { ...prior, [id]: save.calendar.day } } }
+  const legacy = save.farm.cropProofs ? {} : Object.fromEntries(LEGACY_CROP_IDS.filter((crop) => legacyCropProof(save, crop)).map((crop) => [crop, 0]))
+  return { ...save, farm: { ...save.farm, cropProofs: true, discoveries: { ...legacy, ...save.farm.discoveries, [id]: save.calendar.day } } }
 }

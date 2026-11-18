@@ -34,8 +34,8 @@ import { countChallenge, rankBenefits, type ChallengeEvent } from './rank-rules'
 import type { Activity } from './ranks'
 import { talentYield, type TalentOf, type TalentStep } from './talents'
 import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowTile, stagesOf, tileOf, tillGround, clearGround, wetTile, type Reaper } from '../fields/fields'
-import { growsIn } from '../fields/crops'
-import { carrotPlanAt, MAX_SEED_TARGET, saveCarrotSeedsAt, SEED_BATCH, seedOutput, upgradedCarrot } from '../fields/carrot'
+import { CROPS, growsIn, needsWater } from '../fields/crops'
+import { harvestGrade, MAX_SEED_TARGET, plantingPlan, saveCropSeedsAt, SEED_BATCH, seedOutput } from '../fields/production'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
 import { DIG_TOOL, digBuilt, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
@@ -43,7 +43,7 @@ import { gatherQuality, GATHER_TOOL, HOME_COUNT, keepsakeAt, sizeSkill, stationB
 import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
 import { LOAD_SIZE, loadAt, loadsLeft, loadsToday, stationOptions } from '../gathering/stations'
 import { TOOL_YIELD } from '../gathering/tables'
-import { carrotGood, carrotSeed, isCropId, type CropId } from '../goods/ids'
+import { canSaveCropSeed, cropBaseGrade, cropGoodId, cropSeedId, isCropId, type CropId } from '../goods/ids'
 import { goodCount, stockKey } from '../save/warehouse'
 import type { AptitudeUp, FarmhandLine } from '../night/summary'
 import type { PerkPack } from '../romance/perk-terms'
@@ -126,7 +126,7 @@ export function handJob(pack: Pick<StoryPack, 'cast'>, id: string): HandJob {
 /** Each task's name on the board. */
 export const TASK_NAMES: Readonly<Record<TaskKind, string>> = {
   harvest: 'Harvest', water: 'Water', plant: 'Plant', till: 'Clear and till', load: 'Load', forage: 'Forage', chop: 'Chop', fish: 'Fish',
-  care: 'Care for animals', mine: 'Work a face', cook: 'Cook', 'save-seed': 'Save carrot seed',
+  care: 'Care for animals', mine: 'Work a face', cook: 'Cook', 'save-seed': 'Save seed',
 }
 /** The tasks that run until her actions do: her gathering and her digging, a turn each once the field's, the loads and
  * the animals' care are done. */
@@ -167,8 +167,12 @@ export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields'>, 
     return null
   }
   switch (task.kind) {
-    case 'save-seed': return task.grade === 3 && task.improve ? 'G3 is the highest carrot grade.'
-      : !Number.isInteger(task.target) || task.target < 1 || task.target > MAX_SEED_TARGET ? 'Keep 1 to 99 seeds.' : null
+    case 'save-seed': {
+      const crop = task.crop ?? 'carrot'
+      const grade = task.grade + (task.improve ? 1 : 0)
+      if (!canSaveCropSeed(crop) || !cropGoodId(crop, task.grade) || !cropGoodId(crop, grade)) return 'Choose an available seed grade.'
+      return !Number.isInteger(task.target) || task.target < 1 || task.target > MAX_SEED_TARGET ? 'Keep 1 to 99 seeds.' : null
+    }
     case 'load': return stationBuilt(save, task.station) ? null : 'Build it first.'
     case 'care': return homeBuilt(save, task.home) ? null : 'Build it first.'
     case 'mine': return digBuilt(save, task.dig) ? null : 'Build it first.'
@@ -392,10 +396,10 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
   const uma = save.roster[id]!
   switch (task.kind) {
     case 'harvest': {
-      const ripe = tiles.filter((i) => {
-        const tile = at(i)
-        if (!tile.ready) return false
-        return tile.crop !== 'carrot' || tile.grade === 3 || !carrotPlanAt(save, i)?.harvestNext || !!upgradedCarrot(save, tile, i, level)
+      const ripe = tiles.flatMap((i) => {
+        if (!at(i).ready) return []
+        const grade = harvestGrade(save, at(i), i, level)
+        return grade === null ? [] : [{ i, grade }]
       }).slice(0, tilesAnAction('harvest', level))
       if (ripe.length === 0) return null
       const rank = uma.ranks.farming.rank
@@ -407,9 +411,9 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       let next = save
       const items: string[] = []
       const events: Step['events'] = []
-      for (const i of ripe) {
+      for (const { i, grade } of ripe) {
         const level0 = cropLevelOf(next.crops[tileOf(next, i)!.crop!] ?? 0)
-        const done = reapTile(next, i, reaper, upgradedCarrot(next, at(i), i, level))
+        const done = reapTile(next, i, reaper, grade)
         next = done.save
         const stars = done.receipt.stars.flatMap((n, s) => Array.from({ length: n }, () => s + 1))
         items.push(...(done.receipt.lots?.map((lot) => stockKey(lot.id, lot.stars)) ?? stars.map((s) => stockKey(done.receipt.crop, s))))
@@ -418,7 +422,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return { save: next, n: ripe.length, items, events }
     }
     case 'water': {
-      const dry = tiles.filter((i) => { const t = at(i); return t.crop !== null && !t.ready && !t.watered })
+      const dry = tiles.filter((i) => needsWater(at(i)))
       if (dry.length === 0) return null
       // A row an action from Watering 6: every dry tile of hers in the first row that has one. A field index's row,
       // ⌊i / 8⌋, is its plot's own row (a plot is whole rows), so the row stays on her plot.
@@ -432,9 +436,14 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       let n = 0
       for (const i of empty) {
         if (n >= tilesAnAction('plant', level)) break
-        const plan = dateOf(next.calendar.day).season === 'spring' ? carrotPlanAt(next, i) : undefined
-        const seed = seedsInSeason(next).find((s) => ripensInTime(s.crop, next.calendar.day)
-          && (plan ? s.crop === 'carrot' && (s.grade ?? 1) === plan.grade : !s.grade && (task.crop === undefined || s.crop === task.crop)))
+        const plan = plantingPlan(next, i)
+        if (plan === null) continue
+        const named = plan ? plan.crop : task.crop
+        const seed = seedsInSeason(next).find((s) => {
+          if (named && s.crop !== named) return false
+          if (CROPS[s.crop].woody ? !named : !ripensInTime(s.crop, next.calendar.day)) return false
+          return plan?.crop ? (s.grade ?? cropBaseGrade(s.crop)) === plan.grade : s.grade === undefined
+        })
         if (!seed) continue
         next = sowTile(next, i, seed.id)
         n++
@@ -442,13 +451,14 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return n === 0 ? null : { save: next, n, items: [], events: [] }
     }
     case 'save-seed': {
-      const output = seedOutput(save, task.grade, task.improve)
+      const crop = task.crop ?? 'carrot'
+      const output = seedOutput(save, crop, task.grade, task.improve)
       if (!output) return null
-      const input = carrotGood(task.grade)
+      const input = cropGoodId(crop, task.grade)!
       const held = goodCount(save.items, input) - (save.farm.reserves?.[input] ?? 0)
-      const needed = task.target - goodCount(save.items, carrotSeed(output))
+      const needed = task.target - goodCount(save.items, cropSeedId(crop, true, output))
       const n = Math.min(SEED_BATCH, held, needed)
-      return n < 1 ? null : { save: saveCarrotSeedsAt(save, task.grade, task.improve, n), n, items: [], events: [] }
+      return n < 1 ? null : { save: saveCropSeedsAt(save, crop, task.grade, task.improve, n), n, items: [], events: [] }
     }
     case 'till': {
       const i = tiles.find((t) => { const g = at(t).ground; return isOvergrown(g) || g === 'clear' })
@@ -466,7 +476,9 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
     case 'load': {
       // A load an action, until the station holds its loads for the day (one a level).
       if (!stationBuilt(save, task.station) || loadsLeft(save, task.station) === 0) return null
-      const option = [...stationOptions(save, task.station)].sort((a, b) => b.held - a.held)[0]
+      const option = stationOptions(save, task.station).map((o) => ({
+        ...o, held: Math.min(o.held, goodCount(save.items, o.input) - (save.farm.reserves?.[o.input] ?? 0)),
+      })).filter((o) => o.held > 0).sort((a, b) => b.held - a.held)[0]
       if (!option) return null
       const inputs = Math.min(option.held, loadSizeAt(level))
       const out = drawnCount(inputs * aptitudeYield(level), draw(save.account.uid, save.calendar.day, `hand-load:${task.station}`, loadsToday(save, task.station).length))

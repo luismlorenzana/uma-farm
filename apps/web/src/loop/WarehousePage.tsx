@@ -3,14 +3,17 @@
 // 1 action). With `?pick=bin` it's the bin's pick mode: a tap on a star puts one in the crate, All puts the good's every
 // star in, and Ship · 1 action ships the crate, then goes back to the bin. Drawn on the kit's Chip, Sheet and Button:
 // the kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
-import { actionsLeft, binTotal, CARROT_GRADES, carrotGood, carrotGradeOf, crateWorth, discovered, MAX_SEED_TARGET, nextCarrotGrade, SEED_BATCH, SEED_KNOWLEDGE, seedOutput, type CarrotGrade, type CrateLine, type FarmSave } from '@farm/domain'
+import {
+  actionsLeft, binTotal, canSaveCropSeed, CROP_IDS, CROPS, cropBaseGrade, cropGoodId, cropGradeOf, cropGrades, crateWorth, discovered, goodOf, itemNameOf,
+  MAX_SEED_TARGET, SEASON_NAMES, SEED_BATCH, seedKnowledge, seedOf, seedOutput, type CropId, type CrateLine, type FarmSave,
+} from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
-import { reserveCarrots, saveSeeds, shipPicked } from './actions'
+import { reserveCrop, saveSeeds, shipPicked } from './actions'
 import { Notes, useAct } from './FarmPanels'
 import { easedWords, firstTab, goldWords, starWords, warehouseTabs, type GoodRow, type Shelf, type StarCell } from './goods-view'
 
@@ -40,8 +43,15 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
   const [error, setError] = useState<string | null>(null)
   const [crate, setCrate] = useState<Record<string, number>>({})
   const [busy, setBusy] = useState(false)
+  const [discoveryCrop, setDiscoveryCrop] = useState<CropId>('carrot')
+  const [gradeFilter, setGradeFilter] = useState(0)
   const tab = tabs.find((t) => t.shelf === shelf) ?? tabs[0]!
   const rows = tabs.flatMap((t) => t.rows)
+  const visibleRows = tab.rows.filter((row) => {
+    if (gradeFilter === 0) return true
+    const seed = seedOf(row.id)
+    return (seed ? seed.grade ?? cropBaseGrade(seed.crop) : goodOf(row.id)?.grade) === gradeFilter
+  })
   const openRow = open === null ? undefined : rows.find((row) => row.id === open)
   const held = (id: string, stars: number) => rows.find((r) => r.id === id)?.cells[stars - 1]?.count ?? 0
   const pick = (id: string, stars: number) => setCrate((c) => {
@@ -51,9 +61,7 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
   const pickAll = (id: string) => setCrate((c) => ({ ...c, ...Object.fromEntries([1, 2, 3, 4, 5].map((s) => [crateKey(id, s), held(id, s)])) }))
   const lines = crateLines(crate)
   const picked = lines.reduce((n, l) => n + l.count, 0)
-  const usesReserve = CARROT_GRADES.some((grade) => {
-    const id = carrotGood(grade)
-    const floor = save.farm.reserves?.[id] ?? 0
+  const usesReserve = Object.entries(save.farm.reserves ?? {}).some(([id, floor]) => {
     const moving = lines.filter((line) => line.id === id).reduce((n, line) => n + line.count, 0)
     return floor > 0 && moving > 0 && moving > (rows.find((row) => row.id === id)?.total ?? 0) - floor
   })
@@ -84,19 +92,30 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
               </Chip>
             ))}
           </div>
-          {!picking && tab.shelf === 'crops' && (
-            <div className="flex flex-wrap items-center gap-2 text-[13px]" aria-label="Carrot discoveries">
-              <span className="font-semibold">Carrot discoveries</span>
-              {CARROT_GRADES.map((grade) => (
-                <Button key={grade} variant="secondary" size="sm" className="min-h-11" data-carrot-discovery={grade} onClick={() => setOpen(carrotGood(grade))}>
-                  G{grade} · {discovered(save, carrotGood(grade)) ? 'Discovered' : 'Undiscovered'}
+          <label className="flex w-fit items-center gap-2 text-[13px]">Grade
+            <select className="min-h-11 rounded-sm border border-hairline-strong bg-panel px-2" value={gradeFilter} onChange={(e) => setGradeFilter(Number(e.currentTarget.value))}>
+              <option value={0}>All grades</option>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((grade) => <option key={grade} value={grade}>G{grade}</option>)}
+            </select>
+          </label>
+          {!picking && (tab.shelf === 'crops' || tab.shelf === 'fruits') && (
+            <div className="flex flex-wrap items-center gap-2 text-[13px]" aria-label="Crop discoveries">
+              <label className="flex items-center gap-2 font-semibold">Crop discoveries
+                <select className="min-h-11 rounded-sm border border-hairline-strong bg-panel px-2 font-normal" value={discoveryCrop}
+                  onChange={(e) => setDiscoveryCrop(e.currentTarget.value as CropId)}>
+                  {CROP_IDS.map((crop) => <option key={crop} value={crop}>{itemNameOf(crop)}</option>)}
+                </select>
+              </label>
+              {cropGrades(discoveryCrop).map((g) => (
+                <Button key={g.id} variant="secondary" size="sm" className="min-h-11" data-crop-discovery={g.grade} onClick={() => setOpen(g.id)}>
+                  G{g.grade} · {discovered(save, g.id) ? 'Discovered' : 'Undiscovered'}
                 </Button>
               ))}
             </div>
           )}
-          {tab.rows.length === 0 && <p className="rounded-md border border-hairline bg-panel p-4 text-center text-[14px] text-ink-soft">Nothing here yet.</p>}
+          {visibleRows.length === 0 && <p className="rounded-md border border-hairline bg-panel p-4 text-center text-[14px] text-ink-soft">{gradeFilter ? 'Nothing at this grade.' : 'Nothing here yet.'}</p>}
           <ul className="grid gap-1.5 @xl:grid-cols-2" data-shelf-rows={tab.shelf}>
-            {tab.rows.map((row) => (
+            {visibleRows.map((row) => (
               <li key={row.id}>
                 <GoodLine row={row} picking={picking} crate={crate} onOpen={() => setOpen(row.id)} onPick={pick} onPickAll={pickAll} />
               </li>
@@ -119,7 +138,7 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
           </div>
         </div>
       )}
-      <GoodSheet save={save} row={openRow} grade={open ? carrotGradeOf(open) : undefined} onClose={() => setOpen(null)} onShipAll={shipAll} busy={busy || left === 0} error={error} />
+      <GoodSheet save={save} row={openRow} crop={open ? cropGradeOf(open) : undefined} onClose={() => setOpen(null)} onShipAll={shipAll} busy={busy || left === 0} error={error} />
     </div>
   )
 }
@@ -201,15 +220,15 @@ function GoodLine({ row, picking, crate, onOpen, onPick, onPickAll }: {
 }
 
 /** A good's sheet: its family, grade and form, what it refines into or from, its stars, and Ship all · 1 action. */
-function GoodSheet({ save, row, grade, onClose, onShipAll, busy, error }: {
-  save: FarmSave; row: GoodRow | undefined; grade: CarrotGrade | undefined; onClose: () => void; onShipAll: (row: GoodRow) => void; busy: boolean; error: string | null
+function GoodSheet({ save, row, crop, onClose, onShipAll, busy, error }: {
+  save: FarmSave; row: GoodRow | undefined; crop: ReturnType<typeof cropGradeOf>; onClose: () => void; onShipAll: (row: GoodRow) => void; busy: boolean; error: string | null
 }) {
   const reserved = row ? Math.min(row.total, save.farm.reserves?.[row.id] ?? 0) : 0
   return (
     <Sheet
-      open={row !== undefined || grade !== undefined}
+      open={row !== undefined || crop !== undefined}
       onClose={onClose}
-      title={grade ? `Carrot G${grade}` : row?.name}
+      title={crop ? `${itemNameOf(crop.crop)} G${crop.grade}` : row?.name}
       footer={row?.sells
         ? <Button className="w-full" disabled={busy} onClick={() => onShipAll(row)} data-action="ship-all">{reserved ? 'Ship all, including reserve' : 'Ship all'} · {goldWords(row.worth)} · 1 action</Button>
         : undefined}
@@ -229,51 +248,53 @@ function GoodSheet({ save, row, grade, onClose, onShipAll, busy, error }: {
           {error && <p role="status" className="text-[13px] text-danger">{error}</p>}
         </div>
       )}
-      {grade && <CarrotSeedPanel key={grade} save={save} grade={grade} held={row?.total ?? 0} />}
+      {crop && <CropSeedPanel key={`${crop.crop}:${crop.grade}`} save={save} {...crop} held={row?.total ?? 0} />}
     </Sheet>
   )
 }
 
-function CarrotSeedPanel({ save, grade, held }: { save: FarmSave; grade: CarrotGrade; held: number }) {
-  const id = carrotGood(grade)
+function CropSeedPanel({ save, crop, grade, held }: { save: FarmSave; crop: CropId; grade: number; held: number }) {
+  const id = cropGoodId(crop, grade)!
   const floor = save.farm.reserves?.[id] ?? 0
   const [reserve, setReserve] = useState(floor)
   const [count, setCount] = useState(1)
   const { note, error, busy, run } = useAct(id)
   const max = Math.min(SEED_BATCH, held)
-  const next = nextCarrotGrade(grade)
-  const canImprove = seedOutput(save, grade, true) !== undefined
+  const required = seedKnowledge(crop, grade)
+  const canImprove = seedOutput(save, crop, grade, true) !== undefined
+  const seasons = CROPS[crop].seasons.map((season) => SEASON_NAMES[season]).join(' · ')
   const takesReserve = count > held - floor
   const locked = busy || actionsLeft(save) === 0 || !Number.isInteger(count) || count < 1 || count > max
-  const convert = (improve: boolean) => run(saveSeeds(grade, improve, count, takesReserve)
-    .then(() => `Saved ${count} × Carrot G${improve ? next : grade} seed`))
+  const convert = (improve: boolean) => run(saveSeeds(crop, grade, improve, count, takesReserve)
+    .then(() => `Saved ${count} × ${itemNameOf(crop)} G${improve ? grade + 1 : grade} seed`))
   return (
-    <div className="space-y-2 border-t border-hairline pt-2" aria-label="Carrot seed and reserve">
+    <div className="space-y-2 border-t border-hairline pt-2" aria-label="Crop seed and reserve">
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex min-h-11 items-center gap-2 text-[14px]">Reserve G{grade}
           <input type="number" min={0} max={MAX_SEED_TARGET} value={reserve} onChange={(e) => setReserve(Number(e.currentTarget.value))}
             className="min-h-11 w-16 rounded-sm border border-hairline-strong bg-panel px-2" />
         </label>
         <Button variant="secondary" size="sm" disabled={busy || reserve === floor || !Number.isInteger(reserve) || reserve < 0 || reserve > MAX_SEED_TARGET}
-          onClick={() => run(reserveCarrots(grade, reserve).then(() => 'Reserve saved'))}>Set reserve</Button>
+          onClick={() => run(reserveCrop(crop, grade, reserve).then(() => 'Reserve saved'))}>Set reserve</Button>
       </div>
-      {held > 0 ? (
+      {held > 0 && canSaveCropSeed(crop) && (
         <>
-          <label className="flex min-h-11 items-center gap-2 text-[14px]">Carrots for seed
+          <label className="flex min-h-11 items-center gap-2 text-[14px]">Units for seed
             <input type="number" min={1} max={max} value={count} onChange={(e) => setCount(Number(e.currentTarget.value))}
               className="min-h-11 w-16 rounded-sm border border-hairline-strong bg-panel px-2" />
           </label>
           <div className="flex flex-wrap gap-1.5">
             <Button variant="secondary" size="sm" disabled={locked} onClick={() => convert(false)}>{takesReserve ? 'Use reserve for' : 'Save'} G{grade} seed · 1</Button>
-            {next && <Button size="sm" disabled={locked || !canImprove} onClick={() => convert(true)}>{takesReserve ? 'Use reserve to reach' : 'Improve to'} G{next} seed · 1</Button>}
+            {required !== undefined && <Button size="sm" disabled={locked || !canImprove} onClick={() => convert(true)}>{takesReserve ? 'Use reserve to reach' : 'Improve to'} G{grade + 1} seed · 1</Button>}
           </div>
-          {grade !== 3 && !canImprove && <p className="text-[12px] text-ink-soft">Improve at {SEED_KNOWLEDGE[grade]} crop points · {save.crops.carrot ?? 0} now</p>}
+          {required !== undefined && !canImprove && <p className="text-[12px] text-ink-soft">Improve at {required} crop points · {save.crops[crop] ?? 0} now</p>}
         </>
-      ) : <p className="text-[13px] text-ink-soft">No G{grade} carrots held.</p>}
+      )}
+      {held === 0 && <p className="text-[13px] text-ink-soft">No G{grade} held.</p>}
       {!discovered(save, id) && (
         <p className="text-[12px] text-ink-soft">
-          {grade === 1 ? 'Spring · Grow Carrot from the shop’s seed.'
-            : `Spring · Plant G${grade} seed, or assign Harvesting ${grade === 2 ? 4 : 7} to upgrade G${grade - 1}.`}
+          {grade === cropBaseGrade(crop) ? `${seasons} · ${CROPS[crop].tier === 'rare' ? 'Rare seed from farm rewards' : `Shop seed · Farm Rank ${CROPS[crop].tier}`}`
+            : `${seasons} · Plant G${grade} seed, or assign Harvesting ${grade === cropBaseGrade(crop) + 1 ? 4 : 7} to upgrade G${grade - 1}.`}
         </p>
       )}
       <Notes note={note} error={error} />

@@ -10,6 +10,7 @@
 // open in order, each after the one before. Its tiles are worked by hand (`fields.ts`) and by the farmhands, whose field
 // tasks name their plot (`farm/farmhands.ts`). Pure; never stamps.
 import { actionsLeft, spend } from '../farm/actions'
+import { needsWater } from './crops'
 import { farmRankOf } from '../farm/farm'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
@@ -99,7 +100,7 @@ export function countTiles(tiles: readonly Tile[]): FieldCounts {
   const out: FieldCounts = { water: 0, ripe: 0, plant: 0, clear: 0 }
   for (const t of tiles) {
     if (t.ready) out.ripe++
-    else if (t.crop !== null) { if (!t.watered) out.water++ }
+    else if (t.crop !== null) { if (needsWater(t)) out.water++ }
     else if (t.ground === 'tilled') out.plant++
     else if (isOvergrown(t.ground) || t.ground === 'clear') out.clear++
   }

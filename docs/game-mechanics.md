@@ -325,7 +325,8 @@ belong to, and until then cost nothing or aren't there yet:
 | The fields | Water a tile | 1 | Now |
 | The fields | Harvest a tile | 1 | Now |
 | The fields | Water a row: a farmhand’s trick, from Watering 6 | 1 | Now |
-| The fields | Save up to four carrot seeds from one grade of carrots | 1 | Now |
+| The fields | Save up to four seeds from one grade of produce | 1 | Now |
+| The fields | Remove an orchard plant and leave tilled soil | 1 | Now |
 | The fields | Cut grass on a weeds tile, for the silo | 1 | Now |
 | The fields | Clear a plot: a new page of the field, from its Farm Rank, for its gold | 1 | Now |
 | Animals | Feed one, or care for one; collect a building’s eggs, milk or wool | 1 | Now |
@@ -875,60 +876,87 @@ A tap on the field's sign (or the Menu's Fields, or a morning line about the fie
 
 #### The crops
 
-There are 27 crops: 22 from the shop, and 5 rare ones whose seeds the shop never sells and nothing on the farm hands
-out. A crop is planted only in its seasons. In the table, "Shop" is the Farm Rank its seed sells from, "Seed" its price,
-and "Stages" the watered nights from planting to ripe. "Yield" is the crops a tile gives each harvest, "Regrows" how
-many watered nights a regrowing crop takes to ripen again, "Price ★1" what one sells for, and "Refined at" the station
-that turns it into a good worth ×1.5.
+There are 51 plantables, including 46 sold in town and five earned as rare seeds. Annuals grow in their listed
+seasons. Trees and shrubs can be planted whenever you have seed and bear fruit in their listed season.
+The watered nights column gives the time to an annual's first harvest or to an orchard plant's establishment.
+Prices and refined forms in the table are for base-grade produce.
 
 <!-- live:crops -->
-| Crop | Id | Seasons | Shop | Seed | Stages | Yield | Regrows | Price ★1 | Refined at |
-|---|---|---|---|---|---|---|---|---|---|
-| Carrot | `carrot` | Spring | Farm Rank 1 | 20g | 4 | 1 | — | 60g | — |
-| Potato | `potato` | Spring | Farm Rank 1 | 35g | 6 | 2 | — | 55g | — |
-| Mint | `mint` | Spring | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Mint (Sawmill) |
-| Onion | `onion` | Spring, Autumn | Farm Rank 2 | 30g | 5 | 1 | — | 100g | — |
-| Cabbage | `cabbage` | Spring, Winter | Farm Rank 2 | 90g | 8 | 1 | — | 260g | — |
-| Asparagus | `asparagus` | Spring | Farm Rank 4 | 150g | 10 | 1 | — | 480g | — |
-| Tomato | `tomato` | Summer | Farm Rank 1 | 50g | 7 | 1 | every 3 | 70g | — |
-| Basil | `basil` | Summer | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Basil (Sawmill) |
-| Bell Pepper | `bell-pepper` | Summer | Farm Rank 1 | 60g | 6 | 1 | every 3 | 60g | — |
-| Eggplant | `eggplant` | Summer | Farm Rank 2 | 70g | 6 | 1 | every 4 | 95g | — |
-| Sunflower Seed | `sunflower-seed` | Summer | Farm Rank 2 | 70g | 8 | 3 | — | 75g | Sunflower Oil (Mill) |
-| Corn | `corn` | Summer, Autumn | Farm Rank 4 | 80g | 9 | 1 | every 4 | 140g | Cornmeal (Mill) |
-| Wheat | `wheat` | Autumn | Farm Rank 1 | 25g | 5 | 2 | — | 40g | Wheat Flour (Mill) |
-| Peanut | `peanut` | Autumn | Farm Rank 1 | 30g | 4 | 2 | — | 35g | Peanut Butter (Mill) |
-| Rice | `rice` | Autumn | Farm Rank 1 | 35g | 6 | 2 | — | 50g | Polished Rice (Mill) |
-| Sugar Beet | `sugar-beet` | Autumn | Farm Rank 2 | 40g | 6 | 1 | — | 120g | Beet Sugar (Mill) |
-| Emperor Pumpkin | `emperor-pumpkin` | Autumn | Farm Rank 4 | 250g | 10 | 1 | — | 600g | — |
-| Buckwheat | `buckwheat` | Winter | Farm Rank 1 | 30g | 4 | 1 | — | 75g | Buckwheat Flour (Mill) |
-| Oats | `oats` | Winter | Farm Rank 1 | 25g | 5 | 2 | — | 40g | Rolled Oats (Mill) |
-| Barley | `barley` | Winter | Farm Rank 1 | 30g | 5 | 2 | — | 45g | Pearl Barley (Mill) |
-| Rye | `rye` | Winter | Farm Rank 2 | 40g | 6 | 2 | — | 60g | Rye Flour (Mill) |
-| Ginger | `ginger` | Winter | Farm Rank 4 | 120g | 9 | 2 | — | 200g | Ground Ginger (Sawmill) |
-| Golden Carrot | `golden-carrot` | Spring | Rare | — | 6 | 1 | — | 600g | — |
-| Sunwheat | `sunwheat` | Summer | Rare | — | 7 | 2 | — | 260g | Sunwheat Flour (Mill) |
-| Moonrice | `moonrice` | Autumn | Rare | — | 7 | 2 | — | 240g | Moonrice Flour (Mill) |
-| Wild Rice | `wild-rice` | Summer | Rare | — | 6 | 2 | — | 160g | Hulled Wild Rice (Mill) |
-| Mandrake | `mandrake` | Winter | Rare | — | 8 | 1 | — | 520g | Mandrake Powder (Sawmill) |
+| Crop | Id | Kind | Seasons | Grades | Shop | Seed | Watered nights | Yield | Regrows | Price ★1 | Refined at |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Carrot | `carrot` | Annual | Spring | G1–G2–G3 | Farm Rank 1 | 20g | 4 | 1 | — | 60g | — |
+| Potato | `potato` | Annual | Spring | G2–G3–G4 | Farm Rank 1 | 35g | 6 | 2 | — | 55g | — |
+| Mint | `mint` | Annual | Spring | G2–G3–G4 | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Mint (Sawmill) |
+| Onion | `onion` | Annual | Spring, Autumn | G4–G5–G6 | Farm Rank 2 | 30g | 5 | 1 | — | 100g | — |
+| Cabbage | `cabbage` | Annual | Spring, Winter | G3–G4–G5 | Farm Rank 2 | 90g | 8 | 1 | — | 260g | — |
+| Asparagus | `asparagus` | Annual | Spring | G8–G9–G10 | Farm Rank 4 | 150g | 10 | 1 | — | 480g | — |
+| Tomato | `tomato` | Annual | Summer | G5–G6–G7 | Farm Rank 1 | 50g | 7 | 1 | every 3 | 70g | — |
+| Basil | `basil` | Annual | Summer | G1–G2–G3 | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Basil (Sawmill) |
+| Bell Pepper | `bell-pepper` | Annual | Summer | G6–G7–G8 | Farm Rank 1 | 60g | 6 | 1 | every 3 | 60g | — |
+| Eggplant | `eggplant` | Annual | Summer | G7–G8–G9 | Farm Rank 2 | 70g | 6 | 1 | every 4 | 95g | — |
+| Sunflower Seed | `sunflower-seed` | Annual | Summer | G2–G3–G4 | Farm Rank 2 | 70g | 8 | 3 | — | 75g | Sunflower Oil (Mill) |
+| Corn | `corn` | Annual | Summer, Autumn | G5–G6–G7 | Farm Rank 4 | 80g | 9 | 1 | every 4 | 140g | Cornmeal (Mill) |
+| Wheat | `wheat` | Annual | Autumn | G1–G2–G3 | Farm Rank 1 | 25g | 5 | 2 | — | 40g | Wheat Flour (Mill) |
+| Peanut | `peanut` | Annual | Autumn | G1–G2–G3 | Farm Rank 1 | 30g | 4 | 2 | — | 35g | Peanut Butter (Mill) |
+| Rice | `rice` | Annual | Autumn | G4–G5–G6 | Farm Rank 1 | 35g | 6 | 2 | — | 50g | Polished Rice (Mill) |
+| Sugar Beet | `sugar-beet` | Annual | Autumn | G3–G4–G5 | Farm Rank 2 | 40g | 6 | 1 | — | 120g | Beet Sugar (Mill) |
+| Emperor Pumpkin | `emperor-pumpkin` | Annual | Autumn | G10 | Farm Rank 4 | 250g | 10 | 1 | — | 600g | — |
+| Buckwheat | `buckwheat` | Annual | Winter | G7–G8–G9 | Farm Rank 1 | 30g | 4 | 1 | — | 75g | Buckwheat Flour (Mill) |
+| Oats | `oats` | Annual | Winter | G2–G3–G4 | Farm Rank 1 | 25g | 5 | 2 | — | 40g | Rolled Oats (Mill) |
+| Barley | `barley` | Annual | Winter | G3–G4–G5 | Farm Rank 1 | 30g | 5 | 2 | — | 45g | Pearl Barley (Mill) |
+| Rye | `rye` | Annual | Winter | G6–G7–G8 | Farm Rank 2 | 40g | 6 | 2 | — | 60g | Rye Flour (Mill) |
+| Ginger | `ginger` | Annual | Winter | G5–G6–G7 | Farm Rank 4 | 120g | 9 | 2 | — | 200g | Ground Ginger (Sawmill) |
+| Golden Carrot | `golden-carrot` | Annual | Spring | G9 | Rare | — | 6 | 1 | — | 600g | — |
+| Sunwheat | `sunwheat` | Annual | Summer | G10 | Rare | — | 7 | 2 | — | 260g | Sunwheat Flour (Mill) |
+| Moonrice | `moonrice` | Annual | Autumn | G9 | Rare | — | 7 | 2 | — | 240g | Moonrice Flour (Mill) |
+| Wild Rice | `wild-rice` | Annual | Summer | G8 | Rare | — | 6 | 2 | — | 160g | Hulled Wild Rice (Mill) |
+| Mandrake | `mandrake` | Annual | Winter | G9 | Rare | — | 8 | 1 | — | 520g | Mandrake Powder (Sawmill) |
+| Radish | `radish` | Annual | Spring | G1–G2–G3 | Farm Rank 1 | 20g | 3 | 1 | — | 55g | — |
+| Lettuce | `lettuce` | Annual | Spring | G2–G3–G4 | Farm Rank 1 | 30g | 5 | 1 | — | 85g | — |
+| Green Peas | `green-peas` | Annual | Spring | G3–G4–G5 | Farm Rank 2 | 50g | 5 | 2 | every 3 | 65g | — |
+| Strawberry | `strawberry` | Annual | Spring | G2–G3–G4 | Farm Rank 2 | 65g | 5 | 2 | every 3 | 45g | — |
+| Raspberry | `raspberry` | Shrub | Spring | G3–G4–G5 | Farm Rank 3 | 130g | 6 | 3 | each bearing season | 55g | — |
+| Plum | `plum` | Tree | Spring | G4–G5–G6 | Farm Rank 4 | 220g | 8 | 3 | each bearing season | 70g | Plum Preserve (Mill) |
+| Cucumber | `cucumber` | Annual | Summer | G2–G3–G4 | Farm Rank 1 | 40g | 5 | 1 | every 3 | 85g | — |
+| Okra | `okra` | Annual | Summer | G4–G5–G6 | Farm Rank 2 | 55g | 5 | 1 | every 3 | 95g | — |
+| Zucchini | `zucchini` | Annual | Summer | G3–G4–G5 | Farm Rank 2 | 50g | 6 | 2 | — | 80g | — |
+| Peach | `peach` | Tree | Summer | G3–G4–G5 | Farm Rank 3 | 180g | 7 | 3 | each bearing season | 55g | Peach Preserve (Mill) |
+| Blueberry | `blueberry` | Shrub | Summer | G4–G5–G6 | Farm Rank 3 | 150g | 6 | 3 | each bearing season | 70g | — |
+| Mango | `mango` | Tree | Summer | G7–G8–G9 | Farm Rank 6 | 360g | 8 | 3 | each bearing season | 155g | Mango Pulp (Mill) |
+| Turnip | `turnip` | Annual | Autumn | G1–G2–G3 | Farm Rank 1 | 25g | 4 | 1 | — | 65g | — |
+| Sweet Potato | `sweet-potato` | Annual | Autumn | G3–G4–G5 | Farm Rank 2 | 50g | 5 | 2 | — | 80g | — |
+| Winter Squash | `winter-squash` | Annual | Autumn | G6–G7–G8 | Farm Rank 4 | 105g | 8 | 2 | — | 160g | — |
+| Apple | `apple` | Tree | Autumn | G1–G2–G3 | Farm Rank 2 | 100g | 6 | 3 | each bearing season | 35g | Apple Preserve (Mill) |
+| Pear | `pear` | Tree | Autumn | G2–G3–G4 | Farm Rank 3 | 160g | 7 | 3 | each bearing season | 45g | Pear Preserve (Mill) |
+| Grape | `grape` | Shrub | Autumn | G6–G7–G8 | Farm Rank 4 | 260g | 7 | 3 | each bearing season | 120g | Grape Jelly (Mill) |
+| Leek | `leek` | Annual | Winter | G2–G3–G4 | Farm Rank 1 | 30g | 4 | 1 | — | 75g | — |
+| Cauliflower | `cauliflower` | Annual | Winter | G5–G6–G7 | Farm Rank 2 | 65g | 6 | 2 | — | 115g | — |
+| Red Beet | `red-beet` | Annual | Winter | G3–G4–G5 | Farm Rank 2 | 45g | 5 | 2 | — | 85g | — |
+| Orange | `orange` | Tree | Winter | G5–G6–G7 | Farm Rank 4 | 220g | 7 | 3 | each bearing season | 95g | Orange Marmalade (Mill) |
+| Persimmon | `persimmon` | Tree | Winter | G6–G7–G8 | Farm Rank 4 | 245g | 7 | 3 | each bearing season | 120g | — |
+| Pomegranate | `pomegranate` | Tree | Winter | G8–G9–G10 | Farm Rank 6 | 375g | 8 | 3 | each bearing season | 200g | Pomegranate Molasses (Mill) |
 <!-- /live -->
 
 #### The shop's seeds
 
-The shop, in town, sells the season's six seeds: the first three from day 1, the next two from Farm Rank 2 and the last
-from Farm Rank 4. A line shut by its rank still shows, with "From Farm Rank 2". The list changes on a season's first
+The shop in town offers twelve seeds per season, from Farm Ranks 1, 2, 3, 4 and 6. A line shut by its rank still
+shows, with "From Farm Rank 2". The list changes on a season's first
 day and never runs out. Onion sells in Spring and Autumn and Cabbage in Spring and Winter; Corn sells in Summer only,
 though it grows on into Autumn. Seeds go into the Warehouse at ★1, and never sell at the bin.
+
+From **Farm Rank 6**, the morning awards one seed of each rare crop for its growing season each year.
+Spring brings Golden Carrot, Summer brings Sunwheat and Wild Rice, Autumn brings Moonrice, and Winter brings
+Mandrake. Save unused seed for a later year. The prize itself grants no crop discovery.
 
 The season's seeds by the Farm Rank that opens them:
 
 <!-- live:shop-seeds -->
-| Season | Farm Rank 1 | Farm Rank 2 | Farm Rank 4 |
-|---|---|---|---|
-| Spring | Carrot 20g, Potato 35g, Mint 40g | Onion 30g, Cabbage 90g | Asparagus 150g |
-| Summer | Tomato 50g, Basil 40g, Bell Pepper 60g | Eggplant 70g, Sunflower Seed 70g | Corn 80g |
-| Autumn | Wheat 25g, Peanut 30g, Rice 35g | Sugar Beet 40g, Onion 30g | Emperor Pumpkin 250g |
-| Winter | Buckwheat 30g, Oats 25g, Barley 30g | Rye 40g, Cabbage 90g | Ginger 120g |
+| Season | Farm Rank 1 | Farm Rank 2 | Farm Rank 3 | Farm Rank 4 | Farm Rank 6 |
+|---|---|---|---|---|---|
+| Spring | Carrot 20g, Potato 35g, Mint 40g, Radish 20g, Lettuce 30g | Onion 30g, Cabbage 90g, Green Peas 50g, Strawberry 65g | Raspberry 130g | Asparagus 150g, Plum 220g |  |
+| Summer | Tomato 50g, Basil 40g, Bell Pepper 60g, Cucumber 40g | Eggplant 70g, Sunflower Seed 70g, Okra 55g, Zucchini 50g | Peach 180g, Blueberry 150g | Corn 80g | Mango 360g |
+| Autumn | Wheat 25g, Peanut 30g, Rice 35g, Turnip 25g | Sugar Beet 40g, Onion 30g, Sweet Potato 50g, Apple 100g | Pear 160g | Emperor Pumpkin 250g, Winter Squash 105g, Grape 260g |  |
+| Winter | Buckwheat 30g, Oats 25g, Barley 30g, Leek 30g | Rye 40g, Cabbage 90g, Cauliflower 65g, Red Beet 45g |  | Ginger 120g, Orange 220g, Persimmon 245g | Pomegranate 375g |
 <!-- /live -->
 
 #### A tile's actions
@@ -992,44 +1020,61 @@ A harvest's stars by the crop's level, and the chance of a seed back:
 | 10 | +0.9 | ★1 10%, ★2 90% | 5% |
 <!-- /live -->
 
-#### The carrot grade pilot
+#### Crop grades and saved seeds
 
-Carrot has three grades. Ordinary Carrot is **G1**. **Carrot G2** and **Carrot G3** have separate stock and seed
-counts, and each grade still comes at ★1–5. Golden Carrot remains a distinct crop. All three grades take four
-watered nights in Spring. The shop and the starting field still offer ordinary seed.
+Each shop crop has a base grade and up to two higher grades, capped at G10. Rare crops keep their original single
+grade. Each grade has its own produce and seed counts, with ★1–5 quality on the produce. Golden Carrot is its own
+crop. Grades of one species take the same time to grow.
 
-- In the Warehouse's carrot sheet, **Save** turns up to four carrots of one grade into the same number of saved
-  seeds for one action, using the lowest stars first. **Improve** spends the same amount and gives seed one grade
-  higher at 3 carrot crop points for G2, or 12 for G3. A grown carrot still returns a random own seed at its planted
-  grade. A saved seed gives the crop twice the knowledge on harvest.
-- A field row's **Spring carrot plan** sets the grade Umas plant there. Assign the usual field tasks in the Work
-  board, and use **Copy to…** to give a second Uma the same task. Turning on **Harvest next grade when skilled**
-  waits for Harvesting 4 on a G1 planting or 7 on a G2 planting. A qualifying Uma upgrades one carrot per tile,
-  with any extra yield at the planted grade. Another Uma can still water or cover a town day. The player can always
-  harvest the planted grade directly.
-- **Save carrot seed** on the Work board names the source grade, whether to improve it and how many saved seeds to
-  keep. It trains Planting and can turn up to four carrots into seed per action. Multiple Umas use the same stock
-  and stop at their target. Put it after Harvest and before Plant to use it during the same shift.
-- **Reserve** keeps an exact grade across all its stars. Automated seed saving and plain meal batches use the
-  surplus. An explicit seed action can use reserved carrots, as can a player who deliberately ships or chooses
-  them for a meal.
-- The first harvest of each exact grade is remembered in **Carrot discoveries** on the Warehouse's Crops tab and
-  appears in the next morning’s work. The record survives shipping and use. Previously earned carrot crop points
-  prove a legacy G1 harvest. Stored produce and saved seeds alone do not prove a higher grade.
-- Carrot grades ship at their own prices and record separate Diary entries. They share the same market easing and
-  crate of 50, with the best stars first and higher grades first within a star. Any carrot grade qualifies for the
-  existing vegetables collection row.
+- In a crop's Warehouse sheet, **Save** turns up to four units of one grade into the same number of seeds for
+  one action, starting with the lowest stars. **Improve** gives seed one grade higher at 3 crop points for the
+  first increase and 12 for the second. A random seed return inherits the planting's grade. All own seed doubles
+  the knowledge earned when harvested. The five rare crops use seed prizes and natural returns.
+- **Save seed** on the Work board names a species, source grade, whether to improve it and how many saved seeds
+  to keep. It trains Planting. Multiple Umas use the same stock and stop at the shared target. Put it after Harvest
+  and before Plant to use the result in one shift.
+- **Reserve** sets a floor for an exact grade across stars. Automatic seed saving, plain meals and station loads
+  use the surplus. A manual seed action can spend reserved stock when you choose it explicitly.
+- The first harvest of an exact grade is remembered in **Crop discoveries** on the Crops and Fruits tabs and
+  appears in the morning. Foraging a shared crop such as a wild Apple proves its base grade too. Produce in stock
+  and unplanted seeds grant no proof. Legacy crop points prove a base harvest, with the carrot pilot's exact
+  discovery retained.
+- Grades ship at their own prices and record separate Diary entries. The first upgrade sells for 1.2× base
+  and the second for 1.45× base, rounded to 5g. Grades of one crop share a market crate and easing. Collection rows
+  accept any grade of the specified crop.
+
+#### Seasonal row plans
+
+Open a row on the field and choose a season, crop and planting grade. A row with a plan can wait through an unset
+season. **Any annual in season** uses base seeds, preferring saved ones. Orchard plants require a named assignment,
+so a farmer covering a field does not accidentally plant a permanent tree. Assign the normal field tasks in the
+Work board and copy an assignment to a backup as needed. The row panel previews work still outstanding tonight.
+
+**Harvest next grade when skilled** waits for Harvesting 4 at a crop's base grade or 7 at the next grade. A qualified
+Uma upgrades one unit per tile and keeps extra yield at the planted grade. A backup can water the row without the
+harvest skill. You can still pick the planted grade by hand.
+
+#### The orchard
+
+Trees and woody shrubs occupy ordinary field tiles. A sapling needs its listed watered nights to establish, even
+across a season change. After establishment the tile needs no water. It sets a crop on the first morning of its
+bearing season or when it establishes during that season. Ripe fruit waits indefinitely. If a pick is still waiting
+when the next bearing season starts, it occupies that season's slot.
+
+After a pick the plant stays on its tile through dormancy. **Remove orchard plant**, then confirm, spends one action
+and leaves tilled soil. Removing a plant is the way to replace its planted grade. The eight orchard fruits already
+found in the woods retain their original goods, prices and forage sources. Their base preserves still use the Mill.
 
 #### Regrowing
 
-Mint, Tomato, Basil and Bell Pepper regrow in 3 watered nights, Eggplant and Corn in 4. After a harvest the tile keeps
+Mint, Tomato, Basil, Bell Pepper, Green Peas, Strawberry, Cucumber and Okra regrow in 3 watered nights, Eggplant and Corn in 4. After a harvest the tile keeps
 its crop and starts again at stage 0, so it needs watering again. It keeps its seed's kind, own or the shop's, for its
 crop points. Out of its season a regrowing crop doesn't start again: a ripe Tomato harvested on Autumn 1 leaves the tile
 empty.
 
 #### Withering
 
-On a season's last night, after the night's growth and before the date turns, every crop still growing (a regrowing one
+On a season's last night, after the night's growth and before the date turns, every annual still growing (a regrowing one
 too) that doesn't grow in the next season withers, and its tile is left tilled and empty. Ripe crops never wither: they
 wait to be harvested. Only Corn (Summer into Autumn) and Cabbage (Winter into Spring) carry over. Onion grows in Spring
 and Autumn, which don't meet, so a growing Onion withers at the end of both.
@@ -1765,22 +1810,18 @@ Each season's families, and how many goods they lift:
 <!-- live:demand -->
 | Season | In demand (+20%) | Goods lifted |
 |---|---|---|
-| Spring | Vegetables, Sweets | 30 of 284 |
-| Summer | Fruits, Fish | 40 of 284 |
-| Autumn | Grains, Mushrooms, Nuts and seeds | 60 of 284 |
-| Winter | Dishes, Cloth (the refined row), Preserves (the refined row) | 20 of 284 |
+| Spring | Vegetables, Sweets | 84 of 390 |
+| Summer | Fruits, Fish | 68 of 390 |
+| Autumn | Grains, Mushrooms, Nuts and seeds | 78 of 390 |
+| Winter | Dishes, Cloth (the refined row), Preserves (the refined row) | 20 of 390 |
 <!-- /live -->
 
 #### The catalogue
 
-The catalogue holds 284 goods in 17 families, each with ten raw grades (G1–G10) and their refined forms where a station
-makes them: 27 crops and 10 flours, the forest's 113, mining's 60, fishing's 20, the expeditions' 30, and the ranch's
-24: uma-art's fibers (ten raw, from Flax to Cloudfleece, and their ten cloths) and the eggs and milk (Egg, Milk, Duck
-Egg and Goat Milk, G1–G4, with no refined form). Every icon is on uma-art's items atlas, the eggs and milk from 2.30.0
-(the `ranch` kind's `eggs-milk` line, row 38). The farm brings in the shop's crops, the forest's goods
-(Mandrake among them), the freshwater fish, the Mine's ores and the Quarry's stones and gems, the Barn's wool and fleeces,
-the eggs and milk, and the five stations' forms of them; the rest are priced, but nothing on the farm brings them in.
-Seeds aren't goods: they have no price and the bin won't take them.
+The catalogue holds 390 goods in 17 families. The 284 original goods keep their IDs, with 16 new kinds of produce
+and 90 crop grade variants. Eight existing wild fruits are also plantable. Grade variants share their species'
+art. The original Uma Farm produce sheet supplies the new species' icons and the orchard silhouettes. The bin takes
+produce and other priced goods. Seed is kept separately.
 
 The crops' own prices, their refined forms and their season of demand:
 
@@ -1814,6 +1855,30 @@ The crops' own prices, their refined forms and their season of demand:
 | Moonrice | `moonrice` | Grains | 240g | Moonrice Flour | 360g | Autumn |
 | Wild Rice | `wild-rice` | Grains | 160g | Hulled Wild Rice | 240g | Autumn |
 | Mandrake | `mandrake` | Herbs and spices | 520g | Mandrake Powder | 780g | — |
+| Radish | `radish` | Vegetables | 55g | — | — | Spring |
+| Lettuce | `lettuce` | Vegetables | 85g | — | — | Spring |
+| Green Peas | `green-peas` | Vegetables | 65g | — | — | Spring |
+| Strawberry | `strawberry` | Fruits | 45g | — | — | Summer |
+| Raspberry | `raspberry` | Fruits | 55g | — | — | Summer |
+| Plum | `plum` | Fruits | 70g | Plum Preserve | 105g | Summer |
+| Cucumber | `cucumber` | Vegetables | 85g | — | — | Spring |
+| Okra | `okra` | Vegetables | 95g | — | — | Spring |
+| Zucchini | `zucchini` | Vegetables | 80g | — | — | Spring |
+| Peach | `peach` | Fruits | 55g | Peach Preserve | 85g | Summer |
+| Blueberry | `blueberry` | Fruits | 70g | — | — | Summer |
+| Mango | `mango` | Fruits | 155g | Mango Pulp | 235g | Summer |
+| Turnip | `turnip` | Vegetables | 65g | — | — | Spring |
+| Sweet Potato | `sweet-potato` | Vegetables | 80g | — | — | Spring |
+| Winter Squash | `winter-squash` | Vegetables | 160g | — | — | Spring |
+| Apple | `apple` | Fruits | 35g | Apple Preserve | 55g | Summer |
+| Pear | `pear` | Fruits | 45g | Pear Preserve | 70g | Summer |
+| Grape | `grape` | Fruits | 120g | Grape Jelly | 180g | Summer |
+| Leek | `leek` | Vegetables | 75g | — | — | Spring |
+| Cauliflower | `cauliflower` | Vegetables | 115g | — | — | Spring |
+| Red Beet | `red-beet` | Vegetables | 85g | — | — | Spring |
+| Orange | `orange` | Fruits | 95g | Orange Marmalade | 145g | Summer |
+| Persimmon | `persimmon` | Fruits | 120g | — | — | Summer |
+| Pomegranate | `pomegranate` | Fruits | 200g | Pomegranate Molasses | 300g | Summer |
 <!-- /live -->
 
 #### Rings
@@ -1897,7 +1962,7 @@ The gold chip in the bar shows the coin and your gold, and opens the bin.
 
 The shop is in town: its sheet (from the town's **Shop**, the Menu, or a tile's **Seeds at the shop, in town**) first
 asks you to go in, "The shop is in town." with **Go into town · 1 action**; once you're in town today, it's open, free,
-for the rest of the day. It lists the season's six seeds, each with its icon, name and price and, while shut, its gate
+for the rest of the day. It lists the season's twelve seeds, each with its icon, name and price and, while shut, its gate
 ("From Farm Rank 2"). A tap opens a buy sheet: ×1, ×5, ×10, ×25 or a typed count, up to 99, and **Buy 9 · 180g**, held
 back with "Need 30g more" when gold is short. What you buy goes in the Warehouse at ★1. The shop checks its lines again
 as you buy, so a sheet left open past a season's turn can't buy last season's seeds. Beds and stations are bought at
@@ -1907,10 +1972,11 @@ their own places.
 
 The Warehouse holds everything the farm owns, by stars: each good has five counts, ★1 to ★5. It has no limit.
 
-- **Tabs**, in a row that scrolls sideways, each with its count: **Crops** (the 27 crops and the grains' refined forms),
+- **Tabs**, in a row that scrolls sideways, each with its count: **Crops** (field produce and the grains' refined forms),
   **Woods**, **Mushrooms**, **Herbs and spices**, **Fruits**, **Nuts and seeds**, **Sweets**, **Fish**, **Mining**
   (ores, stones and crystals) and **Seeds**; and **Loot** (the expeditions' goods), **Rings** and **Dishes** only while
-  something is on them. A crop's refined form sits on its family's tab (Dried Basil on Herbs and spices, Peanut Butter
+  something is on them. Orchard and berry produce appears in **Fruits**. The **Grade** picker filters the current tab,
+  and **Crop discoveries** shows exact grades even when stock is empty. A crop's refined form sits on its family's tab (Dried Basil on Herbs and spices, Peanut Butter
   on Nuts and seeds).
 - **Each good:** its icon, name, **In demand**, **Eased −20%** after a flood, its total, and its five stars, each with its
   count and today's price (eased, after a flood).
@@ -2009,14 +2075,14 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 
 | Grade | Raw | ★1 | ★5 | Refined | ★1 | ★5 |
 |---|---|---|---|---|---|---|
-| G1 | Apple | 35g | 70g | Apple Preserve | 55g | 110g |
-| G2 | Pear | 45g | 90g | Pear Preserve | 70g | 140g |
-| G3 | Peach | 55g | 110g | Peach Preserve | 85g | 170g |
-| G4 | Plum | 70g | 140g | Plum Preserve | 105g | 210g |
-| G5 | Orange | 95g | 190g | Orange Marmalade | 145g | 290g |
-| G6 | Grape | 120g | 240g | Grape Jelly | 180g | 360g |
-| G7 | Mango | 155g | 310g | Mango Pulp | 235g | 470g |
-| G8 | Pomegranate | 200g | 400g | Pomegranate Molasses | 300g | 600g |
+| G1 | Apple (crop) | 35g | 70g | Apple Preserve | 55g | 110g |
+| G2 | Pear (crop) | 45g | 90g | Pear Preserve | 70g | 140g |
+| G3 | Peach (crop) | 55g | 110g | Peach Preserve | 85g | 170g |
+| G4 | Plum (crop) | 70g | 140g | Plum Preserve | 105g | 210g |
+| G5 | Orange (crop) | 95g | 190g | Orange Marmalade | 145g | 290g |
+| G6 | Grape (crop) | 120g | 240g | Grape Jelly | 180g | 360g |
+| G7 | Mango (crop) | 155g | 310g | Mango Pulp | 235g | 470g |
+| G8 | Pomegranate (crop) | 200g | 400g | Pomegranate Molasses | 300g | 600g |
 | G9 | Starpeach | 255g | 510g | Starpeach Nectar | 385g | 770g |
 | G10 | Golden Apple | 330g | 660g | Golden Apple Preserve | 495g | 990g |
 
@@ -3253,7 +3319,7 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Water | A plot’s tiles you choose (the board offers each plot’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
 | Plant | A plot’s tiles you choose (the board offers each plot’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
 | Clear and till | A plot’s tiles you choose (the board offers each plot’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
-| Save carrot seed | Carrots in the Warehouse | Up to four carrots of one grade become saved seed | At the seed target, knowledge threshold, or reserve floor | Planting | Farming |
+| Save seed | One crop and grade in the Warehouse | Up to four units of produce of one grade become saved seed | At the seed target, knowledge threshold, or reserve floor | Planting | Farming |
 | Load | A built station | A load of the good the station holds most of, up to 8 (12 from her level 5), until the station holds its loads for the day: one a level | Once the station holds today’s loads, one a level | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
 | Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
 | Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |
@@ -3653,10 +3719,10 @@ stations' levels, the shop's seed tiers), so the sheet and the morning can't dri
 |---|---|---|
 | 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs) |
 | 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, New seeds at the shop |
-| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, New seeds at the shop |
 | 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, New seeds at the shop |
 | 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s |
-| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20 |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, New seeds at the shop |
 | 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (25,000g · 60 planks · 40 fillets), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
 | 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 | Plot 8 to clear (50,000g) |

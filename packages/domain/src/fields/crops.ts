@@ -1,17 +1,18 @@
-// The crops: the table row for row, 27 crops (22 from the shop, 5 rare ones from
-// expeditions, requests and prizes), and the shop's seeds by season and tier. Price ★1 is `CROP_PRICES`, and a
+// The crops: the table row for row, 51 crops (46 from the shop, 5 rare ones from
+// seasonal rank prizes), and the shop's seeds by season and tier. Price ★1 is `CROP_PRICES`, and a
 // refined form is `refinedOf` (goods/ids); this file holds what growing needs. The Novice and Expert days follow from
 // the untended days by the growth rule (`nightsToReady`), and a test checks every row against the table's columns.
 import type { Season } from '../farm/calendar'
-import type { CropId } from '../goods/ids'
+import { refinedOf, type CropId, type LegacyCropId } from '../goods/ids'
+import { PLANTABLE_ADDITIONS, type WoodyKind } from './plantables'
+export { established, needsWater } from './plantables'
 
-/** Where a crop's seeds come from: the shop from a Farm Rank (1, 2 or 4), or rare (expeditions, requests,
- * prizes). */
-export type SeedTier = 1 | 2 | 4 | 'rare'
+/** The Farm Rank that opens the shop seed, or a rare seed awarded in the morning. */
+export type SeedTier = 1 | 2 | 3 | 4 | 6 | 'rare'
 
 export interface Crop {
   id: CropId
-  /** The seasons it grows in: it's planted in these, and a growing one carries over where two join. */
+  /** Growing seasons for annuals, bearing seasons for orchard plants. */
   seasons: readonly Season[]
   tier: SeedTier
   /** A shop seed's price; null for a rare crop. */
@@ -24,13 +25,14 @@ export interface Crop {
   regrows: number | null
   /** The station that refines it: the Mill or the Sawmill, or null. */
   station: 'mill' | 'sawmill' | null
+  woody?: WoodyKind
 }
 
 const crop = (id: CropId, seasons: readonly Season[], tier: SeedTier, seed: number | null, days: number, yields: number, regrows: number | null,
   station: Crop['station'] = null): Crop => ({ id, seasons, tier, seed, days, yield: yields, regrows, station })
 
 /** The crops, in table order. */
-export const CROPS: Readonly<Record<CropId, Crop>> = {
+const ORIGINAL_CROPS: Readonly<Record<LegacyCropId, Crop>> = {
   carrot: crop('carrot', ['spring'], 1, 20, 4, 1, null),
   potato: crop('potato', ['spring'], 1, 35, 6, 2, null),
   mint: crop('mint', ['spring'], 1, 40, 4, 1, 3, 'sawmill'),
@@ -59,18 +61,29 @@ export const CROPS: Readonly<Record<CropId, Crop>> = {
   'wild-rice': crop('wild-rice', ['summer'], 'rare', null, 6, 2, null, 'mill'),
   mandrake: crop('mandrake', ['winter'], 'rare', null, 8, 1, null, 'sawmill'),
 }
+export const CROPS = {
+  ...ORIGINAL_CROPS,
+  ...Object.fromEntries(PLANTABLE_ADDITIONS.map(([id, p]) => [id, {
+    ...crop(id, [p.season], p.rank, p.seed, p.days, p.yield, p.regrows ?? null, p.woody && refinedOf(id) ? 'mill' : null),
+    ...(p.woody ? { woody: p.woody } : {}),
+  }])),
+} as Readonly<Record<CropId, Crop>>
 
 /** The shop's seeds by season, in order: the first three from Farm Rank 1, the next two from Farm Rank 2, the last from
  * Farm Rank 4. Onion sells in Spring and Autumn, Cabbage in Spring and Winter, and Corn in Summer only. */
-export const SHOP_SEEDS: Readonly<Record<Season, readonly CropId[]>> = {
+const ORIGINAL_SHOP: Readonly<Record<Season, readonly CropId[]>> = {
   spring: ['carrot', 'potato', 'mint', 'onion', 'cabbage', 'asparagus'],
   summer: ['tomato', 'basil', 'bell-pepper', 'eggplant', 'sunflower-seed', 'corn'],
   autumn: ['wheat', 'peanut', 'rice', 'sugar-beet', 'onion', 'emperor-pumpkin'],
   winter: ['buckwheat', 'oats', 'barley', 'rye', 'cabbage', 'ginger'],
 }
+export const SHOP_SEEDS = Object.fromEntries(Object.entries(ORIGINAL_SHOP).map(([season, ids]) => [
+  season, [...ids, ...PLANTABLE_ADDITIONS.filter(([, p]) => p.season === season).map(([id]) => id)],
+])) as unknown as Readonly<Record<Season, readonly CropId[]>>
 
 /** Whether a crop grows in a season. */
 export const growsIn = (crop: CropId, season: Season): boolean => CROPS[crop].seasons.includes(season)
+export const plantableIn = (crop: CropId, season: Season): boolean => !!CROPS[crop].woody || growsIn(crop, season)
 
 /** A hair of slack, so growth summed in floats reaches its mark (3 × 1.35 is 4.050000000000001). */
 export const GROWTH_SLACK = 1e-9

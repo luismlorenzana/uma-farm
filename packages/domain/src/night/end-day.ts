@@ -34,7 +34,8 @@ import { festivalOn, isNewYear, isSeasonStart, dateOf, type Festival } from '../
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
 import { PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
 import { talentsD, type TalentOf } from '../farm/talents'
-import { growTiles, tilesToPlant, witherTiles, type Withered } from '../fields/fields'
+import { growTiles, setOrchardFruit, tilesToPlant, witherTiles, type Withered } from '../fields/fields'
+import { awardRareSeeds } from '../fields/production'
 import type { MadeTonight } from '../gathering/kinds'
 import { finishLoads, type LoadDone } from '../gathering/stations'
 import { isStation } from '../gathering/ids'
@@ -123,6 +124,7 @@ export interface NightNotes {
   readonly built: readonly FarmPlaceId[]
   /** Step 8: the Diary's milestones and rows paid, and Farm Ranks reached. */
   readonly goals: GoalsTonight
+  readonly seedPrizes: readonly import('../goods/ids').CropId[]
   /** Step 8: the Town notes the night unlocked, by id. */
   readonly townNotes: readonly string[]
   /** Step 6: who was paid +10 for a day at her line. */
@@ -159,7 +161,7 @@ export interface NightNotes {
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], money: [], food: null, worked: [], tended: [], made: [], hands: [], returned: [], handsGathered: [], grew: 0, ripened: 0, ranch: [], loads: [], withered: [], ranks: [],
-  built: [], goals: { paid: [], ranks: [] }, townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
+  built: [], goals: { paid: [], ranks: [] }, seedPrizes: [], townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
   household: [], houseLine: null, houseItems: [], moved: [], misses: null, vows: null,
 })
 
@@ -341,7 +343,7 @@ export const witherCrops: NightStep = (night) => {
  * already withered crops out of season.
  */
 export const turnCalendar: NightStep = (night) =>
-  ({ ...night, save: { ...night.save, calendar: { day: night.save.calendar.day + 1 }, today: newTodayV4() } })
+  ({ ...night, save: setOrchardFruit({ ...night.save, calendar: { day: night.save.calendar.day + 1 }, today: newTodayV4() }) })
 
 /** Step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and the morning says so. */
 export const raiseBuildings: NightStep = (night) => {
@@ -362,7 +364,8 @@ export const unlockTownNotes: NightStep = (night) => {
  * from the day as it was left), and the Farm Rank's points are recomputed. */
 export const checkGoals: NightStep = (night) => {
   const { save, tonight } = checkGoalsNight(night.save, [...new Set([...night.before.today.gathered, ...night.notes.handsGathered])])
-  return { ...night, save, notes: { ...night.notes, goals: tonight } }
+  const awarded = awardRareSeeds(save)
+  return { ...night, save: awarded.save, notes: { ...night.notes, goals: tonight, seedPrizes: awarded.crops } }
 }
 
 /** Step 8, after the goals: the night after the first Romance 8 event anyone played,
@@ -558,7 +561,8 @@ export const buildSummary: NightStep = (night) => {
   const trips: WorkLine[] = notes.returned.map((trip) => ({ kind: 'expedition', ...trip }))
   const discoveries = Object.entries(save.farm.discoveries ?? {})
     .flatMap(([id, day]): WorkLine[] => day === night.before.calendar.day ? [{ kind: 'discovery', id }] : [])
-  const work = [...discoveries, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
+  const prizes = notes.seedPrizes.map((crop): WorkLine => ({ kind: 'seed-prize', crop }))
+  const work = [...discoveries, ...prizes, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
   const ranks = [...notes.ranks, ...aptitudeUps(night.before, save, talentsOf(night))]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),

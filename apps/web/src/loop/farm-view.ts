@@ -3,7 +3,7 @@
 // season's finds and how thin each is today, and a station's level and loads. Pure, so the panels and the tests read the
 // same.
 import {
-  CLEAR_FINDS, cropLook, dateOf, DAYS_PER_SEASON, FIELD_COLUMNS, FULL_HAULS, GROUND_NAMES, growsIn, haulsToday, isOvergrown, isSeasonEnd, itemNameOf, levelLock, levelLockWords,
+  CLEAR_FINDS, CROPS, cropLook, dateOf, DAYS_PER_SEASON, established, FIELD_COLUMNS, FULL_HAULS, GROUND_NAMES, growsIn, haulsToday, isOvergrown, isSeasonEnd, itemNameOf, levelLock, levelLockWords,
   LOAD_SIZE, loadsADay, loadsLeft, loadsToday, nextStationLevel, nightsLeft, plotName, stationLevel, thinToday, type StationLoad,
   plotOf, reachList, SEASON_NAMES, seedsInSeason, sharesOn, stagesOf, stationOptions, tileAt, tileInPlot, type CropLook, type FarmSave, type FieldCounts,
   type GatherPlace, type StationId, type StationOption, type Tile,
@@ -14,7 +14,7 @@ import { plural } from './words'
 export type TileAction =
   | { kind: 'clear'; leaves: string | null }
   | { kind: 'till' }
-  | { kind: 'plant'; seed: string; name: string; count: number; own: boolean; stages: number; late: boolean }
+  | { kind: 'plant'; seed: string; name: string; count: number; own: boolean; stages: number; late: boolean; bears?: string }
   | { kind: 'water' }
   | { kind: 'harvest' }
 
@@ -38,7 +38,7 @@ export interface TileView {
 
 /** Whether a growing tile withers tonight: a season's last day, not ripe by morning, out of season next. */
 export function withersTonight(save: Pick<FarmSave, 'calendar'>, tile: Tile): boolean {
-  if (tile.crop === null || tile.ready || !isSeasonEnd(save.calendar.day)) return false
+  if (tile.crop === null || tile.ready || CROPS[tile.crop].woody || !isSeasonEnd(save.calendar.day)) return false
   const next = dateOf(save.calendar.day + 1).season
   if (growsIn(tile.crop, next)) return false
   return !(tile.watered && nightsLeft(tile) === 1)
@@ -60,13 +60,15 @@ export function tileView(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, 
     const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
     const next = dateOf(save.calendar.day + daysLeft).season
     const seeds = seedsInSeason(save).map((s): TileAction => ({
-      kind: 'plant', seed: s.id, name: s.grade ? `Carrot G${s.grade}` : itemNameOf(s.crop), count: s.count, own: s.own, stages: stagesOf(s.crop, false),
-      late: stagesOf(s.crop, false) > daysLeft && !growsIn(s.crop, next),
+      kind: 'plant', seed: s.id, name: `${itemNameOf(s.crop)}${s.grade ? ` G${s.grade}` : ''}`, count: s.count, own: s.own, stages: stagesOf(s.crop, false),
+      late: !CROPS[s.crop].woody && stagesOf(s.crop, false) > daysLeft && !growsIn(s.crop, next),
+      ...(CROPS[s.crop].woody ? { bears: SEASON_NAMES[CROPS[s.crop].seasons[0]!] } : {}),
     }))
     return { ...base, title: GROUND_NAMES.tilled, line: seeds.length > 0 ? 'Plant a seed, then water it.' : `No seeds for ${SEASON_NAMES[dateOf(save.calendar.day).season]}.`, actions: seeds }
   }
-  const name = tile.grade ? `Carrot G${tile.grade}` : itemNameOf(tile.crop)
+  const name = `${itemNameOf(tile.crop)}${tile.grade ? ` G${tile.grade}` : ''}`
   if (tile.ready) return { ...base, title: name, line: 'Ripe: harvest it.', actions: [{ kind: 'harvest' }] }
+  if (established(tile)) return { ...base, title: name, line: `Dormant · bears ${SEASON_NAMES[CROPS[tile.crop].seasons[0]!]}`, actions: [] }
   const stages = stagesOf(tile.crop, tile.regrowing)
   const grown = `${tile.growth} of ${plural(stages, 'night')}${tile.regrowing ? ', regrowing' : ''}`
   const withers = withersTonight(save, tile)
@@ -81,7 +83,7 @@ export function tileView(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, 
 export function tileLabel(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, index: number): string {
   const view = tileView(save, index)
   const tile = tileAt(save, index)
-  const state = tile.crop === null ? '' : tile.ready ? ', ripe' : tile.watered ? ', watered' : ', dry'
+  const state = tile.crop === null ? '' : tile.ready ? ', ripe' : established(tile) ? ', dormant' : tile.watered ? ', watered' : ', dry'
   return `${view.where}: ${view.title}${state}`
 }
 /** A tile's place in words with its plot, once the farm has more than one: "Plot 2 · Row 1, tile 2". */

@@ -4,13 +4,21 @@
 import { baseGoodId, goodOf, seedOf, type GoodFamily } from '@farm/domain'
 
 export const ATLAS_CELL = 32
-export type Sheet = 'items' | 'dishes'
+export type Sheet = 'items' | 'dishes' | 'field-produce'
 export const SHEET_SIZE: Readonly<Record<Sheet, { w: number; h: number }>> = {
   // uma-art 2.13.0 appends R2's made items after the racer rows; 2.30.0 the ranch's eggs and milk on row 38. No earlier
   // frame moves.
   items: { w: 320, h: 1248 },
   dishes: { w: 320, h: 320 },
+  'field-produce': { w: 192, h: 96 },
 }
+
+/** Farm-owned frames for new species and the two orchard silhouettes. */
+const FIELD_ART = [
+  'radish', 'lettuce', 'green-peas', 'strawberry', 'raspberry', 'cucumber',
+  'okra', 'zucchini', 'blueberry', 'turnip', 'sweet-potato', 'winter-squash',
+  'leek', 'cauliflower', 'red-beet', 'persimmon', 'orchard-tree', 'orchard-shrub',
+]
 
 export interface IconFrame { sheet: Sheet; x: number; y: number }
 
@@ -33,6 +41,9 @@ export function iconFrame(id: string): IconFrame | null {
   const dish = /^dish-([a-z-]+)-(10|[1-9])$/.exec(id)
   const row = dish ? DISH_ROW[dish[1]!] : undefined
   if (dish && row !== undefined) return { sheet: 'dishes', x: (Number(dish[2]) - 1) * ATLAS_CELL, y: row * ATLAS_CELL }
-  const good = goodOf(seedOf(id)?.crop ?? baseGoodId(id))
+  const base = seedOf(id)?.crop ?? baseGoodId(id)
+  const field = FIELD_ART.indexOf(base)
+  if (field >= 0) return { sheet: 'field-produce', x: (field % 6) * ATLAS_CELL, y: Math.floor(field / 6) * ATLAS_CELL }
+  const good = goodOf(base)
   return good ? { sheet: 'items', x: (good.grade - 1) * ATLAS_CELL, y: (GOOD_ROW[good.family] + (good.refined ? 1 : 0)) * ATLAS_CELL } : null
 }

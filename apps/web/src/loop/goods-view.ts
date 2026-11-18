@@ -31,6 +31,7 @@ const orderOf = (id: string): number => ORDER.get(id) ?? Infinity
 
 /** A good's tab: the 27 crops and the flours on Crops (Farming), the rest by family. */
 export function shelfOf(good: Pick<Good, 'family' | 'crop'>): Shelf {
+  if (good.family === 'fruits') return 'fruits'
   if (good.crop || good.family === 'grains' || good.family === 'vegetables') return 'crops'
   if (MINING.has(good.family)) return 'mining'
   if (LOOT.has(good.family)) return 'loot'

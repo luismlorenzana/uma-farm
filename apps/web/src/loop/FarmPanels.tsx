@@ -2,7 +2,7 @@
 // silo), the woods' edge (forage or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
 // brought, and the day's actions left. Part of the farm map's chunk.
 import {
-  actionsLeft, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
+  actionsLeft, CROPS, cropBaseGrade, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
   type HarvestReceipt,
   type StationId,
 } from '@farm/domain'
@@ -11,7 +11,7 @@ import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
-import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, tillAt, upgradeAt, waterAt } from './actions'
+import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, removeOrchardAt, tillAt, upgradeAt, waterAt } from './actions'
 import { reachRows, stationView, thinWords, tileView, tileWhere, type TileAction } from './farm-view'
 import { actionWords, plural } from './words'
 
@@ -79,6 +79,8 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
   const plants = view.actions.filter((a): a is Extract<TileAction, { kind: 'plant' }> => a.kind === 'plant')
   const single = view.actions.find((a) => a.kind !== 'plant')
   const tile = tileAt(save, index)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  useEffect(() => setConfirmRemove(false), [index])
   const tilledEmpty = tile.ground === 'tilled' && tile.crop === null
   return (
     <div className="space-y-2.5 p-4" data-tile-panel={index}>
@@ -88,7 +90,7 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
       <Notes note={note} error={error} />
       {single && (
         <Button className="w-full" disabled={busy || out} onClick={() => doIt(single)} data-action={single.kind}>
-          {single.kind === 'harvest' && tile.crop === 'carrot' ? `Harvest G${tile.grade ?? 1}` : ACTION_WORDS[single.kind]} · 1 action
+          {single.kind === 'harvest' && tile.crop ? `Harvest G${tile.grade ?? cropBaseGrade(tile.crop)}` : ACTION_WORDS[single.kind]} · 1 action
         </Button>
       )}
       {hasGrass(save, index) && siloStands(save) && (
@@ -104,7 +106,8 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
               <ItemIcon id={a.seed} size={32} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-semibold">{a.name} <span className="font-normal text-ink-soft">× {a.count}</span></span>
-                <span className={`block text-[12px] ${a.late ? 'text-danger' : 'text-ink-soft'}`}>{a.late ? 'Won’t ripen this season' : `${plural(a.stages, 'watered night')} to ripe`}</span>
+                <span className={`block text-[12px] ${a.late ? 'text-danger' : 'text-ink-soft'}`}>{a.late ? 'Won’t ripen this season'
+                  : a.bears ? `${plural(a.stages, 'watered night')} to establish · bears ${a.bears}` : `${plural(a.stages, 'watered night')} to ripe`}</span>
               </span>
               <Button size="sm" disabled={busy || out} onClick={() => doIt(a)} data-action="plant">Plant</Button>
             </li>
@@ -115,6 +118,18 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
         <Link to={withParam(location, 'sheet', 'shop')} state={{ back: true }} className="flex min-h-11 items-center justify-center rounded-md border border-hairline-strong text-[14px] font-semibold" data-action="shop">
           Seeds at the shop, in town
         </Link>
+      )}
+      {tile.crop && CROPS[tile.crop].woody && (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" disabled={busy || out} data-action={confirmRemove ? 'confirm-remove-orchard' : 'remove-orchard'}
+            onClick={() => {
+              if (!confirmRemove) setConfirmRemove(true)
+              else run(removeOrchardAt(index).then(() => { setConfirmRemove(false); return 'Removed · soil ready to plant' }))
+            }}>
+            {confirmRemove ? `Remove ${itemNameOf(tile.crop)} permanently · 1 action` : 'Remove orchard plant'}
+          </Button>
+          {confirmRemove && <Button variant="secondary" onClick={() => setConfirmRemove(false)}>Cancel</Button>}
+        </div>
       )}
       <ActionsLeft save={save} />
     </div>

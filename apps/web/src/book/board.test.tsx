@@ -104,10 +104,10 @@ describe('the work board in the Book', () => {
     await render(<BookPage />, `/book?task=${A}`)
     await click($('[data-kind="save-seed"]'))
     await click($('[data-action="add-task-confirm"]'))
-    const task = { kind: 'save-seed', grade: 1, improve: true, target: 1 }
+    const task = { kind: 'save-seed', crop: 'carrot', grade: 1, improve: true, target: 1 }
     const saved = () => useGame.getState().save as SaveV4
     expect(saved().roster[A]?.tasks).toEqual([task])
-    const select = document.querySelector<HTMLSelectElement>(`[data-hand="${A}"] select[aria-label^="Copy Save carrot seed"]`)!
+    const select = document.querySelector<HTMLSelectElement>(`[data-hand="${A}"] select[aria-label^="Copy Save Carrot seed"]`)!
     await act(async () => {
       select.value = B
       select.dispatchEvent(new Event('change', { bubbles: true }))

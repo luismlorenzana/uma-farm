@@ -21,7 +21,10 @@ const reason = (run: () => unknown): string | null => {
 
 describe('the shop', () => {
   it('sells the season\'s seeds', () => {
-    expect(shopLines(newSave('u1', AT)).map((l) => l.id)).toEqual(['seed-carrot', 'seed-potato', 'seed-mint', 'seed-onion', 'seed-cabbage', 'seed-asparagus'])
+    expect(shopLines(newSave('u1', AT)).map((l) => l.id)).toEqual([
+      'seed-carrot', 'seed-potato', 'seed-mint', 'seed-onion', 'seed-cabbage', 'seed-asparagus',
+      'seed-radish', 'seed-lettuce', 'seed-green-peas', 'seed-strawberry', 'seed-raspberry', 'seed-plum',
+    ])
   })
 
   it('is in town: one action goes there, and buying is free for the rest of the day', () => {

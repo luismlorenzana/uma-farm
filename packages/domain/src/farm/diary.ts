@@ -11,7 +11,7 @@ import { RANK_FLOORS } from '../gathering/digs'
 import { ANIMALS } from '../ranch/ranch'
 import { ANIMAL_KINDS, type AnimalKind } from '../save/v4'
 import { FISHERY, FOREST } from '../gathering/tables'
-import { CARROT_GOODS, isGoodOrRingId } from '../goods/ids'
+import { cropGrades, isCropId, isGoodOrRingId } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
 import type { FarmSave } from '../save/v4'
@@ -105,7 +105,7 @@ export function milestoneReached(save: Pick<FarmSave, 'farm' | 'roster' | 'crops
 
 /** Whether a row's goods have all been shipped once. */
 export const rowComplete = (save: Pick<FarmSave, 'diary'>, row: DiaryRow): boolean => row.goods.every((id) => (
-  id === 'carrot' ? CARROT_GOODS.some((carrot) => (save.diary.shipped[carrot] ?? 0) > 0) : (save.diary.shipped[id] ?? 0) > 0
+  (save.diary.shipped[id] ?? 0) > 0 || (isCropId(id) && cropGrades(id).some((g) => (save.diary.shipped[g.id] ?? 0) > 0))
 ))
 
 /** Pays every milestone and row reached and not yet paid: its gold now, its id in
