@@ -42,6 +42,8 @@ import { receptionDays } from '../romance/wedding'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { isDishId, MENU_RECIPES, type FarmSave, type MenuLine, type PlayInProgress, type StaffMeal, type StovePlay } from '../save/v4'
+import { bookedForExpedition } from '../expeditions/presence'
+import { availableDishes } from '../expeditions/stock'
 import { addGoods, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
 import { worksOn, type SchedulePack } from '../town/town'
 import { CONTEST_ACTIONS, contestBlock, judgeContest, type ContestBoard, type ContestEntry } from './contest'
@@ -251,6 +253,7 @@ export function assistantTerm(save: FarmSave, id: string, talentOf: TalentOf = t
 export function assistantLock(save: FarmSave, id: string, pack: SchedulePack | null = null): string | null {
   const day = handDay(save, id)
   if (!day) return 'Only a farmhand assists.'
+  if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (!worksOn(save, pack, id)) return 'She’s in town today.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
 }
@@ -418,21 +421,25 @@ export interface DishHeld {
   count: number
 }
 /** The dishes in the Warehouse, a row a dish and star: the most stars first, then the most held, then the id. */
-export function dishesHeld(save: Pick<FarmSave, 'items'>): DishHeld[] {
+export function dishesHeld(save: Parameters<typeof availableDishes>[0]): DishHeld[] {
   return Object.entries(save.items).filter(([id]) => isDishId(id))
-    .flatMap(([id, row]) => row.flatMap((count, s) => (count > 0 ? [{ key: stockKey(id, s + 1), id, stars: s + 1, count }] : [])))
+    .flatMap(([id, row]) => row.flatMap((_, s) => {
+      const key = stockKey(id, s + 1)
+      const count = availableDishes(save, key)
+      return count > 0 ? [{ key, id, stars: s + 1, count }] : []
+    }))
     .sort((a, b) => b.stars - a.stars || b.count - a.count || a.id.localeCompare(b.id))
 }
 
 /** Tonight's table: its mouths (the farmer, the spouses in their rooms and the farmhands on their farm day: `pack` reads
  * their schedules, and with none every farmhand counts) and the dishes a staff meal takes for them. */
-export function staffTable(save: Pick<FarmSave, 'love' | 'roster' | 'calendar'>, pack: SchedulePack | null = null): { mouths: number; dishes: number } {
+export function staffTable(save: Pick<FarmSave, 'love' | 'roster' | 'calendar'> & Partial<Pick<FarmSave, 'expeditions'>>, pack: SchedulePack | null = null): { mouths: number; dishes: number } {
   const mouths = mouthsTonight(save, handsAtTable(save, pack))
   return { mouths, dishes: Math.ceil(mouths / MOUTHS_A_DISH) }
 }
 /** The staff meal's dishes by the plain rule: the most stars first, then the most held; null when the Warehouse holds too
  * few. */
-export function staffPicks(save: Pick<FarmSave, 'items' | 'love' | 'roster' | 'calendar'>, pack: SchedulePack | null = null): string[] | null {
+export function staffPicks(save: Pick<FarmSave, 'items' | 'love' | 'roster' | 'calendar'> & Partial<Pick<FarmSave, 'expeditions'>>, pack: SchedulePack | null = null): string[] | null {
   const { dishes } = staffTable(save, pack)
   const units = dishesHeld(save).flatMap((r) => Array.from({ length: Math.min(r.count, dishes) }, () => r.key))
   return units.length >= dishes ? units.slice(0, dishes) : null
@@ -454,7 +461,7 @@ export function staffBlock(save: FarmSave, picks: readonly string[] | null = nul
   for (const key of new Set(keys)) {
     const at = parseStockKey(key)
     if (!at || !isDishId(at.id)) return 'Only dishes go on the table.'
-    if ((save.items[at.id]?.[at.stars - 1] ?? 0) < keys.filter((k) => k === key).length) return 'Not enough in the Warehouse.'
+    if (availableDishes(save, key) < keys.filter((k) => k === key).length) return 'Not enough in the Warehouse.'
   }
   return null
 }

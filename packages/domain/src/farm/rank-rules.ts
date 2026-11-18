@@ -114,7 +114,7 @@ export const rankQuality = (rank: Rank): number => rankBenefits(rank).quality
 export type PlayGrade = 'rough' | 'good' | 'fine' | 'masterwork'
 const PLAY_GRADES: readonly PlayGrade[] = ['rough', 'good', 'fine', 'masterwork']
 /** An expedition's result. */
-export type ExpeditionResult = 'failure' | 'partial' | 'success' | 'great'
+export type ExpeditionResult = 'failure' | 'partial' | 'retreat' | 'success' | 'great'
 
 /** What happened, for a challenge: each part of the game reports its own, for the Uma who did it. */
 export type ChallengeEvent =
@@ -223,11 +223,11 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(5, 1, 'Forge a Mythril tool', 'the Forge’s workshop (not built yet)', on('forged', (e) => yes(e.tool === 'mythril'))),
   ],
   expeditions: [
-    row(1, 2, 'Return from 2 expeditions', 'expeditions (not built yet)', on('expedition', () => 1)),
-    row(2, 1, 'A Success at level 10+', 'expeditions (not built yet)', on('expedition', (e) => yes(successful(e.result) && e.level >= 10))),
-    row(3, 1, 'A Success at level 20+', 'expeditions (not built yet)', on('expedition', (e) => yes(successful(e.result) && e.level >= 20))),
-    row(4, 1, 'A Great at level 20+', 'expeditions (not built yet)', on('expedition', (e) => yes(e.result === 'great' && e.level >= 20))),
-    row(5, 1, 'A Success at the Sky Ruins', 'expeditions (not built yet)', on('expedition', (e) => yes(successful(e.result) && e.region === 'sky-ruins'))),
+    row(1, 2, 'Return from 2 expeditions', 'the Expedition post', on('expedition', () => 1)),
+    row(2, 1, 'A Success at level 10+', 'the Expedition post', on('expedition', (e) => yes(successful(e.result) && e.level >= 10))),
+    row(3, 1, 'A Success at level 20+', 'the Expedition post', on('expedition', (e) => yes(successful(e.result) && e.level >= 20))),
+    row(4, 1, 'A Great at level 20+', 'the Expedition post', on('expedition', (e) => yes(e.result === 'great' && e.level >= 20))),
+    row(5, 1, 'A Success at the Sky Ruins', 'the Expedition post', on('expedition', (e) => yes(successful(e.result) && e.region === 'sky-ruins'))),
   ],
 }
 
@@ -274,7 +274,7 @@ export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: Tale
  * night, her challenge's count reset. The lines say who ranked up, then whose points filled tonight with the challenge
  * still to meet (once: the night they fill, or the night a rank-up leaves the next one already full).
  */
-export function tickRankRules<S extends FarmSave>(save: S, worked: readonly WorkedDay[], termsOf: TermsOf): { save: S; lines: RankLine[]; paid: (WorkedDay & { points: number })[] } {
+export function tickRankRules<S extends FarmSave>(save: S, worked: readonly WorkedDay[], termsOf: TermsOf, before = save.roster): { save: S; lines: RankLine[]; paid: (WorkedDay & { points: number })[] } {
   const roster = { ...save.roster }
   const paid: (WorkedDay & { points: number })[] = []
   const seen = new Set<OutfitId>()
@@ -290,7 +290,7 @@ export function tickRankRules<S extends FarmSave>(save: S, worked: readonly Work
   const ups: RankLine[] = []
   const full: RankLine[] = []
   for (const [outfitId, uma] of Object.entries(roster)) {
-    const before = save.roster[outfitId]
+    const old = before[outfitId]
     let ranks = uma.ranks
     for (const activity of ACTIVITIES) {
       let state = ranks[activity]
@@ -299,7 +299,7 @@ export function tickRankRules<S extends FarmSave>(save: S, worked: readonly Work
         ranks = { ...ranks, [activity]: state }
         ups.push({ kind: 'rank-up', outfitId, activity, rank: state.rank })
       }
-      const was = before?.ranks[activity]
+      const was = old?.ranks[activity]
       const fullBefore = was !== undefined && was.rank === state.rank && pointsFull(was)
       if (pointsFull(state) && !challengeMet(activity, state) && !fullBefore) {
         full.push({ kind: 'full', outfitId, activity, rank: (state.rank + 1) as Rank, challenge: state.challenge })

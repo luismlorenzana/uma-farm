@@ -248,7 +248,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     const place = outcome.place
     if (!place || !(weddingPlaces(pack, id) as readonly string[]).includes(place)) throw new SaveRuleError('bad-job', 'Choose one of her places.')
     if (outcome.reception === undefined) throw new SaveRuleError('bad-job', 'Choose the reception.')
-    const days = receptionOf({ items }, outcome.reception)
+    const days = receptionOf({ ...save, items }, outcome.reception)
     if (outcome.reception) items = takeGoods(items, outcome.reception.dish, outcome.reception.stars, 1)
     wedding = { place, dish: outcome.reception?.dish ?? null, stars: outcome.reception?.stars ?? null, days, guests: weddingGuests(save, pack, id), house: null }
     const vowAt = choices.indexOf(outcome.event.steps[answerAt(outcome.event.steps)] as { choice: ChoiceOption[] })

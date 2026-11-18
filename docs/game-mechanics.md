@@ -347,6 +347,7 @@ belong to, and until then cost nothing or aren't there yet:
 | A festival | Enter the Cooking Contest, at the Kitchen on its day: the day’s event actions first (the other festivals’ contests come later) | 3 | Now |
 | The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove | 1 | Now |
 | The Kitchen | Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day | 1 | Now |
+| The Expedition post | Send a party for 2–5 days, with up to eight dishes | 1 | Now |
 | The household | Cook a meal for the household: breakfast or dinner (it cooks a batch too) | 1 | Now |
 | The household | Choose tonight’s companion, at the day’s end | Free | Now |
 <!-- /live -->
@@ -432,7 +433,7 @@ The steps as the game lists them:
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
 | 2 | `farmhandsWork` | The farmhands: each on her farm day (one on a town day is in town, and doesn’t work), in the order you invited them, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
-| 2 | `theFarmEats` | The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil |
+| 2 | `theFarmEats` | The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil |
 | 2 | `settleTheAccounts` | The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
@@ -441,10 +442,11 @@ The steps as the game lists them:
 | 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies |
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, a miner’s one find each from the Mine’s or the Quarry’s deepest floor, at a face’s, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow |
-| 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
 | 6 | `tickBonds` | Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend |
 | 6 | `payLine` | Her line: +10 to each farmhand who worked today at one of her line’s places, once a night |
 | 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house |
+| 6 | `returnTheExpeditions` | Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return |
+| 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
 | 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
@@ -570,7 +572,7 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Dock | `ley-spring` (borrowed) | Farm Rank 6, then built |
 | Shop | `exchange` | Day 1 |
 | Festival ground | `racecourse` | Not built yet |
-| Expedition post | `rangers-lodge` (borrowed) | Farm Rank 7, then built (not built yet) |
+| Expedition post | `rangers-lodge` (borrowed) | Farm Rank 7, then built |
 | Town | `trophy-hall` (borrowed) | Day 1 |
 | Boat | At the Dock | Farm Rank 6, then built after the Dock |
 <!-- /live -->
@@ -2369,6 +2371,69 @@ takeout alone:
   gave every well-fed haul a quarter more on top of the extra action, and the second year shipped 266,525g; F91 took that
   quarter off ([well fed](#well-fed), [the farm at scale](#the-farm-at-scale-10-20-and-50-umas)).
 
+### Expeditions
+
+From Farm Rank 7, a build card for the **Expedition post** appears in town. Build it for 25,000g, 60 planks and 40 fillets.
+It stands the next morning. The post sends one party at a time at Rank 7, two at Rank 8, and three from Rank 9.
+
+<!-- live:expedition-regions -->
+| Region | Level | Days | Farm Rank | Power needed | Loot tiers | Most common |
+|---|---|---|---|---|---|---|
+| Old Fort Ruins | 1 | 2 | 7 | 46 | 1–2 | Bones and horns |
+| Echo Cave | 5 | 2 | 7 | 57 | 2–3 | Hides and scales |
+| Hilltop Track | 10 | 3 | 8 | 128 | 3–5 | Essences |
+| Misty Marsh | 15 | 3 | 8 | 164 | 4–6 | Hides and scales |
+| Sunken Temple | 20 | 4 | 9 | 200 | 5–7 | Bones and horns |
+| Ember Peak | 25 | 4 | 9 | 238 | 7–9 | Essences |
+| Sky Ruins | 30 | 5 | 10 | 304 | 8–10 | Essences |
+<!-- /live -->
+
+- **Send · 1:** Choose one to four farmhands and optionally up to eight Kitchen dishes. A farmhand can leave on a farm
+  or town day, and a spouse can go. Anyone already in a party, assisting the Kitchen, or cooking in the Contest that
+  day is unavailable. Dishes stay in the Warehouse until departure and are reserved when you send the party.
+- **Tonight:** The party leaves after its usual shift. It packs two meals per member per day away. The home table eats
+  first, then the party takes what it can from the pantry. Takeout covers the rest at 15g a meal on tonight's bill.
+- **Away:** She stays off the map, doesn't work or eat on the farm, and keeps her work board assignments. Her profile,
+  People in town, and the work board say **Away**, where she went, and when she's back. Her calendar occasions still play.
+- **Power:** Add each member's Expedition rank power and talent power, then the dishes. The return uses a seeded draw
+  of ±10% before comparing power to the region's need.
+
+<!-- live:expedition-results -->
+| Result | Power after the draw ÷ need | Goods | Expedition rank points per member |
+|---|---|---|---|
+| Great | ≥ 1.25 | ×1.5 | 10 a day + 20 |
+| Success | ≥ 1, below 1.25 | ×1 | 10 a day + 10 |
+| Retreat | < 1 | ×0.5 | 10 a day |
+
+A dish adds 2 power per star. Base loot is 3 goods per member per day away, rounded to a whole good after the result’s multiplier.
+<!-- /live -->
+
+- **Loot:** Each region draws 60% from its main family and 20% from each other family, within its tiers. Stars use the
+  party's mean Expeditions quality, with +1 quality on a Great. Loot goes into the Warehouse and ships under the usual
+  market rules. The shipment counts toward income and Farm Rank.
+- **Return:** Every result counts for the Diary's return challenge and gives each pair +15 bond points per day away
+  through the usual bond rules. Later Expeditions challenges need particular results or regions. The last 20 returns
+  stay in the post's log. Work done in the morning names each return and reads a line from the story, with a default
+  line when the party has none. The v5 save keeps the optional `expeditionLog` field.
+
+#### What expeditions earn at farm scale
+
+The simulation plays seven years with 10, 20 and 50 Umas. It builds the post with earned gold, planks and fillets. The
+bot sends the strongest available party to the deepest region it can meet at average luck, using the fewest dishes
+needed. It compares year 7 to the same farm and calendar days with the expedition plan switched off.
+
+| Farmhands | Parties sent, Spring / Summer / Autumn / Winter | Expedition shipments | Share of the bin | Estimated farm output for missed shifts | Whole bin with / without expeditions |
+|---|---|---:|---:|---:|---:|
+| 10 | 0 / 0 / 0 / 4 | 7,585g | 2.2% | 15,201g | 340,170g / 324,285g |
+| 20 | 12 / 12 / 11 / 9 | 331,200g | 55.7% | 353,087g | 595,140g / 893,185g |
+| 50 | 9 / 9 / 9 / 9 | 615,385g | 31.3% | 417,948g | 1,963,685g / 2,321,935g |
+
+The missed-shift estimate uses the baseline's gross shipments per farmhand shift. It is a rough comparison, since the
+bin also includes the farmer's work and the farm grows differently when farmhands leave. All three runs paid every
+night in year 7. Filling every slot can still reduce the whole farm's shipments, especially when a party takes people
+away from the fields and workshops. The toughest region requires a strong party and good supplies. The 50-Uma bot
+mostly chose Ember Peak with the dishes it had.
+
 ### The Kitchen
 
 Cooking gets its game. Every batch the farmer cooks can be played at **the stove**, from day one, and a good play makes
@@ -2478,7 +2543,7 @@ refined) **and one side** (any grade, raw or refined, any stars):
   dish](#her-signature-dish)); a request's recipe extra. A recipe is known for good (`workshops.recipes`; the first
   three are known while the Kitchen stands, never written). The shelf is the workshops' first gold sink.
 - **Dishes don't ship.** They feed the staff meal, make gifts (a dish is a gift like a good: her taste in it is her
-  bible's, so a loved dish plays) and serve a wedding's reception; later the Restaurant and expeditions. A recipe is
+  bible's, so a loved dish plays), serve a wedding's reception, or pack it for an expedition; later, the Restaurant. A recipe is
   also what you cook at [the Cooking Contest](#the-cooking-contest).
 
 <!-- live:recipes -->
@@ -3062,6 +3127,8 @@ record reads it as 0, and nothing moves `updatedAt`.
 
 ### Farmhands
 
+A farmhand who is [away on an expedition](#expeditions) misses her farm shifts. Her jobs stay on the work board while she's away.
+
 A friend you invite to work is a **farmhand** ([the invitation to work](#the-invitation-to-work)). She keeps her life in
 town, and comes to the farm on her **farm days**: the days her town schedule (her routine, her part-time job, or the
 default schedule's spot) doesn't put her out in town. On a farm day she's on the farm by day, in front of you for talks,
@@ -3335,8 +3402,7 @@ Each grade is a step, G 0 to S 7, and each step lifts her work:
 - **Rank points** multiply every pay of rank points.
 - **Tended growth** was a block's growth a night under her care (B and up only); the field's tiles grow a stage a
   watered night, so nothing reads it now.
-- Affection a day (the ranch) and expedition power are defined, but neither is read in play: a farmhand's care reads her
-  Animal care aptitude (which her talent starts), and expeditions aren't open.
+- Expedition power adds to her party's power. A farmhand's care reads her Animal care aptitude (which her talent starts).
 
 #### Rank points
 
@@ -3345,9 +3411,8 @@ points in its activity:
 
 > **10 points × her talent's rank-point factor × 1.2 in her favourite line × 1.25 well fed × the hearts' factor**
 
-Points are kept to a millionth and shown whole. Every pay of rank points takes the same factors; a workshop play pays its
-assistant 10 and an expedition 10 a day (+10 on a Success, +20 on a Great), but no workshop or expedition is open in
-play. The ranch, the workshops and expeditions are nobody's favourite, so ×1.2 never applies there.
+Points are kept to a millionth and shown whole. Expedition returns pay 10 points per day away, plus 10 on a Success or
+20 on a Great, without the daily work multipliers. The ranch, workshops, and expeditions are nobody's favourite.
 
 - **Well fed:** an Uma with a meal's days left: a wedding's reception or a spouse's breakfast feeds the spouses who live
   on the farm, a ★2+ meal from the pantry whoever eats it. The days
@@ -3406,7 +3471,7 @@ tie):
 - **One day pays one activity.**
 - An Uma living in town earns nothing.
 - A farmhand's day at the Mine, the Quarry, the Smelter or the Cutter pays mining, and at the Coop or the Barn the ranch;
-  cooking, serving, forging and expeditions wait for their places.
+  serving and forging wait for their games. Cooking and Expeditions count at their places.
 
 #### The challenges
 
@@ -3424,7 +3489,7 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 | Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; the Cooking Contest’s judging, its cook |
 | Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant (not built yet) |
 | Forging | Assist 5 Forge plays | Assist a Fine merge | Forge a tool upgrade | Assist a Masterwork | Forge a Mythril tool | The Forge’s workshop (not built yet) |
-| Expeditions | Return from 2 expeditions | A Success at level 10+ | A Success at level 20+ | A Great at level 20+ | A Success at the Sky Ruins | Expeditions (not built yet) |
+| Expeditions | Return from 2 expeditions | A Success at level 10+ | A Success at level 20+ | A Great at level 20+ | A Success at the Sky Ruins | The Expedition post |
 <!-- /live -->
 
 - **One challenge at a time:** her count is toward her next rank's challenge only, from her joining or her last rank-up
@@ -3479,8 +3544,8 @@ The morning's **Ranks** section lists the night's lines, each opening her sheet:
 - **Quality** adds to the star draw of what she grows or makes.
 - **Deepest** is the last area, spot and floor her rank lets her work.
 - **Seeds back** is her harvest's chance of a seed, before the Hoe.
-- Expedition power and workshop yield are defined for places that aren't open in play; affection a day isn't read (a
-  farmhand's care reads her Animal care aptitude).
+- Expedition power is her base power on a party. Workshop yield affects the Kitchen's output. A farmhand's animal care
+  reads her Animal care aptitude.
 
 #### Her favourite line
 
@@ -3562,7 +3627,7 @@ stations' levels, the shop's seed tiers), so the sheet and the morning can't dri
 | 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, New seeds at the shop |
 | 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s |
 | 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20 |
-| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
+| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (25,000g · 60 planks · 40 fillets), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
 | 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 | Plot 8 to clear (50,000g) |
 | 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
@@ -3696,7 +3761,7 @@ A place whose game isn't built yet shows what it'll be: its Build card has its c
 | Dock | 6 | 20,000g | 80 planks | Yes |
 | Boat | 6 | 30,000g | 60 planks, 30 fillets | Yes, after the Dock |
 | Restaurant | 7 | 40,000g | 80 planks, 40 fillets, 30 vegetables | Not built yet |
-| Expedition post | 7 | 25,000g | 60 planks, 40 fillets | Not built yet |
+| Expedition post | 7 | 25,000g | 60 planks, 40 fillets | Yes |
 | Forge | 8 | 60,000g | 120 planks, 60 logs | Not built yet |
 <!-- /live -->
 
@@ -3956,7 +4021,7 @@ them are on the farm a day (the night reads a pack of the fifty, `castPack`). `S
   nothing to do. She's **in a real job** when real work is at least half her actions; else she's **idle-ish**, each of
   the Umas on the farm that day. **Real work on offer** is what the jobs needed that day at the farm's levels, taken and
   still waiting (some waits on days the plain rule can't fit it: one place to gather or dig an Uma). Phase 2's employers
-  (expeditions, the Restaurant, the Forge) aren't built: they're the work to come.
+  (the expedition post, the Restaurant and the Forge) are outside this baseline. The expedition comparison runs separately.
 
 It checks: never a short night at any stage; 10 Umas by year 2, 20 by year 3, 50 by year 4; **10 and 20 in real jobs on
 their farm days** in year 4, two thirds of them on the farm a day (7 and 13), with real work still waiting and under a
@@ -4088,8 +4153,8 @@ The three farms year by year:
 - **Every stage now holds, with work to spare.** In year 4 those on the farm are in real jobs at every stage (6 or 7 of
   7, 13 of 13, 32 of 32), real work still waits (70, 110 and 94 actions a day), and thin and idle actions are a few a
   day. **50 Umas no longer run past the farm's real jobs:** before farm days, 35 of 50 were in real jobs and 14 idle-ish;
-  now the farm's own jobs take the third of them on the farm a day. Phase 2's employers (expeditions, the Restaurant,
-  the Forge) are what more Umas, or more days, would need.
+  now the farm's own jobs take the farmhands who show up. Expeditions take people from this existing work. The Restaurant
+  and Forge would add more jobs.
 - **The farms grow slower:** year 4 ends on Farm Rank 6, 7 and 7 (8, 9 and 10 before), with two, four and six plots
   (eight before at 50), and the bin pays 195K, 265K and 443K in year 4 (580K, 816K and 1.53M before). Upkeep and takeout
   stay a few percent of the bin, and every farm ends year 4 rich (142K, 192K and 238K).
@@ -6100,7 +6165,7 @@ same grades; when the real game ships, the event plays it. The marks are words u
 | `work: cooking` | Rhythm with the pot (the fallback until its game ships) |
 | `work: serving` | Rhythm with the tray (the fallback until its game ships) |
 | `work: forging` | Rhythm with the anvil (the fallback until its game ships) |
-| `work: expeditions` | Rhythm with the pack (the fallback until its game ships) |
+| `work: expeditions` | Rhythm with the pack |
 | `work: farming` with `play.as: rhythm` | Rhythm with the hoe |
 | `date: fishing` | Cast |
 | `date: walk` | Walk |
@@ -6772,7 +6837,7 @@ What a pair earns:
 | Shared | Points | Paid by |
 |---|---|---|
 | Working the same place the same day (the Fields’ tenders together) | +10 a pair; ×1.5 when both favour that place’s line | `bondsTonight`, night step 6 |
-| An expedition party, a day away | +15 a pair | `addBond`, from expeditions (not built yet) |
+| An expedition party, a day away | +15 a pair | `addBond`, paid on the party’s return |
 | A festival team | +20 a pair | `addBond`, from the festivals (not built yet) |
 | The same staff meal, or the same breakfast | +5 a pair | `addBond`: breakfast at a house’s morning; the staff meal once the Kitchen is built |
 | The same house, a night | +10 a pair | `shareTheHouses`, night step 6 |
@@ -6783,8 +6848,7 @@ What a pair earns:
   running job, or the Fields' tenders with a growing block, who count as one place). **×1.5** when both have the same
   favourite line and it's that place's (two foragers at the forest or the Sawmill, two farmers tending). An Uma works one
   place a day, so a pair earns this once.
-- **What pays today:** the same place, the same breakfast and the same house. An expedition party, a festival team and a
-  staff meal pay once those features exist.
+- **What pays today:** the same place, the same breakfast and the same house. Expedition parties earn bonds on return.
 - **Romance 4:** what a pair earns is ×1.5 when either Uma is at Romance 4 or later and the other is her closest friend;
   once, never ×2.25 when both are.
 - **Whole:** each pay rounds once, half up, after its factors: two foragers who are closest friends, one at Romance 4,

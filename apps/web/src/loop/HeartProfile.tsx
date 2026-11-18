@@ -21,7 +21,7 @@
 // under the Next card: her chapters (the pack's or the four defaults), the one she's in with its events played and to
 // come, a gate's words ("Opens when the Kitchen is built"), and what opens the next. Loaded on demand.
 import {
-  atHome, birthdaysOf, canAsk, galleryOf, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
+  atHome, awayOn, birthdaysOf, canAsk, galleryOf, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { giveBetterRing } from './bench-actions'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -107,7 +107,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       <div className="sticky top-0 z-10 -mx-4 bg-panel px-4 pb-3" data-profile-sides>
         <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       </div>
-      {!atHome(save, id) && <TownCard save={save} pack={pack} id={id} />}
+      {(!atHome(save, id) || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
       {side === 'work'
         ? row && <WorkSide row={row} />
         : <HeartsSide save={save} pack={pack} id={id} card={card} nameOf={nameOf} />}
@@ -133,8 +133,8 @@ function TownCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: stri
           <p key={i} className="text-ink-soft" data-find-line={l.at ?? 'home'}>{i === 0 && <span className="font-semibold text-ink">{find.season} · </span>}{l.text}</p>
         ))}
       </div>
-      <p className="text-[14px]" data-lives-in-town><span className="font-semibold">Lives in town</span>
-        <span className="text-ink-soft"> · {waiting ? 'moves to the farm once a room is free' : 'moves to the farm after your wedding'}</span></p>
+      {!atHome(save, id) && <p className="text-[14px]" data-lives-in-town><span className="font-semibold">Lives in town</span>
+        <span className="text-ink-soft"> · {waiting ? 'moves to the farm once a room is free' : 'moves to the farm after your wedding'}</span></p>}
     </section>
   )
 }

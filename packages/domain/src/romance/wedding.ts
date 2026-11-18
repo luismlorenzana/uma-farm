@@ -13,6 +13,9 @@
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { tiesOf } from '../farm/bonds'
 import { SaveRuleError } from '../save/rules'
+import { awayOn } from '../expeditions/presence'
+import { availableDishes } from '../expeditions/stock'
+import { stockKey } from '../save/warehouse'
 import { isDishId } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -40,18 +43,21 @@ export type Reception = { dish: string; stars: number } | null
 /** A dish the reception could serve. */
 export interface ReceptionDish { dish: string; stars: number; count: number; days: number }
 /** The dishes in the Warehouse at each star, the most days first, then fewer stars, then the id. */
-export function receptionDishes(save: Pick<SaveV4, 'items'>): ReceptionDish[] {
+export function receptionDishes(save: Parameters<typeof availableDishes>[0]): ReceptionDish[] {
   return Object.entries(save.items).filter(([id]) => isDishId(id))
-    .flatMap(([dish, row]) => row.flatMap((count, i): ReceptionDish[] => (count > 0 ? [{ dish, stars: i + 1, count, days: receptionDays(i + 1) }] : [])))
+    .flatMap(([dish, row]) => row.flatMap((_, i): ReceptionDish[] => {
+      const count = availableDishes(save, stockKey(dish, i + 1))
+      return count > 0 ? [{ dish, stars: i + 1, count, days: receptionDays(i + 1) }] : []
+    }))
     .sort((a, b) => b.days - a.days || a.stars - b.stars || a.dish.localeCompare(b.dish))
 }
 /** The days a reception gives, or refused: a dish held at those stars, or the cake only with no dish held. */
-export function receptionOf(save: Pick<SaveV4, 'items'>, reception: Reception): number {
+export function receptionOf(save: Parameters<typeof availableDishes>[0], reception: Reception): number {
   if (reception === null) {
     if (receptionDishes(save).length > 0) throw new SaveRuleError('bad-job', 'Choose a dish for the reception.')
     return CAKE_DAYS
   }
-  if (!isDishId(reception.dish) || (save.items[reception.dish]?.[reception.stars - 1] ?? 0) < 1) throw new SaveRuleError('no-items', 'That dish isn’t in the Warehouse.')
+  if (!isDishId(reception.dish) || availableDishes(save, stockKey(reception.dish, reception.stars)) < 1) throw new SaveRuleError('no-items', 'That dish isn’t in the Warehouse.')
   return receptionDays(reception.stars)
 }
 
@@ -59,7 +65,7 @@ export function receptionOf(save: Pick<SaveV4, 'items'>, reception: Reception): 
  * never shortening a meal already running. Who it fed, in id order. */
 export function serveReception(save: SaveV4, days: number): { save: SaveV4; fed: string[] } {
   if (days <= 0) return { save, fed: [] }
-  const fed = Object.keys(save.roster).filter((id) => homeOrHoused(save, id) && save.roster[id]!.wellFed < days).sort((a, b) => Number(a) - Number(b))
+  const fed = Object.keys(save.roster).filter((id) => homeOrHoused(save, id) && !awayOn(save, id, save.calendar.day) && save.roster[id]!.wellFed < days).sort((a, b) => Number(a) - Number(b))
   if (fed.length === 0) return { save, fed }
   return { save: { ...save, roster: { ...save.roster, ...Object.fromEntries(fed.map((id) => [id, { ...save.roster[id]!, wellFed: days }])) } }, fed }
 }

@@ -3,9 +3,10 @@
 // people, met or not, with where she is today), its search and its two sorts, a keeper's post and its menu, and her ties.
 // Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
 import {
-  atHome, CAST, herJobOf, nextOut, onFarmToday, talkedToday, tieLineOf, townLocations, townOf, townsfolk, townTalksOf, type HereBy, type SaveV4, type ShopId, type StoryPack,
+  atHome, awayOn, CAST, farmRankOf, placeBuilt, herJobOf, nextOut, onFarmToday, talkedToday, tieLineOf, townLocations, townOf, townsfolk, townTalksOf, type HereBy, type SaveV4, type ShopId, type StoryPack,
   type TownDay, type TownLocationPlayed, type TownPersonPlayed,
 } from '@farm/domain'
+import { awayWords } from '../loop/expedition-words'
 import { shortDate } from '../loop/words'
 
 type NameOf = (id: string) => string
@@ -18,9 +19,13 @@ export interface LocationView {
 }
 
 /** Every location of the map, in its order, with who's there now. */
-export function locationViews(day: TownDay, pack: StoryPack): LocationView[] {
+export function locationViews(day: TownDay, pack: StoryPack, save?: SaveV4): LocationView[] {
   const town = townOf(pack)
-  return townLocations(pack).map((loc) => ({ loc, here: day.at.get(loc.id) ?? [], keeper: loc.keeper ? town.byId.get(loc.keeper) ?? null : null }))
+  const locations = townLocations(pack).filter((loc) => loc.id !== 'expeditions')
+  if (save && (farmRankOf(save.farm.points) >= 7 || placeBuilt(save, 'expeditions'))) {
+    locations.push({ id: 'expeditions', name: 'Expedition post', line: 'Parties out for days.', group: 'work', keeper: null })
+  }
+  return locations.map((loc) => ({ loc, here: day.at.get(loc.id) ?? [], keeper: loc.keeper ? town.byId.get(loc.keeper) ?? null : null }))
 }
 
 /** The map's groups, each a heading and its locations: the town's spots, its shops and offices, then the story's homes,
@@ -82,7 +87,8 @@ export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: 
     // On the farm that day: she lives there (a spouse in her room), or it's her farm day (a farmhand).
     const farm = met && onFarmToday(save, pack, id, day.day)
     const next = farm || at ? null : nextOut(pack, id, day.day)
-    const where = farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
+    const away = awayOn(save, id, day.day)
+    const where = away ? awayWords(away) : farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
       : at ? `At ${inSentence(named.get(at)!)}${day.by.get(id) === 'job' ? ', at work' : ''} today` : next ? `At home · out ${shortDate(next.day)}` : 'At home'
     return { id, name: nameOf(id), at, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null, where }
   })

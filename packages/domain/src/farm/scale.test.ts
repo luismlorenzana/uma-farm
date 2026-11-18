@@ -23,18 +23,21 @@ import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS } from './calendar'
 import { upkeepOf } from './economy'
 import { farmRankOf } from './farm'
 import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
+import { expeditionMemberBlock, expeditionMemberPower, expeditionPower, expeditionSlots, EXPEDITION_FAMILIES, EXPEDITION_REGIONS, MAX_EXPEDITION_SUPPLIES, sendExpedition } from '../expeditions/expeditions'
+import { dishesHeld } from '../kitchen/kitchen'
+import { REGION_IDS } from '../save/v4'
 import { castPack } from '../story/authored.fixture'
 import { addBatch, cookBatchAt, foodHeld, MEALS_A_DAY, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
 import { kitchenBase, kitchenLevelLock, nextKitchenLevel, staffTable, upgradeKitchen } from '../kitchen/kitchen'
 import { buyRecipe, recipeLock, recipeOf } from '../kitchen/recipes'
 import { botKitchen, botKitchenKeeps, botRecipe } from '../kitchen/stove-bots'
 import { farmPlace, placeBuilt, type BuildPlace, type FarmPlaceId } from './places'
-import { talentsD } from './talents'
+import { talentsD, type TalentOf } from './talents'
 import { growsIn, CROPS } from '../fields/crops'
 import { harvestTile, plantTile, stagesOf, waterTile } from '../fields/fields'
 import { clearPlot, FIELD_PLOTS, plotLock } from '../fields/plots'
 import { digBuilt, stairsLock, takeStairs } from '../gathering/digs'
-import { chop, FULL_HAULS, reachList } from '../gathering/hauls'
+import { chop, fish, FULL_HAULS, reachList } from '../gathering/hauls'
 import { STATIONS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
 import { levelLock, LOAD_SIZE, loadsADay, nextStationLevel, stationLevel, stationOptions, upgradeStation } from '../gathering/stations'
 import { goodOf, seedId, type CropId } from '../goods/ids'
@@ -56,6 +59,8 @@ const sum = (ns: readonly number[]): number => ns.reduce((a, b) => a + b, 0)
 type Stage = 10 | 20 | 50
 const STAGES: readonly Stage[] = [10, 20, 50]
 const YEARS = 4
+const EXPEDITION_YEARS = 7
+const tripTalents: TalentOf = (id, activity) => activity === 'expeditions' ? ([3, 4, 5, 6] as const)[Number(id) % 4]! : talentsD(id, activity)
 /** The Umas working each farm each season, years 1–4: two to start, then ten by year 2's Spring, twenty by year 3's,
  * fifty by year 4's Summer. */
 const SCHEDULE: Readonly<Record<Stage, readonly number[]>> = {
@@ -72,8 +77,10 @@ const PACK = castPack(Array.from({ length: 50 }, (_, n) => handId(n)))
 const working = (save: SaveV4): string[] => handsWorking(save, PACK)
 
 /** What he builds, in order, each once the Farm Rank offers it and its gold and goods are there: the stations, the ranch,
- * the Kitchen, the digs and the sea. (The Restaurant, the Expedition post and the Forge have no game yet.) */
+ * the Kitchen, the digs and the sea, plus the post in the expedition run. */
 const PLAN: readonly FarmPlaceId[] = ['mill', 'coop', 'kitchen', 'sawmill', 'smokehouse', 'barn', 'mine', 'smelter', 'quarry', 'cutter', 'dock', 'boat']
+
+const planFor = (expeditions: boolean): readonly FarmPlaceId[] => expeditions ? [...PLAN, 'expeditions'] : PLAN
 
 /** A day's work by kind, in actions. */
 interface Work {
@@ -94,10 +101,11 @@ const noWork = (): Work => ({ field: 0, animals: 0, stations: 0, kitchen: 0, gat
 
 /** Where the bin's gold came from: the field's crops, the woods and the water, the ranch, the digs, the stations'
  * refined goods. */
-const SOURCES = ['field', 'forest', 'fish', 'ranch', 'mining', 'refined'] as const
+const SOURCES = ['field', 'forest', 'fish', 'ranch', 'mining', 'refined', 'expeditions'] as const
 type Source = typeof SOURCES[number]
 function sourceOf(id: string): Source {
   const good = goodOf(id)!
+  if (EXPEDITION_FAMILIES.some((family) => family === good.family)) return 'expeditions'
   if (good.refined) return 'refined'
   if (good.crop) return 'field'
   if (good.family === 'fish') return 'fish'
@@ -138,6 +146,8 @@ interface Day {
   /** The farmhands on the farm today: on their farm days. */
   today: number
   plots: number
+  sent: number
+  missedFarmDays: number
 }
 
 // --- The farmer's day ---------------------------------------------------------------------------------------------
@@ -162,9 +172,9 @@ const spare = (save: SaveV4): number => save.gold - reserve(save)
 
 /** The places he builds, the plots he clears and the stations' levels he buys: in the plan's order, then the next plot
  * (a plot for every five Umas), then each station's next level, each with spare gold. */
-function grow(start: SaveV4, room: boolean): SaveV4 {
+function grow(start: SaveV4, room: boolean, expeditions: boolean): SaveV4 {
   let save = start
-  for (const id of PLAN) {
+  for (const id of planFor(expeditions)) {
     const place = farmPlace(id) as BuildPlace
     if (buildLock(save, id) === null && spare(save) >= place.opens.cost.gold) save = payBuild(save, id)
   }
@@ -481,10 +491,10 @@ function assign(start: SaveV4): { save: SaveV4; offered: number; unfilled: numbe
 // --- Shipping -------------------------------------------------------------------------------------------------------
 
 /** What he keeps back from the crate: the next builds' goods, each station's loads tonight, and the kitchen's batches. */
-function keeps(save: SaveV4): Map<string, number> {
+function keeps(save: SaveV4, expeditions: boolean): Map<string, number> {
   const keep = new Map<string, number>()
   const add = (key: string, n: number) => keep.set(key, (keep.get(key) ?? 0) + n)
-  const next = PLAN.filter((id) => !placeBuilt(save, id) && !save.farm.builds.includes(id)).slice(0, 2)
+  const next = planFor(expeditions).filter((id) => !placeBuilt(save, id) && !save.farm.builds.includes(id)).slice(0, 2)
   for (const id of next) {
     const place = farmPlace(id) as BuildPlace
     if (farmRankOf(save.farm.points) < place.opens.rank) continue
@@ -517,8 +527,8 @@ function keeps(save: SaveV4): Map<string, number> {
 }
 
 /** A crate of everything with a price, less what he keeps. */
-function ship(save: SaveV4): SaveV4 {
-  const keep = keeps(save)
+function ship(save: SaveV4, expeditions: boolean): SaveV4 {
+  const keep = keeps(save, expeditions)
   const lines: CrateLine[] = Object.entries(save.items).flatMap(([id, row]) => (goodOf(id)
     ? row.flatMap((count, s) => {
       const n = count - Math.min(count, keep.get(`${id}@${s + 1}`) ?? 0)
@@ -569,10 +579,44 @@ function measure(save: SaveV4): { work: Work; real: number; idleish: number; act
   return { work, real, idleish, actions }
 }
 
-function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
+/** Fish for the post's fillets when its build materials are still short. The Smokehouse loads them overnight. */
+function fishForPost(start: SaveV4): SaveV4 {
+  const place = farmPlace('expeditions') as BuildPlace
+  const needed = place.opens.cost.goods.find((line) => line.family === 'fish')!
+  if (placeBuilt(start, 'expeditions') || start.farm.builds.includes('expeditions')
+    || farmRankOf(start.farm.points) < place.opens.rank || heldFor(start.items, needed) >= needed.count) return start
+  const spot = reachList(start, 'fishery').filter((s) => s.lock === null).at(-1)?.id as FishingSpotId | undefined
+  if (!spot) return start
+  let save = start
+  for (let n = 0; n < FULL_HAULS && actionsLeft(save) > 2; n++) save = fish(save, spot).save
+  return save
+}
+
+/** Book the strongest eligible four for the deepest open region they can meet at average luck. Keep an action to ship. */
+function sendStrongest(start: SaveV4): SaveV4 {
+  if (!placeBuilt(start, 'expeditions')) return start
+  const rank = farmRankOf(start.farm.points)
+  const regions = [...REGION_IDS].reverse().filter((id) => EXPEDITION_REGIONS[id].rank <= rank)
+  let save = start
+  while (save.expeditions.length < expeditionSlots(rank) && actionsLeft(save) >= (save.today.town ? 2 : 3)) {
+    const party = handsInOrder(save).filter((id) => !expeditionMemberBlock(save, id))
+      .sort((a, b) => expeditionMemberPower(save, b, tripTalents) - expeditionMemberPower(save, a, tripTalents)).slice(0, 4)
+    if (party.length === 0) break
+    const held = dishesHeld(save).flatMap((dish) => Array.from({ length: Math.min(dish.count, MAX_EXPEDITION_SUPPLIES) }, () => dish.key))
+      .slice(0, MAX_EXPEDITION_SUPPLIES)
+    const best = regions.find((id) => expeditionPower(save, party, held, tripTalents) >= EXPEDITION_REGIONS[id].need)
+    if (!best) break
+    let count = 0
+    while (expeditionPower(save, party, held.slice(0, count), tripTalents) < EXPEDITION_REGIONS[best].need) count++
+    save = sendExpedition(goToTown(save), best, party, held.slice(0, count))
+  }
+  return save
+}
+
+function play(start: SaveV4, stage: Stage, log: Day[], expeditions: boolean): SaveV4 {
   const season = Math.floor((start.calendar.day - 1) / DAYS_PER_SEASON)
-  let save = hire(start, SCHEDULE[stage][season]!)
-  save = grow(save, save.fields.plots.length < Math.ceil(handsInOrder(save).length / UMAS_A_PLOT))
+  let save = hire(start, SCHEDULE[stage][season] ?? stage)
+  save = grow(save, save.fields.plots.length < Math.ceil(handsInOrder(save).length / UMAS_A_PLOT), expeditions)
   // The stairs the faces found, taken (free).
   for (const dig of ['mine', 'quarry'] as const) while (stairsLock(save, dig) === null) save = takeStairs(save, dig)
   save = stock(save)
@@ -580,15 +624,15 @@ function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
   // The Kitchen, once it stands: his play (the casual bot), then the staff meal; and a recipe for the goods the farm holds
   // most of, bought in town at the day's end with spare gold. Then logs for the next build, by his own hand.
   const kitchen = botKitchen(save, 'casual', PACK)
-  save = chopForBuilds(kitchen.save)
+  save = chopForBuilds(expeditions ? sendStrongest(fishForPost(kitchen.save)) : kitchen.save)
   const recipe = botRecipe(save, spare(save))
   save = tendByHand(save)
   const plan = assign(save)
-  save = ship(plan.save)
+  save = ship(plan.save, expeditions)
   if (actionsLeft(save) > 0) save = spendActions(goToTown(save), actionsLeft(goToTown(save)))
   if (recipe && save.today.town && recipeLock(save, recipe) === null && spare(save) >= recipeOf(recipe)!.price) save = buyRecipe(save, recipe)
   const night = measure(save)
-  const morning = runNight(save, { story: PACK })
+  const morning = runNight(save, { story: PACK, talentOf: expeditions ? tripTalents : talentsD })
   const money = morning.summary?.money ?? []
   const pantry = money.find((m) => m.kind === 'pantry')
   // Well fed tonight: a ★2+ meal from the pantry, or the staff meal (every Uma who eats it).
@@ -601,6 +645,8 @@ function play(start: SaveV4, stage: Stage, log: Day[]): SaveV4 {
     takeout: sum(money.map((m) => (m.kind === 'takeout' ? m.due : 0))), pantry: pantry?.kind === 'pantry' ? pantry.meals : 0, fed: (pantry?.kind === 'pantry' ? pantry.fed : 0) + staffFed,
     short: money.some((m) => m.kind === 'short'), eased: Object.keys(morning.farm.market).length, gold: morning.gold, rank: farmRankOf(morning.farm.points),
     today: working(save).length, plots: morning.fields.plots.length,
+    sent: save.expeditions.filter((trip) => trip.left === save.calendar.day).length,
+    missedFarmDays: save.expeditions.length ? working({ ...save, expeditions: [] }).length - working(save).length : 0,
   })
   return morning
 }
@@ -637,13 +683,13 @@ interface Year {
   built: string[]
 }
 
-function simulate(stage: Stage): { log: Day[]; years: Year[]; end: SaveV4; mornings: SaveV4[] } {
+function simulate(stage: Stage, expeditions = false, yearsToPlay = YEARS): { log: Day[]; years: Year[]; end: SaveV4; mornings: SaveV4[] } {
   let save: SaveV4 = { ...newSave(`scale-${stage}`, AT), farmer: { name: 'Sim' } }
   const log: Day[] = []
   const years: Year[] = []
   const mornings: SaveV4[] = []
-  for (let n = 0; n < DAYS_PER_YEAR * YEARS; n++) {
-    save = play(save, stage, log)
+  for (let n = 0; n < DAYS_PER_YEAR * yearsToPlay; n++) {
+    save = play(save, stage, log, expeditions)
     if (n % DAYS_PER_SEASON === DAYS_PER_SEASON - 1) mornings.push(save)
     if ((n + 1) % DAYS_PER_YEAR === 0) {
       const days = log.slice(-DAYS_PER_YEAR)
@@ -659,7 +705,7 @@ function simulate(stage: Stage): { log: Day[]; years: Year[]; end: SaveV4; morni
         score: Math.round(sum(days.map((d) => d.score ?? 0)) / Math.max(1, days.filter((d) => d.score !== null).length)),
         short: days.filter((d) => d.short).length, gold: save.gold, rank: farmRankOf(save.farm.points), plots: save.fields.plots.length,
         today: avg((d) => d.today), eased: avg((d) => d.eased), levels: sum(STATIONS.map((s) => stationLevel(save, s))),
-        built: PLAN.filter((id) => placeBuilt(save, id)),
+        built: planFor(expeditions).filter((id) => placeBuilt(save, id)),
       })
     }
   }
@@ -706,6 +752,28 @@ if (process.env.SCALE) {
     console.log(`\nBuilt: ${years.map((y) => `Y${y.year} ${y.built.join(', ')}`).join('; ')}. Shipped ${g(end.farm.counts[GOLD_SHIPPED] ?? 0)}. The bin by source, year 4: ${JSON.stringify(years.at(-1)!.sources)}`)
   }
 }
+
+describe('expeditions at farm scale', () => {
+  it.each(STAGES)('sends and ships from expeditions on the %i-Uma farm', (stage) => {
+    const run = simulate(stage, true, EXPEDITION_YEARS)
+    const base = simulate(stage, false, EXPEDITION_YEARS)
+    const last = run.log.slice(-DAYS_PER_YEAR)
+    const sameDays = base.log.slice(-DAYS_PER_YEAR)
+    const shipped = sum(last.map((day) => day.sources.expeditions))
+    const income = sum(last.map((day) => day.income))
+    const farmIncome = sum(sameDays.map((day) => day.income))
+    const missed = sum(last.map((day) => day.missedFarmDays))
+    const equivalent = Math.round(farmIncome * missed / sum(sameDays.map((day) => day.today)))
+    const parties = Array.from({ length: 4 }, (_, season) => sum(last.slice(season * DAYS_PER_SEASON, (season + 1) * DAYS_PER_SEASON).map((day) => day.sent)))
+    if (process.env.SCALE) console.log({ stage, rank: run.years.at(-1)?.rank, parties, shipped, income, farmIncome, missed, equivalent, log: run.end.expeditionLog?.map((trip) => trip.region) })
+    expect(run.end.buildings.expeditions).toBe(1)
+    expect(sum(parties)).toBeGreaterThan(0)
+    expect(shipped).toBeGreaterThan(0)
+    expect(missed).toBeGreaterThan(0)
+    expect(last.filter((day) => day.short)).toEqual([])
+    for (const morning of run.mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
+  }, 60000)
+})
 
 describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', () => {
   const year = (stage: Stage, n: number): Year => farms[stage].years[n - 1]!

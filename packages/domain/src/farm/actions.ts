@@ -24,7 +24,7 @@ export const ACTION_IDS = [
   'load', 'ship',
   'town', 'shop',
   'introduce', 'talk', 'gift', 'invite', 'hangout', 'event',
-  'festival', 'batch', 'kitchen', 'cook', 'companion',
+  'festival', 'batch', 'kitchen', 'expedition', 'cook', 'companion',
 ] as const
 export type ActionId = typeof ACTION_IDS[number]
 
@@ -70,6 +70,7 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('festival', 'A festival', 'Enter the Cooking Contest, at the Kitchen on its day: the day’s event actions first (the other festivals’ contests come later)', 3),
   rule('batch', 'The kitchen', 'Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove', 1),
   rule('kitchen', 'The Kitchen', 'Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day', 1),
+  rule('expedition', 'The Expedition post', 'Send a party for 2–5 days, with up to eight dishes', 1),
   rule('cook', 'The household', 'Cook a meal for the household: breakfast or dinner (it cooks a batch too)', 1),
   rule('companion', 'The household', 'Choose tonight’s companion, at the day’s end', 0),
 ]

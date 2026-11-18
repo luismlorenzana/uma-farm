@@ -113,7 +113,7 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('dock', 'Dock', 'yard', 7, 2, 'ley-spring', 'A pier on the sea: the Sea Pier’s fish.', build(6, 20000, [planks(80)], true), true),
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
   place('festival', 'Festival ground', 'town', 8, 1, 'racecourse', 'A festival on each season’s 10th day.', { by: 'later' }),
-  place('expeditions', 'Expedition post', 'town', 8, 2, 'rangers-lodge', 'Parties out for days.', build(7, 25000, [planks(60), fillets(40)], false), true),
+  place('expeditions', 'Expedition post', 'town', 8, 2, 'rangers-lodge', 'Parties out for days.', build(7, 25000, [planks(60), fillets(40)], true), true),
   place('town', 'Town', 'town', 9, 1, 'trophy-hall', 'Who’s out at the town’s spots today, and everyone who lives there.', START, true),
   place('boat', 'Boat', 'yard', 7, 2, 'ley-spring', 'Out past the pier: the Deep Sea’s fish.', build(6, 30000, [planks(60), fillets(30)], true, 'dock'), true, 'dock'),
 ]

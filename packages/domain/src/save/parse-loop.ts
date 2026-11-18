@@ -7,15 +7,15 @@ import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { isStation, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
-import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
+import { goodOf, GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
   MARKET_FLOOR, MAX_FIELD_TILES, MAX_KITCHEN_BASE, MAX_PLOTS, MEAL_KEEPS, MENU_RECIPES, STATION_MAX_LEVEL, STOVE_PLAYS,
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
-  REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
-  type Expedition, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV5, type StarCounts,
+  EXPEDITION_OUTCOMES, REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
+  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV5, type StarCounts,
   type StationLoad, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
@@ -276,14 +276,30 @@ export function parseExpeditions(value: unknown, path: string, roster: ReadonlyS
     const at = `${path}.${i}`
     const e = object(v, at, ['region', 'party', 'supplies', 'left', 'back'])
     const party = unique(list(e.party, `${at}.party`, 1, 4).map((m, j) => member(m, `${at}.party.${j}`, roster)), `${at}.party`)
-    const supplies = list(e.supplies, `${at}.supplies`, 0, 8).map((s, j) => (typeof s === 'string' && isWarehouseId(s) ? s : fail(`${at}.supplies.${j}`, 'unknown item')))
+    const supplies = list(e.supplies, `${at}.supplies`, 0, 8).map((s, j) => (typeof s === 'string' && (isWarehouseId(s) || isDishId(parseStockKey(s)?.id ?? '')) ? s : fail(`${at}.supplies.${j}`, 'unknown supply')))
     const left = day(e.left, `${at}.left`)
     const back = day(e.back, `${at}.back`)
-    if (back <= left) fail(`${at}.back`, 'expected after the day it left')
+    if (back <= left || back - left > 5) fail(`${at}.back`, 'expected 1–5 days after departure')
     return { region: oneOf(e.region, `${at}.region`, REGION_IDS), party, supplies, left, back }
   })
   unique(out.flatMap((e) => e.party), path)
   return out
+}
+
+export function parseExpeditionReturn(value: unknown, path: string, roster: ReadonlySet<string>, summary = false): ExpeditionReturn {
+  const e = object(value, path, ['region', 'party', 'left', 'back', 'result', 'loot', ...(summary ? ['kind'] : [])])
+  const party = unique(list(e.party, `${path}.party`, 1, 4).map((id, i) => member(id, `${path}.party.${i}`, roster)), `${path}.party`)
+  const left = day(e.left, `${path}.left`)
+  const back = day(e.back, `${path}.back`)
+  if (back <= left || back - left > 5) fail(`${path}.back`, 'expected 1–5 days after departure')
+  const loot = counts(e.loot, `${path}.loot`, (key) => {
+    const family = goodOf(parseStockKey(key)?.id ?? '')?.family
+    return family === 'hides-scales' || family === 'bones-horns' || family === 'essences'
+  }, 'expected an expedition good at its stars')
+  const total = Object.values(loot).reduce((sum, n) => sum + n, 0)
+  if (total < 1 || total > 90) fail(`${path}.loot`, 'expected 1–90 goods')
+  return { region: oneOf(e.region, `${path}.region`, REGION_IDS), party, left, back,
+    result: oneOf(e.result, `${path}.result`, EXPEDITION_OUTCOMES), loot }
 }
 
 /** Bond points by pair: two roster ids in numeric order, whole. */
@@ -478,9 +494,10 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
 export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
   const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, MAX_FIELD_TILES)
   const loads = new Map<string, number>()
-  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 1 + MAX_FIELD_TILES).map((v, i): WorkLine => {
+  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 4 + MAX_FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition'] as const)
+    if (kind === 'expedition') return { kind, ...parseExpeditionReturn(v, at, roster, true) }
     if (kind === 'ranch') {
       // A building's night: its animals fed today, those that went hungry, and the goods waiting this morning.
       const r = object(v, at, ['kind', 'home', 'fed', 'hungry', 'ready'])
@@ -517,7 +534,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
   }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? loadKey(w.station) : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
-    : `withered:${w.crop}`))
+    : w.kind === 'expedition' ? `expedition:${w.party[0]}:${w.left}` : `withered:${w.crop}`))
   // A station's loads: one a level, so up to its top level's (each its own line, in the order started).
   function loadKey(station: string): string {
     const n = (loads.get(station) ?? 0) + 1
