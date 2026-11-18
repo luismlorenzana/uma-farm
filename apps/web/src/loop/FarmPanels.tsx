@@ -19,7 +19,10 @@ const errorWords = (err: unknown): string => (err instanceof Error ? err.message
 /** Stock keys in words: "Pine Log, Shiitake". */
 export const goodsWords = (keys: readonly string[]): string => keys.map((key) => goodName(key.slice(0, key.lastIndexOf('@')))).join(', ')
 /** A harvest in words: "+2 Potato · 1 seed back". */
-const harvestWords = (r: HarvestReceipt): string => `+${receiptItems(r)} ${itemNameOf(r.crop)}${r.seeds > 0 ? ' · 1 seed back' : ''}`
+function harvestWords(r: HarvestReceipt): string {
+  const crops = r.lots ? r.lots.map((lot) => `+1 ${goodName(lot.id)}`).join(' · ') : `+${receiptItems(r)} ${itemNameOf(r.crop)}`
+  return `${crops}${r.seeds > 0 ? ' · 1 seed back' : ''}`
+}
 
 /** One action at a time: what it brought, or why it was refused. */
 export function useAct(key: string | number) {
@@ -85,7 +88,7 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
       <Notes note={note} error={error} />
       {single && (
         <Button className="w-full" disabled={busy || out} onClick={() => doIt(single)} data-action={single.kind}>
-          {ACTION_WORDS[single.kind]} · 1 action
+          {single.kind === 'harvest' && tile.crop === 'carrot' ? `Harvest G${tile.grade ?? 1}` : ACTION_WORDS[single.kind]} · 1 action
         </Button>
       )}
       {hasGrass(save, index) && siloStands(save) && (

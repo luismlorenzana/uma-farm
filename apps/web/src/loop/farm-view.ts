@@ -60,12 +60,12 @@ export function tileView(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, 
     const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
     const next = dateOf(save.calendar.day + daysLeft).season
     const seeds = seedsInSeason(save).map((s): TileAction => ({
-      kind: 'plant', seed: s.id, name: itemNameOf(s.crop), count: s.count, own: s.own, stages: stagesOf(s.crop, false),
+      kind: 'plant', seed: s.id, name: s.grade ? `Carrot G${s.grade}` : itemNameOf(s.crop), count: s.count, own: s.own, stages: stagesOf(s.crop, false),
       late: stagesOf(s.crop, false) > daysLeft && !growsIn(s.crop, next),
     }))
     return { ...base, title: GROUND_NAMES.tilled, line: seeds.length > 0 ? 'Plant a seed, then water it.' : `No seeds for ${SEASON_NAMES[dateOf(save.calendar.day).season]}.`, actions: seeds }
   }
-  const name = itemNameOf(tile.crop)
+  const name = tile.grade ? `Carrot G${tile.grade}` : itemNameOf(tile.crop)
   if (tile.ready) return { ...base, title: name, line: 'Ripe: harvest it.', actions: [{ kind: 'harvest' }] }
   const stages = stagesOf(tile.crop, tile.regrowing)
   const grown = `${tile.growth} of ${plural(stages, 'night')}${tile.regrowing ? ', regrowing' : ''}`

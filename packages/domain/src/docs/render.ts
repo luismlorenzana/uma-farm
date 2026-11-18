@@ -563,15 +563,16 @@ function farmhandDay(): string {
 /** The work board's tasks: what each works over, an action, when it stops, its aptitude and the activity it reads. */
 function workBoard(): string {
   const rows: Cell[][] = TASK_KINDS.map((kind) => {
-    const aptitude = kind === 'load' ? 'mill' : kind
+    const aptitude = kind === 'load' ? 'mill' : kind === 'save-seed' ? 'plant' : kind
     const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'A plot’s tiles you choose (the board offers each plot’s rows)' : kind === 'load' ? 'A built station'
       : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor'
-        : kind === 'cook' ? 'The farmhouse kitchen (the Kitchen’s, once it stands)' : 'An area the farm reaches'
+        : kind === 'cook' ? 'The farmhouse kitchen (the Kitchen’s, once it stands)' : kind === 'save-seed' ? 'Carrots in the Warehouse' : 'An area the farm reaches'
     const each: Record<TaskKind, string> = {
       harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
       water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
       plant: `An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; ${tilesAt('plant', TRICK_AT.plantTwo)}`,
       till: `A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing ${TRICK_AT.tillInOne}`,
+      'save-seed': 'Up to four carrots of one grade become saved seed',
       load: `A load of the good the station holds most of, up to ${LOAD_SIZE} (${BIG_LOAD} from her level ${TRICK_AT.bigLoad}), until the station holds its loads for the day: one a level`,
       forage: `A haul of ${FORAGE_HAUL} finds (${FORAGE_HAUL + 1} from Foraging ${TRICK_AT.forageThree})`,
       chop: `${CHOP_LOGS} logs (${CHOP_LOGS + 1} from Chopping ${TRICK_AT.chopThree})`,
@@ -582,7 +583,7 @@ function workBoard(): string {
     }
     const stops = OPEN_TASKS.includes(kind) ? `Never: her ${kind === 'mine' ? 'digging' : 'gathering'} shares what’s left, a turn each` : kind === 'load' ? 'Once the station holds today’s loads, one a level'
       : kind === 'care' ? 'When every animal there is fed, collected and cared for' : kind === 'cook' ? 'Once the pantry holds tonight’s meals for everyone, or the food runs out'
-        : 'When none of its tiles needs it'
+        : kind === 'save-seed' ? 'At the seed target, knowledge threshold, or reserve floor' : 'When none of its tiles needs it'
     return [TASK_NAMES[kind], over, each[kind], stops, kind === 'load' ? 'Milling, Sawing, Smoking, Smelting or Cutting, by station' : APTITUDE_NAMES[aptitude as AptitudeId],
       ACTIVITY_NAMES[APTITUDE_ACTIVITY[aptitude as AptitudeId]] + (kind === 'load' ? ', foraging, fishing or mining' : '')]
   })

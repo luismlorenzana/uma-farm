@@ -7,7 +7,7 @@
 // action, and a tap opens the row's panel (`?row=<r>`): what it holds, who works it and how much an action. Every move
 // inside the screen replaces the entry, so the strip's Farm button and Back both go to the farm. Loaded on demand.
 import {
-  fieldIndex, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, plotCounts, plotName, TASK_NAMES, APTITUDE_NAMES, type FarmSave,
+  carrotRowKey, CARROT_GRADES, handsTonight, fieldIndex, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, plotCounts, plotName, TASK_NAMES, APTITUDE_NAMES, type CarrotGrade, type FarmSave,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, CloseIcon, HelpButton, LockedIcon } from '@luismlorenzana/uma-kit/ui'
@@ -17,12 +17,13 @@ import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { DayActions } from '../shell/Bars'
-import { clearPlotAt } from './actions'
+import { clearPlotAt, planCarrotRow } from './actions'
 import { TileArt } from './farm-art'
 import { countsWords, tileLabel, tileView, tileWhere } from './farm-view'
 import { plotPages, rowCounts, rowHands, type PlotPage } from './field-view'
 import { Notes, TilePanel, useAct } from './FarmPanels'
 import { useTalents } from './talents'
+import { useStory } from '../story/story'
 
 /** The page's params: the plot's index, its tile and its row, each checked against the save; null where absent. */
 interface FieldAt { plot: number; tile: number | null; row: number | null }
@@ -259,8 +260,9 @@ function PlotGrid({ save, plot, tile, row, size, state }: { save: FarmSave; plot
                   <div key={i} role="gridcell" className="p-[2px]">
                     <Link to={fieldPath(plot, { tile: i })} replace state={state} aria-label={tileLabel(save, index)} aria-current={tile === i ? 'true' : undefined}
                       className={`relative block size-full rounded-[4px] ${tile === i ? 'z-10 outline-[3px] outline-offset-1 outline-white outline-solid' : ''}`}
-                      data-tile={i} data-crop={t.crop ?? undefined} data-ready={t.ready || undefined}>
+                      data-tile={i} data-crop={t.crop ?? undefined} data-ready={t.ready || undefined} data-grade={t.grade}>
                       <TileArt tile={t} cell={size} />
+                      {t.grade && <span aria-hidden className="absolute right-0 bottom-0 rounded-tl-sm bg-panel px-0.5 text-[10px] leading-tight font-bold">G{t.grade}</span>}
                     </Link>
                   </div>
                 )
@@ -324,14 +326,45 @@ function Side({ label, onClose, data, children }: { label: string; onClose: () =
 /** A row's panel: what it holds, the farmhands who work it, each with her task there and what she does an action. */
 function RowPanel({ save, plot, row }: { save: FarmSave; plot: number; row: number }) {
   const talents = useTalents()
+  const story = useStory()
   const master = useMaster()
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const counts = countsWords(rowCounts(save, plot, row))
   const hands = rowHands(save, plot, row, talents.of)
+  const key = carrotRowKey(plot, row)
+  const plan = save.farm.carrotRows?.[key]
+  const { note, error, busy, run } = useAct(key)
+  const forecast = plan ? rowCounts(handsTonight(save, save, talents.of, story).save, plot, row) : null
   return (
     <div className="space-y-2.5 p-4" data-row-panel={row + 1}>
       <p className="text-[12px] text-ink-faint">{tileWhere(save, { plot, where: `Row ${row + 1}` })}</p>
       <p className="text-[15px]" data-row-counts>{counts.length > 0 ? counts.join(' · ') : 'Nothing due'}</p>
+      <label className="flex flex-wrap items-center justify-between gap-2 text-[14px]">
+        Spring carrot plan
+        <select className="min-h-11 rounded-sm border border-hairline-strong bg-panel px-2" value={plan?.grade ?? ''} disabled={busy}
+          onChange={(e) => {
+            const grade = Number(e.currentTarget.value) as CarrotGrade | 0
+            run(planCarrotRow(plot, row, grade ? { grade, harvestNext: grade < 3 && !!plan?.harvestNext } : null).then(() => null))
+          }}>
+          <option value="">Off</option>
+          {CARROT_GRADES.map((grade) => <option key={grade} value={grade}>Plant Carrot G{grade}</option>)}
+        </select>
+      </label>
+      {plan && (
+        <>
+          <label className="flex min-h-11 items-center gap-2 text-[14px]">
+            <input type="checkbox" checked={plan.harvestNext} disabled={busy || plan.grade === 3}
+              onChange={(e) => run(planCarrotRow(plot, row, { ...plan, harvestNext: e.currentTarget.checked }).then(() => null))} />
+            Harvest next grade when skilled
+          </label>
+          <p className="text-[12px] text-ink-soft" data-row-forecast>
+            Tonight · {forecast?.water ? `${forecast.water} still need water` : 'Water covered'}
+            {forecast?.ripe ? ` · ${forecast.ripe} ripe waiting` : ''}
+            {forecast?.plant ? ` · ${forecast.plant} empty tilled` : ''}
+          </p>
+        </>
+      )}
+      <Notes note={note} error={error} />
       <h3 className="text-micro pt-1">Farmhands on this row</h3>
       {hands.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-row-none>No farmhand works this row.</p>

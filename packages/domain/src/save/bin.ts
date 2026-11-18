@@ -4,13 +4,13 @@
 // `updatedAt`: shipping and taking back are the player's operations, which stamp around them, and the night stamps once
 // after its nine steps.
 import { spend } from '../farm/actions'
-import { GOOD_IDS } from '../goods/ids'
-import { easedLines, easedPercent, easeOf, type Market } from '../goods/market'
+import { baseGoodId, GOOD_IDS } from '../goods/ids'
+import { easedGroup, easedPercent, easeOf, type Market } from '../goods/market'
 import { hasPrice, inDemand } from '../goods/prices'
 import type { BinSale } from '../night/summary'
 import { earnGold } from './gold'
 import { SaveRuleError } from './rules'
-import type { Warehouse } from './v4'
+import type { StarCounts, Warehouse } from './v4'
 import { addGoods, takeGoods } from './warehouse'
 import type { FarmSave } from './v4'
 
@@ -70,14 +70,19 @@ const ORDER = new Map(GOOD_IDS.map((id, i) => [id, i]))
  * order, ★1 first. With the farm's market, a good eased by a flood sells at its ease, and past a crate of it each crate
  * more a step lower (`goods/market.ts`): its lines say how far (`eased`, in percent). */
 export function binSales(bin: Warehouse, day: number, market: Market = {}): BinSale[] {
-  return Object.entries(bin)
-    .sort(([a], [b]) => (ORDER.get(a) ?? Infinity) - (ORDER.get(b) ?? Infinity))
-    .flatMap(([id, row]) => {
-      const demand = inDemand(id, day)
-      return easedLines(id, row, day, easeOf(market, id)).map((line): BinSale => ({
-        kind: 'sold', id, stars: line.stars, count: line.count, gold: line.gold, demand, ...(line.steps > 0 ? { eased: easedPercent(line.steps) } : {}),
-      }))
-    })
+  const groups = new Map<string, [string, StarCounts][]>()
+  for (const [id, row] of Object.entries(bin)) {
+    const key = baseGoodId(id)
+    const group = groups.get(key)
+    if (group) group.push([id, row])
+    else groups.set(key, [[id, row]])
+  }
+  return [...groups].flatMap(([key, rows]) => easedGroup(rows, day, easeOf(market, key)))
+    .sort((a, b) => (ORDER.get(a.id) ?? Infinity) - (ORDER.get(b.id) ?? Infinity) || a.stars - b.stars)
+    .map((line) => ({
+      kind: 'sold', id: line.id, stars: line.stars, count: line.count, gold: line.gold, demand: inDemand(line.id, day),
+      ...(line.steps > 0 ? { eased: easedPercent(line.steps) } : {}),
+    }))
 }
 
 /** What the bin pays tonight if nothing changes: the bin sheet's "About 1,240g tonight". */

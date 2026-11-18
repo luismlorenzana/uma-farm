@@ -17,7 +17,7 @@ export const DAY_ACTIONS = 10
 
 /** Every action the design prices. */
 export const ACTION_IDS = [
-  'clear', 'till', 'plant', 'water', 'harvest', 'water-row', 'grass', 'plot',
+  'clear', 'till', 'plant', 'water', 'harvest', 'water-row', 'save-seed', 'grass', 'plot',
   'animal', 'buy-animal',
   'forage', 'chop', 'fish',
   'mine', 'stairs',
@@ -48,6 +48,7 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('water', 'The fields', 'Water a tile', 1),
   rule('harvest', 'The fields', 'Harvest a tile', 1),
   rule('water-row', 'The fields', 'Water a row: a farmhand’s trick, from Watering 6', 1),
+  rule('save-seed', 'The fields', 'Save up to four carrot seeds from one grade of carrots', 1),
   rule('grass', 'The fields', 'Cut grass on a weeds tile, for the silo', 1),
   rule('plot', 'The fields', 'Clear a plot: a new page of the field, from its Farm Rank, for its gold', 1),
   rule('animal', 'Animals', 'Feed one, or care for one; collect a building’s eggs, milk or wool', 1),

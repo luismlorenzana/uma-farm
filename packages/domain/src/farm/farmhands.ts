@@ -35,6 +35,7 @@ import type { Activity } from './ranks'
 import { talentYield, type TalentOf, type TalentStep } from './talents'
 import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowTile, stagesOf, tileOf, tillGround, clearGround, wetTile, type Reaper } from '../fields/fields'
 import { growsIn } from '../fields/crops'
+import { carrotPlanAt, MAX_SEED_TARGET, saveCarrotSeedsAt, SEED_BATCH, seedOutput, upgradedCarrot } from '../fields/carrot'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
 import { DIG_TOOL, digBuilt, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
@@ -42,7 +43,8 @@ import { gatherQuality, GATHER_TOOL, HOME_COUNT, keepsakeAt, sizeSkill, stationB
 import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
 import { LOAD_SIZE, loadAt, loadsLeft, loadsToday, stationOptions } from '../gathering/stations'
 import { TOOL_YIELD } from '../gathering/tables'
-import { isCropId, type CropId } from '../goods/ids'
+import { carrotGood, carrotSeed, isCropId, type CropId } from '../goods/ids'
+import { goodCount, stockKey } from '../save/warehouse'
 import type { AptitudeUp, FarmhandLine } from '../night/summary'
 import type { PerkPack } from '../romance/perk-terms'
 import { SaveRuleError } from '../save/rules'
@@ -124,7 +126,7 @@ export function handJob(pack: Pick<StoryPack, 'cast'>, id: string): HandJob {
 /** Each task's name on the board. */
 export const TASK_NAMES: Readonly<Record<TaskKind, string>> = {
   harvest: 'Harvest', water: 'Water', plant: 'Plant', till: 'Clear and till', load: 'Load', forage: 'Forage', chop: 'Chop', fish: 'Fish',
-  care: 'Care for animals', mine: 'Work a face', cook: 'Cook',
+  care: 'Care for animals', mine: 'Work a face', cook: 'Cook', 'save-seed': 'Save carrot seed',
 }
 /** The tasks that run until her actions do: her gathering and her digging, a turn each once the field's, the loads and
  * the animals' care are done. */
@@ -137,7 +139,7 @@ export const taskTiles = (task: Extract<FarmTask, { tiles: number[] }>): number[
   task.tiles.filter((i) => Number.isInteger(i) && i >= 0 && i < FIELD_TILES).map((i) => fieldIndex(taskPlot(task), i))
 
 /** The aptitude a task practises: its own, a load its station's. */
-export const taskAptitude = (task: FarmTask): AptitudeId => (task.kind === 'load' ? task.station : task.kind)
+export const taskAptitude = (task: FarmTask): AptitudeId => (task.kind === 'load' ? task.station : task.kind === 'save-seed' ? 'plant' : task.kind)
 
 /** Where a task is worked: the Fields, a station, the forest, the Fishery, the Coop or the Barn, the Mine or the
  * Quarry, the kitchen (the farmhouse's until the Kitchen stands). */
@@ -165,6 +167,8 @@ export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields'>, 
     return null
   }
   switch (task.kind) {
+    case 'save-seed': return task.grade === 3 && task.improve ? 'G3 is the highest carrot grade.'
+      : !Number.isInteger(task.target) || task.target < 1 || task.target > MAX_SEED_TARGET ? 'Keep 1 to 99 seeds.' : null
     case 'load': return stationBuilt(save, task.station) ? null : 'Build it first.'
     case 'care': return homeBuilt(save, task.home) ? null : 'Build it first.'
     case 'mine': return digBuilt(save, task.dig) ? null : 'Build it first.'
@@ -388,7 +392,11 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
   const uma = save.roster[id]!
   switch (task.kind) {
     case 'harvest': {
-      const ripe = tiles.filter((i) => at(i).ready).slice(0, tilesAnAction('harvest', level))
+      const ripe = tiles.filter((i) => {
+        const tile = at(i)
+        if (!tile.ready) return false
+        return tile.crop !== 'carrot' || tile.grade === 3 || !carrotPlanAt(save, i)?.harvestNext || !!upgradedCarrot(save, tile, i, level)
+      }).slice(0, tilesAnAction('harvest', level))
       if (ripe.length === 0) return null
       const rank = uma.ranks.farming.rank
       const keepsake = keepsakeAt(save, story, id, 'fields')
@@ -401,10 +409,10 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       const events: Step['events'] = []
       for (const i of ripe) {
         const level0 = cropLevelOf(next.crops[tileOf(next, i)!.crop!] ?? 0)
-        const done = reapTile(next, i, reaper)
+        const done = reapTile(next, i, reaper, upgradedCarrot(next, at(i), i, level))
         next = done.save
         const stars = done.receipt.stars.flatMap((n, s) => Array.from({ length: n }, () => s + 1))
-        items.push(...stars.map((s) => `${done.receipt.crop}@${s}`))
+        items.push(...(done.receipt.lots?.map((lot) => stockKey(lot.id, lot.stars)) ?? stars.map((s) => stockKey(done.receipt.crop, s))))
         events.push({ activity: 'farming', event: { kind: 'harvest', stars, level: level0 } })
       }
       return { save: next, n: ripe.length, items, events }
@@ -424,12 +432,23 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       let n = 0
       for (const i of empty) {
         if (n >= tilesAnAction('plant', level)) break
-        const seed = seedsInSeason(next).find((s) => (task.crop === undefined || s.crop === task.crop) && ripensInTime(s.crop, next.calendar.day))
-        if (!seed) break
+        const plan = dateOf(next.calendar.day).season === 'spring' ? carrotPlanAt(next, i) : undefined
+        const seed = seedsInSeason(next).find((s) => ripensInTime(s.crop, next.calendar.day)
+          && (plan ? s.crop === 'carrot' && (s.grade ?? 1) === plan.grade : !s.grade && (task.crop === undefined || s.crop === task.crop)))
+        if (!seed) continue
         next = sowTile(next, i, seed.id)
         n++
       }
       return n === 0 ? null : { save: next, n, items: [], events: [] }
+    }
+    case 'save-seed': {
+      const output = seedOutput(save, task.grade, task.improve)
+      if (!output) return null
+      const input = carrotGood(task.grade)
+      const held = goodCount(save.items, input) - (save.farm.reserves?.[input] ?? 0)
+      const needed = task.target - goodCount(save.items, carrotSeed(output))
+      const n = Math.min(SEED_BATCH, held, needed)
+      return n < 1 ? null : { save: saveCarrotSeedsAt(save, task.grade, task.improve, n), n, items: [], events: [] }
     }
     case 'till': {
       const i = tiles.find((t) => { const g = at(t).ground; return isOvergrown(g) || g === 'clear' })

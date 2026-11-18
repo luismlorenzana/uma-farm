@@ -149,7 +149,7 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.4 **The roster-run farm** | The [farm rework packet](handoff/tasks/F99-farm-rework.md) covers grade progression, 51 plantables, recurring Uma work plans and discovery. Prove the carrot loop first, then deliver fields and orchard, ranch and stations, and fishing. |
+| 2.4 **The roster-run farm** | The [carrot pilot](game-mechanics.md#the-carrot-grade-pilot) implements saved seed, skilled harvests and discovery. The [farm rework packet](handoff/tasks/F99-farm-rework.md) continues with fields and orchard, ranch and stations, and fishing. |
 | 2.5 **The Restaurant's and the Forge's games** | The [Restaurant packet](handoff/tasks/F98-restaurant.md) follows the farm rework, using its exact-grade discoveries. The Forge's merge game follows separately. |
 | 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |
 

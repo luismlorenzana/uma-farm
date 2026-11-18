@@ -2,7 +2,7 @@
 // for one action, and Ship all from a good's sheet; Take back in the bin's sheet; the night paying it into the morning;
 // and the shop, in town, buying with gold. Master data and the server are stubs; the story pack is the stand-in.
 import 'fake-indexeddb/auto'
-import { farmDay, newSave, shopLines, type SaveV4, type ShopLine } from '@farm/domain'
+import { farmDay, newSave, shopLines, tileAt, type SaveV4, type ShopLine } from '@farm/domain'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -18,11 +18,12 @@ vi.mock('../api/client', async () => {
   return { ...actual, saveApi: { load: vi.fn(async () => ({ revision: 0, save: null })), put: vi.fn(async (_: number, save: unknown) => ({ revision: 1, save })) } }
 })
 
-const { useGame, resetGame } = await import('../save/game')
+const { useGame, useLoopSave, resetGame } = await import('../save/game')
 const { FarmBar } = await import('../shell/Bars')
 const { default: LoopSheets } = await import('./LoopSheets')
 const { default: WarehousePage } = await import('./WarehousePage')
 const { ShopList } = await import('./GoodsSheets')
+const { TilePanel } = await import('./FarmPanels')
 const { buyLine, endTheDay } = await import('./actions')
 const { storyReady } = await import('../story/story')
 // The night reads the story pack: the stand-in, loaded once.
@@ -85,6 +86,41 @@ describe('gold in the bar', () => {
 })
 
 describe('shipping', () => {
+  it('saves improved seed at the Warehouse, then plants and harvests G2 from the tile panel', async () => {
+    const fresh = newSave('u1', AT)
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...fresh, crops: { carrot: 3 }, items: { ...fresh.items, carrot: [3, 0, 0, 0, 0] } } })
+    await render(<WarehousePage />, '/warehouse')
+    await click('[data-item="carrot"]')
+    const improve = [...document.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Improve to G2 seed · 1')
+    expect(improve?.disabled).toBe(false)
+    await act(async () => improve!.click())
+    await settle()
+    expect(save().items).toMatchObject({ carrot: [2, 0, 0, 0, 0], 'seed-carrot-grade-2-own': [1, 0, 0, 0, 0] })
+    expect(save().today.actions).toBe(1)
+    expect($('[data-carrot-discovery="2"]')?.textContent).toBe('G2 · Undiscovered')
+    function Tile() {
+      const active = useLoopSave()
+      return active ? <TilePanel save={active} index={0} /> : null
+    }
+    const tileClick = async (selector: string) => {
+      await vi.waitFor(() => expect($(selector)).toMatchObject({ disabled: false }))
+      await click(selector)
+    }
+    await render(<Tile />, '/field')
+    await tileClick('[data-action="till"]')
+    await tileClick('[data-seed="seed-carrot-grade-2-own"] [data-action="plant"]')
+    expect(tileAt(save(), 0)).toMatchObject({ crop: 'carrot', grade: 2 })
+    for (let day = 1; day <= 4; day++) {
+      await tileClick('[data-action="water"]')
+      await act(async () => { expect(await endTheDay(day)).toBe(true) })
+    }
+    expect($('[data-action="harvest"]')?.textContent).toContain('Harvest G2')
+    await tileClick('[data-action="harvest"]')
+    expect($('[data-note]')?.textContent).toContain('+1 Carrot G2')
+    await render(<WarehousePage />, '/warehouse')
+    expect($('[data-carrot-discovery="2"]')?.textContent).toBe('G2 · Discovered')
+  })
+
   it('picks a crate in pick mode, ships it for one action, takes a line back in the bin, and the night pays the rest into the morning', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
     await render(<WarehousePage />, '/warehouse?pick=bin')

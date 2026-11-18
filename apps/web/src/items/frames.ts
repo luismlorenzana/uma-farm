@@ -1,7 +1,7 @@
 // Copied from uma-rpg apps/web/src/items/frames.ts at 30a322a, cut to the farm's goods and seeds, and the Kitchen's
 // dishes. Where an icon sits on uma-art's items and dishes atlases, computed from the ids so the atlas index never ships
 // in the main chunk; frames.test.ts pins every position against them.
-import { goodOf, seedOf, type GoodFamily } from '@farm/domain'
+import { baseGoodId, goodOf, seedOf, type GoodFamily } from '@farm/domain'
 
 export const ATLAS_CELL = 32
 export type Sheet = 'items' | 'dishes'
@@ -33,6 +33,6 @@ export function iconFrame(id: string): IconFrame | null {
   const dish = /^dish-([a-z-]+)-(10|[1-9])$/.exec(id)
   const row = dish ? DISH_ROW[dish[1]!] : undefined
   if (dish && row !== undefined) return { sheet: 'dishes', x: (Number(dish[2]) - 1) * ATLAS_CELL, y: row * ATLAS_CELL }
-  const good = goodOf(seedOf(id)?.crop ?? id)
+  const good = goodOf(seedOf(id)?.crop ?? baseGoodId(id))
   return good ? { sheet: 'items', x: (good.grade - 1) * ATLAS_CELL, y: (GOOD_ROW[good.family] + (good.refined ? 1 : 0)) * ATLAS_CELL } : null
 }

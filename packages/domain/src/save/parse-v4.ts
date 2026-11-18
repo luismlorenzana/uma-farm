@@ -12,7 +12,7 @@
 import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
-import { isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
+import { isCropId, isGoodId, isGoodOrRingId, type CarrotGrade, type CropId } from '../goods/ids'
 import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
 import { isStockId, parseStockKey } from './warehouse'
 import type { HeartLine, MorningSummary } from '../night/summary'
@@ -86,6 +86,13 @@ function parseTask(value: unknown, path: string): FarmTask {
       const plot = o.plot === undefined ? {} : { plot: int(o.plot, `${path}.plot`, 1, MAX_PLOTS - 1) }
       if (kind !== 'plant') return { kind, tiles, ...plot }
       return o.crop === undefined ? { kind, tiles, ...plot } : { kind, tiles, ...plot, crop: typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop') }
+    }
+    case 'save-seed': {
+      const o = object(value, path, ['kind', 'grade', 'improve', 'target'])
+      const grade = int(o.grade, `${path}.grade`, 1, 3) as CarrotGrade
+      const improve = bool(o.improve, `${path}.improve`)
+      if (grade === 3 && improve) fail(path, 'G3 is the highest carrot grade')
+      return { kind, grade, improve, target: int(o.target, `${path}.target`, 1, 99) }
     }
     case 'load': return { kind, station: oneOf(object(value, path, ['kind', 'station']).station, `${path}.station`, STATIONS) }
     case 'forage': case 'chop': return { kind, area: oneOf(object(value, path, ['kind', 'area']).area, `${path}.area`, FOREST_AREAS) }
@@ -575,6 +582,9 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
 
 /** A field task works a plot the farm has cleared. */
 function parsePlotTasks(save: SaveV5, path: string): void {
+  for (const key of Object.keys(save.farm.carrotRows ?? {})) {
+    if (Number(key[0]) >= save.fields.plots.length) fail(`${path}.farm.carrotRows.${key}`, 'a plot the farm hasn’t cleared')
+  }
   for (const [id, uma] of Object.entries(save.roster)) {
     (uma.tasks ?? []).forEach((task, i) => {
       if ('plot' in task && task.plot !== undefined && task.plot >= save.fields.plots.length) fail(`${path}.roster.${id}.tasks.${i}.plot`, 'a plot the farm hasn’t cleared')

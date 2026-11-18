@@ -20,7 +20,7 @@ import { START_GOLD, START_SEEDS } from '../farm/farm'
 import type { FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import type { FishingSpotId, ForestAreaId, StationId } from '../gathering/ids'
-import { seedId, type CropId } from '../goods/ids'
+import { seedId, type CarrotGrade, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
 import type { Account, OlderSave } from './save'
 
@@ -74,6 +74,8 @@ export interface Tile {
   regrowing: boolean
   /** Planted from own seeds. */
   own: boolean
+  /** Higher carrot seed planted here. Omitted at the original grade. */
+  grade?: 2 | 3
   watered: boolean
 }
 
@@ -356,7 +358,7 @@ export interface Love {
 /** The work board's tasks: the field's (a plot and a list of its tiles), a station's load, a forest area's forage or chop,
  * a fishing spot's catch, the Coop's or the Barn's care, a face at the Mine or the Quarry, and cooking in the farm's
  * kitchen. */
-export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish', 'care', 'mine', 'cook'] as const
+export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'save-seed', 'load', 'forage', 'chop', 'fish', 'care', 'mine', 'cook'] as const
 export type TaskKind = typeof TASK_KINDS[number]
 /** The field's tasks, each over a list of tiles. */
 export const TILE_TASKS = ['harvest', 'water', 'plant', 'till'] as const
@@ -368,6 +370,7 @@ export type TileTaskKind = typeof TILE_TASKS[number]
 export type FarmTask =
   | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[]; plot?: number }
   | { kind: 'plant'; tiles: number[]; crop?: CropId; plot?: number }
+  | { kind: 'save-seed'; grade: CarrotGrade; improve: boolean; target: number }
   | { kind: 'load'; station: StationId }
   | { kind: 'forage' | 'chop'; area: ForestAreaId }
   | { kind: 'fish'; spot: FishingSpotId }
@@ -648,6 +651,11 @@ export interface SaveV5 {
   farm: {
     points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]
     pantry: PantryLot[]; market: Record<string, number>
+    /** First production day by exact stock ID. Legacy crop evidence can be read without stamping the save. */
+    discoveries?: Record<string, number>
+    reserves?: Record<string, number>
+    /** A Spring carrot plan by zero-based plot and row. */
+    carrotRows?: Record<string, { grade: CarrotGrade; harvestNext: boolean }>
   }
   homestead: Homestead
   /** Her route's event ids played, in order. */

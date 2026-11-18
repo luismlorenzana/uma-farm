@@ -12,6 +12,7 @@
 // `isGoodOrRingId` takes the rings too (the bin, the Diary).
 import { itemNameOf } from '../items/lines'
 import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
+import { round5 } from '../farm/round'
 
 /** The families the 284 goods come from: uma-art's fifteen, then the ranch's eggs and milk (uma-art's `eggs-milk` line,
  * a family of the farm's). */
@@ -161,8 +162,20 @@ export const GOODS: readonly Good[] = GOOD_FAMILIES.flatMap((family) => {
   })
   return [...raws, ...refineds]
 })
-const GOOD_BY_ID = new Map(GOODS.map((g) => [g.id, g]))
-export const GOOD_IDS: readonly string[] = GOODS.map((g) => g.id)
+export const CARROT_GRADES = [1, 2, 3] as const
+export type CarrotGrade = typeof CARROT_GRADES[number]
+export const CARROT_GOODS = ['carrot', 'carrot-grade-2', 'carrot-grade-3'] as const
+export const carrotGood = (grade: CarrotGrade): typeof CARROT_GOODS[number] => CARROT_GOODS[grade - 1]!
+export const carrotGradeOf = (id: string): CarrotGrade | undefined => CARROT_GRADES.find((grade) => carrotGood(grade) === id)
+/** Variants share their species' art and market. Legacy family/grade lookups still read GOODS. */
+export const baseGoodId = (id: string): string => carrotGradeOf(id) === undefined ? id : 'carrot'
+const gradedCarrots: Good[] = ([2, 3] as const).map((grade) => ({
+  id: carrotGood(grade), family: 'vegetables', grade, crop: true, refined: false, input: null,
+  price: round5(CROP_PRICES.carrot * (grade === 2 ? 1.2 : 1.45)),
+}))
+const catalogue = GOODS.flatMap((g) => g.id === 'carrot' ? [g, ...gradedCarrots] : [g])
+const GOOD_BY_ID = new Map(catalogue.map((g) => [g.id, g]))
+export const GOOD_IDS: readonly string[] = catalogue.map((g) => g.id)
 
 // --- The rings ---------------------------------------------------------------------------------
 
@@ -197,11 +210,13 @@ export const isGoodOrRingId = (id: string): boolean => GOOD_BY_ID.has(id) || RIN
 /** Seeds are Warehouse items with farm ids: `seed-<crop>` from the shop and `seed-<crop>-own` from
  * harvests, held at ★1 only. They have no bin price. */
 export const seedId = (crop: CropId, own = false): string => `seed-${crop}${own ? '-own' : ''}`
-export const SEED_IDS: readonly string[] = CROP_IDS.flatMap((crop) => [seedId(crop), seedId(crop, true)])
-const SEEDS = new Map<string, { crop: CropId; own: boolean }>(CROP_IDS.flatMap((crop) => [[seedId(crop), { crop, own: false }], [seedId(crop, true), { crop, own: true }]]))
+export const carrotSeed = (grade: CarrotGrade): string => `seed-${carrotGood(grade)}-own`
+const SEEDS = new Map<string, { crop: CropId; own: boolean; grade?: 2 | 3 }>(CROP_IDS.flatMap((crop) => [[seedId(crop), { crop, own: false }], [seedId(crop, true), { crop, own: true }]]))
+for (const grade of [2, 3] as const) SEEDS.set(carrotSeed(grade), { crop: 'carrot', own: true, grade })
+export const SEED_IDS: readonly string[] = [...SEEDS.keys()]
 export const isSeedId = (id: string): boolean => SEEDS.has(id)
 /** A seed's crop and whether it's an own seed, or undefined for any other id. */
-export const seedOf = (id: string): { crop: CropId; own: boolean } | undefined => SEEDS.get(id)
+export const seedOf = (id: string) => SEEDS.get(id)
 
 /** A good or a seed (the rings and dishes apart: `isStockId`). */
 export const isWarehouseId = (id: string): boolean => GOOD_BY_ID.has(id) || SEEDS.has(id)
@@ -224,7 +239,9 @@ export function dishName(id: string): string {
  * ("Carrot seeds", "Carrot seeds (own)"), a ring by its name ("Iron Ring") and a dish by its kind ("Carp Grill"). */
 export function goodName(id: string): string {
   const seed = SEEDS.get(id)
-  if (seed) return `${itemNameOf(seed.crop)} seeds${seed.own ? ' (own)' : ''}`
+  if (seed) return `${itemNameOf(seed.crop)}${seed.grade ? ` G${seed.grade}` : ''} seeds${seed.own ? ' (own)' : ''}`
+  const grade = carrotGradeOf(id)
+  if (grade && grade > 1) return `Carrot G${grade}`
   const ring = RING_BY_ID.get(id)
   if (ring) return ringName(ring.grade)
   return id.startsWith('dish-') ? dishName(id) : itemNameOf(id)

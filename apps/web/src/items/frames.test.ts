@@ -15,6 +15,8 @@ describe('icon frames', () => {
       expect(iconFrame(good.id), good.id).toEqual({ sheet: 'items', x: frame!.x, y: frame!.y })
     }
     expect(iconFrame('seed-carrot')).toEqual(iconFrame('carrot'))
+    expect(iconFrame('carrot-grade-2')).toEqual(iconFrame('carrot'))
+    expect(iconFrame('seed-carrot-grade-3-own')).toEqual(iconFrame('carrot'))
     expect(iconFrame('seed-wild-rice-own')).toEqual(iconFrame('wild-rice'))
     expect(items.width).toBe(SHEET_SIZE.items.w)
     expect(items.height).toBe(SHEET_SIZE.items.h)

@@ -11,7 +11,7 @@
 // never stamps. Loaded with the bin and the night.
 import { round5 } from '../farm/round'
 import { MARKET_FLOOR, type StarCounts, type Warehouse } from '../save/v4'
-import { goodOf } from './ids'
+import { baseGoodId, goodOf } from './ids'
 import { DEMAND_LIFT } from './rule'
 import { inDemand, starFactor } from './prices'
 
@@ -26,7 +26,7 @@ export const EASE_FLOOR = MARKET_FLOOR
 export type Market = Readonly<Record<string, number>>
 
 /** A good's steps eased today. */
-export const easeOf = (market: Market | undefined, id: string): number => Math.min(EASE_FLOOR, market?.[id] ?? 0)
+export const easeOf = (market: Market | undefined, id: string): number => Math.min(EASE_FLOOR, market?.[baseGoodId(id)] ?? 0)
 /** A price's factor at so many steps: ×0.9 a step, ×0.5 at the floor. */
 export const easeFactor = (steps: number): number => 1 - EASE_STEP * Math.min(EASE_FLOOR, Math.max(0, steps))
 /** The percent off at so many steps: 10, 20 … 50. */
@@ -51,22 +51,30 @@ export interface EasedLine {
 /** A good's star counts in the night's bin, priced crate by crate: the best stars first, the first crate at the good's
  * ease today and each crate after a step lower, down to the floor. Its lines, ★1 first. */
 export function easedLines(id: string, row: StarCounts, day: number, steps: number): EasedLine[] {
-  const out: EasedLine[] = []
+  return easedGroup([[id, row]], day, steps).reverse().map(({ stars, count, gold, steps }) => ({ stars, count, gold, steps }))
+}
+
+/** All grade variants share a crate. Within each star, sell the higher grade first. */
+export function easedGroup(rows: readonly [string, StarCounts][], day: number, steps: number): (EasedLine & { id: string })[] {
+  const out: (EasedLine & { id: string })[] = []
+  const byGrade = [...rows].sort(([a], [b]) => (goodOf(b)?.grade ?? 0) - (goodOf(a)?.grade ?? 0))
   let sold = 0
-  for (let s = row.length; s >= 1; s--) {
-    let left = row[s - 1] ?? 0
-    if (left <= 0) continue
-    const line: EasedLine = { stars: s, count: left, gold: 0, steps: 0 }
-    while (left > 0) {
-      const crate = Math.floor(sold / CRATE)
-      const n = Math.min(left, CRATE * (crate + 1) - sold)
-      const at = Math.min(EASE_FLOOR, steps + crate)
-      line.gold += easedPrice(id, s, day, at) * n
-      line.steps = Math.max(line.steps, at)
-      sold += n
-      left -= n
+  for (let s = 5; s >= 1; s--) {
+    for (const [id, row] of byGrade) {
+      let left = row[s - 1] ?? 0
+      if (left <= 0) continue
+      const line = { id, stars: s, count: left, gold: 0, steps: 0 }
+      while (left > 0) {
+        const crate = Math.floor(sold / CRATE)
+        const at = Math.min(EASE_FLOOR, steps + crate)
+        const n = at === EASE_FLOOR ? left : Math.min(left, CRATE * (crate + 1) - sold)
+        line.gold += easedPrice(id, s, day, at) * n
+        line.steps = Math.max(line.steps, at)
+        sold += n
+        left -= n
+      }
+      out.push(line)
     }
-    out.unshift(line)
   }
   return out
 }
@@ -80,9 +88,14 @@ export const cratesPast = (count: number): number => (count <= 0 ? 0 : Math.floo
 export function marketNight(market: Market, bin: Warehouse): Market {
   const next: Record<string, number> = {}
   let moved = false
-  const ids = new Set([...Object.keys(market), ...Object.keys(bin)])
+  const totals = new Map<string, number>()
+  for (const [id, row] of Object.entries(bin)) {
+    const key = baseGoodId(id)
+    totals.set(key, (totals.get(key) ?? 0) + row.reduce((a, b) => a + b, 0))
+  }
+  const ids = new Set([...Object.keys(market), ...totals.keys()])
   for (const id of ids) {
-    const shipped = (bin[id] ?? [0, 0, 0, 0, 0]).reduce((a, b) => a + b, 0)
+    const shipped = totals.get(id) ?? 0
     const was = easeOf(market, id)
     const past = cratesPast(shipped)
     const now = past > 0 ? Math.min(EASE_FLOOR, was + past) : Math.max(0, was - 1)

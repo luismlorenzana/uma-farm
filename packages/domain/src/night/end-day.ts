@@ -556,7 +556,9 @@ export const buildSummary: NightStep = (night) => {
   const plant = tilesToPlant(save)
   const nudges: Nudge[] = [...(water > 0 ? [{ kind: 'water' as const, tiles: water }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, tiles: plant }] : [])]
   const trips: WorkLine[] = notes.returned.map((trip) => ({ kind: 'expedition', ...trip }))
-  const work = [...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
+  const discoveries = Object.entries(save.farm.discoveries ?? {})
+    .flatMap(([id, day]): WorkLine[] => day === night.before.calendar.day ? [{ kind: 'discovery', id }] : [])
+  const work = [...discoveries, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
   const ranks = [...notes.ranks, ...aptitudeUps(night.before, save, talentsOf(night))]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),

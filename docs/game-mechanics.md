@@ -325,6 +325,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The fields | Water a tile | 1 | Now |
 | The fields | Harvest a tile | 1 | Now |
 | The fields | Water a row: a farmhand’s trick, from Watering 6 | 1 | Now |
+| The fields | Save up to four carrot seeds from one grade of carrots | 1 | Now |
 | The fields | Cut grass on a weeds tile, for the silo | 1 | Now |
 | The fields | Clear a plot: a new page of the field, from its Farm Rank, for its gold | 1 | Now |
 | Animals | Feed one, or care for one; collect a building’s eggs, milk or wool | 1 | Now |
@@ -990,6 +991,34 @@ A harvest's stars by the crop's level, and the chance of a seed back:
 | 8 | +0.7 | ★1 30%, ★2 70% | 5% |
 | 10 | +0.9 | ★1 10%, ★2 90% | 5% |
 <!-- /live -->
+
+#### The carrot grade pilot
+
+Carrot has three grades. Ordinary Carrot is **G1**. **Carrot G2** and **Carrot G3** have separate stock and seed
+counts, and each grade still comes at ★1–5. Golden Carrot remains a distinct crop. All three grades take four
+watered nights in Spring. The shop and the starting field still offer ordinary seed.
+
+- In the Warehouse's carrot sheet, **Save** turns up to four carrots of one grade into the same number of saved
+  seeds for one action, using the lowest stars first. **Improve** spends the same amount and gives seed one grade
+  higher at 3 carrot crop points for G2, or 12 for G3. A grown carrot still returns a random own seed at its planted
+  grade. A saved seed gives the crop twice the knowledge on harvest.
+- A field row's **Spring carrot plan** sets the grade Umas plant there. Assign the usual field tasks in the Work
+  board, and use **Copy to…** to give a second Uma the same task. Turning on **Harvest next grade when skilled**
+  waits for Harvesting 4 on a G1 planting or 7 on a G2 planting. A qualifying Uma upgrades one carrot per tile,
+  with any extra yield at the planted grade. Another Uma can still water or cover a town day. The player can always
+  harvest the planted grade directly.
+- **Save carrot seed** on the Work board names the source grade, whether to improve it and how many saved seeds to
+  keep. It trains Planting and can turn up to four carrots into seed per action. Multiple Umas use the same stock
+  and stop at their target. Put it after Harvest and before Plant to use it during the same shift.
+- **Reserve** keeps an exact grade across all its stars. Automated seed saving and plain meal batches use the
+  surplus. An explicit seed action can use reserved carrots, as can a player who deliberately ships or chooses
+  them for a meal.
+- The first harvest of each exact grade is remembered in **Carrot discoveries** on the Warehouse's Crops tab and
+  appears in the next morning’s work. The record survives shipping and use. Previously earned carrot crop points
+  prove a legacy G1 harvest. Stored produce and saved seeds alone do not prove a higher grade.
+- Carrot grades ship at their own prices and record separate Diary entries. They share the same market easing and
+  crate of 50, with the best stars first and higher grades first within a star. Any carrot grade qualifies for the
+  existing vegetables collection row.
 
 #### Regrowing
 
@@ -3224,6 +3253,7 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Water | A plot’s tiles you choose (the board offers each plot’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
 | Plant | A plot’s tiles you choose (the board offers each plot’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
 | Clear and till | A plot’s tiles you choose (the board offers each plot’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
+| Save carrot seed | Carrots in the Warehouse | Up to four carrots of one grade become saved seed | At the seed target, knowledge threshold, or reserve floor | Planting | Farming |
 | Load | A built station | A load of the good the station holds most of, up to 8 (12 from her level 5), until the station holds its loads for the day: one a level | Once the station holds today’s loads, one a level | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
 | Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
 | Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |

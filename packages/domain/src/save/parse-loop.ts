@@ -7,7 +7,7 @@ import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { isStation, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
-import { goodOf, GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
+import { carrotGradeOf, goodOf, GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS, type CarrotGrade } from '../goods/ids'
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
@@ -126,7 +126,7 @@ const MAX_GROWTH = 10
 /** A tile: its ground; a crop only on tilled soil, its growth whole nights below its ripeness unless ripe; an empty
  * tile holds nothing else. */
 export function parseTile(value: unknown, path: string): Tile {
-  const o = object(value, path, ['ground', 'crop', 'growth', 'ready', 'regrowing', 'own', 'watered'])
+  const o = object(value, path, ['ground', 'crop', 'growth', 'ready', 'regrowing', 'own', 'watered', 'grade'])
   const ground = oneOf(o.ground, `${path}.ground`, GROUNDS)
   const crop = o.crop === null ? null : typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop')
   const tile: Tile = {
@@ -136,6 +136,10 @@ export function parseTile(value: unknown, path: string): Tile {
   if (crop && ground !== 'tilled') fail(`${path}.ground`, 'a crop grows on tilled soil')
   if (!crop && (tile.growth > 0 || tile.ready || tile.regrowing || tile.own || tile.watered)) fail(path, 'an empty tile holds nothing')
   if (tile.ready && tile.watered) fail(`${path}.watered`, 'a ripe crop isn’t watered')
+  if (o.grade !== undefined) {
+    if (crop !== 'carrot' || !tile.own) fail(`${path}.grade`, 'only a carrot planted from saved seed has a higher grade')
+    tile.grade = int(o.grade, `${path}.grade`, 2, 3) as 2 | 3
+  }
   return tile
 }
 
@@ -351,7 +355,21 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals'] as const
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows'] as const
+
+function parseCarrotRows(value: unknown, path: string): NonNullable<SaveV5['farm']['carrotRows']> {
+  const plans: NonNullable<SaveV5['farm']['carrotRows']> = {}
+  for (const [key, raw] of Object.entries(record(value, path))) {
+    const at = `${path}.${key}`
+    if (!/^[0-7]:[0-4]$/.test(key)) fail(at, 'unknown plot row')
+    const plan = object(raw, at, ['grade', 'harvestNext'])
+    const grade = int(plan.grade, `${at}.grade`, 1, 3) as CarrotGrade
+    const harvestNext = bool(plan.harvestNext, `${at}.harvestNext`)
+    if (grade === 3 && harvestNext) fail(at, 'G3 is the highest carrot grade')
+    plans[key] = { grade, harvestNext }
+  }
+  return plans
+}
 const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly'] as const
 
 /** A loan's project: a place you build, a house on the homestead (`house:1` … `house:6`), or a level of the retired
@@ -413,6 +431,9 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV5['
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
     // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
     market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isGoodOrRingId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),
+    ...(o.discoveries === undefined ? {} : { discoveries: counts(o.discoveries, `${path}.discoveries`, (id) => isGoodId(id) || isDishId(id), 'unknown ingredient', (v, at) => int(v, at, 0, today)) }),
+    ...(o.reserves === undefined ? {} : { reserves: counts(o.reserves, `${path}.reserves`, (id) => carrotGradeOf(id) !== undefined, 'unknown reserve ingredient', (v, at) => int(v, at, 1, 99)) }),
+    ...(o.carrotRows === undefined ? {} : { carrotRows: parseCarrotRows(o.carrotRows, `${path}.carrotRows`) }),
   }
 }
 
@@ -496,8 +517,12 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
   const loads = new Map<string, number>()
   return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 4 + MAX_FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition', 'discovery'] as const)
     if (kind === 'expedition') return { kind, ...parseExpeditionReturn(v, at, roster, true) }
+    if (kind === 'discovery') {
+      const id = object(v, at, ['kind', 'id']).id
+      return { kind, id: typeof id === 'string' && (isGoodId(id) || isDishId(id)) ? id : fail(`${at}.id`, 'unknown ingredient') }
+    }
     if (kind === 'ranch') {
       // A building's night: its animals fed today, those that went hungry, and the goods waiting this morning.
       const r = object(v, at, ['kind', 'home', 'fed', 'hungry', 'ready'])
@@ -534,7 +559,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
   }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? loadKey(w.station) : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
-    : w.kind === 'expedition' ? `expedition:${w.party[0]}:${w.left}` : `withered:${w.crop}`))
+    : w.kind === 'expedition' ? `expedition:${w.party[0]}:${w.left}` : w.kind === 'discovery' ? `discovery:${w.id}` : `withered:${w.crop}`))
   // A station's loads: one a level, so up to its top level's (each its own line, in the order started).
   function loadKey(station: string): string {
     const n = (loads.get(station) ?? 0) + 1

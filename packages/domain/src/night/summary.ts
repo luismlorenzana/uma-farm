@@ -96,7 +96,7 @@ export interface RanchLine {
 
 /** §2's lines: the farmhands' days, the stations' loads, the ranch's nights, then the field's growth, then what withered
  * (in section order). */
-export type WorkLine = ({ kind: 'expedition' } & import('../save/v4').ExpeditionReturn) | FarmhandLine | LoadLine | RanchLine | FieldGrew | CropsWithered
+export type WorkLine = ({ kind: 'expedition' } & import('../save/v4').ExpeditionReturn) | { kind: 'discovery'; id: string } | FarmhandLine | LoadLine | RanchLine | FieldGrew | CropsWithered
 
 /** §3 Ranks: she reached a rank in an activity tonight. */
 export interface RankUp {
