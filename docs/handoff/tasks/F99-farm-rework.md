@@ -195,7 +195,9 @@ panel and the grade's discovery hint.
   existing aptitude rule, and 1–5 loads per station. A job with a fixed ratio rounds down to whole batches and
   consumes only the number of complete batches. A homogeneous load keeps the input stars.
 - Add these goods in the existing stations. Any worker or player can run an unlocked recipe. Grade and stars come
-  from the exact selected input. These are first authored conversions, with base grade inherited from the source.
+  from the exact selected input. The Mill keeps preserves with its other food jobs. The Sawmill's existing drying
+  side takes pickles, preserved eggs and sauce so all food loads do not compete for one station. The output starts
+  at its source's grade.
 
 | Station job | Minimum station level | Exact input per output | Output ladder |
 |---|---:|---|---|
@@ -206,7 +208,7 @@ panel and the grade's discovery hint.
 | Sawmill · Carrot Pickles | 2 | 2 Carrot | G1–G3 |
 | Sawmill · Preserved Egg / Preserved Duck Egg | 2 | 1 Egg or 1 Duck Egg, separate jobs | G1–G3 / G3–G5 |
 | Sawmill · Tomato Sauce | 2 | 2 Tomato | G5–G7 |
-| Sawmill · Fruit preserves | 1 | 1 fruit, a separate job per fruit | Existing preserves and graded forms, plus Strawberry Jam, Raspberry Jam, Blueberry Jam and Persimmon Preserve |
+| Mill · Fruit preserves | 1 | 1 fruit, a separate job per fruit | Existing preserves and graded forms, plus Strawberry Jam, Raspberry Jam, Blueberry Jam and Persimmon Preserve |
 
 Keep intentional multi-input cooking in the Kitchen. Build standard refined pricing from the exact raw grade as
 today. For the new jobs that take two units, start at 125% of the full raw cost, rounded to 5g. Spot-check that
