@@ -214,7 +214,26 @@ Keep intentional multi-input cooking in the Kitchen. Build standard refined pric
 today. For the new jobs that take two units, start at 125% of the full raw cost, rounded to 5g. Spot-check that
 crates, food and processing all stay worthwhile and output multipliers never mint an unlimited margin.
 
-## 24 added plantables
+## Seasonal crop plan
+
+The full roster has **51 distinct plantables**, including all 27 existing crops and 24 additions.
+Carrot is the Spring starter and the first crop in the rework, with a G1 → G2 → G3 ladder.
+See the [worked carrot pilot](#a-spring-carrot-in-nine-days) for the first G2 harvest.
+
+### Existing crops
+
+| Growing season | Shop crops | Rare crops |
+|---|---|---|
+| Spring | **Carrot**, Potato, Mint, Onion, Cabbage, Asparagus | Golden Carrot |
+| Summer | Tomato, Basil, Bell Pepper, Eggplant, Sunflower Seed, Corn | Sunwheat, Wild Rice |
+| Autumn | Onion, Corn, Wheat, Peanut, Rice, Sugar Beet, Emperor Pumpkin | Moonrice |
+| Winter | Cabbage, Buckwheat, Oats, Barley, Rye, Ginger | Mandrake |
+
+Onion, Cabbage and Corn appear in both of their growing seasons. Seed shelves and rare seed sources follow the
+[existing rules](../../game-mechanics.md#the-crops). The [shop schedule](../../game-mechanics.md#the-shops-seeds)
+shows when each seed is sold. Carrot seeds are 20g from Farm Rank 1, with four watered nights and one carrot per tile.
+
+### New crops
 
 The table gives base G, farm rank and buy price. A slash in the timing column separates first maturity and watered
 regrowth. Woody plants use establishment nights and then one pick per bearing season. Values in the last column
@@ -278,7 +297,7 @@ transitive sources after grades ship. If a test chain lacks a dependable season 
 or recipe constraint before shipping that row. Ingredient discovery, recipe learning and spending stock remain
 different events. F98 keeps its choices to sell, cook with, or feed the farm with the finished dishes.
 
-### Worked pilot · a Spring carrot in nine days
+### A Spring carrot in nine days
 
 The farm starts with nine clear tiles and nine Carrot seeds. With three of those tiles, all below fit the existing
 ten-action daily budget using Basic tools and no perks.
