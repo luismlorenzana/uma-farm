@@ -216,9 +216,24 @@ crates, food and processing all stay worthwhile and output multipliers never min
 
 ## Seasonal crop plan
 
-**Carrot is the existing Spring starter and the first crop in the rework.** Its grade ladder is G1 → G2 → G3.
-The table lists it alongside the 24 additions. The full roster will have 51 plantables. See the
-[worked carrot pilot](#a-spring-carrot-in-nine-days) for the first G2 harvest.
+The full roster has **51 distinct plantables**, including all 27 existing crops and 24 additions.
+Carrot is the Spring starter and the first crop in the rework, with a G1 → G2 → G3 ladder.
+See the [worked carrot pilot](#a-spring-carrot-in-nine-days) for the first G2 harvest.
+
+### Existing crops
+
+| Growing season | Shop crops | Rare crops |
+|---|---|---|
+| Spring | **Carrot**, Potato, Mint, Onion, Cabbage, Asparagus | Golden Carrot |
+| Summer | Tomato, Basil, Bell Pepper, Eggplant, Sunflower Seed, Corn | Sunwheat, Wild Rice |
+| Autumn | Onion, Corn, Wheat, Peanut, Rice, Sugar Beet, Emperor Pumpkin | Moonrice |
+| Winter | Cabbage, Buckwheat, Oats, Barley, Rye, Ginger | Mandrake |
+
+Onion, Cabbage and Corn appear in both of their growing seasons. Seed shelves and rare seed sources follow the
+[existing rules](../../game-mechanics.md#the-crops). The [shop schedule](../../game-mechanics.md#the-shops-seeds)
+shows when each seed is sold. Carrot seeds are 20g from Farm Rank 1, with four watered nights and one carrot per tile.
+
+### New crops
 
 The table gives base G, farm rank and buy price. A slash in the timing column separates first maturity and watered
 regrowth. Woody plants use establishment nights and then one pick per bearing season. Values in the last column
@@ -228,7 +243,6 @@ shop. Names, grade placement and assets are Uma Farm authoring.
 
 | Season | Crop | Type | Base | Rank | Seed | Nights | Yield |
 |---|---|---|---:|---:|---:|---:|---:|
-| Spring | **Carrot (existing starter)** | Annual | G1 | 1 | 20g | 4 | 1 |
 | Spring | Radish | Annual | G1 | 1 | 20g | 3 | 1 |
 | Spring | Lettuce | Annual | G2 | 1 | 30g | 5 | 1 |
 | Spring | Green Peas | Annual | G3 | 2 | 50g | 5/3 | 2 |
