@@ -107,7 +107,11 @@ the result ([expeditions](../game-mechanics.md#expeditions)).
 
 ## Open packets
 
-No open packets. Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm) is the Restaurant and Forge.
+| Packet | What | Status |
+|---|---|---|
+| [F98](tasks/F98-restaurant.md) | **The Restaurant**, with eight recipe stages, 120 new recipes and farm ingredient discovery | Design packet ready |
+
+The Forge remains in Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm).
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
