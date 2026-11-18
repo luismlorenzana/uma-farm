@@ -8,10 +8,10 @@
 // choose) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
-  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, CROPS, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
-  plotLock, plotLockWords, plotName,
+  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, CROPS, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
+  carrotPlanAt, plotLock, plotLockWords, plotName, taskTiles,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
-  type CropId, type DigId, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
+  CARROT_GRADES, MAX_SEED_TARGET, type CarrotGrade, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -19,7 +19,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
-import { setHandTasks } from '../loop/actions'
+import { copyHandTask, setHandTasks } from '../loop/actions'
 import { useTalents } from '../loop/talents'
 import { plural, shortDate } from '../loop/words'
 import { useMaster } from '../master/master'
@@ -41,6 +41,7 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const talents = useTalents()
   const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const hands = handsInOrder(save)
+  const tonight = new Map(handsTonight(save, save, talents.of, pack).lines.map((line) => [line.id, line]))
   const adding = new URLSearchParams(location.search).get('task')
   return (
     <section aria-label="The work board" className="space-y-2" data-book="board" data-hands={hands.length}>
@@ -62,7 +63,8 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       ) : (
         <ul className="@container grid gap-2 @2xl:grid-cols-2" data-hand-cards>
           {hands.map((id) => (
-            <HandCard key={id} save={save} id={id} name={nameOf(id)} pack={pack} talentOf={talents.of}
+            <HandCard key={id} save={save} id={id} name={nameOf(id)} pack={pack} talentOf={talents.of} tonight={tonight.get(id)}
+              cover={hands.filter((other) => other !== id && (save.roster[other]?.tasks?.length ?? 0) < MAX_TASKS).map((other) => ({ id: other, name: nameOf(other) }))}
               onAdd={() => navigate(withParam(location, 'task', id), { state: { back: true } })} />
           ))}
         </ul>
@@ -73,8 +75,10 @@ export function WorkBoard({ save }: { save: FarmSave }) {
 }
 
 /** One farmhand: her day, tonight's work as the farm stands, and her tasks. */
-function HandCard({ save, id, name, pack, talentOf, onAdd }: {
+function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
   save: FarmSave; id: string; name: string; pack: StoryPack | null; talentOf: ReturnType<typeof useTalents>['of']; onAdd: () => void
+  cover: { id: string; name: string }[]
+  tonight: FarmhandLine | undefined
 }) {
   const [error, setError] = useState<string | null>(null)
   const uma = save.roster[id]!
@@ -84,7 +88,6 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
   const working = worksOn(save, pack, id)
   const away = awayOn(save, id, save.calendar.day)
   const back = !working && pack ? nextFarmDay(pack, id, save.calendar.day) : null
-  const tonight = working ? handTonight(save, id, talentOf, pack) : null
   const chips = working ? dayChips(day) : []
   const farmDays = !pack ? null : atHome(save, id) ? 'every day' : daysList(farmDaysIn(pack, id, dateOf(save.calendar.day).season))
   const plots = save.fields.plots.length
@@ -122,12 +125,23 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
           {tasks.map((task, i) => {
             const aptitude = taskAptitude(task)
             const level = aptitudeOf(uma, aptitude, (a) => talentOf(id, a)).level
+            const planned = (task.kind === 'plant' || task.kind === 'harvest') && taskTiles(task).some((tile) => carrotPlanAt(save, tile))
             return (
               <li key={`${i}:${taskWords(task, plots)}`} className="flex min-h-11 items-center gap-1 pl-2" data-task={task.kind}>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px] font-semibold" data-task-words>{taskWords(task, plots)}</span>
-                  <span className="block truncate text-[11px] text-ink-soft" data-task-aptitude>{APTITUDE_NAMES[aptitude]} {level}{runsOn(task) ? ' · shares what’s left' : ''}</span>
+                  <span className="block truncate text-[11px] text-ink-soft" data-task-aptitude>{APTITUDE_NAMES[aptitude]} {level}{runsOn(task) ? ' · shares what’s left' : ''}{planned ? ' · follows row plan' : ''}</span>
                 </span>
+                {cover.length > 0 && (
+                  <select aria-label={`Copy ${taskWords(task, plots)} to another Uma`} value="" className="min-h-11 max-w-24 bg-panel text-[12px] text-ink"
+                    onChange={(e) => {
+                      setError(null)
+                      copyHandTask(e.currentTarget.value, task).catch((err: unknown) => setError(errorWords(err)))
+                    }}>
+                    <option value="" disabled>Copy to…</option>
+                    {cover.map((hand) => <option key={hand.id} value={hand.id}>{hand.name}</option>)}
+                  </select>
+                )}
                 {i > 0 && <IconButton aria-label={`Move ${taskWords(task, plots)} up`} onClick={() => move(i)} data-action="task-up"><span aria-hidden>↑</span></IconButton>}
                 <IconButton aria-label={`Remove ${taskWords(task, plots)}`} onClick={() => edit(tasks.filter((_, k) => k !== i))} data-action="task-remove"><span aria-hidden>✕</span></IconButton>
               </li>
@@ -166,13 +180,18 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   const [plot, setPlot] = useState(0)
   const [rows, setRows] = useState<number[]>([])
   const [crop, setCrop] = useState<CropId | null>(null)
+  const [seedGrade, setSeedGrade] = useState<CarrotGrade>(1)
+  const [improve, setImprove] = useState(true)
+  const [target, setTarget] = useState(1)
   const [where, setWhere] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const tile = (TILE_TASKS as readonly string[]).includes(kind)
   const tiles = rows.flatMap(rowTiles)
   const on = plot > 0 ? { plot } : {}
-  const task: FarmTask | null = kind === 'cook' ? { kind } : tile
+  const task: FarmTask | null = kind === 'cook' ? { kind }
+    : kind === 'save-seed' ? Number.isInteger(target) && target >= 1 && target <= MAX_SEED_TARGET ? { kind, grade: seedGrade, target, improve: seedGrade < 3 && improve } : null
+    : tile
     ? (tiles.length === 0 ? null : kind === 'plant' ? { kind, tiles, ...on, ...(crop ? { crop } : {}) } : { kind: kind as Exclude<TileTaskKind, 'plant'>, tiles, ...on })
     : where === null ? null
       : kind === 'load' ? { kind, station: where as StationId }
@@ -210,6 +229,23 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           <p className="text-[14px] text-ink-soft" data-cook-where>
             In {KITCHEN}: a batch an action from two goods of food, ★2 goods first, until the pantry holds tonight’s meals for everyone.
           </p>
+        ) : kind === 'save-seed' ? (
+          <fieldset className="space-y-2">
+            <legend className="text-micro pb-1">Carrot seed</legend>
+            <label className="flex min-h-11 items-center gap-2">Use carrots
+              <select className="min-h-11 bg-panel px-2" value={seedGrade} onChange={(e) => setSeedGrade(Number(e.currentTarget.value) as CarrotGrade)}>
+                {CARROT_GRADES.map((grade) => <option key={grade} value={grade}>G{grade}</option>)}
+              </select>
+            </label>
+            <label className="flex min-h-11 items-center gap-2">
+              <input type="checkbox" checked={seedGrade < 3 && improve} disabled={seedGrade === 3} onChange={(e) => setImprove(e.currentTarget.checked)} />
+              Improve to next grade
+            </label>
+            <label className="flex min-h-11 items-center gap-2">Keep this many saved seeds
+              <input className="min-h-11 w-16 rounded-sm border border-hairline-strong bg-panel px-2" type="number" min={1} max={MAX_SEED_TARGET} value={target}
+                onChange={(e) => setTarget(Number(e.currentTarget.value))} />
+            </label>
+          </fieldset>
         ) : tile ? (
           <fieldset>
             <legend className="text-micro pb-1">The plot</legend>

@@ -17,6 +17,7 @@ export * from './farm/round'
 export * from './farm/ranks'
 export * from './farm/farm'
 export * from './goods/ids'
+export * from './goods/discovery'
 export * from './save/warehouse'
 export * from './save/gold'
 
@@ -43,6 +44,7 @@ export * from './save/shop'
 // The field: the crops, the tiles (clearing, tilling, planting, watering, harvesting), crop levels, growth and withering
 // at night, and the shop's seeds; its plots, each a page of 8 × 5, cleared as the Farm Rank rises.
 export * from './fields/crops'
+export * from './fields/carrot'
 export * from './fields/fields'
 export * from './fields/plots'
 

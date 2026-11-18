@@ -15,7 +15,7 @@ import {
   chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, upgradeStation, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
-  sendExpedition, type RegionId, type RanchHome,
+  sendExpedition, saveCarrotSeeds, setCarrotPlan, setCarrotReserve, type CarrotGrade, type CarrotPlan, type RegionId, type RanchHome,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -99,6 +99,10 @@ export const tillAt = (tile: number) => change((s) => tillTile(s, tile))
 export const plantAt = (tile: number, seed: string) => change((s) => plantTile(s, tile, seed))
 /** Waters a growing tile. */
 export const waterAt = (tile: number) => change((s) => waterTile(s, tile))
+export const saveSeeds = (grade: CarrotGrade, improve: boolean, count: number, useReserved = false) =>
+  change((s) => saveCarrotSeeds(s, grade, improve, count, useReserved))
+export const planCarrotRow = (plot: number, row: number, plan: CarrotPlan | null) => change((s) => setCarrotPlan(s, plot, row, plan))
+export const reserveCarrots = (grade: CarrotGrade, count: number) => change((s) => setCarrotReserve(s, grade, count))
 /** Harvests a ripe tile: what it brought. */
 export const harvestAt = (tile: number): Promise<HarvestReceipt> => act((s) => {
   const done = harvestTile(s, tile)
@@ -179,6 +183,11 @@ export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
 
 /** A farmhand's tasks on the work board, in your order: free. */
 export const setHandTasks = (id: string, tasks: readonly FarmTask[]) => change((s) => setTasks(s, id, tasks))
+export const copyHandTask = (id: string, task: FarmTask) => change((s) => {
+  const tasks = s.roster[id]?.tasks ?? []
+  if (tasks.some((existing) => JSON.stringify(existing) === JSON.stringify(task))) throw new SaveRuleError('bad-job', 'She already has that task.')
+  return setTasks(s, id, [...tasks, task])
+})
 
 // --- The start ------------------------------------------------------------------------------------------------
 

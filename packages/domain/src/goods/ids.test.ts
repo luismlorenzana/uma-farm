@@ -6,8 +6,8 @@ const of = (families: string[]) => GOODS.filter((g) => families.includes(g.famil
 
 describe('the goods', () => {
   it('holds 284 goods, each once', () => {
-    expect(GOOD_IDS).toHaveLength(284)
-    expect(new Set(GOOD_IDS).size).toBe(284)
+    expect(GOOD_IDS).toHaveLength(286)
+    expect(new Set(GOOD_IDS).size).toBe(286)
   })
 
   it('counts 27 crops and 10 flours, the forest 113, mining 60, fishing 20, expeditions 30, the ranch 24', () => {
@@ -41,7 +41,7 @@ describe('the goods', () => {
 
 describe('seeds', () => {
   it('names a shop seed and an own seed for each crop', () => {
-    expect(SEED_IDS).toHaveLength(54)
+    expect(SEED_IDS).toHaveLength(56)
     expect(seedId('carrot')).toBe('seed-carrot')
     expect(seedId('carrot', true)).toBe('seed-carrot-own')
     expect(seedOf('seed-wild-rice-own')).toEqual({ crop: 'wild-rice', own: true })

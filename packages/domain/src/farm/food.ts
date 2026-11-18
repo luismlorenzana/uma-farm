@@ -33,7 +33,7 @@ import { goodOf, type GoodsFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
 import { farmHome, MEAL_KEEPS, type FarmSave, type PantryLot } from '../save/v4'
-import { MAX_STARS, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
+import { goodCount, MAX_STARS, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
 import { worksOn, type SchedulePack } from '../town/town'
 
 /** Each mouth eats two meals a night. */
@@ -201,8 +201,14 @@ export function foodHeld(save: Pick<FarmSave, 'items'>): FoodHeld[] {
 /** The plain rule's two goods for a batch, as stock keys (one key twice when two of it are held): the two cheapest goods
  * of ★2 or more, so the meals feed well; with fewer than two held, the two cheapest. Cheapest is the price at its stars
  * out of demand, then the id. Null with fewer than two goods of food. */
-export function plainBatch(save: Pick<FarmSave, 'items'>): string[] | null {
-  const units = foodHeld(save).flatMap((r) => Array.from({ length: Math.min(r.count, BATCH_GOODS) }, () => r))
+export function plainBatch(save: Pick<FarmSave, 'items'> & Partial<Pick<FarmSave, 'farm'>>): string[] | null {
+  const available = new Map(Object.entries(save.farm?.reserves ?? {}).map(([id, floor]) => [id, Math.max(0, goodCount(save.items, id) - floor)]))
+  const units = foodHeld(save).flatMap((r) => {
+    const remaining = available.get(r.id)
+    const count = Math.min(r.count, remaining ?? r.count)
+    if (remaining !== undefined) available.set(r.id, remaining - count)
+    return Array.from({ length: Math.min(count, BATCH_GOODS) }, () => r)
+  })
   if (units.length < BATCH_GOODS) return null
   const good = units.filter((u) => u.stars >= WELL_FED_STARS)
   return (good.length >= BATCH_GOODS ? good : units).slice(0, BATCH_GOODS).map((u) => u.key)

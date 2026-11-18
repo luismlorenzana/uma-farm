@@ -100,6 +100,21 @@ describe('the board\'s words', () => {
 })
 
 describe('the work board in the Book', () => {
+  it('assigns carrot seed saving and copies its exact target to a backup', async () => {
+    await render(<BookPage />, `/book?task=${A}`)
+    await click($('[data-kind="save-seed"]'))
+    await click($('[data-action="add-task-confirm"]'))
+    const task = { kind: 'save-seed', grade: 1, improve: true, target: 1 }
+    const saved = () => useGame.getState().save as SaveV4
+    expect(saved().roster[A]?.tasks).toEqual([task])
+    const select = document.querySelector<HTMLSelectElement>(`[data-hand="${A}"] select[aria-label^="Copy Save carrot seed"]`)!
+    await act(async () => {
+      select.value = B
+      select.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(saved().roster[B]?.tasks).toEqual([task])
+  })
+
   it('has a card for each farmhand, in the order they work: her actions, tonight\'s work and her tasks', async () => {
     const save = farm()
     useGame.setState({ save: { ...save, roster: { ...save.roster, [A]: { ...save.roster[A]!, tasks: [{ kind: 'water', tiles: [...START_CLEAR] }] } } } })
