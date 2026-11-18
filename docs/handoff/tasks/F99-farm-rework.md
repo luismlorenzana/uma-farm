@@ -214,7 +214,11 @@ Keep intentional multi-input cooking in the Kitchen. Build standard refined pric
 today. For the new jobs that take two units, start at 125% of the full raw cost, rounded to 5g. Spot-check that
 crates, food and processing all stay worthwhile and output multipliers never mint an unlimited margin.
 
-## 24 added plantables
+## Seasonal crop plan
+
+**Carrot is the existing Spring starter and the first crop in the rework.** Its grade ladder is G1 → G2 → G3.
+The table lists it alongside the 24 additions. The full roster will have 51 plantables. See the
+[worked carrot pilot](#a-spring-carrot-in-nine-days) for the first G2 harvest.
 
 The table gives base G, farm rank and buy price. A slash in the timing column separates first maturity and watered
 regrowth. Woody plants use establishment nights and then one pick per bearing season. Values in the last column
@@ -224,6 +228,7 @@ shop. Names, grade placement and assets are Uma Farm authoring.
 
 | Season | Crop | Type | Base | Rank | Seed | Nights | Yield |
 |---|---|---|---:|---:|---:|---:|---:|
+| Spring | **Carrot (existing starter)** | Annual | G1 | 1 | 20g | 4 | 1 |
 | Spring | Radish | Annual | G1 | 1 | 20g | 3 | 1 |
 | Spring | Lettuce | Annual | G2 | 1 | 30g | 5 | 1 |
 | Spring | Green Peas | Annual | G3 | 2 | 50g | 5/3 | 2 |
@@ -278,7 +283,7 @@ transitive sources after grades ship. If a test chain lacks a dependable season 
 or recipe constraint before shipping that row. Ingredient discovery, recipe learning and spending stock remain
 different events. F98 keeps its choices to sell, cook with, or feed the farm with the finished dishes.
 
-### Worked pilot · a Spring carrot in nine days
+### A Spring carrot in nine days
 
 The farm starts with nine clear tiles and nine Carrot seeds. With three of those tiles, all below fit the existing
 ten-action daily budget using Basic tools and no perks.
