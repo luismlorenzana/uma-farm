@@ -43,7 +43,7 @@ export function taskWords(task: FarmTask, plots = 1): string {
     case 'care': return `${TASK_NAMES.care} · the ${HOME_NAMES[task.home]}`
     case 'mine': return `${TASK_NAMES.mine} · the ${DIG_NAMES[task.dig]}`
     case 'cook': return `${TASK_NAMES.cook} · ${KITCHEN}`
-    case 'save-seed': return `Save carrot seed · G${task.grade}${task.improve ? ` → G${task.grade + 1}` : ''} · keep ${task.target}`
+    case 'save-seed': return `Save ${itemNameOf(task.crop ?? 'carrot')} seed · G${task.grade}${task.improve ? ` → G${task.grade + 1}` : ''} · keep ${task.target}`
     case 'plant': return `Plant${task.crop ? ` ${itemNameOf(task.crop)}` : ''} · ${where(task)}`
     default: return `${TASK_NAMES[task.kind]} · ${where(task)}`
   }
@@ -94,7 +94,7 @@ export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
       case 'care': return [`tended animals ${times(n)}`]
       case 'mine': return [`worked ${plural(n, 'face')}`]
       case 'cook': return [`cooked ${plural(n, 'meal')}`]
-      case 'save-seed': return [`saved ${plural(n, 'carrot seed')}`]
+      case 'save-seed': return [`saved ${plural(n, 'seed')}`]
     }
   })
 }

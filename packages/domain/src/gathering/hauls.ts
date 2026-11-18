@@ -13,7 +13,8 @@ import { spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
 import { TALENT_D } from '../farm/talents'
-import { goodOf } from '../goods/ids'
+import { goodOf, isCropId } from '../goods/ids'
+import { discoverOutput } from '../goods/discovery'
 import { SaveRuleError } from '../save/rules'
 import type { FarmSave } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
@@ -124,7 +125,10 @@ export function forageAt<S extends FarmSave>(save: S, area: string, by: Gatherer
     got.push(stockKey(good, stars))
   }
   return {
-    save: { ...save, items, today: hauled(save, area), farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } },
+    save: got.reduce((state, entry) => {
+      const id = entry.slice(0, entry.lastIndexOf('@'))
+      return isCropId(id) ? discoverOutput(state, id) : state
+    }, { ...save, items, today: hauled(save, area), farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } }),
     haul: { where: area, items: got },
   }
 }

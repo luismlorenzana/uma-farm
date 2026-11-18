@@ -9,10 +9,10 @@
 // day's actions and event actions are counts (the budget is the rules', so an upgrade never breaks a save), and the areas
 // and spots worked today their ids, each once; today's occasion scenes, when any played, the roster Umas who played one.
 // The Diary's Town notes are ids. Her gallery names roster Umas, each with her scenes seen by id.
-import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
+import { dateOf, DAYS_PER_SEASON, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
-import { isCropId, isGoodId, isGoodOrRingId, type CarrotGrade, type CropId } from '../goods/ids'
+import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
 import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
 import { isStockId, parseStockKey } from './warehouse'
 import type { HeartLine, MorningSummary } from '../night/summary'
@@ -88,11 +88,12 @@ function parseTask(value: unknown, path: string): FarmTask {
       return o.crop === undefined ? { kind, tiles, ...plot } : { kind, tiles, ...plot, crop: typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop') }
     }
     case 'save-seed': {
-      const o = object(value, path, ['kind', 'grade', 'improve', 'target'])
-      const grade = int(o.grade, `${path}.grade`, 1, 3) as CarrotGrade
+      const o = object(value, path, ['kind', 'crop', 'grade', 'improve', 'target'])
+      const crop = o.crop === undefined ? 'carrot' : typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop')
+      const grade = int(o.grade, `${path}.grade`, 1, 10)
       const improve = bool(o.improve, `${path}.improve`)
-      if (grade === 3 && improve) fail(path, 'G3 is the highest carrot grade')
-      return { kind, grade, improve, target: int(o.target, `${path}.target`, 1, 99) }
+      if (!canSaveCropSeed(crop) || !cropGoodId(crop, grade) || (improve && !cropGoodId(crop, grade + 1))) fail(path, 'unknown saved seed grade')
+      return { kind, ...(o.crop === undefined ? {} : { crop }), grade, improve, target: int(o.target, `${path}.target`, 1, 99) }
     }
     case 'load': return { kind, station: oneOf(object(value, path, ['kind', 'station']).station, `${path}.station`, STATIONS) }
     case 'forage': case 'chop': return { kind, area: oneOf(object(value, path, ['kind', 'area']).area, `${path}.area`, FOREST_AREAS) }
@@ -582,8 +583,16 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
 
 /** A field task works a plot the farm has cleared. */
 function parsePlotTasks(save: SaveV5, path: string): void {
-  for (const key of Object.keys(save.farm.carrotRows ?? {})) {
-    if (Number(key[0]) >= save.fields.plots.length) fail(`${path}.farm.carrotRows.${key}`, 'a plot the farm hasn’t cleared')
+  for (const field of ['carrotRows', 'fieldPlans'] as const) {
+    for (const key of Object.keys(save.farm[field] ?? {})) {
+      if (Number(key[0]) >= save.fields.plots.length) fail(`${path}.farm.${field}.${key}`, 'a plot the farm hasn’t cleared')
+    }
+  }
+  const season = Math.floor((save.calendar.day - 1) / DAYS_PER_SEASON)
+  for (const [plot, field] of save.fields.plots.entries()) {
+    for (const [index, tile] of field.tiles.entries()) {
+      if (tile.fruitSeason !== undefined && tile.fruitSeason > season) fail(`${path}.fields.plots.${plot}.tiles.${index}.fruitSeason`, 'after today')
+    }
   }
   for (const [id, uma] of Object.entries(save.roster)) {
     (uma.tasks ?? []).forEach((task, i) => {

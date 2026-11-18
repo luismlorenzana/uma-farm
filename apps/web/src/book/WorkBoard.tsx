@@ -8,10 +8,10 @@
 // choose) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
-  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, CROPS, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
-  carrotPlanAt, plotLock, plotLockWords, plotName, taskTiles,
-  MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
-  CARROT_GRADES, MAX_SEED_TARGET, type CarrotGrade, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
+  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
+  canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
+  MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES,
+  MAX_SEED_TARGET, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -125,7 +125,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
           {tasks.map((task, i) => {
             const aptitude = taskAptitude(task)
             const level = aptitudeOf(uma, aptitude, (a) => talentOf(id, a)).level
-            const planned = (task.kind === 'plant' || task.kind === 'harvest') && taskTiles(task).some((tile) => carrotPlanAt(save, tile))
+            const planned = (task.kind === 'plant' || task.kind === 'harvest') && taskTiles(task).some((tile) => plantingPlan(save, tile) !== undefined)
             return (
               <li key={`${i}:${taskWords(task, plots)}`} className="flex min-h-11 items-center gap-1 pl-2" data-task={task.kind}>
                 <span className="min-w-0 flex-1">
@@ -165,7 +165,7 @@ function rowCount(save: FarmSave, kind: TileTaskKind, plot: number, row: number)
     const t = tiles[i]
     if (!t) return false
     switch (kind) {
-      case 'water': return t.crop !== null && !t.ready
+      case 'water': return t.crop !== null && !t.ready && !established(t)
       case 'harvest': return t.crop !== null
       case 'plant': return t.ground === 'tilled' && t.crop === null
       case 'till': return isOvergrown(t.ground) || t.ground === 'clear'
@@ -180,7 +180,8 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   const [plot, setPlot] = useState(0)
   const [rows, setRows] = useState<number[]>([])
   const [crop, setCrop] = useState<CropId | null>(null)
-  const [seedGrade, setSeedGrade] = useState<CarrotGrade>(1)
+  const [seedCrop, setSeedCrop] = useState<CropId>('carrot')
+  const [seedGrade, setSeedGrade] = useState(1)
   const [improve, setImprove] = useState(true)
   const [target, setTarget] = useState(1)
   const [where, setWhere] = useState<string | null>(null)
@@ -189,8 +190,10 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   const tile = (TILE_TASKS as readonly string[]).includes(kind)
   const tiles = rows.flatMap(rowTiles)
   const on = plot > 0 ? { plot } : {}
+  const canImprove = cropGoodId(seedCrop, seedGrade + 1) !== undefined
   const task: FarmTask | null = kind === 'cook' ? { kind }
-    : kind === 'save-seed' ? Number.isInteger(target) && target >= 1 && target <= MAX_SEED_TARGET ? { kind, grade: seedGrade, target, improve: seedGrade < 3 && improve } : null
+    : kind === 'save-seed' ? Number.isInteger(target) && target >= 1 && target <= MAX_SEED_TARGET
+      ? { kind, crop: seedCrop, grade: seedGrade, target, improve: canImprove && improve } : null
     : tile
     ? (tiles.length === 0 ? null : kind === 'plant' ? { kind, tiles, ...on, ...(crop ? { crop } : {}) } : { kind: kind as Exclude<TileTaskKind, 'plant'>, tiles, ...on })
     : where === null ? null
@@ -204,8 +207,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
     setBusy(true)
     setHandTasks(id, [...(save.roster[id]!.tasks ?? []), task]).then(onClose, (e: unknown) => setError(errorWords(e))).finally(() => setBusy(false))
   }
-  const season = dateOf(save.calendar.day).season
-  const crops = (Object.keys(CROPS) as CropId[]).filter((c) => growsIn(c, season) && seedsInSeason(save).some((s) => s.crop === c))
+  const crops = [...new Set(seedsInSeason(save).map((s) => s.crop))]
   const built = (id: FarmPlaceId) => ({ id, name: farmPlace(id)?.name ?? id, lock: placeBuilt(save, id) ? null : 'Build it first.' })
   const places = kind === 'load' ? STATIONS.map((s) => ({ ...built(s), lock: stationBuilt(save, s) ? null : 'Build it first.' }))
     : kind === 'care' ? RANCH_HOMES.map(built) : kind === 'mine' ? DIGS.map(built)
@@ -231,14 +233,23 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           </p>
         ) : kind === 'save-seed' ? (
           <fieldset className="space-y-2">
-            <legend className="text-micro pb-1">Carrot seed</legend>
-            <label className="flex min-h-11 items-center gap-2">Use carrots
-              <select className="min-h-11 bg-panel px-2" value={seedGrade} onChange={(e) => setSeedGrade(Number(e.currentTarget.value) as CarrotGrade)}>
-                {CARROT_GRADES.map((grade) => <option key={grade} value={grade}>G{grade}</option>)}
+            <legend className="text-micro pb-1">Seed to save</legend>
+            <label className="flex min-h-11 items-center gap-2">Crop
+              <select className="min-h-11 bg-panel px-2" value={seedCrop} onChange={(e) => {
+                const crop = e.currentTarget.value as CropId
+                setSeedCrop(crop)
+                setSeedGrade(cropBaseGrade(crop))
+              }}>
+                {CROP_IDS.filter(canSaveCropSeed).map((crop) => <option key={crop} value={crop}>{itemNameOf(crop)}</option>)}
+              </select>
+            </label>
+            <label className="flex min-h-11 items-center gap-2">Use grade
+              <select className="min-h-11 bg-panel px-2" value={seedGrade} onChange={(e) => setSeedGrade(Number(e.currentTarget.value))}>
+                {cropGrades(seedCrop).map((g) => <option key={g.id} value={g.grade}>G{g.grade}</option>)}
               </select>
             </label>
             <label className="flex min-h-11 items-center gap-2">
-              <input type="checkbox" checked={seedGrade < 3 && improve} disabled={seedGrade === 3} onChange={(e) => setImprove(e.currentTarget.checked)} />
+              <input type="checkbox" checked={canImprove && improve} disabled={!canImprove} onChange={(e) => setImprove(e.currentTarget.checked)} />
               Improve to next grade
             </label>
             <label className="flex min-h-11 items-center gap-2">Keep this many saved seeds

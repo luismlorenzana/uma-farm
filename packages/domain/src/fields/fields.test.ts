@@ -248,8 +248,9 @@ describe('the shop\'s seeds', () => {
     const lines = shopLines(save)
     expect(lines.map((l) => [l.id, l.price])).toEqual([
       ['seed-carrot', 20], ['seed-potato', 35], ['seed-mint', 40], ['seed-onion', 30], ['seed-cabbage', 90], ['seed-asparagus', 150],
+      ['seed-radish', 20], ['seed-lettuce', 30], ['seed-green-peas', 50], ['seed-strawberry', 65], ['seed-raspberry', 130], ['seed-plum', 220],
     ])
-    expect(lines.map((l) => lineOpen(save, l))).toEqual([true, true, true, false, false, false])
+    expect(lines.map((l) => lineOpen(save, l))).toEqual([true, true, true, false, false, false, true, true, false, false, false, false])
     expect(buy(save, lines[1]!, 2).items['seed-potato']).toEqual([2, 0, 0, 0, 0])
     const asparagus = lines[5]!
     expect(reason(() => buy(save, asparagus, 1))).toBe('locked')
@@ -258,7 +259,10 @@ describe('the shop\'s seeds', () => {
   })
 
   it('changes its list on a season\'s first day', () => {
-    expect(shopLines(farm(SUMMER(1))).map((l) => l.id)).toEqual(['seed-tomato', 'seed-basil', 'seed-bell-pepper', 'seed-eggplant', 'seed-sunflower-seed', 'seed-corn'])
+    expect(shopLines(farm(SUMMER(1))).map((l) => l.id)).toEqual([
+      'seed-tomato', 'seed-basil', 'seed-bell-pepper', 'seed-eggplant', 'seed-sunflower-seed', 'seed-corn',
+      'seed-cucumber', 'seed-okra', 'seed-zucchini', 'seed-peach', 'seed-blueberry', 'seed-mango',
+    ])
     expect(shopLines(farm(farmDay({ year: 1, season: 'winter', day: 1 }))).map((l) => l.id)[4]).toBe('seed-cabbage')
   })
 })

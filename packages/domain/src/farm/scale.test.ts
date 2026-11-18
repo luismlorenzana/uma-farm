@@ -40,7 +40,7 @@ import { digBuilt, stairsLock, takeStairs } from '../gathering/digs'
 import { chop, fish, FULL_HAULS, reachList } from '../gathering/hauls'
 import { STATIONS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
 import { levelLock, LOAD_SIZE, loadsADay, nextStationLevel, stationLevel, stationOptions, upgradeStation } from '../gathering/stations'
-import { goodOf, seedId, type CropId } from '../goods/ids'
+import { goodOf, LEGACY_CROP_IDS, seedId, type CropId } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { animalLock, animalsIn, ANIMALS, buyAnimal, buyFodder, FODDER_PRICE, homeBuilt, siloRoom } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
@@ -223,7 +223,9 @@ function cropsToday(save: SaveV4): CropId[] {
   const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
   const next = dateOf(save.calendar.day + daysLeft).season
   return shopLines(save).filter((l) => lineOpen(save, l)).map((l) => l.id.slice('seed-'.length) as CropId)
-    .filter((c) => stagesOf(c, false) <= daysLeft || growsIn(c, next)).sort((a, b) => cropValue(b) - cropValue(a))
+    // Keep this original scale scenario comparable. The orchard playthrough exercises the full new catalogue.
+    .filter((c) => (LEGACY_CROP_IDS as readonly CropId[]).includes(c) && (stagesOf(c, false) <= daysLeft || growsIn(c, next)))
+    .sort((a, b) => cropValue(b) - cropValue(a))
 }
 /** Each plot's crop today: the best ones, a different one a plot by turns, so no crop floods the market. */
 const plotCrop = (crops: readonly CropId[], plot: number): CropId | null => crops[plot % Math.max(1, crops.length)] ?? null

@@ -122,7 +122,10 @@ describe('the morning summary', () => {
       nudges: [],
     })
     const spring = night(worked(farm(3)))
-    expect(spring.summary).toMatchObject({ work: [{ kind: 'load' }, { kind: 'grew', tiles: 1, ripe: 0 }], nudges: [{ kind: 'water', tiles: 1 }] })
+    expect(spring.summary).toMatchObject({
+      work: [{ kind: 'discovery', id: 'mint' }, { kind: 'load' }, { kind: 'grew', tiles: 1, ripe: 0 }],
+      nudges: [{ kind: 'water', tiles: 1 }],
+    })
     expect(summarySections(spring.summary!)).toEqual(['money', 'work', 'nudges'])
   })
 

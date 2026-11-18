@@ -4,7 +4,7 @@
 // are `#####`, so a block never breaks the outline of the section it sits in. Adapted from uma-rpg's own `render.ts`.
 import { FARM_RANK_POINTS } from '../farm/farm'
 import { ACTIVITIES, ACTIVITY_NAMES, RANK_POINTS, RANKS, type Rank } from '../farm/ranks'
-import { CROP_IDS, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, refinedOf, type GoodFamily } from '../goods/ids'
+import { CATALOGUE, CROP_IDS, cropGrades, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, refinedOf, type GoodFamily } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
 import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
@@ -242,9 +242,9 @@ function cropPrices(): string {
 /** Each season's demand, and how many of the catalogue's goods it lifts. */
 function demand(): string {
   return table(['Season', 'In demand (+20%)', 'Goods lifted'], SEASONS.map((season) => {
-    const lifted = GOODS.filter((good) => inDemand(good.id, SEASON_DAY[season])).length
+    const lifted = CATALOGUE.filter((good) => inDemand(good.id, SEASON_DAY[season])).length
     const rules = DEMAND[season].map((rule) => `${rule.name}${rule.refined ? ' (the refined row)' : ''}`).join(', ')
-    return [SEASON_NAMES[season], rules, `${lifted} of ${GOODS.length}`]
+    return [SEASON_NAMES[season], rules, `${lifted} of ${CATALOGUE.length}`]
   }))
 }
 
@@ -267,17 +267,18 @@ const pct = (n: number) => `${Math.round(n * 100)}%`
 /** Every crop, its seasons, its shop tier and seed price, its stages (the watered nights to ripe), its yield, regrowth,
  * price ★1 and its station. */
 function crops(): string {
-  return table(['Crop', 'Id', 'Seasons', 'Shop', 'Seed', 'Stages', 'Yield', 'Regrows', 'Price ★1', 'Refined at'],
+  return table(['Crop', 'Id', 'Kind', 'Seasons', 'Grades', 'Shop', 'Seed', 'Watered nights', 'Yield', 'Regrows', 'Price ★1', 'Refined at'],
     Object.values(CROPS).map((c) => {
       const into = refinedOf(c.id)
-      return [itemNameOf(c.id), `\`${c.id}\``, seasonsOf(c.seasons), tierWords(c.tier), c.seed === null ? '—' : g(c.seed), stagesOf(c.id, false), c.yield,
-        c.regrows === null ? '—' : `every ${stagesOf(c.id, true)}`, g(goodOf(c.id)!.price), into && c.station ? `${itemNameOf(into)} (${STATION_NAME[c.station]})` : '—']
+      const grades = cropGrades(c.id).map((v) => `G${v.grade}`).join('–')
+      return [itemNameOf(c.id), `\`${c.id}\``, c.woody ? cap(c.woody) : 'Annual', seasonsOf(c.seasons), grades, tierWords(c.tier), c.seed === null ? '—' : g(c.seed), stagesOf(c.id, false), c.yield,
+        c.woody ? 'each bearing season' : c.regrows === null ? '—' : `every ${stagesOf(c.id, true)}`, g(goodOf(c.id)!.price), into && c.station ? `${itemNameOf(into)} (${STATION_NAME[c.station]})` : '—']
     }))
 }
 
 /** The shop's seeds by season and tier, with their prices. */
 function shopSeeds(): string {
-  const tiers = [1, 2, 4] as const
+  const tiers = [1, 2, 3, 4, 6] as const
   return table(['Season', ...tiers.map((t) => `Farm Rank ${t}`)], SEASONS.map((season) => [SEASON_NAMES[season],
     ...tiers.map((t) => SHOP_SEEDS[season].filter((id) => CROPS[id].tier === t).map((id) => `${itemNameOf(id)} ${g(CROPS[id].seed!)}`).join(', '))]))
 }
@@ -566,13 +567,13 @@ function workBoard(): string {
     const aptitude = kind === 'load' ? 'mill' : kind === 'save-seed' ? 'plant' : kind
     const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'A plot’s tiles you choose (the board offers each plot’s rows)' : kind === 'load' ? 'A built station'
       : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor'
-        : kind === 'cook' ? 'The farmhouse kitchen (the Kitchen’s, once it stands)' : kind === 'save-seed' ? 'Carrots in the Warehouse' : 'An area the farm reaches'
+        : kind === 'cook' ? 'The farmhouse kitchen (the Kitchen’s, once it stands)' : kind === 'save-seed' ? 'One crop and grade in the Warehouse' : 'An area the farm reaches'
     const each: Record<TaskKind, string> = {
       harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
       water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
       plant: `An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; ${tilesAt('plant', TRICK_AT.plantTwo)}`,
       till: `A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing ${TRICK_AT.tillInOne}`,
-      'save-seed': 'Up to four carrots of one grade become saved seed',
+      'save-seed': 'Up to four units of produce of one grade become saved seed',
       load: `A load of the good the station holds most of, up to ${LOAD_SIZE} (${BIG_LOAD} from her level ${TRICK_AT.bigLoad}), until the station holds its loads for the day: one a level`,
       forage: `A haul of ${FORAGE_HAUL} finds (${FORAGE_HAUL + 1} from Foraging ${TRICK_AT.forageThree})`,
       chop: `${CHOP_LOGS} logs (${CHOP_LOGS + 1} from Chopping ${TRICK_AT.chopThree})`,

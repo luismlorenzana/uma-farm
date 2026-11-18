@@ -2,7 +2,7 @@
 // output row for row, the crops' own prices, stars never compounded, and demand by season.
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
-import { CROP_IDS, GOODS, goodOf, type GoodFamily } from './ids'
+import { LEGACY_CROP_IDS, GOODS, goodOf, type GoodFamily } from './ids'
 import { demandRule, hasPrice, inDemand, madePrice, priceOf, starFactor, STARS } from './prices'
 import { CROP_PRICES, DEMAND, FAMILY_FACTOR, LADDER, ladderPrice } from './rule'
 
@@ -74,8 +74,8 @@ describe('the tables are the rule\'s output, row for row', () => {
 
 describe('crops have their own prices', () => {
   it('prices all 27, and the seven that are forest goods keep them', () => {
-    expect(Object.keys(CROP_PRICES).sort()).toEqual([...CROP_IDS].sort())
-    for (const crop of CROP_IDS) expect(goodOf(crop)!.price, crop).toBe(CROP_PRICES[crop])
+    expect(Object.keys(CROP_PRICES).sort()).toEqual([...LEGACY_CROP_IDS].sort())
+    for (const crop of LEGACY_CROP_IDS) expect(goodOf(crop)!.price, crop).toBe(CROP_PRICES[crop])
     expect(['basil', 'mint', 'ginger', 'mandrake', 'peanut', 'sunflower-seed', 'sugar-beet'].map((id) => [goodOf(id)!.family, goodOf(id)!.price])).toEqual([
       ['herbs-spices', 45], ['herbs-spices', 45], ['herbs-spices', 200], ['herbs-spices', 520], ['nuts-seeds', 35], ['nuts-seeds', 75], ['sweets', 120],
     ])

@@ -7,7 +7,8 @@
 // action, and a tap opens the row's panel (`?row=<r>`): what it holds, who works it and how much an action. Every move
 // inside the screen replaces the entry, so the strip's Farm button and Back both go to the farm. Loaded on demand.
 import {
-  carrotRowKey, CARROT_GRADES, handsTonight, fieldIndex, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, plotCounts, plotName, TASK_NAMES, APTITUDE_NAMES, type CarrotGrade, type FarmSave,
+  APTITUDE_NAMES, CROP_IDS, cropBaseGrade, cropGrades, dateOf, fieldIndex, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handsTonight, itemNameOf,
+  plantableIn, plotCounts, plotName, rowPlan, SEASONS, SEASON_NAMES, TASK_NAMES, type CropId, type FarmSave, type FieldPlan, type Season,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, CloseIcon, HelpButton, LockedIcon } from '@luismlorenzana/uma-kit/ui'
@@ -17,7 +18,7 @@ import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { DayActions } from '../shell/Bars'
-import { clearPlotAt, planCarrotRow } from './actions'
+import { clearPlotAt, planFieldRow } from './actions'
 import { TileArt } from './farm-art'
 import { countsWords, tileLabel, tileView, tileWhere } from './farm-view'
 import { plotPages, rowCounts, rowHands, type PlotPage } from './field-view'
@@ -97,6 +98,7 @@ function FieldHelp() {
       <p>The field is plots of 8 by 5 tiles, a page each. The dots, the arrows or a swipe across the plot move between them.</p>
       <p>Tap a tile for its action: clear, till, plant, water or harvest, one action each. A watered tile grows a stage at night.</p>
       <p>A row’s tab shows the farmhands who work it, and a droplet once one waters the whole row in one action. Set their tasks, a plot’s rows, on the Book’s work board.</p>
+      <p>Use the seasonal row plan to choose the crop and seed grade for the Plant task. Orchard plants stay on their tile and bear once per year. Water them until established.</p>
       <p>A new plot opens at its Farm Rank: clear it for its gold and an action, and it’s yours at once, wild ground to clear and till. Plots cost no upkeep.</p>
     </HelpButton>
   )
@@ -128,7 +130,7 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   // The arrow keys turn the page; Escape closes a panel.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, [role="dialog"]')) return
+      if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, [role="dialog"]')) return
       if (e.key === 'ArrowLeft') turn(-1)
       else if (e.key === 'ArrowRight') turn(1)
       else if (e.key === 'Escape' && (at.tile !== null || at.row !== null)) close()
@@ -331,40 +333,20 @@ function RowPanel({ save, plot, row }: { save: FarmSave; plot: number; row: numb
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const counts = countsWords(rowCounts(save, plot, row))
   const hands = rowHands(save, plot, row, talents.of)
-  const key = carrotRowKey(plot, row)
-  const plan = save.farm.carrotRows?.[key]
-  const { note, error, busy, run } = useAct(key)
-  const forecast = plan ? rowCounts(handsTonight(save, save, talents.of, story).save, plot, row) : null
+  const today = dateOf(save.calendar.day).season
+  const forecast = rowPlan(save, plot, row, today) ? rowCounts(handsTonight(save, save, talents.of, story).save, plot, row) : null
   return (
     <div className="space-y-2.5 p-4" data-row-panel={row + 1}>
       <p className="text-[12px] text-ink-faint">{tileWhere(save, { plot, where: `Row ${row + 1}` })}</p>
       <p className="text-[15px]" data-row-counts>{counts.length > 0 ? counts.join(' · ') : 'Nothing due'}</p>
-      <label className="flex flex-wrap items-center justify-between gap-2 text-[14px]">
-        Spring carrot plan
-        <select className="min-h-11 rounded-sm border border-hairline-strong bg-panel px-2" value={plan?.grade ?? ''} disabled={busy}
-          onChange={(e) => {
-            const grade = Number(e.currentTarget.value) as CarrotGrade | 0
-            run(planCarrotRow(plot, row, grade ? { grade, harvestNext: grade < 3 && !!plan?.harvestNext } : null).then(() => null))
-          }}>
-          <option value="">Off</option>
-          {CARROT_GRADES.map((grade) => <option key={grade} value={grade}>Plant Carrot G{grade}</option>)}
-        </select>
-      </label>
-      {plan && (
-        <>
-          <label className="flex min-h-11 items-center gap-2 text-[14px]">
-            <input type="checkbox" checked={plan.harvestNext} disabled={busy || plan.grade === 3}
-              onChange={(e) => run(planCarrotRow(plot, row, { ...plan, harvestNext: e.currentTarget.checked }).then(() => null))} />
-            Harvest next grade when skilled
-          </label>
-          <p className="text-[12px] text-ink-soft" data-row-forecast>
-            Tonight · {forecast?.water ? `${forecast.water} still need water` : 'Water covered'}
-            {forecast?.ripe ? ` · ${forecast.ripe} ripe waiting` : ''}
-            {forecast?.plant ? ` · ${forecast.plant} empty tilled` : ''}
-          </p>
-        </>
+      <RowPlanEditor key={`${plot}:${row}`} save={save} plot={plot} row={row} today={today} />
+      {forecast && (
+        <p className="text-[12px] text-ink-soft" data-row-forecast>
+          Tonight · {forecast.water ? `${forecast.water} still need water` : 'Water covered'}
+          {forecast.ripe ? ` · ${forecast.ripe} ripe waiting` : ''}
+          {forecast.plant ? ` · ${forecast.plant} empty tilled` : ''}
+        </p>
       )}
-      <Notes note={note} error={error} />
       <h3 className="text-micro pt-1">Farmhands on this row</h3>
       {hands.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-row-none>No farmhand works this row.</p>
@@ -386,5 +368,59 @@ function RowPanel({ save, plot, row }: { save: FarmSave; plot: number; row: numb
         The work board
       </Link>
     </div>
+  )
+}
+
+function RowPlanEditor({ save, plot, row, today }: { save: FarmSave; plot: number; row: number; today: Season }) {
+  const [season, setSeason] = useState<Season>(today)
+  const { note, error, busy, run } = useAct(season)
+  const plan = rowPlan(save, plot, row, season)
+  const hasOtherSeason = SEASONS.some((other) => other !== season && rowPlan(save, plot, row, other))
+  const grades = plan?.crop ? cropGrades(plan.crop) : []
+  const choices = CROP_IDS.filter((crop) => plantableIn(crop, season)).sort((a, b) => itemNameOf(a).localeCompare(itemNameOf(b)))
+  const setPlan = (next: FieldPlan | null) => run(planFieldRow(plot, row, season, next).then(() => null))
+  const chooseCrop = (value: string) => {
+    if (value === '') return setPlan(null)
+    if (value === 'any') return setPlan({ crop: null, harvestNext: false })
+    const crop = value as CropId
+    setPlan({ crop, grade: cropBaseGrade(crop), harvestNext: false })
+  }
+  const select = 'min-h-11 max-w-full rounded-sm border border-hairline-strong bg-panel px-2'
+  return (
+    <fieldset className="space-y-1 text-[14px]">
+      <legend className="text-micro">Seasonal row plan</legend>
+      <div className="flex flex-wrap gap-2">
+        <label className="flex items-center gap-2">Season
+          <select className={select} value={season} onChange={(e) => setSeason(e.currentTarget.value as Season)}>
+            {SEASONS.map((s) => <option key={s} value={s}>{SEASON_NAMES[s]}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">Crop
+          <select className={select} value={plan ? plan.crop ?? 'any' : ''} disabled={busy} onChange={(e) => chooseCrop(e.currentTarget.value)}>
+            <option value="">{hasOtherSeason ? 'Idle this season' : 'Use Plant assignment'}</option>
+            <option value="any">Any annual in season</option>
+            {choices.map((crop) => <option key={crop} value={crop}>{itemNameOf(crop)}</option>)}
+          </select>
+        </label>
+      </div>
+      {plan?.crop && (
+        <label className="flex items-center gap-2">Plant grade
+          <select className={select} value={plan.grade} disabled={busy} onChange={(e) => {
+            const grade = Number(e.currentTarget.value)
+            setPlan({ ...plan, grade, harvestNext: plan.harvestNext && grades.some((g) => g.grade === grade + 1) })
+          }}>
+            {grades.map((g) => <option key={g.id} value={g.grade}>G{g.grade}</option>)}
+          </select>
+        </label>
+      )}
+      {plan && (
+        <label className="flex min-h-11 items-center gap-2">
+          <input type="checkbox" checked={plan.harvestNext} disabled={busy || (!!plan.crop && !grades.some((g) => g.grade === plan.grade + 1))}
+            onChange={(e) => setPlan({ ...plan, harvestNext: e.currentTarget.checked })} />
+          Harvest next grade when skilled
+        </label>
+      )}
+      <Notes note={note} error={error} />
+    </fieldset>
   )
 }

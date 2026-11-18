@@ -4,7 +4,7 @@
 // adds stars and demand.
 import type { Season } from '../farm/calendar'
 import { round5 } from '../farm/round'
-import type { CropId, GoodFamily, GoodsFamily } from './ids'
+import type { LegacyCropId, GoodFamily, GoodsFamily } from './ids'
 
 /** A grade's base price, G1 → G10. */
 export const LADDER = [30, 40, 50, 65, 85, 110, 140, 180, 230, 300] as const
@@ -28,7 +28,7 @@ export const STAR_STEP = 0.25
 export const DEMAND_LIFT = 0.2
 
 /** The crops' own prices ★1, wherever they come from: the seven that are also forest goods keep them. */
-export const CROP_PRICES: Readonly<Record<CropId, number>> = {
+export const CROP_PRICES: Readonly<Record<LegacyCropId, number>> = {
   carrot: 60, potato: 55, mint: 45, onion: 100, cabbage: 260, asparagus: 480,
   tomato: 70, basil: 45, 'bell-pepper': 60, eggplant: 95, 'sunflower-seed': 75, corn: 140,
   wheat: 40, peanut: 35, rice: 50, 'sugar-beet': 120, 'emperor-pumpkin': 600,

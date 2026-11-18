@@ -3,7 +3,7 @@
 // uma-art's sheet through the kit's art, and the woods' and the pond's edges. No character art. Part of the farm map's
 // chunk.
 import type { CropLook, Tile } from '@farm/domain'
-import { cropLook } from '@farm/domain'
+import { CROPS, cropLook, established } from '@farm/domain'
 import { useKitArt } from '@luismlorenzana/uma-kit/ui'
 import { ItemIcon } from '../items/ItemIcon'
 
@@ -94,11 +94,18 @@ function Crop({ crop, look, cell }: { crop: string; look: CropLook; cell: number
 /** A field tile: its ground, its crop, a droplet once watered. */
 export function TileArt({ tile, cell }: { tile: Tile; cell: number }) {
   const look = cropLook(tile)
+  const woody = tile.crop ? CROPS[tile.crop].woody : undefined
+  const tree = woody && (established(tile) || look === 'nearly')
   const background = tile.ground === 'tilled' ? (tile.watered ? WET : SOIL) : tile.ground === 'clear' ? EARTH : GRASS
   return (
     <span aria-hidden className="absolute inset-0 overflow-hidden rounded-[3px]" style={{ background }} data-ground={tile.ground}>
       <Ground tile={tile} />
-      {tile.crop && look && <Crop crop={tile.crop} look={look} cell={cell} />}
+      {tree ? (
+        <span className="absolute inset-0 flex items-center justify-center" data-look={look}>
+          <ItemIcon id={`orchard-${woody}`} size={Math.round(cell * .85)} />
+          {tile.ready && tile.crop && <ItemIcon id={tile.crop} size={Math.round(cell * .5)} className="!absolute right-0 bottom-0 rounded-full bg-[#ffe27a]/60" />}
+        </span>
+      ) : tile.crop && look && <Crop crop={tile.crop} look={look} cell={cell} />}
       {tile.watered && (
         <svg aria-hidden viewBox="0 0 10 10" className="absolute top-0.5 right-0.5 size-2.5" data-watered>
           <path d="M5 1C5 1 2 5 2 6.5a3 3 0 006 0C8 5 5 1 5 1z" fill="#6ec3f0" />

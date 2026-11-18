@@ -1,8 +1,7 @@
 // The crops: the table row for row, and a crop's stages (its watered nights to ripe) from its growth days.
 import { describe, expect, it } from 'vitest'
 import { SEASONS } from '../farm/calendar'
-import { CROP_PRICES } from '../goods/rule'
-import { CROP_IDS, refinedOf } from '../goods/ids'
+import { CROP_IDS, goodOf, LEGACY_CROP_IDS, refinedOf } from '../goods/ids'
 import { CROPS, growsIn, nightsToReady, readyAt, SHOP_SEEDS } from './crops'
 import { stagesOf } from './fields'
 
@@ -14,18 +13,18 @@ const DAYS: Readonly<Record<string, number>> = {
 }
 
 describe('the crops', () => {
-  it('has the 27 crops, 22 from the shop and 5 rare', () => {
+  it('has 51 crops, 46 from the shop and 5 rare', () => {
     expect(Object.keys(CROPS)).toEqual([...CROP_IDS])
-    expect(Object.values(CROPS).filter((c) => c.tier !== 'rare')).toHaveLength(22)
+    expect(Object.values(CROPS).filter((c) => c.tier !== 'rare')).toHaveLength(46)
     expect(Object.values(CROPS).filter((c) => c.tier === 'rare').map((c) => c.id)).toEqual(['golden-carrot', 'sunwheat', 'moonrice', 'wild-rice', 'mandrake'])
     for (const crop of Object.values(CROPS)) {
       expect(crop.seed === null, crop.id).toBe(crop.tier === 'rare')
       expect(crop.station !== null, crop.id).toBe(refinedOf(crop.id) !== null)
-      expect(CROP_PRICES[crop.id], crop.id).toBeGreaterThan(0)
+      expect(goodOf(crop.id)?.price, crop.id).toBeGreaterThan(0)
     }
   })
 
-  it.each(CROP_IDS.map((id) => [id]))('%s: its stages are its growth days, a stage a watered night', (id) => {
+  it.each(LEGACY_CROP_IDS.map((id) => [id]))('%s: its stages are its growth days, a stage a watered night', (id) => {
     expect(CROPS[id].days).toBe(DAYS[id])
     expect(stagesOf(id, false)).toBe(DAYS[id])
     expect(nightsToReady(id, 1)).toBe(DAYS[id])
@@ -43,18 +42,19 @@ describe('the crops', () => {
     expect(readyAt('eggplant', true)).toBe(3.5)
     expect(readyAt('corn', true)).toBe(3.5)
     expect(readyAt('carrot', true)).toBe(3.5)
-    expect(Object.values(CROPS).filter((c) => c.regrows !== null).map((c) => c.id)).toEqual(['mint', 'tomato', 'basil', 'bell-pepper', 'eggplant', 'corn'])
+    expect(Object.values(CROPS).filter((c) => c.regrows !== null).map((c) => c.id)).toEqual(['mint', 'tomato', 'basil', 'bell-pepper', 'eggplant', 'corn', 'green-peas', 'strawberry', 'cucumber', 'okra'])
   })
 
-  it('sells six seeds a season by tier: three at Farm Rank 1, two at Farm Rank 2, one at Farm Rank 4', () => {
+  it('sells the original six and six new seeds each season', () => {
     for (const season of SEASONS) {
-      const tiers = SHOP_SEEDS[season].map((id) => CROPS[id].tier)
+      expect(SHOP_SEEDS[season]).toHaveLength(12)
+      const tiers = SHOP_SEEDS[season].slice(0, 6).map((id) => CROPS[id].tier)
       expect(tiers, season).toEqual([1, 1, 1, 2, 2, 4])
       for (const id of SHOP_SEEDS[season]) expect(growsIn(id, season), `${id} in ${season}`).toBe(true)
     }
-    expect(SHOP_SEEDS.spring).toEqual(['carrot', 'potato', 'mint', 'onion', 'cabbage', 'asparagus'])
-    expect(SHOP_SEEDS.autumn.slice(3)).toEqual(['sugar-beet', 'onion', 'emperor-pumpkin'])
-    expect(SHOP_SEEDS.winter.slice(3)).toEqual(['rye', 'cabbage', 'ginger'])
+    expect(SHOP_SEEDS.spring.slice(0, 6)).toEqual(['carrot', 'potato', 'mint', 'onion', 'cabbage', 'asparagus'])
+    expect(SHOP_SEEDS.autumn.slice(3, 6)).toEqual(['sugar-beet', 'onion', 'emperor-pumpkin'])
+    expect(SHOP_SEEDS.winter.slice(3, 6)).toEqual(['rye', 'cabbage', 'ginger'])
   })
 
   it('carries over only where seasons join: Corn Summer → Autumn, Cabbage Winter → Spring', () => {

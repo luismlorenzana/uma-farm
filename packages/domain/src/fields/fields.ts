@@ -16,21 +16,20 @@
 // (`fieldTiles`): plot 1's tiles are 0–39 as they always were, plot 2's 40–79, so a draw keyed by the index (`harvest:<i>`)
 // replays the same on plot 1.
 import { spend } from '../farm/actions'
-import { dateOf, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
+import { dateOf, DAYS_PER_SEASON, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import type { PlaceOpens } from '../farm/places'
 import { rankBenefits, rankQuality } from '../farm/rank-rules'
 import type { Rank } from '../farm/ranks'
 import { talentQuality, type TalentStep } from '../farm/talents'
 import { cropLevelQuality, drawStars, quality, TENDED_QUALITY, toolQuality, WELL_FED_QUALITY } from '../goods/stars'
-import { carrotGood, carrotSeed, seedId, seedOf, type CropId, type CarrotGrade } from '../goods/ids'
+import { cropBaseGrade, cropGoodId, cropGrades, cropSeedId, seedId, seedOf, type CropId } from '../goods/ids'
 import { discoverOutput } from '../goods/discovery'
 import { itemNameOf } from '../items/lines'
 import { SaveRuleError } from '../save/rules'
 import { bareTile, FIELD_TILES, fieldTiles, isOvergrown, plotOf, tileInPlot, type FarmSave, type Overgrowth, type Plot, type Tile } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
-import { CROPS, GROWTH_SLACK, growsIn, readyAt, SHOP_SEEDS } from './crops'
-import { nextCarrotGrade } from './carrot'
+import { CROPS, established, GROWTH_SLACK, growsIn, plantableIn, readyAt, SHOP_SEEDS } from './crops'
 
 const cropName = (crop: CropId): string => itemNameOf(crop)
 
@@ -121,7 +120,7 @@ function mapTiles(save: Pick<FarmSave, 'fields'>, f: (tile: Tile, index: number)
   }
 }
 function inSeason(save: Pick<FarmSave, 'calendar'>, crop: CropId): void {
-  if (!growsIn(crop, seasonOf(save))) {
+  if (!plantableIn(crop, seasonOf(save))) {
     throw new SaveRuleError('out-of-season', `${cropName(crop)} grows in ${CROPS[crop].seasons.map((s) => SEASON_NAMES[s]).join(' and ')}.`)
   }
 }
@@ -197,6 +196,7 @@ export function waterTile<S extends FarmSave>(save: S, index: number): S {
 function wettable(tile: Tile): void {
   if (tile.crop === null) throw new SaveRuleError('bad-slot', 'Nothing grows there.')
   if (tile.ready) throw new SaveRuleError('bad-slot', 'It’s ripe: harvest it.')
+  if (established(tile)) throw new SaveRuleError('bad-slot', 'Established orchard plants need no water.')
   if (tile.watered) throw new SaveRuleError('bad-slot', 'Watered today.')
 }
 /** The watering itself, spending nothing. */
@@ -240,7 +240,7 @@ function reapable(tile: Tile): void {
 }
 /** The harvest itself, spending nothing, by the farmer (`null`) or a farmhand. A farmhand's yield above ×1 draws its
  * fraction (`draw(uid, day, 'harvest-more:<i>', 0)`). */
-export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Reaper | null, upgrade?: 2 | 3): { save: S; receipt: HarvestReceipt } {
+export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Reaper | null, upgrade?: number): { save: S; receipt: HarvestReceipt } {
   const tile = tileAt(save, index)
   reapable(tile)
   const crop = CROPS[tile.crop!]
@@ -251,21 +251,23 @@ export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Rea
   const many = reaper ? drawnCount(crop.yield * reaper.yield, draw(uid, day, `harvest-more:${index}`, 0)) : crop.yield
   const stars = Array.from({ length: many }, (_, n) => drawStars(q, draw(uid, day, `harvest:${index}`, n)))
   const receipt: HarvestReceipt = { crop: crop.id, stars: [0, 0, 0, 0, 0], seeds: 0 }
-  const planted = tile.grade ?? 1
-  if (upgrade && (!reaper || crop.id !== 'carrot' || upgrade !== nextCarrotGrade(planted))) throw new SaveRuleError('bad-slot', 'This crop can’t reach that grade.')
-  const base = tile.grade ? carrotGood(tile.grade) : crop.id
-  const lots = stars.map((s, i) => ({ id: i === 0 && upgrade ? carrotGood(upgrade) : base, stars: s }))
+  const planted = tile.grade ?? cropBaseGrade(crop.id)
+  const upgraded = upgrade === undefined ? undefined : cropGoodId(crop.id, upgrade)
+  if (upgrade !== undefined && (!reaper || !upgraded || upgrade !== planted + 1)) throw new SaveRuleError('bad-slot', 'This crop can’t reach that grade.')
+  const base = cropGoodId(crop.id, planted)!
+  const lots = stars.map((s, i) => ({ id: i === 0 && upgraded ? upgraded : base, stars: s }))
   if (upgrade || tile.grade) receipt.lots = lots
   let items = lots.reduce((all, lot) => addGoods(all, lot.id, lot.stars, 1), save.items)
   for (const s of stars) receipt.stars[s - 1]! += 1
   if (draw(uid, day, `seeds:${index}`, 0) < (reaper?.seedsBack ?? seedsBackChance(null, save.tools.hoe))) {
-    items = addGoods(items, tile.grade ? carrotSeed(tile.grade) : seedId(crop.id, true), 1, 1)
+    items = addGoods(items, cropSeedId(crop.id, true, planted), 1, 1)
     receipt.seeds = 1
   }
   // A regrowing crop starts again at 0 while it's in season; otherwise the soil is left empty, still tilled.
   const regrows = crop.regrows !== null && growsIn(crop.id, seasonOf(save))
-  const next: Tile = regrows ? { ...bareTile('tilled'), crop: crop.id, regrowing: true, own: tile.own } : bareTile('tilled')
-  const found = crop.id === 'carrot' ? lots.reduce((state, lot) => discoverOutput(state, lot.id), save) : save
+  const next: Tile = crop.woody ? { ...tile, ready: false }
+    : regrows ? { ...tile, growth: 0, ready: false, watered: false, regrowing: true } : bareTile('tilled')
+  const found = lots.reduce((state, lot) => discoverOutput(state, lot.id), save)
   return {
     save: {
       ...found, items, fields: withTile(save, index, next), crops: { ...save.crops, [crop.id]: points + cropPointsOf(tile.own) },
@@ -285,13 +287,12 @@ export function drawnCount(n: number, u: number): number {
 // --- What a screen and the morning read ----------------------------------------------------------------------------
 
 /** The seeds held that plant today, by id: own seeds first, then the shop's, by the crop table's order. */
-export function seedsInSeason(save: Pick<FarmSave, 'items' | 'calendar'>): { id: string; crop: CropId; own: boolean; grade?: CarrotGrade; count: number }[] {
+export function seedsInSeason(save: Pick<FarmSave, 'items' | 'calendar'>): { id: string; crop: CropId; own: boolean; grade?: number; count: number }[] {
   const season = seasonOf(save)
   return Object.keys(CROPS).flatMap((c) => {
     const crop = c as CropId
-    if (!growsIn(crop, season)) return []
-    const ids = [seedId(crop, true), seedId(crop)]
-    if (crop === 'carrot') ids.push(carrotSeed(2), carrotSeed(3))
+    if (!plantableIn(crop, season)) return []
+    const ids = [seedId(crop, true), seedId(crop), ...cropGrades(crop).slice(1).map((g) => cropSeedId(crop, true, g.grade))]
     return ids.flatMap((id) => {
       const count = goodCount(save.items, id)
       return count > 0 ? [{ id, ...seedOf(id)!, count }] : []
@@ -310,15 +311,16 @@ export const stagesOf = (crop: CropId, regrowing: boolean): number => Math.ceil(
 
 /** Watered nights left until a growing tile is ripe; 0 once it is. */
 export function nightsLeft(tile: Pick<Tile, 'crop' | 'ready' | 'growth' | 'regrowing'>): number {
-  if (tile.crop === null || tile.ready) return 0
+  if (tile.crop === null || tile.ready || established(tile)) return 0
   return Math.max(1, stagesOf(tile.crop, tile.regrowing) - tile.growth)
 }
 
 /** A growing tile's look, by how far it's grown: a seed, a sprout, half grown, nearly ripe, or ripe. */
-export type CropLook = 'seed' | 'sprout' | 'growing' | 'nearly' | 'ripe'
+export type CropLook = 'seed' | 'sprout' | 'growing' | 'nearly' | 'dormant' | 'ripe'
 export function cropLook(tile: Pick<Tile, 'crop' | 'ready' | 'growth' | 'regrowing'>): CropLook | null {
   if (tile.crop === null) return null
   if (tile.ready) return 'ripe'
+  if (established(tile)) return 'dormant'
   const share = tile.growth / stagesOf(tile.crop, tile.regrowing)
   return tile.growth === 0 ? 'seed' : share < 0.4 ? 'sprout' : share < 0.75 ? 'growing' : 'nearly'
 }
@@ -348,12 +350,14 @@ export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<numbe
   let grew = 0
   let ripened = 0
   const fields = mapTiles(save, (tile, i): Tile => {
-    if (tile.crop === null || tile.ready || !(tile.watered || chores.has(i))) return tile.watered ? { ...tile, watered: false } : tile
+    if (tile.crop === null || tile.ready || established(tile) || !(tile.watered || chores.has(i))) return tile.watered ? { ...tile, watered: false } : tile
     const growth = tile.growth + 1
-    const ready = growth + GROWTH_SLACK >= readyAt(tile.crop, tile.regrowing)
+    const mature = growth + GROWTH_SLACK >= readyAt(tile.crop, tile.regrowing)
+    const woody = CROPS[tile.crop].woody
+    const ready = mature && (!woody || growsIn(tile.crop, seasonOf(save)))
     grew++
     if (ready) ripened++
-    return { ...tile, growth, ready, watered: false }
+    return { ...tile, growth, ready, watered: false, ...(woody && ready ? { fruitSeason: orchardSeason(save.calendar.day) } : {}) }
   })
   return { save: { ...save, fields }, grew, ripened }
 }
@@ -370,7 +374,7 @@ export function witherTiles<S extends FarmSave>(save: S): { save: S; withered: W
   const withered: Withered[] = []
   let changed = false
   const fields = mapTiles(save, (tile): Tile => {
-    if (tile.crop === null || tile.ready || growsIn(tile.crop, next)) return tile
+    if (tile.crop === null || tile.ready || CROPS[tile.crop].woody || growsIn(tile.crop, next)) return tile
     changed = true
     const line = withered.find((w) => w.crop === tile.crop)
     if (line) line.tiles++
@@ -382,3 +386,22 @@ export function witherTiles<S extends FarmSave>(save: S): { save: S; withered: W
 
 /** Whether a field index is a tile on this save's field: on a plot it has cleared. */
 export const isTile = (save: Pick<FarmSave, 'fields'>, index: number): boolean => tileOf(save, index) !== undefined
+
+const orchardSeason = (day: number): number => Math.floor((day - 1) / DAYS_PER_SEASON)
+
+/** A mature plant reserves one pick for a bearing season. A pending pick uses the new season's slot too. */
+export function setOrchardFruit<S extends FarmSave>(save: S): S {
+  if (dateOf(save.calendar.day).day !== 1) return save
+  const season = seasonOf(save)
+  const pick = orchardSeason(save.calendar.day)
+  return { ...save, fields: mapTiles(save, (tile) => (
+    tile.crop && established(tile) && growsIn(tile.crop, season) && tile.fruitSeason !== pick
+      ? { ...tile, ready: true, fruitSeason: pick } : tile
+  )) }
+}
+
+export function removeOrchard<S extends FarmSave>(save: S, index: number): S {
+  const tile = tileAt(save, index)
+  if (!tile.crop || !CROPS[tile.crop].woody) throw new SaveRuleError('bad-slot', 'There is no orchard plant here.')
+  return { ...spend(save, 'remove-orchard'), fields: withTile(save, index, bareTile('tilled')) }
+}

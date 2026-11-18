@@ -44,7 +44,7 @@ export * from './save/shop'
 // The field: the crops, the tiles (clearing, tilling, planting, watering, harvesting), crop levels, growth and withering
 // at night, and the shop's seeds; its plots, each a page of 8 × 5, cleared as the Farm Rank rises.
 export * from './fields/crops'
-export * from './fields/carrot'
+export * from './fields/production'
 export * from './fields/fields'
 export * from './fields/plots'
 

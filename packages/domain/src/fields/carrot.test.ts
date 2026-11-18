@@ -15,7 +15,7 @@ import { joinCast } from '../romance/meeting.fixture'
 import { withOccasions } from '../story/occasions.fixture'
 import { storyPackFrom } from '../story/pack'
 import { farmDayOn } from '../town/town'
-import { saveCarrotSeeds, setCarrotPlan, setCarrotReserve } from './carrot'
+import { saveCropSeeds, setFieldPlan, setCropReserve } from './production'
 import { harvestTile, plantTile, tileAt, tillTile, waterTile } from './fields'
 
 const NOW = '2026-11-18T12:00:00.000Z'
@@ -28,6 +28,8 @@ const BACKUP = '9000001'
 const talentOf: TalentOf = (id, activity) => id === LEAD && activity === 'farming' ? 7 : TALENT_D
 const rows = [0, 1, 2]
 const fresh = () => ({ ...newSave('carrot-pilot', NOW), farmer: { name: 'Robin' } })
+const saveCarrotSeeds = (save: FarmSave, grade: number, improve: boolean, count: number, useReserved = false) =>
+  saveCropSeeds(save, 'carrot', grade, improve, count, useReserved)
 
 function advance(save: FarmSave, roster = false): FarmSave {
   const next = runNight(save, roster ? { talentOf, story: PACK } : {})
@@ -104,7 +106,8 @@ describe('F99 carrot pilot', () => {
   })
 
   it('lets a roster plant, water, and produce G2 across town days without player field actions', () => {
-    let save = setCarrotPlan(rosterFarm(), 0, 0, { grade: 1, harvestNext: true })
+    const base = rosterFarm()
+    let save: FarmSave = { ...base, farm: { ...base.farm, carrotRows: { '0:0': { grade: 1, harvestNext: true } } } }
     for (const id of [LEAD, BACKUP]) {
       save = setTasks(save, id, [{ kind: 'harvest', tiles: [0] }, { kind: 'till', tiles: [0] }, { kind: 'plant', tiles: [0] }, { kind: 'water', tiles: [0] }])
     }
@@ -143,7 +146,7 @@ describe('F99 carrot pilot', () => {
     save = advance(save, true)
     for (let day = 2; day <= 4; day++) save = advance(rows.reduce((state, tile) => waterTile(state, tile), save), true)
     save = rows.reduce((state, tile) => harvestTile(state, tile).save, save)
-    save = setCarrotReserve(save, 1, 2)
+    save = setCropReserve(save, 'carrot', 1, 2)
     for (const id of [LEAD, BACKUP]) save = setTasks(save, id, [{ kind: 'save-seed', grade: 1, improve: true, target: 2 }, { kind: 'cook' }])
     save = advance(save, true)
     expect(goodCount(save.items, carrotSeed(2))).toBe(1)

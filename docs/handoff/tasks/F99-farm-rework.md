@@ -268,8 +268,8 @@ shop. Names, grade placement and assets are Uma Farm authoring.
 | Winter | Persimmon | Tree | G6 | 4 | 245g | 7 | 3 |
 | Winter | Pomegranate | Tree | G8 | 6 | 375g | 8 | 3 |
 
-Add IDs and art through the repository's Uma Platform catalogue release workflow. Reuse a species' icon with a grade
-label where the atlas contract permits it, and use one original plant/seed/produce set per new species as needed.
+Fields add stable IDs in the farm catalogue. Existing species keep their shared atlas icons. New species use a
+farm-local original sprite sheet, with one produce icon per species, grade labels, and separate tree and shrub silhouettes.
 Start the added vegetables at these ★1 prices and tune against current per-action profit and regrowth.
 Spring has Radish 55g, Lettuce 85g, Green Peas 65g. Summer has Cucumber 85g, Okra 95g, Zucchini 80g. Autumn
 has Turnip 65g, Sweet Potato 80g, Winter Squash 160g. Winter has Leek 75g, Cauliflower 115g, Red Beet 85g.
@@ -283,8 +283,8 @@ while base-family milestones aggregate appropriately, with existing milestone to
 
 | Release | Slice | Play it through before moving on |
 |---|---|---|
-| **A · Shared contract and carrots** | [Carrot pilot implemented](../../game-mechanics.md#the-carrot-grade-pilot) with exact-grade stock and discovery, saving seeds, row plans, shared coverage and reserves. | The seed route reaches Carrot G2 on Spring 9. The roster fixture reaches G2 on the morning of Spring 7, with the backup watering on a town day and holding the ripe carrot for the skilled harvester. |
-| **B · Fields and orchard** | 24 plantables, remaining common crop ladders, tree tiles, Grade filters and stock hints. | A four-season plan runs on the same rows. Trees survive dormancy, and existing forage routes for fruit work. Replacing a mature tree takes deliberate action. |
+| **A · Shared contract and carrots** | [Carrot pilot implemented](../../game-mechanics.md#crop-grades-and-saved-seeds) with exact-grade stock and discovery, saving seeds, row plans, shared coverage and reserves. | The seed route reaches Carrot G2 on Spring 9. The roster fixture reaches G2 on the morning of Spring 7, with the backup watering on a town day and holding the ripe carrot for the skilled harvester. |
+| **B · Fields and orchard** | [Implemented](../../game-mechanics.md#the-orchard). The 51 plantables use seasonal row plans, crop grades and the Warehouse grade filter. | Both roster simulations harvested all 51 in year one. Established orchards bore fruit again in year two. |
 | **C · Ranch, stations and surplus** | All seven ranch ladders, product caps, exact load queues and food conversions, optional surplus job. | The roster gets G3 Milk, makes G3 Yogurt, protects a milk floor for cooking and sells a deliberately prepared surplus crate. No claimed input or station load is counted twice. |
 | **D · Fishing and full-farm tuning** | Targeted fishing modes, preserved records, fillet ladders, source and economy checks. | G2 Carp and G2 Carp Fillet are earned through a roster shift and an overnight station load, with base catches still available. Run the multi-year portfolio and F98 source audit. |
 | **F98 · Restaurant** | Use the discovery contract and revise selected authored recipes within the existing 120. | A roster can discover the entire menu. Early-stage base dishes keep the year-round entry path. Later recipes give a reason to improve production grades. |
@@ -296,6 +296,23 @@ Carp Fillet G2 in **R044 Rosemary Fillet Supper**, Apple Preserve G2 in **R051 A
 transitive sources after grades ship. If a test chain lacks a dependable season or skilled source, solve the sourcing
 or recipe constraint before shipping that row. Ingredient discovery, recipe learning and spending stock remain
 different events. F98 keeps its choices to sell, cook with, or feed the farm with the finished dishes.
+
+### Field balance playthrough
+
+The fixtures start at Farm Rank 6 with five prepared plots, staggered town days, practiced field workers and
+20,000g working cash. Umas run recurring Harvest, Plant, Water and Cook assignments. The player buys one season's
+seed and ships surplus every other day. Seed costs and takeout below are charged, and sales exclude Diary rewards.
+Land preparation and recruitment are starting conditions.
+
+| Crew and footprint | Spring net | Summer net | Autumn net | Winter net | Year-one total | Crew actions |
+|---|---:|---:|---:|---:|---:|---:|
+| 10 Umas, two tiles per crop | −840g | 1,375g | 2,635g | 1,510g | 4,680g | 635 of 654 |
+| 15 Umas, three tiles per crop | 1,385g | 3,285g | 6,245g | 3,150g | 14,065g | 791 of 812 |
+
+Neither crew lost a first annual planting to a season change. Regrowth sometimes ended at the boundary after a
+crop had already paid out. The 15-Uma setup earned 29,605g net in its second year with the established orchard.
+Keep the authored prices for this slice. The smaller setup's first Spring costs more than it earns while buying
+its orchard. The full-farm scale and staffing checks resume in the later slices.
 
 ### A Spring carrot in nine days
 
