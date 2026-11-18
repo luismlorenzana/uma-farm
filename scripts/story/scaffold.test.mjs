@@ -72,12 +72,13 @@ async function world(t, { plan = true, master = true } = {}) {
 }
 
 const quiet = () => {}
+const slash = (p) => p.replaceAll('\\', '/')
 /** Every file under a folder, by its path in it. */
 async function tree(dir) {
   if (!existsSync(dir)) return {}
   const out = {}
   for (const entry of await readdir(dir, { withFileTypes: true, recursive: true })) {
-    if (entry.isFile()) out[join(entry.parentPath ?? entry.path, entry.name).slice(dir.length + 1)] = await readFile(join(entry.parentPath ?? entry.path, entry.name), 'utf8')
+    if (entry.isFile()) out[slash(join(entry.parentPath ?? entry.path, entry.name).slice(dir.length + 1))] = await readFile(join(entry.parentPath ?? entry.path, entry.name), 'utf8')
   }
   return out
 }
@@ -97,7 +98,7 @@ test('Tier n is the Ranker’s umas board, in its order; a sister is s<outfitId>
   assert.equal(herName(master, { umas: [] }, 's900000102'), 'Invented Aster’s sister')
   assert.equal(herName(master, { umas: [{ characterId: 's900000102', name: 'Invented Dahlia' }] }, 's900000102'), 'Invented Dahlia')
   assert.deepEqual([id(1), id(2), id(3), 's900000102'].map((x) => herTemperament(master, { umas: [] }, x)), ['clever', 'steady', 'bold', 'breezy'])
-  assert.equal(env.STORY_DIR.endsWith('content/story'), true)
+  assert.equal(slash(env.STORY_DIR).endsWith('content/story'), true)
 })
 
 test('a dry run lists every missing piece and writes nothing', async (t) => {
@@ -113,7 +114,7 @@ test('a dry run lists every missing piece and writes nothing', async (t) => {
   assert.match(said, new RegExp(`${id(3)} Invented Corra: would write 98 pieces \\(cast 2, bible 37, route 59\\)`))
   assert.match(said, /route: arrival, f1–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk/)
   assert.match(said, /291 pieces in 7 files would be written/)
-  assert.deepEqual(result.files.sort(), ['cast.json', `routes/${id(1)}.json`, `routes/${id(2)}.json`, `routes/${id(3)}.json`, `umas/${id(1)}.json`, `umas/${id(2)}.json`, `umas/${id(3)}.json`])
+  assert.deepEqual(result.files.map(slash).sort(), ['cast.json', `routes/${id(1)}.json`, `routes/${id(2)}.json`, `routes/${id(3)}.json`, `umas/${id(1)}.json`, `umas/${id(2)}.json`, `umas/${id(3)}.json`])
 })
 
 test('writes what’s missing, backs up every file it changes first, and a second run writes nothing', async (t) => {
@@ -160,7 +161,7 @@ test('a file that isn’t JSON is never written over', async (t) => {
   const result = await scaffold({ ids: id(1), env, now: NOW, log: quiet })
   assert.equal(await readFile(join(pack, `umas/${id(1)}.json`), 'utf8'), '{ not json')
   assert.deepEqual(result.refused[id(1)], [`umas/${id(1)}.json isn’t a bible (an object), so none of its pieces is written`])
-  assert.ok(result.files.includes(`routes/${id(1)}.json`))
+  assert.ok(result.files.map(slash).includes(`routes/${id(1)}.json`))
 })
 
 test('no master data: a dry run lists by id, a real run is refused before it writes', async (t) => {

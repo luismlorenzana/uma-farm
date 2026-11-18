@@ -41,6 +41,6 @@ test('every page has its doc, and each page is current', () => {
     assert.ok(existsSync(doc), `docs/${entry.doc} exists`)
     const built = join(ROOT, 'docs', 'pages', entry.page)
     assert.ok(existsSync(built), `docs/pages/${entry.page} exists`)
-    assert.equal(readFileSync(built, 'utf8'), page(entry, readFileSync(doc, 'utf8')), `docs/pages/${entry.page} is stale: run \`pnpm docs:update\``)
+    assert.equal(readFileSync(built, 'utf8').replace(/\r\n/g, '\n'), page(entry, readFileSync(doc, 'utf8')), `docs/pages/${entry.page} is stale: run \`pnpm docs:update\``)
   }
 })

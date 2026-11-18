@@ -56,7 +56,7 @@ const cells = (row) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split(/(
 
 /** Markdown to HTML, and the headings for the contents column. */
 export function render(md, fromDoc = 'x.md') {
-  const lines = md.replace(/<!--[\s\S]*?-->\n?/g, '').split('\n')
+  const lines = md.replace(/\r\n/g, '\n').replace(/<!--[\s\S]*?-->\n?/g, '').split('\n')
   const out = []
   const headings = []
   const seen = new Map()
