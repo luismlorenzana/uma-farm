@@ -9,9 +9,10 @@
 ## Scope
 
 This packet authors the Restaurant and its menu. **120 new recipes across eight stages** ship with the future
-Restaurant implementation, alongside the Kitchen's existing 80. The Forge and a broader farming overhaul are
-separate work. The launch menu uses obtainable goods already in the game, so a farm overhaul is optional for F98.
-The names, quantities, sales formula and timings below are authoring defaults to tune against the farm simulation.
+Restaurant implementation, alongside the Kitchen's existing 80. Implement [F99, the roster-run farm](F99-farm-rework.md)
+first. Its shared ingredient catalogue and discovery rules let the Restaurant reward grades the player or roster
+has produced. The menu below is the authored baseline. Apply F99's grade integrations and recheck the full menu
+against the final farm sources before F98 ships. The Forge follows separately.
 
 ## Read first
 
@@ -125,36 +126,11 @@ inputs, including station processing costs. Set explicit prices after testing la
 easing, household takeout savings and up to one Restaurant shift per day. Include the value of a farmhand's missed
 work and her Serving-tip perks. Check that raw shipping, cooking and using meals each have a defensible purpose.
 
-## Farm expansion for a follow-up
+## Farm prerequisite
 
-F98's menu uses seasonal crops, forage, fishing, animal outputs and the existing stations. It gives each of those
-sources a reason to exist before adding more farms or production systems. The next farm design should add variety and
-a real grade progression without flattening the value of the current goods.
-
-| System | What is already in the farm | Proposed follow-up and how it fits |
-|---|---|---|
-| Seasonal fields and orchard | 27 plantable crops. Much of the fruit comes from the forest. Plots, seed shelves, crop ranks and own seeds already work across 12-day seasons. | Aim for **51 plantables** by adding 12 vegetables and 12 orchard or berry crops. Put quick, moderate and regrowing plants on each season's shelf. Keep the current forest sources for fruit. Orchard plants use rows in the existing plots, persist through dormant seasons, and bear in a named season. Test plots and work-board assignments before introducing a dedicated orchard. |
-| Crop grade and seeds | Crop experience, own seeds, Hoe and Uma skill raise the odds of higher stars. A crop variant's G grade is currently fixed. | Give each supported crop a short grade ladder with stable IDs. **Save seed** spends one harvest unit to keep its grade, or advances its seed by one grade when the crop's mastery and the lot's stars meet the next threshold. Independently, a skilled Uma on a harvest row can produce a next-grade lot from its current planting. Cap each route at one grade step per harvest or seed cycle. Seeds carry their stored grade back into planting and the existing crop-experience loop. Keep base seeds and a base-grade harvest option, and show the grade on the tile and in Warehouse. |
-| Animal products | Feed, care, fondness, brush and ranch skill already affect output quality. The Coop and Barn produce eggs, milk and fiber. | Use a short grade ladder per product, distinct from species and ★ quality. An animal's sustained fondness sets its baseline, and experienced Uma care opens the next grade. Offer a base-grade supply route even after mastery. Pilot eggs and milk before adding breeding, special feed, rare varieties or fiber upgrades. |
-| Crafted goods | Refined ingredients have a fixed input, output and grade. Loads carry input stars overnight. | Keep the source grade through canonical recipes such as Wheat → Flour and Carp → Fillet. For later crafted variants, use a named input-grade minimum and station or worker threshold, with output grade limited by the limiting input. Trial yoghurt, butter, cheese, preserved eggs, vegetable pickles, fruit preserves and sauces. Add batches to the existing load boards, with no extra daily collection chore. |
-| Fish | Spots, seasons, Dock and Boat select species. The Rod, Fishing rank, aptitude and talent already change catch properties. | Keep habitat and species meaningful. Use Fishing skill and the Rod to add a named higher-grade lot of a species within its own spots. The same spot can still supply the ordinary catch. Fillets inherit grade and stars. Test a repeatable fishing upgrade route at a reachable spot before touching rare sea species. |
-| Sourcing and planning | The calendar, Warehouse, shop, Diary and work boards already expose seasonal and stock state. | Use those screens for planting forecasts, **Days left to grow**, a short discovery list, and ingredient source hints. Later consider a greenhouse for one out-of-season slot and a side-board reservation for meal or recipe stock after simulation confirms the need. |
-
-Suggested adds for later authoring. Exact timings, grades, and art mapping belong in the follow-up packet.
-
-| Harvest | New plantable vegetables | New plantable orchard or berry crops |
-|---|---|---|
-| Spring | Radish, lettuce, green peas | Strawberry, raspberry, plum |
-| Summer | Cucumber, okra, zucchini | Peach, blueberry, mango |
-| Autumn | Turnip, sweet potato, winter squash | Apple, pear, grape |
-| Winter | Leek, cauliflower, red beet | Orange, persimmon, pomegranate |
-
-For any future grade variants, retain old IDs for existing goods, seeds, crafts and recipe inputs. Add new grade IDs
-only onto supported ladders. All prior grades must stay attainable where a recipe requires them. Give at least two
-ways to improve a productive crop over time, through saving seed or assigning a skilled Uma. Keep multi-season fruit
-trees compatible with the existing plot, action and farmhand model before introducing any new map. Set a release
-sequence of crops and seed improvement, then animal and processing grades, then fishing grades. Each step should be
-playable and should measure income, food, warehouse growth, and reachability across all four seasons.
+[F99](F99-farm-rework.md) defines how every supported ingredient grade is earned and recorded by the player or the
+roster. Use its discovery ledger and the [Restaurant handoff](F99-farm-rework.md#release-sequence-and-the-restaurant-handoff)
+for recipe changes. Keep the base-grade routes for the first stage and at least one seasonal entry in each season.
 
 ## Implement and verify
 
