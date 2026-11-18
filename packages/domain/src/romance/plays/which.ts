@@ -27,7 +27,7 @@ export const PLAY_MAP: Readonly<Record<Activity | DateGame, PlayAs>> = {
   cooking: play('rhythm', 'pot', true),
   serving: play('rhythm', 'tray', true),
   forging: play('rhythm', 'anvil', true),
-  expeditions: play('rhythm', 'pack', true),
+  expeditions: play('rhythm', 'pack'),
   walk: play('walk'),
   boat: play('rhythm', 'oar'),
   picnic: play('pick'),

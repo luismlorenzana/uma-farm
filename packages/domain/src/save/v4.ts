@@ -250,6 +250,18 @@ export interface Expedition {
   back: number
 }
 
+export const EXPEDITION_OUTCOMES = ['great', 'success', 'retreat'] as const
+export type ExpeditionOutcome = typeof EXPEDITION_OUTCOMES[number]
+export interface ExpeditionReturn {
+  region: RegionId
+  party: OutfitId[]
+  left: number
+  back: number
+  result: ExpeditionOutcome
+  /** Counts by Warehouse stock key (good and stars). */
+  loot: Record<string, number>
+}
+
 /** A request's extra: a recipe, rare seeds, an animal or a recruit. */
 export const EXTRA_KINDS = ['recipe', 'seeds', 'animal', 'recruit'] as const
 export interface Extra {
@@ -620,6 +632,7 @@ export interface SaveV5 {
    * workshop's best score. A save from before the stove has no play under way. */
   workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number> }
   expeditions: Expedition[]
+  expeditionLog?: ExpeditionReturn[]
   /** Bond points by pair: `pairKey` of character ids. */
   bonds: Record<string, number>
   board: BoardRequest[]

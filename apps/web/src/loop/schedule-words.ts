@@ -2,9 +2,10 @@
 // town show it, and who's in town on a calendar day. Every placement is the schedule's, never a draw. Names are the
 // town map's (the pack's, else the game's). Pure, so the screens and the tests read the same.
 import {
-  atHome, dateOf, farmDaysIn, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereOn, whereYouMeet,
+  atHome, awayOn, dateOf, farmDaysIn, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereOn, whereYouMeet,
   type SaveV4, type SeasonPlace, type StoryPack,
 } from '@farm/domain'
+import { awayWords } from './expedition-words'
 import { shortDate } from './words'
 
 type Pack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'master'>>
@@ -65,6 +66,8 @@ export interface FindHer {
 export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
   const date = dateOf(save.calendar.day)
   const season = SEASON_NAMES[date.season]
+  const away = awayOn(save, id, save.calendar.day)
+  if (away) return { today: awayWords(away), at: null, season, lines: [], farm: false }
   if (save.roster[id] && atHome(save, id)) return { today: 'On the farm', at: null, season: 'Every day', lines: [{ at: null, text: 'She lives on the farm' }], farm: true }
   const hand = !!save.roster[id] && isFarmhand(save, id)
   const lines = hand ? farmhandLines(pack, id, date.season) : seasonLines(pack, id, date.season)
@@ -79,7 +82,7 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
 /** Who's in town on a calendar day, by place: each place with anyone, in the map's order, her Umas in the cast's order
  * (met first). A day ahead reads the save as it stands (who's on the farm, who's a farmhand). */
 export interface TownRow { at: string; name: string; ids: string[] }
-export function townRows(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'>, pack: Pack, day: number): TownRow[] {
+export function townRows(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: Pack, day: number): TownRow[] {
   const town = townDay(save, pack, day)
   return townLocations(pack).flatMap((l): TownRow[] => {
     const here = town.at.get(l.id) ?? []

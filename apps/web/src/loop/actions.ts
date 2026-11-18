@@ -15,7 +15,7 @@ import {
   chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, upgradeStation, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
-  type RanchHome,
+  sendExpedition, type RegionId, type RanchHome,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -81,6 +81,10 @@ export const buyLine = (line: ShopLine, count: number) => change((s) => {
 })
 
 // --- The day's actions -------------------------------------------------------------------------------------------
+
+/** Sends a party on the save as it stands. */
+export const sendParty = (region: RegionId, party: readonly string[], supplies: readonly string[]) =>
+  change((save) => sendExpedition(save, region, party, supplies))
 
 /** Clears a plot (its index, 1 for plot 2): its gold and an action, and it opens at once, wild. */
 export const clearPlotAt = (plot: number) => change((s) => clearPlot(s, plot))

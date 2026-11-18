@@ -17,6 +17,7 @@ import { draw } from '../farm/draw'
 import { talentsD, type TalentOf, type Temperament } from '../farm/talents'
 import { drawStars } from '../goods/stars'
 import type { HouseholdNews, HouseLine, ItemLine, LevelLine, VowsLine } from '../night/summary'
+import { awayForNight } from '../expeditions/presence'
 import { FINALE_MARRIED, FURNITURE_PIECES, HOUSEHOLD_MILESTONES, marriedCount, residentsOf, vowsOn, type SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import type { Finale, Household, HouseholdAt, Step } from '../story/authored'
@@ -57,7 +58,7 @@ export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | 
   const companion = companionTonight(save)
   const { companion: _picked, ...h } = save.homestead
   const house = h.tonight ?? defaultHouse(save)
-  const alone = h.tonight === null || h.alone === null || save.love[h.alone]?.house !== house ? null : h.alone
+  const alone = h.tonight === null || h.alone === null || save.love[h.alone]?.house !== house || awayForNight(save, h.alone, save.calendar.day) ? null : h.alone
   const slept = h.slept.map((d, i) => (i === house ? save.calendar.day : d))
   const love = companion === null ? save.love : { ...save.love, [companion]: { ...save.love[companion]!, night: save.calendar.day } }
   return { save: { ...save, love, homestead: { ...h, tonight: null, alone: null, slept } }, night: { house, alone, companion } }
@@ -67,11 +68,11 @@ export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | 
 
 /** Step 6: +10 bond a night to each pair of residents sharing a house, through `addBond` (Romance 4's
  * ×1.5 inside). Every house, every night. */
-export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
+export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>, trips: Pick<SaveV4, 'expeditions'> = save): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
   let next = save
   const paid: { a: string; b: string; points: number }[] = []
   save.homestead.houses.forEach((_, house) => {
-    const here = residentsOf(save, house).filter((id) => save.roster[id]).sort((a, b) => Number(a) - Number(b))
+    const here = residentsOf(save, house).filter((id) => save.roster[id] && !awayForNight(trips, id, save.calendar.day)).sort((a, b) => Number(a) - Number(b))
     for (let i = 0; i < here.length; i++) {
       for (let j = i + 1; j < here.length; j++) {
         const pay = addBond(next, pack, here[i]!, here[j]!, BOND_POINTS.house)
@@ -144,8 +145,8 @@ export function householdNight(save: SaveV4): { save: SaveV4; news: HouseholdNew
  * feeds); each resident at S2 or more leaves **one more morning item** of her line (★3+, `lineGood(…, n = 2)`), on top of her
  * own count. On a birthday-alone night only she counts. An empty house's morning is quiet: no line.
  */
-export function houseMorning(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, night: NightHouse, talentOf: TalentOf = talentsD): { save: SaveV4; line: HouseLine | null; items: ItemLine[] } {
-  const umas = (night.alone !== null ? [night.alone] : residentsOf(save, night.house)).filter((id) => save.roster[id])
+export function houseMorning(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, night: NightHouse, talentOf: TalentOf = talentsD, away: ReadonlySet<string> = new Set()): { save: SaveV4; line: HouseLine | null; items: ItemLine[] } {
+  const umas = (night.alone !== null ? [night.alone] : residentsOf(save, night.house)).filter((id) => save.roster[id] && !away.has(id))
   if (umas.length === 0) return { save, line: null, items: [] }
   let next = save
   let paid = 0

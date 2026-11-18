@@ -26,6 +26,7 @@ import type { DateGame } from '../story/authored'
 import { castOrder, type StoryPack } from '../story/pack'
 import type { Moment } from '../story/look'
 import { eveningSceneId, festivalsOf, routeBeats } from '../story/placeholders'
+import { awayOn } from '../expeditions/presence'
 import { whereYouMeet } from '../town/town'
 import { addLove, bar, dayFactor, isAnniversary, roundPoints, type Bar } from './love'
 import { EVENING_GRADE_POINTS, GRADES, gradeOf, type Grade } from './plays/grade'
@@ -157,7 +158,8 @@ export function kindOpens(love: Pick<Love, 'stage' | 'level'>, k: EveningKind): 
 }
 
 /** Whether she's home tonight: a spouse in her room, the one who lives on the farm. */
-export function homeTonight(save: Pick<SaveV4, 'love'>, id: string): boolean {
+export function homeTonight(save: Pick<SaveV4, 'love'> & Partial<Pick<SaveV4, 'calendar' | 'expeditions'>>, id: string): boolean {
+  if (save.calendar && awayOn(save, id, save.calendar.day)) return false
   const love = save.love[id]
   return love?.stage === 'spouse' && love.house !== undefined
 }

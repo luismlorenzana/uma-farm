@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { delimiter, dirname, join, resolve } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { STAND_IN } from './release.mjs'
@@ -266,16 +266,19 @@ test('pnpm story:ship: every gcloud call scoped by the environment, never the ac
   await mkdir(bin)
   const log = join(work, 'gcloud.log')
   // A stand-in gcloud: records its configuration, project and arguments; nothing is published yet.
-  await writeFile(join(bin, 'gcloud'), `#!/usr/bin/env node
+  const isWindows = process.platform === 'win32'
+  const stub = join(bin, isWindows ? 'gcloud.cjs' : 'gcloud')
+  await writeFile(stub, `#!/usr/bin/env node
 const { appendFileSync } = require('node:fs')
 const args = process.argv.slice(2)
 appendFileSync(${JSON.stringify(log)}, [process.env.CLOUDSDK_ACTIVE_CONFIG_NAME, process.env.CLOUDSDK_CORE_PROJECT, args.join(' ')].join('|') + '\\n')
 if (args[1] === 'cat' || args[1] === 'ls') { process.stderr.write('ERROR: The following URLs matched no objects or files'); process.exit(1) }
 `)
-  await chmod(join(bin, 'gcloud'), 0o755)
+  if (isWindows) await writeFile(join(bin, 'gcloud.cmd'), `@"${process.execPath}" "%~dp0gcloud.cjs" %*\r\n`)
+  else await chmod(stub, 0o755)
   const out = join(work, 'release')
   const run = (args, env = {}) => execFileSync(process.execPath, ['--no-warnings', join(ROOT, 'scripts/story/ship.mjs'), '--from', from, '--out', out, ...args], {
-    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, STORY_PLATFORM_DIR: join(work, 'no-platform'), CLOUDSDK_ACTIVE_CONFIG_NAME: 'someone-else', CLOUDSDK_CORE_PROJECT: 'elsewhere', STORY_BUCKET: '', STORY_GCLOUD_CONFIG: '', STORY_GCLOUD_PROJECT: '', ...env },
+    env: { ...process.env, PATH: `${bin}${delimiter}${process.env.PATH}`, UMA_STORY_AUTHORING_ROOT: join(work, 'no-platform'), CLOUDSDK_ACTIVE_CONFIG_NAME: 'someone-else', CLOUDSDK_CORE_PROJECT: 'elsewhere', STORY_BUCKET: '', STORY_GCLOUD_CONFIG: '', STORY_GCLOUD_PROJECT: '', ...env },
     encoding: 'utf8', stdio: 'pipe',
   })
   const said = run(['--note', 'An invented chapter.'])
@@ -283,8 +286,8 @@ if (args[1] === 'cat' || args[1] === 'ls') { process.stderr.write('ERROR: The fo
   assert.deepEqual((await readFile(log, 'utf8')).trim().split('\n'), [
     'default|uma-rpg|storage cat gs://uma-farm-content/story.json',
     'default|uma-rpg|storage ls gs://uma-farm-content/story/',
-    `default|uma-rpg|storage rsync ${out}/story gs://uma-farm-content/story --checksums-only --cache-control=private, max-age=31536000, immutable --content-type=application/json`,
-    `default|uma-rpg|storage cp ${out}/story.json gs://uma-farm-content/story.json --cache-control=private, no-cache --content-type=application/json`,
+    `default|uma-rpg|storage rsync ${join(out, 'story')} gs://uma-farm-content/story --checksums-only --cache-control=private, max-age=31536000, immutable --content-type=application/json`,
+    `default|uma-rpg|storage cp ${join(out, 'story.json')} gs://uma-farm-content/story.json --cache-control=private, no-cache --content-type=application/json`,
   ])
 
   await rm(log)

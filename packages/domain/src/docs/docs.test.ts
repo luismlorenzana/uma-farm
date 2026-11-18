@@ -29,7 +29,7 @@ describe('live docs', () => {
   })
 
   it.each(files.map((f) => [relative(ROOT, f), f]))('%s matches the rules (run `pnpm docs:update` to update)', (_, file) => {
-    const text = readFileSync(file, 'utf8')
+    const text = readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
     const unknown: string[] = []
     const fresh = refresh(text, unknown)
     expect(unknown, 'unknown live blocks').toEqual([])

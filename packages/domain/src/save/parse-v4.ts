@@ -18,7 +18,7 @@ import { isStockId, parseStockKey } from './warehouse'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
-  counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
+  counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions, parseExpeditionReturn,
   legacyChapter, parseFarm, parseFields, parseLoads, parseMoneyLines, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWorkLines,
   parseWorkshops, unique,
 } from './parse-loop'
@@ -33,7 +33,7 @@ export type { LoopPlaceId } from './parse-loop'
 
 export const SAVE_V5_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'fields', 'loads', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town',
+  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town',
 ] as const
 
 /** The most actions a day can hold: well past any budget the farm grows to. */
@@ -544,6 +544,8 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     tools: parseTools(o.tools, `${path}.tools`),
     workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids),
     expeditions: parseExpeditions(o.expeditions, `${path}.expeditions`, ids),
+    ...(o.expeditionLog === undefined ? {} : { expeditionLog: list(o.expeditionLog, `${path}.expeditionLog`, 0, 20)
+      .map((row, i) => parseExpeditionReturn(row, `${path}.expeditionLog.${i}`, ids)) }),
     bonds: parseBonds(o.bonds, `${path}.bonds`, ids),
     board: parseBoard(o.board, `${path}.board`),
     diary: parseDiary(o.diary, `${path}.diary`),
@@ -554,6 +556,17 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     gallery: parseGallery(o.gallery, `${path}.gallery`, ids),
     summary: o.summary === null ? null : parseSummary(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
     town: parseTown(o.town, `${path}.town`, today),
+  }
+  // Booked dishes are still in stock until tonight. Refuse a save that would fail out of End the day.
+  const reserved = new Map<string, number>()
+  for (const party of save.expeditions.filter((e) => e.left === today)) {
+    for (const key of party.supplies) {
+      const dish = parseStockKey(key)
+      if (!dish || !isDishId(dish.id)) continue
+      const n = (reserved.get(key) ?? 0) + 1
+      if (n > (save.items[dish.id]?.[dish.stars - 1] ?? 0)) fail(`${path}.expeditions`, 'not enough dishes reserved for tonight')
+      reserved.set(key, n)
+    }
   }
   parseRooms(save, path)
   parsePlotTasks(save, path)

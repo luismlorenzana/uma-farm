@@ -21,6 +21,7 @@
 // resident of tonight's house who's been your companion least lately. In the morning she greets you in a short scene in
 // pajamas, her greeting the story's or the default's for her temperament. Pure; never stamps.
 import { actionCost, actionsLeft, spend } from '../farm/actions'
+import { awayForNight, awayOn } from '../expeditions/presence'
 import { draw } from '../farm/draw'
 import { addBatch, BATCH_MEALS, plainBatch } from '../farm/food'
 import type { Temperament } from '../farm/talents'
@@ -122,8 +123,9 @@ export const mealsCooked = (save: Pick<SaveV4, 'today'>): readonly Meal[] => sav
 
 /** Who eats the household's meals: everyone who lives on the farm (the spouses in their rooms) and every farmhand, by
  * id. */
-export function mealEaters(save: Pick<SaveV4, 'roster' | 'love'>): string[] {
-  return Object.keys(save.roster).filter((id) => save.love[id]?.house !== undefined || isFarmhand(save, id))
+export function mealEaters(save: Pick<SaveV4, 'roster' | 'love'> & Partial<Pick<SaveV4, 'calendar' | 'expeditions'>>): string[] {
+  return Object.keys(save.roster).filter((id) => (!save.calendar || !awayOn(save, id, save.calendar.day))
+    && (save.love[id]?.house !== undefined || isFarmhand(save, id)))
     .sort((a, b) => Number(a) - Number(b))
 }
 
@@ -164,8 +166,8 @@ export function spousesByWedding(save: Pick<SaveV4, 'love' | 'roster'>): string[
 }
 
 /** Whose line plays at a meal: one spouse, drawn by `draw(uid, day, 'meal:<meal>', 0)`; null before the first wedding. */
-export function mealSpeaker(save: Pick<SaveV4, 'love' | 'roster' | 'account' | 'calendar'>, meal: Meal): string | null {
-  const spouses = spousesByWedding(save)
+export function mealSpeaker(save: Pick<SaveV4, 'love' | 'roster' | 'account' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, meal: Meal): string | null {
+  const spouses = spousesByWedding(save).filter((id) => !awayOn(save, id, save.calendar.day))
   if (spouses.length === 0) return null
   return spouses[Math.min(spouses.length - 1, Math.floor(draw(save.account.uid, save.calendar.day, `meal:${meal}`, 0) * spouses.length))]!
 }
@@ -179,8 +181,12 @@ export function mealScene(save: Pick<SaveV4, 'account' | 'calendar'>, pack: HerP
 
 // --- The night's companion ---------------------------------------------------------------------------------------
 
+type CompanionSave = Pick<SaveV4, 'love' | 'roster'> & Partial<Pick<SaveV4, 'expeditions' | 'calendar'>>
+const homeForNight = (save: CompanionSave, id: string): boolean =>
+  !save.calendar || !awayForNight(save, id, save.calendar.day)
+
 /** Who can be the night's companion: the spouses with a room, in wedding order. */
-export const companions = (save: Pick<SaveV4, 'love' | 'roster'>): string[] => spousesByWedding(save).filter((id) => save.love[id]!.house !== undefined)
+export const companions = (save: CompanionSave): string[] => spousesByWedding(save).filter((id) => save.love[id]!.house !== undefined && homeForNight(save, id))
 
 /** Among `ids`, the one who's been your companion least lately (never first), ties in wedding order; null with none. */
 function leastLately(save: Pick<SaveV4, 'love' | 'roster'>, ids: readonly string[]): string | null {
@@ -191,12 +197,12 @@ function leastLately(save: Pick<SaveV4, 'love' | 'roster'>, ids: readonly string
 /** Tonight's companion as the night will take her: your pick, else the resident of tonight's house (your Sleep at, or the
  * house slept in least lately) who's been your companion least lately; null before the first wedding or with no one in
  * that house. */
-export function companionTonight(save: Pick<SaveV4, 'love' | 'roster' | 'homestead'>): string | null {
+export function companionTonight(save: CompanionSave & Pick<SaveV4, 'homestead'>): string | null {
   const h = save.homestead
-  if (h.companion !== undefined && save.love[h.companion]?.house === h.tonight) return h.companion
+  if (h.companion !== undefined && save.love[h.companion]?.house === h.tonight && homeForNight(save, h.companion)) return h.companion
   if (marriedCount(save) === 0) return null
   const house = h.tonight ?? defaultHouse(save)
-  return leastLately(save, residentsOf(save, house).filter((id) => save.roster[id] && save.love[id]!.stage === 'spouse'))
+  return leastLately(save, residentsOf(save, house).filter((id) => save.roster[id] && save.love[id]!.stage === 'spouse' && homeForNight(save, id)))
 }
 
 /** Chooses tonight's companion: a spouse with a room. Her house is tonight's house; `alone` (a birthday-alone wisher on
@@ -205,6 +211,7 @@ export function companionTonight(save: Pick<SaveV4, 'love' | 'roster' | 'homeste
 export function chooseCompanion(save: SaveV4, id: string, alone = false, birthdays: Birthdays | null = null): SaveV4 {
   const love = save.love[id]
   if (!save.roster[id] || love?.stage !== 'spouse' || love.house === undefined) throw new SaveRuleError('locked', 'Only a spouse with a room.')
+  if (!homeForNight(save, id)) throw new SaveRuleError('busy', 'She’s in an expedition party.')
   if (alone && birthdays !== null && !isBirthday(birthdays, id, save.calendar.day)) throw new SaveRuleError('bad-job', 'Her room is hers on her birthday.')
   const h = save.homestead
   if (h.companion === id && h.tonight === love.house && h.alone === (alone ? id : null)) return save

@@ -6,7 +6,7 @@
 // fixture: 90001–90006, named Aster to Fable) and an invented pack with a town.json; master data and the server are
 // stubs.
 import 'fake-indexeddb/auto'
-import { addGoods, farmDay, newRosterUma, newSave, readScene, readStoryPack, storyOf, townDay, type SaveV4, type StoryPack } from '@farm/domain'
+import { addGoods, farmDay, GOLD_PER_POINT, GOLD_SHIPPED, newLove, runNight, newRosterUma, newSave, readScene, readStoryPack, storyOf, townDay, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -133,6 +133,43 @@ afterEach(async () => {
 })
 
 describe('the town', () => {
+  it('opens the expedition post at Rank 7 and follows a party out and back', async () => {
+    const id = '90001'
+    const base = farm(5)
+    useGame.setState({ save: { ...base, farm: { ...base.farm, points: 6249 } } })
+    await render(<TownPage />, '/town?at=expeditions&sheet=expeditions')
+    expect($('[data-expedition-build]')).toBeNull()
+    const ready = {
+      ...base, gold: 50000, items: addGoods(addGoods(base.items, 'oak-plank', 1, 60), 'carp-fillet', 1, 40),
+      farm: { ...base.farm, points: 6250, counts: { [GOLD_SHIPPED]: 6250 * GOLD_PER_POINT } }, roster: { [id]: { ...newRosterUma(1), farmhand: 2 } },
+      love: { [id]: { ...newLove(), level: 3 } },
+    }
+    await act(async () => useGame.setState({ save: ready }))
+    await click(await find('[data-action="build-expeditions"]'))
+    expect(save().farm.builds).toContain('expeditions')
+    const morning = runNight(save(), { story: fixture.pack! })
+    expect(morning.buildings.expeditions).toBe(1)
+    await act(async () => useGame.setState({ save: { ...morning, today: { ...morning.today, town: true } } }))
+    await click(await find('[data-expedition-region="echo-cave"]'))
+    await click(await find(`[data-expedition-hand="${id}"]`))
+    await click(await find('[data-action="send-expedition"]'))
+    expect(save().expeditions).toMatchObject([{ region: 'echo-cave', party: [id] }])
+    expect($('[data-expedition-away]')?.textContent).toContain('Leaves tonight')
+    const away = runNight(save(), { story: fixture.pack! })
+    await act(async () => useGame.setState({ save: { ...away, today: { ...away.today, town: true } } }))
+    await render(<TownPage />, '/town?view=people')
+    expect($(`[data-person-row="${id}"]`)?.textContent).toContain('Away · Echo Cave · back Spring 8')
+    await render(<HeartsPage />, `/hearts?uma=${id}`)
+    expect((await find('[data-find-today]')).textContent).toContain('Away · Echo Cave')
+    const back = runNight(away, { story: fixture.pack! })
+    expect(back.summary?.work).toContainEqual(expect.objectContaining({ kind: 'expedition', region: 'echo-cave', result: 'retreat' }))
+    await act(async () => useGame.setState({ save: { ...back, today: { ...back.today, town: true } } }))
+    await render(<TownPage />, '/town?at=expeditions&sheet=expeditions')
+    const log = $$('button').find((b) => b.textContent?.trim() === 'Away and log')
+    await click(log)
+    expect($('[data-expedition-log]')?.textContent).toContain('Echo Cave · Retreat')
+  })
+
   it('stands among the town\'s places, open from day 1, and opens its screen', () => {
     const town = loopMenuGroups(farm()).find((g) => g.key === 'town')!
     expect(town.places.map((p) => [p.key, p.to, p.locked])).toEqual([

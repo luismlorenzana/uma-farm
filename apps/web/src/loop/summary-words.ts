@@ -15,10 +15,11 @@
 // season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
 // name where she's met in town.
 import {
-  ACTIVITY_NAMES, CONTEST_ID, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
+  ACTIVITY_NAMES, CONTEST_ID, EXPEDITION_REGIONS, EXPEDITION_WORDS, expeditionReturnLine, type ExpeditionReturn, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
   SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
   type SummarySection,
 } from '@farm/domain'
+import { EXPEDITION_POST } from './expedition-words'
 import { builtWords, farmRankWords, milestoneWords } from './goal-words'
 import { moneyLines } from './money-words'
 import { readParam, type PairWords } from './hearts-view'
@@ -30,6 +31,7 @@ import { plural } from './words'
  * one of the story's days' names and the town's name. The game's own words before the pack loads, and without
  * `world.json`. */
 export interface WorldWords {
+  expedition?: (trip: ExpeditionReturn) => string
   festival: (id: string) => string
   seasonLine: (season: Season) => string | null
   noteTitle: (id: string) => string | null
@@ -42,9 +44,10 @@ export const NO_WORLD: WorldWords = {
   festival: (id) => festivalNameOf(FESTIVALS, id), seasonLine: () => null, noteTitle: () => null, day: () => null, town: null, place: (id) => placeNameOf(null, id),
 }
 /** The world's words from the pack. */
-export function worldWords(pack: Partial<Pick<StoryPack, 'world'>> | null): WorldWords {
+export function worldWords(pack: Partial<Pick<StoryPack, 'world' | 'bibles'>> | null): WorldWords {
   const year = festivalsOf(pack)
   return {
+    expedition: (trip) => expeditionReturnLine(pack?.bibles ? { bibles: pack.bibles } : null, trip),
     festival: (id) => festivalNameOf(year, id), seasonLine: (s) => seasonLineOf(pack, s), noteTitle: (id) => townNoteOf(pack, id)?.title ?? null,
     day: (id) => storyDayNameOf(pack, id), town: worldNamesOf(pack).town, place: (id) => placeNameOf(pack, id),
   }
@@ -279,6 +282,12 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           case 'farmhand': return {
             key: `farmhand:${line.id}`, to: BOARD, text: `${nameOf(line.id)} · ${nightWords(line)}`,
             ...(line.half ? { tag: 'Half pace', warn: true } : line.fed ? { tag: 'Well fed' } : line.tasks === 0 ? { tag: 'No tasks' } : {}),
+          }
+          case 'expedition': {
+            const total = Object.values(line.loot).reduce((sum, count) => sum + count, 0)
+            return { key: `expedition:${line.party[0]}:${line.left}`, to: EXPEDITION_POST,
+              text: `Back from ${EXPEDITION_REGIONS[line.region].name} · ${EXPEDITION_WORDS[line.result]} · ${plural(total, 'good')}`,
+              quote: world.expedition?.(line) ?? expeditionReturnLine(null, line) }
           }
           case 'load': {
             const [id, stars] = line.item.split('@')

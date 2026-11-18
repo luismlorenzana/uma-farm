@@ -19,6 +19,7 @@
 // Counts are expected values: a fraction becomes a whole item by a seeded draw, `draw(uid, day, 'perk:<id>…', n)`, so a
 // night replays the same. Loaded with the night and the romance's screens.
 import { addBond, BOND_POINTS, placesToday } from '../farm/bonds'
+import { awayOn } from '../expeditions/presence'
 import { draw } from '../farm/draw'
 import { opened } from '../farm/places'
 import { rankQuality } from '../farm/rank-rules'
@@ -372,7 +373,7 @@ export const BREAKFAST_DAYS = 1
  * pair it feeds earns +5 bond (`addBond`, Romance 4's ×1.5 inside). Pure; never stamps.
  */
 export function breakfast(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save: SaveV4; fed: string[] } {
-  const fed = Object.keys(save.roster).filter((id) => homeOrHoused(save, id) && save.roster[id]!.wellFed <= 0).sort((a, b) => Number(a) - Number(b))
+  const fed = Object.keys(save.roster).filter((id) => homeOrHoused(save, id) && !awayOn(save, id, save.calendar.day) && save.roster[id]!.wellFed <= 0).sort((a, b) => Number(a) - Number(b))
   if (fed.length === 0) return { save, fed }
   let next: SaveV4 = { ...save, roster: { ...save.roster, ...Object.fromEntries(fed.map((id) => [id, { ...save.roster[id]!, wellFed: BREAKFAST_DAYS }])) } }
   for (let i = 0; i < fed.length; i++) for (let j = i + 1; j < fed.length; j++) next = addBond(next, pack, fed[i]!, fed[j]!, BOND_POINTS.breakfast).save

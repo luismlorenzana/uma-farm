@@ -18,6 +18,7 @@ import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { talentsFor } from '../loop/talents'
 import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
@@ -27,6 +28,7 @@ import { storyReady, useStory } from '../story/story'
 import { IntoTown } from '../loop/GoodsSheets'
 import { HerMenu } from './HerMenu'
 
+const ExpeditionSheet = lazy(() => import('./ExpeditionSheet'))
 const MayorSheet = lazy(() => import('./MayorSheet'))
 const RancherSheet = lazy(() => import('./RancherSheet'))
 import { findPeople, locationViews, mapGroups, peopleRows, PEOPLE_SORTS, postMenu, sortPeople, type LocationView, type PeopleSort } from './town-view'
@@ -97,7 +99,7 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   const leave = useLeave()
   const nameOf = useMemo(() => namer(master, pack), [master, pack])
   const day = useMemo(() => townDay(save, pack), [save, pack])
-  const views = useMemo(() => locationViews(day, pack), [day, pack])
+  const views = useMemo(() => locationViews(day, pack, save), [day, pack, save])
   const asked = params.get('at')
   const here = views.find((v) => v.loc.id === asked) ?? views.find((v) => v.loc.id === START)!
   const uma = params.get('uma') ?? params.get('talk')
@@ -120,6 +122,11 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
       {uma && (
         <HerMenu key={uma} id={uma} save={save} pack={pack} master={master} day={day} nameOf={nameOf}
           onClose={() => leave(paramsTo(location, { uma: null, talk: null }))} />
+      )}
+      {params.get('sheet') === 'expeditions' && (
+        <Suspense fallback={null}>
+          <ExpeditionSheet save={save} nameOf={nameOf} talentOf={talentsFor(master)} onClose={() => leave(paramsTo(location, { sheet: null }))} />
+        </Suspense>
       )}
       {params.get('sheet') === 'mayor' && (
         <Suspense fallback={null}>
@@ -215,6 +222,9 @@ function Place({ view, save, nameOf, onOpen }: { view: LocationView; save: SaveV
     <section aria-label={loc.name} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-place-panel={loc.id}>
       <h2 className="font-display text-[18px] leading-tight font-bold" data-place-name>{loc.name}</h2>
       {loc.line && <p className="text-[13px] text-ink-soft">{loc.line}</p>}
+      {loc.id === 'expeditions' && (
+        <Link to={withParam(location, 'sheet', 'expeditions')} state={{ back: true }} className="mt-2 grid min-h-11 place-items-center rounded-md bg-accent font-semibold text-accent-ink">Open post ›</Link>
+      )}
       <h3 className="text-micro pt-2 pb-1">Here now · {here.length}</h3>
       {here.length === 0 ? <p className="text-[13px] text-ink-soft" data-nobody>No one’s here now.</p> : (
         <ul className="grid grid-cols-4 gap-1" data-here={here.length}>

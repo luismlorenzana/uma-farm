@@ -23,6 +23,7 @@ import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
 import { CAST_IDS, isCastId } from './cast'
 import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type StoryOutfit } from './look'
+import { EXPEDITION_OUTCOMES, type ExpeditionOutcome } from '../save/v4'
 import { ILLUSTRATION_ID } from '../save/gallery'
 import { NO_ILLUSTRATION } from './illustrations'
 
@@ -295,6 +296,8 @@ export interface UmaBible {
   /** Her greetings: a chat and a talk in town open with one, from the most specific set that holds lines
    * (`romance/talk.ts`). */
   greetings?: Greetings
+  /** Lines said when her party returns, by result. */
+  expeditionReturns?: Partial<Record<ExpeditionOutcome, string[]>>
   /** Her small talk: short exchanges a chat may draw, each fitting the moment its tags name. */
   smallTalk?: SmallTalk[]
   /** Her lines at a gift, by its taste, and on her birthday. Without them, the default story's. */
@@ -1375,6 +1378,14 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
     wishes: field(raw, 'wishes', (v) => idList(v, 'wishes', f, (w) => oneOf(WISHES, w), WISHES.join(' and ')) as Wish[] | undefined, 'wishes', f, `is a list of ${WISHES.join(' and ')}`),
     greetings: field(raw, 'greetings', (v) => readGreetings(v, f, ctx), 'greetings', f, 'is { birthday, places, seasons, times, weather }'),
     smallTalk: field(raw, 'smallTalk', (v) => readSmallTalk(v, id, f, ctx), 'smallTalk', f, 'is a list of { lines, at, season, stage }'),
+    expeditionReturns: field(raw, 'expeditionReturns', (v) => isObject(v) ? Object.fromEntries(
+      EXPEDITION_OUTCOMES.flatMap((result) => {
+        if (v[result] === undefined) return []
+        const key = `expeditionReturns.${result}`
+        const lines = field(v, result, (value) => readLines(value, key, f), key, f, 'is a list of lines')
+        return lines?.length ? [[result, lines]] : []
+      }),
+    ) : undefined, 'expeditionReturns', f, 'is { great, success, retreat }'),
     giftLines: field(raw, 'giftLines', (v) => readGiftLines(v, f), 'giftLines', f, `is { ${GIFT_LINE_SETS.join(', ')} }`),
   })
   return { value, ...f }

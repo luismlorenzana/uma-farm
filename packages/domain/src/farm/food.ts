@@ -26,6 +26,8 @@
 //   staff meal   served at the Kitchen, its mouths eat it tonight in place of their two meals (`today.staff`)
 //
 // Pure; never stamps. Loaded with the night, the Book and the homestead.
+import { awayOn, leavingOn } from '../expeditions/presence'
+import type { Expedition } from '../save/v4'
 import { spend } from './actions'
 import { goodOf, type GoodsFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
@@ -73,23 +75,35 @@ export function addMeals(pantry: readonly PantryLot[], day: number, stars: numbe
   return lots.sort((a, b) => a.day - b.day || b.stars - a.stars)
 }
 
+type TableSave = Pick<FarmSave, 'love' | 'roster'> & Partial<Pick<FarmSave, 'calendar' | 'expeditions'>>
+type ScheduledTable = TableSave & Pick<FarmSave, 'calendar'>
+
 /** The Umas who eat tonight, in the order they eat: the farmhands on the farm today in their order (`working`), then
  * everyone else who lives there (the spouses in their rooms). The farmer eats last. */
-export function umasAtTable(save: Pick<FarmSave, 'love' | 'roster'>, working: readonly string[]): string[] {
-  return [...new Set([...working, ...farmHome(save)])].filter((id) => save.roster[id])
+export function umasAtTable(save: TableSave, working: readonly string[]): string[] {
+  const today = save.calendar?.day
+  const leaving = new Set(today === undefined ? [] : leavingOn(save, today).flatMap((trip) => trip.party))
+  return [...new Set([...working, ...farmHome(save)])].filter((id) =>
+    save.roster[id] && !leaving.has(id) && (today === undefined || !awayOn(save, id, today)))
 }
 /** The mouths tonight: the Umas at the table and the farmer. */
-export const mouthsTonight = (save: Pick<FarmSave, 'love' | 'roster'>, working: readonly string[]): number => umasAtTable(save, working).length + 1
+export const mouthsTonight = (save: TableSave, working: readonly string[]): number => umasAtTable(save, working).length + 1
 
 /** The farmhands on the farm today, who eat there tonight: each on her farm day (`worksOn`; every one with no pack to read
  * their schedules). A cook reads her table by them. */
-export const handsAtTable = (save: Pick<FarmSave, 'roster' | 'love' | 'calendar'>, pack: SchedulePack | null): string[] =>
+export const handsAtTable = (save: ScheduledTable, pack: SchedulePack | null): string[] =>
   Object.keys(save.roster).filter((id) => worksOn(save, pack, id))
+
+export const expeditionMeals = (trip: Pick<Expedition, 'left' | 'back' | 'party'>): number =>
+  MEALS_A_DAY * trip.party.length * (trip.back - trip.left)
+
+const mealsToPack = (save: ScheduledTable): number =>
+  leavingOn(save, save.calendar.day).reduce((sum, trip) => sum + expeditionMeals(trip), 0)
 
 /** The meals tonight's table needs (a cook stops once the pantry holds them): two a mouth, but for the mouths a staff
  * meal feeds tonight. */
-export const mealsNeeded = (save: Pick<FarmSave, 'love' | 'roster' | 'calendar'> & Partial<Pick<FarmSave, 'today'>>, pack: SchedulePack | null): number =>
-  MEALS_A_DAY * Math.max(0, mouthsTonight(save, handsAtTable(save, pack)) - (save.today?.staff?.mouths ?? 0))
+export const mealsNeeded = (save: ScheduledTable & Partial<Pick<FarmSave, 'today'>>, pack: SchedulePack | null): number =>
+  MEALS_A_DAY * Math.max(0, mouthsTonight(save, handsAtTable(save, pack)) - (save.today?.staff?.mouths ?? 0)) + mealsToPack(save)
 
 /** What the farm ate tonight. */
 export interface Eaten<S extends FarmSave> {
@@ -146,6 +160,11 @@ export function eatTonight<S extends FarmSave>(save: S, working: readonly string
       }
     }
     if (good && mouth !== null) fed.push(mouth)
+  }
+  // Pack the party's meals after the home table, before any unused food spoils.
+  for (let i = 0, n = mealsToPack(save); i < n; i++) {
+    if (take() === null) takeout++
+    else pantry++
   }
   // A lot cooked on day D is eaten on nights D to D + MEAL_KEEPS − 1; after tonight, the lots past that spoil.
   const keeps = (l: PantryLot) => l.day > today - MEAL_KEEPS + 1

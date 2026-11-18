@@ -26,6 +26,7 @@ import { dateOf, festivalOn, SEASONS, type Festival, type FestivalId } from '../
 import { farmRankOf } from '../farm/farm'
 import { handDay } from '../farm/farmhands'
 import { FESTIVAL_PLACE_POINTS } from '../farm/milestones'
+import { bookedForExpedition } from '../expeditions/presence'
 import { countChallenge } from '../farm/rank-rules'
 import { dishName } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
@@ -136,6 +137,7 @@ export interface ContestEntry {
 export function cookLock(save: FarmSave, id: string): string | null {
   const day = handDay(save, id)
   if (!day) return 'Only a farmhand cooks for you.'
+  if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
 }
 

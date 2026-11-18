@@ -255,7 +255,7 @@ test('skips what the game can\'t read, file by file, and releases the rest', asy
   const out = await temp(t)
   const { index, errors } = await buildRelease({ from, out, builtAt: BUILT_AT })
   assert.deepEqual(errors.map((e) => e.split(' (')[0]), [
-    'pairs/9000002-9000003.json: not JSON',
+    `${join('pairs', '9000002-9000003.json')}: not JSON`,
     'cast.json: Uma 3',
     'ties.json: Not a ties file',
   ])
@@ -283,7 +283,7 @@ test('reads only the pack: the sandbox notes, reviews and the cast pack beside i
   assert.deepEqual((await readdir(out)).sort(), ['story', 'story.json'])
 })
 
-test('publish: the release first, then the hash-named files, then story.json, with the scoped gcloud only', async (t) => {
+test('publish: the release first, then the hash-named files, then story.json, with the scoped gcloud only', { skip: process.platform === 'win32' }, async (t) => {
   const from = await pack(t)
   const work = await temp(t)
   const bin = join(work, 'bin')

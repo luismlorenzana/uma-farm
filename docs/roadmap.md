@@ -58,9 +58,10 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **The story** | **Being written** | By the story session, read in the Farm Story Sandbox and shipped with one command at the end of each session. Tier 1's ten are complete and live (release 8, 2026-11-15), and the game plays everything it writes, read by id: every occasion (each festival's day and night, her birthday, her anniversary, the story's days), greetings, small talk and gift lines ([occasion scenes](game-mechanics.md#occasion-scenes), [talk that knows the day](game-mechanics.md#talk-that-knows-the-day)). The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack](story-pack.md) says how it reaches the game and lists what the game reads |
 | **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's. The Umas' faces and busts on cards and lists are master data's, and so are twelve Umas' dialogue portraits and nine illustrations each, from Uma Character Art's Farm Life. Every other Uma plays scenes on the blank bust. [The art brief](design/her-look.md#the-art-brief) says what's drawn next |
 | **The HD-2D farm** | **Retired** | The tile farm is Home. The portrait preview, its stage and its kit are gone; an HD-2D look may come back when uma-platform's look path is ready |
-| **The workshops still to build** | **Not built** | Expeditions, and the Restaurant's and the Forge's games; the other festivals' contests: Phase 2 |
-| **Sound** | **None** | No music and no sound effects |
-| **Safety nets** | **Partial** | The save syncs with rescues and backups; there's no error reporting and no end-to-end test |
+| **Expeditions** | **Built** (F97) | The town post opens at Farm Rank 7. Farmhands take supplies to one of seven regions and return with loot, rank points and bonds. The post keeps a return log ([expeditions](game-mechanics.md#expeditions)). |
+| **The workshops still to build** | **Not built** | The Restaurant's and the Forge's games and the other festivals' contests. |
+| **Sound** | **Deferred** | Music and sound effects are outside the active roadmap. |
+| **Safety nets** | **Partial** | The save syncs with rescues and backups. Error reporting and restore checks are open. The browser playthrough in CI is deferred. |
 | **Parcels to the other games** | **Parked** | The farm sending items to uma-quest, uma-rpg and uma-racer comes after the farm's own game |
 
 ## The finish line
@@ -76,14 +77,12 @@ The farm is a full game when all eight of these hold:
 4. **Each Uma's story to its end, and the farm built out.** Her chapters play from meeting her to married life, its meals
    and the night's companion. Every place can be built, and the homestead fills with houses. The game keeps going:
    years, festivals, the household, records.
-5. **Every place works.** The ranch and the Mine and the Quarry are in; the Kitchen with its cooking game, expeditions,
-   and the Restaurant's and the Forge's games are still to come.
-6. **Real art and sound everywhere.** Every Uma's portraits and illustrations instead of the blank bust, no stand-in
-   frames, farm-work animations, music and sound effects.
-7. **It feels finished.** A quick start, places that explain themselves the first time, settings (sound, motion, text
-   size), every control labelled and easy to tap, and pacing proven by simulation and by your play.
-8. **It's safe and steady.** A save that never loses progress, the farm kept and grown in place, error reports that reach
-   us, and a full playthrough tested on every push.
+5. **Every place works.** The ranch, the Mine and Quarry, the Kitchen, the sea, and expeditions are in. The Restaurant's
+   and Forge's games are still to come.
+6. **Real art everywhere.** Every Uma's portraits and illustrations, finished frames, and farm-work animations.
+7. **It feels finished.** A quick start, places that explain themselves the first time, and pacing proven by simulation
+   and by your play.
+8. **It's safe and steady.** The farm's save grows in place, with a tested restore and error reports that reach us.
 
 ## The phases
 
@@ -92,15 +91,15 @@ Phase 0  Clean slate                       ── done
 Phase 1  One game, built around the Umas   ── done: one build on v5, the farm by building, the lean start, the town,
                                               her chapters, and the rework (landscape, a day of actions, the Uma loop,
                                               farmhands, upkeep, the calendar, the ranch and the mine)
-Phase 2  The whole farm                    ── each workshop's game, the sea, festivals and the long game
-Phase 3  Feel and polish                   ── sound, animation, settings, balance, speed
-Phase 4  Steady                            ── error reports, save safety, a tested playthrough, releases
+Phase 2  The whole farm                    ── the Restaurant, the Forge, festivals and the long game
+Phase 3  Feel and polish                   ── animation, first times, balance, speed, painted maps
+Phase 4  Steady                            ── error reports, save safety, releases
 Later    Release packs                     ── sets of Umas after the launch cast (the Ranker's Tier 1–5)
 Later    Parcels to the other games        ── parked until the farm's own game is done
 ```
 
 Phase 2 is under way, one workshop at a time: the Kitchen is in, with the Cooking Contest (your go, 2026-11-15; F92
-and F93); the launch cast is in (F96), and so are farm days and home after the wedding (F95); the sea and expeditions (2.4) come next. Phase 3 can start now that the first workshop plays.
+and F93); the launch cast is in (F96), and so are farm days and home after the wedding (F95); the sea and expeditions are in (F97). The Restaurant and the Forge are next. Phase 3 can start now that the first workshop plays.
 Phase 4's error reports and save safety are small and can come any time.
 
 ### Phase 0: Clean slate (done)
@@ -146,11 +145,10 @@ Contest on Autumn 10, the first festival you play (F93) ([the Kitchen](game-mech
 in (F96: the Ranker's Tier 1–5, 50 Umas, [the launch cast](game-mechanics.md#the-launch-cast)), and so are farm days and
 home after the wedding (F95: a farmhand works the farm on the days her town life leaves free and eats her meals there;
 only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mechanics.md#farmhands),
-[the retired Dorm](game-mechanics.md#the-retired-dorm)). The sea and expeditions are next.
+[the retired Dorm](game-mechanics.md#the-retired-dorm)). The Dock and Boat open the sea, and the Expedition post sends farmhands out from Farm Rank 7 ([expeditions](game-mechanics.md#expeditions)).
 
 | Step | What |
 |---|---|
-| 2.4 **The sea and expeditions** | The dock and the boat's spots; regions, parties and their power, results and loot, the log |
 | 2.5 **The Restaurant's and the Forge's games** | The serving game and the merge game |
 | 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |
 
@@ -166,10 +164,8 @@ How each workshop is built:
 
 | Step | What |
 |---|---|
-| 3.1 **Sound** | Music by season and time of day, and effects for taps, harvests, the bin and heart events. Mute and volume in settings. A small set, cached on first use |
 | 3.2 **Animation** | The farm-work animations from the sprite pipeline, and the items' flights |
 | 3.3 **First times** | Each new place explains itself the first time you open it |
-| 3.4 **Settings and access** | Sound, motion and text size. Every control labelled for VoiceOver, every tap target 44 points |
 | 3.5 **Balance** | Simulations of a long run (Farm Rank 10 and a year after) that check the pacing; then your play notes |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
 | 3.7 **Painted maps** | A painted town map and farm map in landscape, with clickable places as data over the painting, seasons and time of day as tints ([the plan](design/game-design.md#the-maps-2026-11-15)); who paints is the owner's call |
@@ -180,8 +176,15 @@ How each workshop is built:
 |---|---|
 | 4.1 **Error reports** | The app's and the API's errors go to Cloud Logging, with an alert by email (free tier) |
 | 4.2 **Save safety** | A save-health check when the app opens, scheduled save exports, and a tested restore |
-| 4.3 **A tested playthrough** | A headless browser plays the first days on every push, and CI fails if it breaks |
 | 4.4 **Releases** | A version and a short "What's new" in the app, so you see what changed as you play |
+
+### Deferred
+
+These items are outside the active roadmap and the finish criteria.
+
+- **Sound:** Music, sound effects, mute and volume.
+- **Accessibility:** The planned VoiceOver, motion, and text size pass.
+- **Browser playthrough in CI:** A headless browser playing the first days on every push.
 
 ### Later: release packs
 

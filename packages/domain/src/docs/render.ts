@@ -22,6 +22,7 @@ import {
 import { CONTEST_SCENE_LINES } from '../story/contest'
 import { RECIPE_KINDS, RECIPE_SIDE, RECIPES, RECIPES_GOLD, recipeWords, SIDE_WORDS, START_RECIPES } from '../kitchen/recipes'
 import { BATCH_GOODS, BATCH_MEALS, COOK_BATCH, FOOD_FAMILIES, MEALS_A_DAY, TAKEOUT_PRICE, WELL_FED_STARS } from '../farm/food'
+import { EXPEDITION_BONUS, EXPEDITION_GOODS_PER_DAY, EXPEDITION_LOOT, EXPEDITION_POINTS_PER_DAY, EXPEDITION_REGIONS, EXPEDITION_THRESHOLDS, EXPEDITION_WORDS, SUPPLY_POWER } from '../expeditions/expeditions'
 import { MEAL_KEEPS } from '../save/v4'
 import {
   APTITUDE_ACTIVITY, APTITUDE_NAMES, APTITUDE_POINTS, aptitudeLevelOf, aptitudeQuality, aptitudeYield, BIG_LOAD, FED_ACTIONS, HAND_ACTIONS, OPEN_TASKS, SETTLED_ACTIONS,
@@ -987,7 +988,7 @@ function farmerName(): string {
 function bondPoints(): string {
   return table(['Shared', 'Points', 'Paid by'], [
     ['Working the same place the same day (the Fields’ tenders together)', `+${BOND_POINTS.place} a pair; ×${SHARED_LINE} when both favour that place’s line`, '`bondsTonight`, night step 6'],
-    ['An expedition party, a day away', `+${BOND_POINTS.party} a pair`, '`addBond`, from expeditions (not built yet)'],
+    ['An expedition party, a day away', `+${BOND_POINTS.party} a pair`, '`addBond`, paid on the party’s return'],
     ['A festival team', `+${BOND_POINTS.team} a pair`, '`addBond`, from the festivals (not built yet)'],
     ['The same staff meal, or the same breakfast', `+${BOND_POINTS.meal} a pair`, '`addBond`: breakfast at a house’s morning; the staff meal once the Kitchen is built'],
     ['The same house, a night', `+${BOND_POINTS.house} a pair`, '`shareTheHouses`, night step 6'],
@@ -1371,6 +1372,20 @@ function contestScene(): string {
   ])}`
 }
 
+function expeditionRegions(): string {
+  return table(['Region', 'Level', 'Days', 'Farm Rank', 'Power needed', 'Loot tiers', 'Most common'], Object.values(EXPEDITION_REGIONS).map((r) => [
+    r.name, r.level, r.days, r.rank, r.need, r.tiers.join('–'), r.family === 'bones-horns' ? 'Bones and horns' : r.family === 'hides-scales' ? 'Hides and scales' : 'Essences',
+  ]))
+}
+
+function expeditionResults(): string {
+  return table(['Result', 'Power after the draw ÷ need', 'Goods', 'Expedition rank points per member'], [
+    [EXPEDITION_WORDS.great, `≥ ${EXPEDITION_THRESHOLDS.great}`, `×${EXPEDITION_LOOT.great}`, `${EXPEDITION_POINTS_PER_DAY} a day + ${EXPEDITION_BONUS.great}`],
+    [EXPEDITION_WORDS.success, `≥ ${EXPEDITION_THRESHOLDS.success}, below ${EXPEDITION_THRESHOLDS.great}`, `×${EXPEDITION_LOOT.success}`, `${EXPEDITION_POINTS_PER_DAY} a day + ${EXPEDITION_BONUS.success}`],
+    [EXPEDITION_WORDS.retreat, `< ${EXPEDITION_THRESHOLDS.success}`, `×${EXPEDITION_LOOT.retreat}`, `${EXPEDITION_POINTS_PER_DAY} a day`],
+  ]) + `\n\nA dish adds ${SUPPLY_POWER} power per star. Base loot is ${EXPEDITION_GOODS_PER_DAY} goods per member per day away, rounded to a whole good after the result’s multiplier.`
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
     'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
@@ -1396,6 +1411,7 @@ export function renderBlock(key: string): string | null {
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock,
     'stove-rules': stoveRules, 'play-tiers': playTiers, 'kitchen-levels': kitchenLevels, 'recipe-kinds': recipeKinds, recipes: recipesBlock, 'staff-meal': staffMealBlock,
+    'expedition-regions': expeditionRegions, 'expedition-results': expeditionResults,
     'contest-rules': contestRules, 'contest-rivals': contestRivals, 'contest-prizes': contestPrizes, 'contest-scene': contestScene }
   return blocks_[key]?.() ?? null
 }

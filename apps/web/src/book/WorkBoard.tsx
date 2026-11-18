@@ -8,7 +8,7 @@
 // choose) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
-  aptitudeOf, APTITUDE_NAMES, atHome, CROPS, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
+  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, CROPS, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
   plotLock, plotLockWords, plotName,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   type CropId, type DigId, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
@@ -17,6 +17,7 @@ import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
+import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
 import { setHandTasks } from '../loop/actions'
 import { useTalents } from '../loop/talents'
@@ -81,6 +82,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
   const tasks = uma.tasks ?? []
   // On a town day she's in town: she doesn't work tonight, and she's back on her next farm day.
   const working = worksOn(save, pack, id)
+  const away = awayOn(save, id, save.calendar.day)
   const back = !working && pack ? nextFarmDay(pack, id, save.calendar.day) : null
   const tonight = working ? handTonight(save, id, talentOf, pack) : null
   const chips = working ? dayChips(day) : []
@@ -111,6 +113,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
       )}
       {working
         ? <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
+        : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away)}</p>
         : <p className="text-[13px] font-semibold" data-in-town>In town today{back ? ` · back ${shortDate(back)}` : ''}</p>}
       {tasks.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-no-tasks>No tasks yet: add one, and she starts tonight.</p>

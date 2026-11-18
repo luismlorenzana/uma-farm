@@ -90,11 +90,13 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['gate', '/?peek=gate'],
   ['dock', '/?peek=dock'],
   ['town', '/town'],
+  ['expeditions', '/town?at=expeditions&sheet=expeditions'],
 ])
 
 /** Where a tap on a place goes: its screen once it's open and landed, else its quick look. The Forge's ring bench
  * opens in its quick look. */
 export function placeLink(save: Pick<FarmSave, 'farm' | 'buildings' | 'roster'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, string> = PLACE_SCREENS): string {
+  if (place.id === 'expeditions' && (farmRankOf(save.farm.points) >= 7 || placeBuilt(save, 'expeditions'))) return '/town?at=expeditions&sheet=expeditions'
   return lockOf(save, place, screens) === null ? screens.get(place.id) ?? `/?peek=${place.id}` : `/?peek=${place.id}`
 }
 

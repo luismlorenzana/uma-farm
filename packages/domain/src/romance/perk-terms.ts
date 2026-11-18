@@ -14,6 +14,7 @@
 //
 // A perk at her line's place works only once that place is built ("Opens when the Kitchen is built"). The shared rules call these
 // only with the pack. Loaded with the night and the romance's screens.
+import { awayOn } from '../expeditions/presence'
 import type { FarmPlaceId } from '../farm/places'
 import { marriedCount, type Love, type SaveV4 } from '../save/v4'
 import { type StoryPack } from '../story/pack'
@@ -47,8 +48,8 @@ export const homeOrHoused = (save: Pick<SaveV4, 'love'>, id: string): boolean =>
 /** Whether she's on the farm for her perks on the save's day (her night chores, her morning item, a cook's dishes): she
  * lives there (`homeOrHoused`), or she's a farmhand on her farm day, who works the farm that night (`worksOn`). Anyone
  * else, in town that day, does nothing. */
-export const onFarmForPerks = (save: Pick<SaveV4, 'love' | 'roster' | 'calendar'>, pack: PerkPack, id: string): boolean =>
-  homeOrHoused(save, id) || worksOn(save, pack, id)
+export const onFarmForPerks = (save: Pick<SaveV4, 'love' | 'roster' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: PerkPack, id: string): boolean =>
+  !awayOn(save, id, save.calendar.day) && (homeOrHoused(save, id) || worksOn(save, pack, id))
 
 /** Whether her line's place is open on this farm: open from the start, or built (the ranch's, the Coop or the Barn). */
 export function linePlaceOpen(save: Pick<SaveV4, 'buildings'>, pack: PerkPack, id: string): boolean {

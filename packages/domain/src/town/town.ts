@@ -17,6 +17,7 @@
 // The same day always shows the same town, and the same season the same days.
 import { dateOf, DAYS_PER_SEASON, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
+import { awayOn } from '../expeditions/presence'
 import { atHome, type SaveV4, type TownTalks } from '../save/v4'
 import { GAME_LOCATIONS, SHOP_IDS, SPOT_IDS, type LifeWhen, type LocationKind, type ShopId, type SpotId } from '../story/authored'
 import type { CastId } from '../story/cast'
@@ -250,14 +251,14 @@ export function nextFarmDay(pack: SchedulePack, id: string, day: number): number
  * her farm days (`farmDayOn`). Either way she's in front of you there, and not in town. A farmhand's town days, and
  * everyone else you've met (a spouse waiting for a room among them, unless she's a farmhand on a farm day), are in town
  * by her schedule. A day ahead reads the save as it stands. */
-export const onFarmToday = (save: Pick<SaveV4, 'roster' | 'love' | 'calendar'>, pack: SchedulePack, id: string, day = save.calendar.day): boolean =>
-  !!save.roster[id] && (atHome(save, id) || (save.roster[id]!.farmhand !== undefined && farmDayOn(pack, id, day)))
+export const onFarmToday = (save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack, id: string, day = save.calendar.day): boolean =>
+  !awayOn(save, id, day) && !!save.roster[id] && (atHome(save, id) || (save.roster[id]!.farmhand !== undefined && farmDayOn(pack, id, day)))
 
 /** Whether she works the farm on a day (today, unless another is given): a farmhand on the farm (`onFarmToday`: her farm
  * day, or every day once she's a spouse in her room). With no pack to read her schedule, every farmhand works every day.
  * On a town day she's in town: she doesn't work, eat on the farm or cost anything. */
-export function worksOn(save: Pick<SaveV4, 'roster' | 'love' | 'calendar'>, pack: SchedulePack | null, id: string, day = save.calendar.day): boolean {
-  if (save.roster[id]?.farmhand === undefined) return false
+export function worksOn(save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack | null, id: string, day = save.calendar.day): boolean {
+  if (save.roster[id]?.farmhand === undefined || awayOn(save, id, day)) return false
   return pack === null || onFarmToday(save, pack, id, day)
 }
 
@@ -275,13 +276,13 @@ export interface TownDay {
 /** The town on a day (the save's, unless another is given): everyone who lives in town where her schedule puts her (the
  * story's, else the default), the rest at home off the map. An Uma on the farm that day (a spouse in her room, or a
  * farmhand on her farm day) isn't in town. A spot holds everyone the schedules put there. A day ahead reads the save as it stands. */
-export function townDay(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'>, pack: TownPack, day = save.calendar.day): TownDay {
+export function townDay(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: TownPack, day = save.calendar.day): TownDay {
   const locations = townLocations(pack)
   const at = new Map<string, string[]>(locations.map((l) => [l.id, []]))
   const where = new Map<string, string>()
   const by = new Map<string, HereBy>()
   for (const id of townsfolk(pack)) {
-    if (onFarmToday(save, pack, id, day)) continue
+    if (awayOn(save, id, day) || onFarmToday(save, pack, id, day)) continue
     const placed = whereOn(pack, id, day)
     if (placed.at === null || placed.by === null) continue
     at.get(placed.at)?.push(id)
@@ -305,7 +306,8 @@ export const livesInTown = (pack: SchedulePack, id: string): boolean => castOrde
 /** Where you meet her now (the talk-and-gift rule, and the evening's): on the farm when she lives there (a spouse in her
  * room) or it's her farm day (a farmhand), else where her schedule puts her in town today; she's in front of you there
  * once you've gone into town. */
-export function whereYouMeet(save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'>, pack: SchedulePack, id: string): MeetWhere {
+export function whereYouMeet(save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack, id: string): MeetWhere {
+  if (awayOn(save, id, save.calendar.day)) return { here: false, farm: false, at: null }
   if (onFarmToday(save, pack, id)) return { here: true, farm: true, at: null }
   const at = livesInTown(pack, id) ? whereOn(pack, id, save.calendar.day).at : null
   return { here: at !== null && save.today.town, farm: false, at }

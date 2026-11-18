@@ -17,7 +17,8 @@ import type { Temperament } from '../farm/talents'
 import { goodOf, isSeedId } from '../goods/ids'
 import { SaveRuleError } from '../save/rules'
 import { isDishId, type Love, type SaveV4 } from '../save/v4'
-import { takeGoods } from '../save/warehouse'
+import { availableDishes } from '../expeditions/stock'
+import { stockKey, takeGoods } from '../save/warehouse'
 import { type StoryPack } from '../story/pack'
 import { chatLinesOf, defaultTalksOf, giftReactionsOf, giftsOf, linePlaces, talkStageOf, tasteOf } from '../story/placeholders'
 import { NO_BIRTHDAYS, isBirthday, type Birthdays } from './days'
@@ -126,6 +127,7 @@ export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string
   const love = loveOf(save, id)
   if (save.today.gifts.includes(id)) throw new SaveRuleError('busy', 'One gift a day.')
   if (isSeedId(item) || (!goodOf(item) && !isDishId(item))) throw new SaveRuleError('bad-job', 'That isn’t a gift.')
+  if (isDishId(item) && availableDishes(save, stockKey(item, stars)) < 1) throw new SaveRuleError('no-items', 'That dish isn’t available.')
   const items = takeGoods(save.items, item, stars, 1)
   const taste = tasteOf(pack, id, item)
   const learnt: Love = love.known.includes(item) ? love : { ...love, known: [...love.known, item] }

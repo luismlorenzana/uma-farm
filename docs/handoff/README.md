@@ -101,15 +101,13 @@ and the Book's work board show her farm days ("In town today · back Spring 5").
 Invite to the farm, beds, swaps and upkeep are gone, and your farm's Uma in the Dorm lives in town, everything else
 kept ([farmhands](../game-mechanics.md#farmhands), [the retired Dorm](../game-mechanics.md#the-retired-dorm)).
 
-**Now: expeditions** (Phase 2.4; F97): the expedition post in town from Farm Rank 7, parties of up to four farmhands
-away two to five days in seven regions, and loot, ranks, bonds and a log when they're back. The sea's half of 2.4 is
-already in: the Dock's Sea Pier and the Boat's Deep Sea ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
+**Expeditions are in** (F97). Build the Expedition post in town from Farm Rank 7, then send up to four farmhands to one
+of seven regions for two to five days. They bring loot, rank points and bonds home. The morning and the post's log show
+the result ([expeditions](../game-mechanics.md#expeditions)).
 
 ## Open packets
 
-| Packet | What | Who |
-|---|---|---|
-| [F97](tasks/F97-expeditions.md) | **Expeditions:** the post in town, seven regions, a party's power against each region's need, Great, Success or Retreat, the loot, and the post's log | Claude |
+No open packets. Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm) is the Restaurant and Forge.
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
@@ -135,6 +133,7 @@ Not packets: each has a standing guide that changes as the game does.
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play the whole story on your phone:** on a festival day open the calendar and play an Uma's **Play · 1** twice, her day's scene then its night's; on Spring 6 play her Blossom viewing; Chat with her on her profile and read her greeting and, some days, a small talk with your line under your name; give her a gift and read her own line. Tell me if the greeting and the small talk read right where you are | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Meet Tier 1's story on your phone:** open the game and see Account's **Story: Release 8, Nov 15, 2026**; the next morning opens with **New story arrived**. Then play, and meet them as they come | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Try an expedition on your phone.** From Farm Rank 7, build the post in town and send a party. Check the away date in People and the work board, then open the return log when they're back. | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
 
