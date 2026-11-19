@@ -150,7 +150,8 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.6 **The long game** | Playable contests for the remaining festivals, reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. The dates and rewards still need design. |
+| 2.6 **Festival contests** | The [F100 packet](handoff/tasks/F100-festival-contests.md) authors the Flower Show, Fishing Derby, Animal Show and Harvest Cup around the farm's current state and the Umas' work. |
+| 2.6 **The long game** | Reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. |
 
 How each workshop is built:
 
