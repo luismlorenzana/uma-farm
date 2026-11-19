@@ -140,6 +140,17 @@ function manualCrate(save: FarmSave): FarmSave {
   return lines.length ? shipCrate(save, lines) : save
 }
 
+/** Ship a specific order from the shelf so the repeating plan has something to replenish. */
+function shipSeasonalOrder(save: FarmSave): FarmSave {
+  const lines: CrateLine[] = []
+  for (const id of ['cultured-yogurt-grade-3', 'carp-fillet-grade-2']) {
+    const row = save.items[id] ?? []
+    const index = row.findIndex(count => count > 0)
+    if (index >= 0) lines.push({ id, stars: index + 1, count: Math.min(row[index]!, 2) })
+  }
+  return lines.length && actionsLeft(save) ? shipCrate(save, lines) : save
+}
+
 function soloDay(save: FarmSave, tiles: readonly number[]): FarmSave {
   for (const home of RANCH_HOMES) if (readyIn(save, home) > 0) save = collect(save, home).save
   for (const animal of save.ranch.animals) {
@@ -189,7 +200,10 @@ export async function playProductionFarm(crew: CrewSize) {
   for (let turn = 0; turn < DAYS_PER_YEAR * 4; turn++) {
     const { year, season, day } = dateOf(save.calendar.day)
     const gold = save.gold
-    if (day === 1) save = stockSeason(save, season, plots, width)
+    if (day === 1) {
+      save = stockSeason(save, season, plots, width)
+      if (crew >= 10 && year > 1) save = shipSeasonalOrder(save)
+    }
     if (crew >= 10 && year === 3 && season === 'summer' && (day === 3 || day === 8)) {
       save = sendExpedition(goToTown(save), 'sky-ruins', [ids[0]!, ids[plots * 2]!, ids[plots * 2 + 2]!], [])
     }
