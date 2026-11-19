@@ -25,6 +25,8 @@ export interface Visit {
   /** Anniversary number, independent of the night on which it played. */
   anniversary?: number
 }
+/** In a shared anniversary, the spouse whose date it is wears her anniversary outfit. */
+export const visitLookKind = (visit: Pick<Visit, 'kind'>, index: number): NightKind => index === 0 ? visit.kind : 'pajamas'
 export interface GreaterLove {
   points: number
   pajamas: number

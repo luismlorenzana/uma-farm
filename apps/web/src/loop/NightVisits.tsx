@@ -1,6 +1,6 @@
 import {
   anniversaryOffer, birthdaysOf, completeVisit, configuredDuos, DEFAULT_NIGHT_SCRIPT, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled,
-  NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, visitScript, wantsBirthdayAlone,
+  NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, visitLookKind, visitScript, wantsBirthdayAlone,
   type Duo, type FarmSave, type NightKind, type Step, type StoryPack, type Visit,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -96,9 +96,17 @@ function Visits({ save, pack, birthday, nameOf, onClose }: { save: FarmSave; pac
             </Button>
           </div>
         </div> : mode === 'duo' ? <ul className="grid gap-2 sm:grid-cols-2">
-          {duos.map(duo => <li key={duoKey(duo)}>
-            <Button variant="secondary" className="w-full" disabled={!availableDuo(duo)} onClick={() => start(duo, 'pajamas')}>{duo.map(nameOf).join(' & ')}</Button>
-          </li>)}
+          {duos.map(duo => {
+            const availableNow = availableDuo(duo)
+            return <li key={duoKey(duo)} className="space-y-1">
+              <Button variant="secondary" className="w-full" disabled={!availableNow} onClick={() => start(duo, 'pajamas')}>{duo.map(nameOf).join(' & ')}</Button>
+              {duo.map((id, i) => {
+                const year = anniversaryOffer(save, id)
+                return year === null ? null : <Button key={id} variant="secondary" className="w-full" disabled={!availableNow}
+                  onClick={() => start([id, duo[1 - i]!], 'anniversary')}>{nameOf(id)} · Anniversary {year}</Button>
+              })}
+            </li>
+          })}
         </ul> : <ul className="grid gap-2 sm:grid-cols-2">
           {spouses.map(id => {
             const love = greaterLoveOf(save, id)
@@ -161,14 +169,15 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
     {error && <p role="alert" className="text-danger">{error}</p>}
     <Button disabled={busy} onClick={onDone}>{morning ? 'Good morning' : 'Finish'}</Button>
   </Sheet>
-  const script = visitScript(pack, visit, part % visit.who.length)
+  const index = part % visit.who.length
+  const script = visitScript(pack, visit, index)
   const steps: Step[] = []
   if (phase === 0 && script.illustration) steps.push({ illustration: script.illustration })
   if (phase === 1 && part % visit.who.length === 0) steps.push({ narrate: 'You sit by the bedside as the house grows quiet.' })
   const beat = morning ? 'morning' : beats[phase]!
   steps.push({ say: who, line: script[beat] ?? DEFAULT_NIGHT_SCRIPT[beat], emote: 'tender' })
   return <Frame title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
-    <SceneLookProvider value={{ day: visit.day, leads: [who], own: script.outfit ?? (visit.kind === 'anniversary' ? 'wedding-night' : 'pajamas') }}>
+    <SceneLookProvider value={{ day: visit.day, leads: [who], own: script.outfit ?? (visitLookKind(visit, index) === 'anniversary' ? 'wedding-night' : 'pajamas') }}>
       <LifeScene key={part} id={who} steps={steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={morning ? MORNING_BACKDROP : NIGHT_BACKDROP}
         onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': morning ? 'morning' : beats[phase] }} />
     </SceneLookProvider>

@@ -1,4 +1,4 @@
-import { ANNIVERSARY_LOOK_POINTS, EVENINGS, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitScript, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
+import { ANNIVERSARY_LOOK_POINTS, EVENINGS, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitLookKind, visitScript, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
 import { Link } from 'react-router'
 import { libraryDate } from './LibraryPage'
 
@@ -13,7 +13,10 @@ export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: 
     <p data-greater-love={heart.points}>{heart.trueDay ? `True Love · ${libraryDate(heart.trueDay)}` : `Greater Love · ${heart.points}/${TRUE_LOVE}`}</p>
     <progress className="lib-greater-love" aria-label="Greater Love" value={heart.points} max={TRUE_LOVE} />
     {collections.map(({ kind, title, thresholds }) => {
-      const seen = new Set(heart.memories.filter(visit => visit.kind === kind).map(visit => visit.looks[visit.who.indexOf(id)]))
+      const seen = new Set(heart.memories.flatMap(visit => {
+        const index = visit.who.indexOf(id)
+        return visitLookKind(visit, index) === kind ? [visit.looks[index]] : []
+      }))
       return <section key={kind} className="pb-2">
         <h3>{title} · {seen.size}/{thresholds.length} seen</h3>
         <ul className="grid grid-cols-5 gap-1" aria-label={title}>
@@ -30,7 +33,7 @@ export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: 
         const own = visit.who.indexOf(id)
         const withUma = visit.who.find(who => who !== id)
         const script = visitScript(pack, visit, own)
-        const label = visit.kind === 'anniversary' ? `Anniversary ${visit.anniversary} · Look ${visit.looks[own]}` : `Pajamas ${visit.looks[own]}`
+        const label = visit.kind === 'anniversary' ? `Anniversary ${visit.anniversary} · ${own === 0 ? 'Look' : 'Pajamas'} ${visit.looks[own]}` : `Pajamas ${visit.looks[own]}`
         return <li key={index}>
           <span>{label}{withUma && ` · With ${nameOf(withUma)}`}</span>
           <small>{libraryDate(visit.day)}{!script.illustration && !script.outfit ? ' · Default look' : ''}</small>
