@@ -118,8 +118,11 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 
 ## Open packets
 
-The Forge is [deferred pending a redesign](../roadmap.md#deferred). The broader long-game progression awaits
-the owner's requirements.
+| Packet | Work | Status |
+|---|---|---|
+| [F102 · Long-game progression](tasks/F102-long-game.md) | Weekly town shifts, five-spouse celebrations, the Greater Festival, Year 50 and married-life progression | Draft for owner review |
+
+The Forge is [deferred pending a redesign](../roadmap.md#deferred).
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
