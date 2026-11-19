@@ -1,3 +1,4 @@
+import { recordLibrary } from '../library/receipts'
 import { festivalBooked } from '../festivals/state'
 import { actionsLeft, spend } from '../farm/actions'
 import { addBond, BOND_POINTS } from '../farm/bonds'
@@ -164,6 +165,7 @@ export function returnExpeditions(save: FarmSave, day: number, talentOf: TalentO
       const points = rank.points + EXPEDITION_POINTS_PER_DAY * days + EXPEDITION_BONUS[log.result]
       next = { ...next, roster: { ...next.roster, [id]: { ...uma, ranks: { ...uma.ranks, expeditions: { ...rank, points } } } } }
       next = countChallenge(next, id, 'expeditions', { kind: 'expedition', result: log.result, level, region: log.region })
+      next = recordLibrary(next, id, `expedition:${log.region}:${log.result}`, { day, activity: 'expedition:return' })
       for (const other of log.party.slice(i + 1)) {
         if (next.roster[other]) next = addBond(next, pack, id, other, BOND_POINTS.party * days).save
       }

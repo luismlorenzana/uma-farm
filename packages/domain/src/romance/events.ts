@@ -17,6 +17,7 @@
 // last choice again, once a day, paying nothing). Memories replay any event from any choice, paying nothing. Her event
 // costs one action, the special day's event actions first (`spendForEvent`): with none left of either kind it's refused
 // before it pays. Pure.
+import { recordLibrary } from '../library/receipts'
 import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
 import { isRingId, isWarehouseId, ringGrade } from '../goods/ids'
 import { goodName } from '../goods/names'
@@ -286,7 +287,11 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   // The wedding gives her a room at once (her default), or with none free she lives in town until one frees.
   const roomed = wedding ? takeRoom(dish?.save ?? played, pack, id) : null
   if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
-  const next = spendForEvent(roomed?.save ?? dish?.save ?? played, actionCost('event'), days)
+  let next = spendForEvent(roomed?.save ?? dish?.save ?? played, actionCost('event'), days)
+  next = recordLibrary(next, id, `route:${rung}`)
+  if (pack.scripted.get(id)?.has(rung)) next = recordLibrary(next, id, `route:${rung}:authored`)
+  if (rung === 'confession' && !notYet) next = recordLibrary(next, id, 'milestone:confession')
+  for (const item of learnt) next = recordLibrary(next, id, `fact:gift:${item}`)
   const after = bar(next.love[id]!)
   const say = [...path.steps].reverse().find((s): s is { say: string; line: string } => 'say' in s && s.say === id)
   return {
@@ -320,7 +325,7 @@ export function askHer(save: SaveV4, id: string, answer: Answer): SaveV4 {
   if (save.today.asked.includes(id)) throw new SaveRuleError('busy', 'You asked her today. Ask again tomorrow.')
   const today = { ...save.today, asked: [...save.today.asked, id] }
   if (answer === 'not-yet') return { ...save, today }
-  return { ...save, today, love: { ...save.love, [id]: { ...advance(love, save.calendar.day), last: love.last } } }
+  return recordLibrary({ ...save, today, love: { ...save.love, [id]: { ...advance(love, save.calendar.day), last: love.last } } }, id, 'milestone:confession')
 }
 
 /** Ask her's scene: the confession from her line before its answer (the place it plays at kept), without

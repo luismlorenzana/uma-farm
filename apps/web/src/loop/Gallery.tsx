@@ -22,9 +22,14 @@ export default function Gallery({ id }: { id: string }) {
   const master = useMaster()
   const location = useLocation()
   const leave = useLeave()
+  const fromLibrary = location.pathname === '/library'
   const state = useIllustrationsState(id)
-  const [open, setOpen] = useState<string | null>(null)
-  const close = () => leave(withParam(location, 'gallery', null))
+  const [open, setOpen] = useState<string | null>(() => new URLSearchParams(location.search).get('art'))
+  const close = () => {
+    const params = new URLSearchParams(location.search)
+    params.delete('art')
+    leave(withParam({ ...location, search: params.size ? `?${params}` : '' }, 'gallery', null))
+  }
   // Someone you haven't met, or an Uma with no illustrations: nothing to show.
   useEffect(() => {
     if (save && (!save.roster[id] || state === null)) close()
@@ -48,12 +53,12 @@ export default function Gallery({ id }: { id: string }) {
             <li key={scene.id}>
               {unlocked
                 ? <button type="button" onClick={() => setOpen(scene.id)} className="block w-full text-left" data-tile={scene.id} data-unlocked aria-label={scene.title}><Tile scene={scene} /></button>
-                : <div data-tile={scene.id} data-locked><Locked title={scene.title} /></div>}
+                : <div data-tile={scene.id} data-locked><Locked title={fromLibrary ? 'Locked illustration' : scene.title} /></div>}
             </li>
           ))}
         </ul>
       )}
-      {shown >= 0 && <Viewer scenes={seen} at={shown} onAt={(i) => setOpen(seen[i]!.id)} onClose={() => setOpen(null)} />}
+      {shown >= 0 && <Viewer scenes={seen} at={shown} onAt={(i) => setOpen(seen[i]!.id)} onClose={fromLibrary ? close : () => setOpen(null)} />}
     </div>,
     document.body,
   )

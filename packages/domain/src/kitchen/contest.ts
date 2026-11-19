@@ -21,6 +21,7 @@
 //
 // A play left unfinished is judged as Rough (its play's score 0) at the next open or the night's start, through the
 // stove's own settle. Pure; never stamps.
+import { recordLibrary } from '../library/receipts'
 import { actionCost, canSpendForEvent, type SpecialDays } from '../farm/actions'
 import { dateOf, festivalOn, SEASONS, type Festival, type FestivalId } from '../farm/calendar'
 import { farmRankOf } from '../farm/farm'
@@ -216,6 +217,8 @@ export function judgeContest<S extends FarmSave>(save: S, day: number, stars: nu
   if (cook !== null && next.roster[cook] && next.love[cook]) {
     if (board.place === 1) next = countChallenge(next, cook, 'cooking', { kind: 'won', festival: CONTEST_ID })
     next = festivalTogether(next, [cook], CONTEST_ID, dateOf(day).year).save as S
+    next = recordLibrary(next, cook, `festival:${CONTEST_ID}:cook:${board.place}${board.place === 1 ? ':won' : ''}`,
+      { day, activity: `festival:${CONTEST_ID}`, score: board.score })
   }
   return { save: next, board }
 }

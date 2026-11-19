@@ -34,7 +34,7 @@ export default function MemoriesShelf({ save }: { save: SaveV4 }) {
         ))}
         {ids.map((id) => (
           <li key={id}>
-            <Link to={withParam(location, 'album', id)} state={{ back: true }} className="flex min-h-12 items-center gap-2.5 py-1" data-shelf={id}>
+            <Link to={`/library?uma=${id}&page=scenes`} state={{ back: true }} className="flex min-h-12 items-center gap-2.5 py-1" data-shelf={id}>
               <Avatar id={id} size={32} label={nameOf(id)} />
               <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{nameOf(id)}</span>
               <span className="shrink-0 text-[13px] text-ink-soft tabular-nums">{memoryCount(save, id)} ›</span>

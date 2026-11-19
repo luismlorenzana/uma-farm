@@ -12,6 +12,7 @@ import { Root } from './Root'
 const FarmMap = lazy(() => import('../loop/FarmMap'))
 const FieldScreen = lazy(() => import('../loop/FieldScreen'))
 const HeartsPage = lazy(() => import('../loop/HeartsPage'))
+const LibraryPage = lazy(() => import('../library/LibraryPage'))
 const DiaryPage = lazy(() => import('../loop/DiaryPage'))
 const WarehousePage = lazy(() => import('../loop/WarehousePage'))
 const TownPage = lazy(() => import('../town/TownPage'))
@@ -32,6 +33,7 @@ export const ROUTES: RouteObject[] = [
   { path: 'field', element: loading(<FieldScreen />) },
   { path: 'roster', element: <RosterRoute /> },
   { path: 'hearts', element: loading(<HeartsPage />) },
+  { path: 'library', element: loading(<LibraryPage />) },
   { path: 'diary', element: loading(<DiaryPage />) },
   { path: 'warehouse', element: loading(<WarehousePage />) },
   { path: 'town', element: loading(<TownPage />) },

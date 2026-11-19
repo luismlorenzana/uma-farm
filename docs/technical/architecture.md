@@ -95,7 +95,8 @@ Sheets and scenes are query parameters on the page under them:
 | Folder | What |
 |---|---|
 | `src/app/` | Root and the start-over card, the upright card, the router, the build id, the Firebase config |
-| `src/shell/` | uma-kit's `AppFrame` as a rail and a bar: the rail (`BottomBar side="left"`: Farm · Town · People · Book · Diary), the bar (`AccountBar landscape="bar"`: date, gold, sync chip, then actions left, End the day, Menu), the Menu's panel, the sync warning |
+| `src/shell/` | uma-kit's `AppFrame` as a rail and a bar: the rail (`BottomBar side="left"`: Farm · Town · Library · Ledger · Diary), the bar (`AccountBar landscape="bar"`: date, gold, sync chip, then actions left, End the day, Menu), the Menu's panel, the sync warning |
+| `src/library/` | Lazy portrait shelves and individual books, with scene and illustration viewers loaded on demand. The v5 save holds dated proof and bounded outing receipts. Route scripts and art remain in their releases. |
 | `src/home/` | Account |
 | `src/book/` | The farm's book |
 | `src/town/` | The Town |

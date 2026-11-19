@@ -9,6 +9,7 @@
 //   Festival  +50                                   once a festival a year, on its team or entry (the Cooking Contest's cook)
 //
 // Loaded with the romance's screens and the night.
+import { recordLibrary } from '../library/receipts'
 import { spend } from '../farm/actions'
 import { draw } from '../farm/draw'
 import type { Taste } from './chats'
@@ -133,7 +134,8 @@ export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string
   const learnt: Love = love.known.includes(item) ? love : { ...love, known: [...love.known, item] }
   const spent = markDay(spend(save, 'gift'), id, 'gift')
   const given: SaveV4 = { ...spent, items, today: { ...spent.today, gifts: [...spent.today.gifts, id] }, love: { ...spent.love, [id]: learnt } }
-  return { ...addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day)), taste }
+  const paid = addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day))
+  return { ...paid, save: learnt === love || taste === 'neutral' ? paid.save : recordLibrary(paid.save, id, `fact:gift:${item}`), taste }
 }
 
 // --- Praise -----------------------------------------------------------------------------------------------

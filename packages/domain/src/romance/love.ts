@@ -10,6 +10,7 @@
 // bank into the next ladder. `addLove` is the one way points move: the day's factors, rounded once, nothing once S5 has
 // played. Her arrival scene, "event zero", pays +50 and its one choice: the option with the highest authored gain +30,
 // every other +10, shown on the button before the tap. Loaded with the romance's screens and the night.
+import { recordLibrary } from '../library/receipts'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { SaveRuleError } from '../save/rules'
 import type { Love, LoveStage, SaveV4 } from '../save/v4'
@@ -255,5 +256,5 @@ export function finishArrival(save: SaveV4, id: string, played: ArrivalPlayed): 
   if (played.choice !== CHOICE_BEST && played.choice !== CHOICE_OTHER && played.choice !== 0) throw new SaveRuleError('bad-count', 'An arrival’s choice pays +10 or +30.')
   const paid = addLove(save, id, ARRIVAL_POINTS + played.choice, 'arrival').save
   const love = paid.love[id]!
-  return { ...paid, love: { ...paid.love, [id]: { ...love, flags: [...new Set([...love.flags, ...played.flags])] } }, arrivals: [...save.arrivals, id] }
+  return recordLibrary({ ...paid, love: { ...paid.love, [id]: { ...love, flags: [...new Set([...love.flags, ...played.flags])] } }, arrivals: [...save.arrivals, id] }, id, 'route:arrival')
 }

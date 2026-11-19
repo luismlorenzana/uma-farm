@@ -145,11 +145,10 @@ Contest on Autumn 10, the first festival you play (F93) ([the Kitchen](game-mech
 in (F96: the Ranker's Tier 1–5, 50 Umas, [the launch cast](game-mechanics.md#the-launch-cast)), and so are farm days and
 home after the wedding (F95: a farmhand works the farm on the days her town life leaves free and eats her meals there;
 only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mechanics.md#farmhands),
-[the retired Dorm](game-mechanics.md#the-retired-dorm)). The Dock and Boat open the sea, and the Expedition post sends farmhands out from Farm Rank 7 ([expeditions](game-mechanics.md#expeditions)).
+[the retired Dorm](game-mechanics.md#the-retired-dorm)). The Dock and Boat open the sea, and the Expedition post sends farmhands out from Farm Rank 7 ([expeditions](game-mechanics.md#expeditions)). **The Uma Library is in** (F101), with one shelf per launch Tier, portrait books, scene replays, discoveries and personal histories ([Uma Library](game-mechanics.md#uma-library)).
 
 | Step | What |
 |---|---|
-| 2.6 **Uma Library** | The [F101 packet](handoff/tasks/F101-uma-library.md) authors the portrait bookshelf, each Uma’s book of unlockable scenes and discoveries, and her relationship journal. Farm achievements live in the Diary. |
 | 2.7 **The long game** | Reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. |
 
 How each workshop is built:

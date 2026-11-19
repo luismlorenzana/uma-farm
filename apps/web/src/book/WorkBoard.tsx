@@ -17,7 +17,7 @@ import {
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
@@ -47,6 +47,12 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const forecast = handsTonight(save, save, talents.of, pack)
   const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
   const adding = new URLSearchParams(location.search).get('task')
+  const selected = new URLSearchParams(location.search).get('hand')
+  useEffect(() => {
+    if (!selected || !save.roster[selected]) return
+    Array.from(document.querySelectorAll<HTMLElement>('[data-hand]'))
+      .find(card => card.dataset.hand === selected)?.scrollIntoView?.({ block: 'center' })
+  }, [selected, save.roster])
   return (
     <section aria-label="The work board" className="space-y-2" data-book="board" data-hands={hands.length}>
       <div className="flex items-center justify-between gap-2">

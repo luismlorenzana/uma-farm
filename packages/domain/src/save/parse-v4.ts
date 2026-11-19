@@ -17,6 +17,7 @@ import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
 import { FISH_MODES } from '../goods/production-catalogue'
 import { isStockId, parseStockKey } from './warehouse'
 import { checkFestivalSave } from './parse-festivals'
+import { parseLibrary } from './parse-library'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
@@ -35,7 +36,7 @@ export type { LoopPlaceId } from './parse-loop'
 
 export const SAVE_V5_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'fields', 'loads', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town',
+  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library',
 ] as const
 
 /** The most actions a day can hold: well past any budget the farm grows to. */
@@ -572,6 +573,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     memories: parseMemories(o.memories, `${path}.memories`, ids),
     arrivals,
     gallery: parseGallery(o.gallery, `${path}.gallery`, ids),
+    ...(o.library === undefined ? {} : { library: parseLibrary(o.library, `${path}.library`, ids, today) }),
     summary: o.summary === null ? null : parseSummary(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
     town: parseTown(o.town, `${path}.town`, today),
   }

@@ -763,14 +763,42 @@ At its right end:
 
 #### The rail
 
-**Farm · Town · People · Book · Diary**, down the left edge. The page you're on is lit: a marker on the rail's inner edge
+**Farm · Town · Library · Ledger · Diary**, down the left edge. The page you're on is lit: a marker on the rail's inner edge
 and its two-tone icon. A farm place's page (the Warehouse …) keeps Farm lit.
 - **Farm:** the farm map.
 - **Town:** the town's screen (see [the town](#the-town)).
-- **People:** everyone you've met, on the farm or in town, by their route; its Work view is the roster's album, with their
-  talents and ranks (see [the People page](#the-people-page)). `/roster` lands on the Work view.
-- **Book:** the farm's book (below).
+- **Library:** every Uma's portrait book, with **People & work** leading to the Ready list and roster album.
+- **Ledger:** the Farm Book (below).
 - **Diary:** the farm's projects, the Farm Rank, the milestones, each Uma's Memories and the pairs' Conversations.
+
+#### Uma Library
+
+Meeting an Uma places her portrait book in her launch Tier. Each of the five shelves has ten places, with five books on
+each of its two rows at both landscape sizes. Use the shelf arrows or swipe between shelves. An un-met Uma's place stays
+empty. Earlier cast members keep their own books.
+
+| Page | What fills it |
+|---|---|
+| Profile | Her name, birthday and schedule as known, gift tastes, signature dish, personal keepsakes and authored facts as their gates are reached |
+| Abilities | Her calling, work ranks, skills and current farm role, with a link to her work orders |
+| Chapters | Her relationship route and the normal links for Ready scenes and relationship actions |
+| Scenes | Completed route chapters, evenings, calendar scenes, home vignettes, shared scenes and seen illustrations |
+| Our Story | Dated relationship milestones, individual festival and expedition credits, the latest 32 outings and lifetime first, latest and best results |
+
+The cover count combines the route chapters, playable evening kinds and calendar slots, discoveries and the main
+relationship milestones. Variants of an evening share one slot. For instance a hangout, date and spouse evening at the
+pond can all be replayed under Fishing. A festival's daytime story, its night story and the festival evening activity have
+separate proof. Shared scenes, home vignettes, illustrations and rank or group awards sit outside the cover count. The
+Library stamps Our Story with the first day the book was filled through play. Farm-wide achievements live in the Diary.
+
+Locked scenes show a silhouette. Tap an earned tile to replay its scene or view seen illustrations. A replay costs
+no actions and leaves scores, hearts, stock and journal history alone. The old Memory player can still collect an
+illustration when it actually appears. A story update can move a calendar entry without losing its receipt, or withdraw a
+script and leave its earned entry with replay unavailable. Older saves read evidence from the existing Memories,
+illustrations and dated milestones. Where an older save has no proven date, the Library says **Date unknown**.
+
+In the fresh-farm playthroughs, the default-story book filled all 55 entries on day 64. The authored book filled
+all 59 on day 105, including its anniversary and a personal fact gated on Friendship 1.
 
 #### The Book
 
@@ -6768,7 +6796,7 @@ choice points, its **last choice point** holding one Yes and one Not yet. Either
 
 #### Memories
 
-**Her album** (from her profile's **Album ›** and the Diary's **Memories** shelf) has 26 tiles, one a rung with an event,
+**Her album** (from the People profile's **Album ›**) has 26 tiles, one a rung with an event,
 under four filters: **Friend** (Friendship 1–10 and her confession), **Romance** (Romance 1–10), **Wed** (the proposal and
 the wedding) and **Spouse** (Spouse 1, 3 and 5). Played tiles show their caption, **the next** is marked, the rest are
 locked. **Her arrival ›** replays her arrival scene.
@@ -6777,8 +6805,8 @@ locked. **Her arrival ›** replays her arrival scene.
   plays with its plays and her illustrations, **every option is open** (no cost, no gain shown), **nothing is paid,
   taken or saved** (but an illustration seen joins her gallery), and it ends "A Memory, replayed. Replays give no
   points."
-- **The Diary's shelf** lists each Uma on the farm with "n of 26", opening her album, and the household scenes and the
-  finale once played.
+- **The Diary's shelf** lists each Uma on the farm with "n of 26", opening her Library book at Scenes. The shelf
+  also keeps its links to the household scenes and the finale once read.
 
 #### The stand-in route
 

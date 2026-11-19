@@ -113,16 +113,16 @@ describe('the bar', () => {
 
 describe('the rail', () => {
   it('lights the page it is on; the farm\'s places keep Farm lit, Account none', () => {
-    expect(['/', '/fields', '/warehouse', '/forest', '/dorm', '/town', '/hearts', '/roster', '/book', '/diary', '/account'].map(railPageOf))
-      .toEqual(['farm', 'farm', 'farm', 'farm', 'farm', 'town', 'people', 'people', 'book', 'diary', null])
+    expect(['/', '/fields', '/warehouse', '/forest', '/dorm', '/town', '/library', '/hearts', '/roster', '/book', '/diary', '/account'].map(railPageOf))
+      .toEqual(['farm', 'farm', 'farm', 'farm', 'farm', 'town', 'people', 'people', 'people', 'book', 'diary', null])
   })
 
   it('draws the five pages down the left, the lit one marked for VoiceOver', async () => {
     await render(onStage(<FarmRail page="book" />), '/book')
     expect($(rail)?.getAttribute('data-side')).toBe('left')
     expect($$(`${rail} a`).map((a) => [a.textContent, a.getAttribute('href')]))
-      .toEqual([['Farm', '/'], ['Town', '/town'], ['People', '/hearts'], ['Book', '/book'], ['Diary', '/diary']])
-    expect($$(`${rail} a[aria-current="page"]`).map((a) => a.textContent)).toEqual(['Book'])
+      .toEqual([['Farm', '/'], ['Town', '/town'], ['Library', '/library'], ['Ledger', '/book'], ['Diary', '/diary']])
+    expect($$(`${rail} a[aria-current="page"]`).map((a) => a.textContent)).toEqual(['Ledger'])
   })
 })
 

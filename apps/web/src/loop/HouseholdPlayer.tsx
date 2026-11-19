@@ -41,7 +41,11 @@ export default function HouseholdPlayer({ value, replay }: { value: string; repl
     at.searchParams.delete('replay')
     leave(`${at.pathname}${at.search}`)
   }
-  const play = useMemo(() => (id && save && pack ? householdPlay(save, householdOf(pack), id) : null), [id, save, pack])
+  const play = useMemo(() => {
+    if (!id || !save || !pack) return null
+    const participants = replay ? Object.keys(save.library ?? {}).filter(who => save.library?.[who]?.first[`shared:${id}`] !== undefined) : []
+    return householdPlay(save, householdOf(pack), id, participants.length ? participants : undefined)
+  }, [id, save, pack, replay])
   // A link plays only what the game has given you (`mayPlayHousehold`): Ready and unread, or read for a replay.
   const open = !!id && save && !!pack && mayPlayHousehold(save, id, replay)
   const gone = !id || (!!pack && (!open || play === null))
@@ -49,15 +53,15 @@ export default function HouseholdPlayer({ value, replay }: { value: string; repl
     if (gone) close()
   }, [gone]) // eslint-disable-line react-hooks/exhaustive-deps
   if (gone || !play || !pack || !save || !id) return null
-  const finish = () => {
+  const finish = (seen = true) => {
     if (leaving) return
     setLeaving(true)
     close()
-    if (!replay) void readHouseholdOnce(id).catch(() => undefined)
+    if (!replay) void readHouseholdOnce(id, seen ? play.spouses : []).catch(() => undefined)
   }
   return createPortal(
     <MasterGate skeleton={<div className="fixed inset-0 z-[60] bg-page" />}>
-      {(master) => <Scene save={save} pack={pack} id={id} play={play} master={master} replay={replay} leaving={leaving} onDone={finish} />}
+      {(master) => <Scene save={save} pack={pack} id={id} play={play} master={master} replay={replay} leaving={leaving} onDone={() => finish()} onSkip={() => finish(false)} />}
     </MasterGate>,
     document.body,
   )
@@ -66,8 +70,8 @@ export default function HouseholdPlayer({ value, replay }: { value: string; repl
 /** One part a time: `open`, the play (the finale's), each spouse's beat, `close`; then the finale's card. */
 type Part = { kind: 'steps'; who: string | null; steps: readonly Step[] } | { kind: 'play' } | { kind: 'card' }
 
-function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
-  save: SaveV4; pack: StoryPack; id: HouseholdId; play: HouseholdPlay; master: MasterView; replay: boolean; leaving: boolean; onDone: () => void
+function Scene({ save, pack, id, play, master, replay, leaving, onDone, onSkip }: {
+  save: SaveV4; pack: StoryPack; id: HouseholdId; play: HouseholdPlay; master: MasterView; replay: boolean; leaving: boolean; onDone: () => void; onSkip: () => void
 }) {
   const parts = useMemo((): Part[] => {
     const steps = play.parts.map((p): Part => ({ kind: 'steps', who: p.who, steps: p.steps }))
@@ -95,7 +99,7 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
   return (
     <SceneLookProvider value={{ own: play.outfit, moments: play.moments, day: save.calendar.day, leads: play.spouses }}>
       <Part key={index} title={play.title} scene={`${id}:${index}`} steps={part.steps} place={place} onPlace={setPlace} nameOf={nameOf} farmer={save.farmer.name}
-        leaving={leaving} onSkip={onDone} onDone={next} />
+        leaving={leaving} onSkip={onSkip} onDone={next} />
     </SceneLookProvider>
   )
 }

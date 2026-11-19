@@ -265,6 +265,7 @@ export interface UmaBible {
   whyTheFarm?: string
   dream?: string
   blurb?: string
+  profileFacts?: { id: string; text: string; reveal: 'met' | { rung: string } | { taste: string } }[]
   favouriteLine?: Exclude<Activity, 'expeditions'>
   season?: Season
   festival?: Festival
@@ -1359,6 +1360,24 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
   const proposed = new Set(Array.isArray(gifts?.proposed) ? gifts.proposed : [])
   const value = kept<UmaBible>(raw, {
     characterId: id,
+    profileFacts: field(raw, 'profileFacts', (v) => {
+      if (!Array.isArray(v) || v.length > 32) return undefined
+      const seen = new Set<string>()
+      const facts: NonNullable<UmaBible['profileFacts']> = []
+      for (const fact of v) {
+        if (!isObject(fact) || typeof fact.id !== 'string' || fact.id.length > 48 || !WORLD_ID.test(fact.id) || seen.has(fact.id)
+          || typeof fact.text !== 'string' || !fact.text.trim() || fact.text.length > 400) return undefined
+        const gate = fact.reveal
+        const reveal = gate === 'met' ? 'met'
+          : isObject(gate) && typeof gate.rung === 'string' && RUNGS.includes(gate.rung) ? { rung: gate.rung }
+          : isObject(gate) && typeof gate.taste === 'string' && isGood(gate.taste) ? { taste: gate.taste }
+          : null
+        if (reveal === null) return undefined
+        seen.add(fact.id)
+        facts.push({ id: fact.id, text: fact.text.trim(), reveal })
+      }
+      return facts
+    }, 'profileFacts', f, 'is a list of unique { id, text, reveal } entries with met, a route rung or a known gift taste'),
     favouriteLine: field(raw, 'favouriteLine', (v) => (oneOf(FAVOURITE_LINES, v) ? v : undefined), 'favouriteLine', f, `is one of ${FAVOURITE_LINES.join(', ')}`),
     gifts,
     route: raw.route === undefined ? undefined : readBeats(raw.route, ctx, isGood, proposed, f),

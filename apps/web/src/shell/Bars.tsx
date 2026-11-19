@@ -154,8 +154,8 @@ export type RailPage = 'farm' | 'town' | 'people' | 'book' | 'diary'
 const RAIL: readonly { key: RailPage; to: string; label: string; Icon: IconComponent }[] = [
   { key: 'farm', to: '/', label: 'Farm', Icon: CarrotIcon },
   { key: 'town', to: '/town', label: 'Town', Icon: VenueIcon },
-  { key: 'people', to: '/hearts', label: 'People', Icon: HeartIcon },
-  { key: 'book', to: '/book', label: 'Book', Icon: CoinIcon },
+  { key: 'people', to: '/library', label: 'Library', Icon: HeartIcon },
+  { key: 'book', to: '/book', label: 'Ledger', Icon: CoinIcon },
   { key: 'diary', to: '/diary', label: 'Diary', Icon: BookIcon },
 ]
 
@@ -163,7 +163,7 @@ const RAIL: readonly { key: RailPage; to: string; label: string; Icon: IconCompo
 export function railPageOf(pathname: string): RailPage | null {
   // The field's screen is full screen, a farm place's: Farm stays lit behind it.
   if (pathname === '/town') return 'town'
-  if (pathname === '/hearts' || pathname === '/roster') return 'people'
+  if (pathname === '/library' || pathname === '/hearts' || pathname === '/roster') return 'people'
   if (pathname === '/book') return 'book'
   if (pathname === '/diary') return 'diary'
   if (pathname === '/account') return null

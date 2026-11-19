@@ -1,0 +1,85 @@
+.uma-library {
+  --lib-paper: color-mix(in srgb, var(--color-panel) 88%, #bd9b63);
+  --lib-edge: color-mix(in srgb, var(--color-hairline-strong) 85%, #976432);
+  background: var(--color-page);
+  color: var(--color-ink);
+  container-type: inline-size;
+  padding: 5px clamp(6px, 1.7vw, 14px) 12px;
+}
+.uma-library h1, .uma-library h2, .uma-library h3, .lib-cover strong { font-family: Georgia, serif }
+.uma-library h1 { font-size: clamp(19px, 3vw, 25px); font-weight: 700; line-height: 1.1 }
+.uma-library h2 { font-size: 20px; font-weight: 700 }
+.uma-library h3 { font-size: 16px; font-weight: 700 }
+.uma-library p { font-size: 13px }
+.lib-head, .lib-actions { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap }
+.lib-head { justify-content: space-between; min-height: 46px }
+.lib-button {
+  display: inline-flex; align-items: center; justify-content: center; text-align: center;
+  min-height: 44px; min-width: 44px; padding: 3px 8px; border: 1px solid var(--lib-edge);
+  border-radius: 7px; font-size: 12px; font-weight: 650; color: inherit;
+}
+.lib-button:disabled { opacity: .45 }
+.lib-button[aria-current], .lib-button[aria-pressed="true"] { background: var(--color-accent); color: var(--color-accent-ink) }
+.lib-shelves {
+  background: linear-gradient(#8b5c3d, #583726); border-radius: 9px; padding: 5px 8px 6px;
+  box-shadow: inset 0 1px #ffe0a26e; display: grid; gap: 4px; touch-action: pan-y;
+}
+.lib-row {
+  display: grid; grid-template-columns: repeat(5, minmax(44px, 1fr)); align-items: end; gap: clamp(3px, 1.8vw, 14px);
+  background: linear-gradient(#492a22b5, #73503980); border-bottom: 5px solid #aa7850;
+  padding: 3px 4px 0; min-height: 86px; border-radius: 4px 4px 0 0;
+}
+.lib-cover {
+  background: linear-gradient(90deg, #17141d88 0 7%, #e5ca922b 8% 10%, transparent 11%), var(--lib-cloth, #4f6849);
+  border: 1px solid #f9d59a7c; border-radius: 4px 7px 7px 3px;
+  color: #fff4d5; padding: 3px 4px 3px 8px; width: min(100%, 104px); justify-self: center;
+  display: grid; justify-items: center; align-content: center; min-height: 83px; line-height: 1.08;
+  box-shadow: 3px 2px 1px #271812;
+}
+.lib-cover[data-tone="1"] { --lib-cloth: #74523e }
+.lib-cover[data-tone="2"] { --lib-cloth: #415779 }
+.lib-cover[data-tone="3"] { --lib-cloth: #814653 }
+.lib-cover[data-tone="4"] { --lib-cloth: #436c70 }
+.lib-cover strong { min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; line-height: 1.1 }
+.lib-cover > span:last-child { font-size: 11px; line-height: 1.1; margin-top: 3px }
+.lib-spacer { min-height: 83px }
+.lib-pagination { display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 13px; margin-top: 4px }
+.lib-empty { display: grid; justify-items: start; gap: 8px; padding: 12px 0 }
+.lib-book-head h1 { max-width: 58%; overflow-wrap: anywhere }
+.lib-book-head > p { white-space: nowrap }
+.lib-spread {
+  background: var(--lib-paper); border: 1px solid var(--lib-edge); border-radius: 9px 9px 13px 13px;
+  box-shadow: 0 4px 0 var(--lib-edge);
+  display: grid; grid-template-columns: minmax(150px, .32fr) minmax(0, 1fr); margin-top: 4px;
+}
+.lib-binding { padding: 7px; border-right: 1px solid var(--lib-edge); background: linear-gradient(90deg, transparent 94%, #43290f12) }
+.lib-portrait { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 4px }
+.lib-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px }
+.lib-tabs > * { min-width: 0; padding-inline: 3px; overflow-wrap: anywhere }
+.lib-counts { padding-top: 5px; font-size: 12px }
+.lib-counts li { display: flex; justify-content: space-between; gap: 4px }
+.lib-paper { min-width: 0; padding: 7px 9px; display: grid; align-content: start; gap: 5px }
+.lib-lines { margin-block: 3px 5px; font-size: 13px }
+.lib-lines > li { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 8px; padding: 5px 1px; border-bottom: 1px solid var(--color-hairline) }
+.lib-lines small { font-size: 12px; color: var(--color-ink-soft) }
+.lib-scene-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px }
+.lib-scene {
+  min-height: 55px; padding: 4px; min-width: 0; display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--lib-edge); border-radius: 6px; text-align: start; font-size: 13px;
+}
+.lib-scene strong { display: block; overflow-wrap: anywhere; line-height: 1.15 }
+.lib-scene span small { color: var(--color-ink-soft); font-size: 11px }
+.lib-scene[data-locked] { color: #e7d9cd; background: #302720; border-color: #694f37 }
+.lib-scene[data-locked] span small { color: #cbb5a2 }
+.lib-thumbnail { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; flex-shrink: 0; display: grid; place-items: center; background: var(--color-sunken) }
+.lib-silhouette {
+  background: radial-gradient(circle at 50% 36%, #806b58 0 7px, transparent 8px),
+    radial-gradient(ellipse at 50% 99%, #806b58 0 15px, transparent 16px), #251d17;
+}
+@container (max-width: 510px) {
+  .lib-spread { grid-template-columns: minmax(0,1fr) }
+  .lib-binding { padding: 3px 5px; border-right: 0; border-bottom: 1px solid var(--lib-edge); background: transparent }
+  .lib-portrait, .lib-counts { display: none }
+  .lib-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)) }
+  .lib-paper { padding: 5px }
+}

@@ -12,6 +12,7 @@
 //
 // Household scenes (5, 10, 15) and the finale (20) are Ready offers from the morning after, never auto-played; they pay
 // nothing. Each plays the pack's words where it has them and the game's short card where it doesn't (`householdOf`). Every draw is `draw(uid, day, what, n)`. Pure. Loaded with the night and the romance's screens.
+import { recordLibrary } from '../library/receipts'
 import { addBond, BOND_POINTS } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { talentsD, type TalentOf, type Temperament } from '../farm/talents'
@@ -291,10 +292,10 @@ export interface HouseholdPlay {
   outfit?: StoryOutfit
   moments: Moment[]
 }
-export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: Household, id: HouseholdId): HouseholdPlay | null {
+export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: Household, id: HouseholdId, participants?: readonly string[]): HouseholdPlay | null {
   const scene = id === 'finale' ? household.finale : household.scenes?.find((s) => `household:${s.at}` === id)
   if (!scene) return null
-  const spouses = spousesInOrder(save)
+  const spouses = spousesInOrder(save).filter(who => !participants || participants.includes(who))
   // `householdOf` fills a missing `open`, `close` and the finale's play; a spouse without her beat says her one line.
   const at = id === 'finale' ? 'finale' : (householdAt(id) as HouseholdAt)
   const beats = spouses.map((who) => ({ who, steps: scene.each?.[who] ?? placeholderHouseholdBeat(at, who) }))
@@ -307,8 +308,10 @@ export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: 
 
 /** A household scene or the finale played or skipped: read once into `diary.read`, paying nothing. Refused
  * before it's reached. */
-export function readHousehold(save: SaveV4, id: HouseholdId): SaveV4 {
+export function readHousehold(save: SaveV4, id: HouseholdId, seenBy: readonly string[] = []): SaveV4 {
   if (!householdReached(save, id)) return save
   if (save.diary.read.includes(id)) return save
-  return { ...save, diary: { ...save.diary, read: [...save.diary.read, id] } }
+  const next = { ...save, diary: { ...save.diary, read: [...save.diary.read, id] } }
+  const spouses = new Set(spousesInOrder(save))
+  return seenBy.filter(who => spouses.has(who)).reduce((s, who) => recordLibrary(s, who, `shared:${id}`), next)
 }

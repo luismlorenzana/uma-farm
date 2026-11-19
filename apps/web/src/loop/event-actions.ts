@@ -6,6 +6,7 @@
 // demand.
 import { askHer, GAME_DAYS, playEvent, playOccasion, touched, type Answer, type EventCard, type EventOutcome, type SpecialDays } from '@farm/domain'
 import { commit, useGame } from '../save/game'
+import { libraryChange } from '../library/changes'
 import { specialDays, storyReady } from '../story/story'
 
 /** The special days once the pack is in: the story's year and the met Umas' birthdays. */
@@ -23,7 +24,7 @@ export async function playHerEvent(id: string, outcome: EventOutcome): Promise<E
   const save = useGame.getState().save
   if (!save) throw new Error('No farm yet.')
   const done = playEvent(save, pack, id, outcome, special)
-  await commit(touched(done.save, new Date().toISOString()))
+  await commit(touched(libraryChange(save, done.save, pack, special), new Date().toISOString()))
   return done.card
 }
 
@@ -34,12 +35,12 @@ export async function playOccasionOnce(id: string, occasion: string): Promise<vo
   const special = await days()
   const save = useGame.getState().save
   if (!save) throw new Error('No farm yet.')
-  await commit(touched(playOccasion(save, pack, id, special, occasion), new Date().toISOString()))
+  await commit(touched(libraryChange(save, playOccasion(save, pack, id, special, occasion), pack, special), new Date().toISOString()))
 }
 
 /** Ask her: her answer, once a day, paying nothing; Yes moves her to romance. One stamped change. */
 export async function askHerOnce(id: string, answer: Answer): Promise<void> {
   const save = useGame.getState().save
   if (!save) throw new Error('No farm yet.')
-  await commit(touched(askHer(save, id, answer), new Date().toISOString()))
+  await commit(touched(libraryChange(save, askHer(save, id, answer)), new Date().toISOString()))
 }

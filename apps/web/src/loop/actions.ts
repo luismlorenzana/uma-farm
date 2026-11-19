@@ -16,10 +16,11 @@ import {
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
   sendExpedition, removeOrchard, saveCropSeeds, setFieldPlan, setCropReserve, type CropId, type FieldPlan, type RegionId, type RanchHome, type Season,
-  setCollectionCap, setFishingMode, setStationPlan, setStockReserve, setSurplusPlan,
+  setCollectionCap, setFishingMode, setStationPlan, setStockReserve, setSurplusPlan, recordLibrary, festivalsOf,
   type CollectionCap, type FishMode, type FishingSpotId, type StationTarget, type SurplusPlan,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
+import { libraryChange } from '../library/changes'
 import { commit, useGame } from '../save/game'
 import { arrivedRelease, forgetArrived } from '../story/news'
 import { storyReady } from '../story/story'
@@ -40,7 +41,8 @@ export async function endTheDay(day: number): Promise<boolean> {
   // The cast's birthdays (master data's, the cast's own winning) for the morning's lines.
   const birthdays = birthdaysOf(story, view.birthdays)
   const release = arrivedRelease()
-  await commit(endDay(save, { talentOf: talentsFor(view), story, birthdays, release }, nowIso()))
+  const next = endDay(save, { talentOf: talentsFor(view), story, birthdays, release }, nowIso())
+  await commit(libraryChange(save, next, story, { festivals: festivalsOf(story), birthdays }))
   if (release) forgetArrived(release.number)
   return true
 }
@@ -56,7 +58,9 @@ export async function dismissSummary(): Promise<void> {
 async function change(rule: (save: FarmSave) => FarmSave): Promise<FarmSave> {
   const save = loopSave()
   if (!save) throw new Error('The farm is still loading.')
-  const next = touched(rule(save), nowIso())
+  const changed = rule(save)
+  if (changed === save) return save
+  const next = touched(libraryChange(save, changed), nowIso())
   await commit(next)
   return next
 }
@@ -214,7 +218,15 @@ export async function finishArrivalScene(id: string, played: ArrivalPlayed): Pro
 export async function seeIllustrationOnce(id: string, scene: string): Promise<void> {
   const save = loopSave()
   if (!save || seeIllustration(save, id, scene) === save) return
-  await change((s) => seeIllustration(s, id, scene))
+  await change((s) => {
+    const next = seeIllustration(s, id, scene)
+    return next === s ? s : recordLibrary(next, id, `art:${scene}`)
+  })
+}
+
+/** A live vignette that actually reached its last line. */
+export async function readLifeOnce(id: string, scene: string, day: number): Promise<void> {
+  await change((s) => s.calendar.day === day ? recordLibrary(s, id, `life:${scene}`) : s)
 }
 
 // --- Her route ----------------------------------------------------------------------------------------------
@@ -244,9 +256,15 @@ export const praiseHer = (id: string) => loveAct((s) => praiseV4(s, id))
 
 /** A pair's conversations played or skipped: each level into `diary.read`, once, a player's change. A replay
  * of what's read changes nothing. */
-export async function readPairOnce(a: string, b: string, levels: readonly number[]): Promise<void> {
+export async function readPairOnce(a: string, b: string, levels: readonly number[], seen: readonly number[]): Promise<void> {
   const save = loopSave()
   if (!save || levels.every((h) => save.diary.read.includes(pairReadId(a, b, h)))) return
   const pack = await storyReady()
-  await change((s) => readPair(s, pack, a, b, levels))
+  await change((s) => {
+    const next = readPair(s, pack, a, b, levels)
+    return next.diary.read.filter(key => !s.diary.read.includes(key)).reduce((out, key) => {
+      const entry = `shared:${seen.some(h => pairReadId(a, b, h) === key) ? '' : 'skipped:'}${key}`
+      return recordLibrary(recordLibrary(out, a, entry), b, entry)
+    }, next)
+  })
 }

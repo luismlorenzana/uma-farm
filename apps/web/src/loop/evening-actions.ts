@@ -2,7 +2,8 @@
 // the save as it is now with her birthday from master data, committed once and stamped; an invitation's answer the same
 // through `answerInvite`. Nothing is written while the play runs, so one left halfway spends nothing. Apart from
 // `actions.ts` so the evening's rules load with its player. Loaded on demand.
-import { answerInvite, birthdaysOf, isBirthday, spendEvening, touched, type EveningCard, type EveningKind } from '@farm/domain'
+import { answerInvite, birthdaysOf, festivalsOf, isBirthday, spendEvening, touched, type EveningCard, type EveningKind } from '@farm/domain'
+import { libraryChange } from '../library/changes'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
 import { storyReady } from '../story/story'
@@ -18,8 +19,9 @@ const current = () => {
 export async function spendHerEvening(id: string, kind: EveningKind, score: number): Promise<EveningCard> {
   const [view, pack] = await Promise.all([masterReady(), storyReady()])
   const save = current()
-  const done = spendEvening(save, pack, id, kind, score, isBirthday(birthdaysOf(pack, view.birthdays), id, save.calendar.day))
-  await commit(touched(done.save, new Date().toISOString()))
+  const birthdays = birthdaysOf(pack, view.birthdays)
+  const done = spendEvening(save, pack, id, kind, score, isBirthday(birthdays, id, save.calendar.day))
+  await commit(touched(libraryChange(save, done.save, pack, { birthdays, festivals: festivalsOf(pack) }), new Date().toISOString()))
   return done.card
 }
 

@@ -49,6 +49,7 @@ export default function HeartsPage() {
           </Link>
         ))}
         <EveningMarks save={save} />
+        <Link to="/library" className="flex min-h-11 items-center text-[13px] font-semibold text-accent-strong">Library ›</Link>
         <span className="ml-auto">
           {view === 'hearts' ? (
             <HelpButton title="Hearts" label="About hearts">

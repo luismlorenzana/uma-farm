@@ -532,7 +532,14 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | `smallTalk` | Short exchanges a chat may play instead of her line: a list of `{ "lines": [["<her id>", "…"], ["you", "…"], ["<her id>", "…"]], "at", "season", "stage" }`. A chat draws from her stage's lines and the small talks that fit together; one fits when every tag it carries matches: `at` the place (a farm place, a town spot or location, or `town` anywhere in town), `season`, `stage` her chat set (`friend`, `partner`, `spouse`). It plays on the dialogue engine, `you` under your name | Her line alone |
 | `giftLines` | Her line at a gift: `loved`, `liked`, `neutral`, `disliked` by its taste, and `birthday` first on her birthday, each a list of lines | The default story's reactions for the taste |
 | `voice` | The story's own notes on how she talks: never shown | Nothing |
-| `now`, `whyTheFarm`, `dream`, `blurb`, `laughs`, `hurts`, `season`, `festival`, `outfitId` | The story's own: the sandbox shows them | Nothing |
+| `blurb` | Her short biography in the Uma Library from the first meeting | No biography entry |
+| `profileFacts` | Optional personal discoveries in her Library profile | No authored facts |
+| `now`, `whyTheFarm`, `dream`, `laughs`, `hurts`, `season`, `festival`, `outfitId` | The story's own: the sandbox shows them | Nothing |
+
+Each `profileFacts` entry has a stable slug `id`, its `text`, and a `reveal` of `"met"`, `{ "rung": "f1" }`,
+or `{ "taste": "carrot" }`. Use the existing route IDs and goods IDs. The Library shows only discovered text
+and a neutral slot before its gate. Keep the ID when revising a fact. A removed fact with saved proof appears in
+the archive.
 
 ### Her route's beats
 

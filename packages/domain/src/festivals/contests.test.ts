@@ -118,9 +118,13 @@ describe('festival dates and entries', () => {
     expect(flowerPreview(picked.save, null, grower, autumn)).toMatchObject({ valid: true, hands: [grower] })
     expect(flowerPreview(picked.save, null, grower, autumn)?.parts[2]).toBe(6)
     expect(flowerPreview(picked.save, null, grower)?.valid).toBe(false)
-    const live = { ...picked.save, calendar: { day: show } }
+    const live = { ...picked.save, calendar: { day: show }, summary: null }
     expect(festivalHandLock(live, grower, cast)).toMatch(/town/)
-    expect(() => enterFlower(live, null, grower, autumn)).not.toThrow()
+    const entered = enterFlower(live, null, grower, autumn)
+    const result = festivalResult(entered, 'flower-show')!
+    expect(entered.library?.[grower]?.recent).toEqual([[show, `festival:flower-show:grower:${result.place}${result.credit.includes(grower) ? ':won' : ''}`, result.score]])
+    for (const spectator of hands.filter(id => id !== grower && worksOn(live, cast, id))) expect(entered.library?.[spectator]).toBeUndefined()
+    expect(parseSaveV5(raw(entered))).toEqual(entered)
   })
 })
 
