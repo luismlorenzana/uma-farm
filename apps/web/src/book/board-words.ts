@@ -5,6 +5,7 @@
 // levels and tricks. The morning's farmhand lines read the same words. Pure, so the board, the card and the tests agree.
 import {
   APTITUDE_NAMES, AREA_NAMES, DIG_NAMES, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handJob, HOME_NAMES, isTileTask, itemNameOf, SPOT_NAMES, TASK_NAMES, taskPlot, townLocation,
+  FISH_MODE_NAMES, OPEN_TASKS,
   type FarmhandLine, type FarmTask, type HandDay, type StoryPack, type TaskKind,
 } from '@farm/domain'
 import { plural, theName } from '../loop/words'
@@ -39,10 +40,11 @@ export function taskWords(task: FarmTask, plots = 1): string {
   switch (task.kind) {
     case 'load': return `Load ${theName(farmPlace(task.station)?.name ?? task.station)}`
     case 'forage': case 'chop': return `${TASK_NAMES[task.kind]} · ${theName(AREA_NAMES[task.area])}`
-    case 'fish': return `Fish · ${theName(SPOT_NAMES[task.spot])}`
-    case 'care': return `${TASK_NAMES.care} · the ${HOME_NAMES[task.home]}`
+    case 'fish': return `Fish · ${theName(SPOT_NAMES[task.spot])}${task.mode ? ` · ${FISH_MODE_NAMES[task.mode]}` : ''}`
+    case 'care': return `${task.feedOnly ? 'Feed only' : TASK_NAMES.care} · the ${HOME_NAMES[task.home]}`
     case 'mine': return `${TASK_NAMES.mine} · the ${DIG_NAMES[task.dig]}`
     case 'cook': return `${TASK_NAMES.cook} · ${KITCHEN}`
+    case 'ship-surplus': return TASK_NAMES[task.kind]
     case 'save-seed': return `Save ${itemNameOf(task.crop ?? 'carrot')} seed · G${task.grade}${task.improve ? ` → G${task.grade + 1}` : ''} · keep ${task.target}`
     case 'plant': return `Plant${task.crop ? ` ${itemNameOf(task.crop)}` : ''} · ${where(task)}`
     default: return `${TASK_NAMES[task.kind]} · ${where(task)}`
@@ -51,7 +53,7 @@ export function taskWords(task: FarmTask, plots = 1): string {
 
 /** Whether a task stops when it's done for the day (the field's, a load, the animals' care, the cooking) or runs on (her
  * gathering and digging). */
-export const runsOn = (task: FarmTask): boolean => !isTileTask(task) && task.kind !== 'load' && task.kind !== 'care' && task.kind !== 'cook'
+export const runsOn = (task: FarmTask): boolean => OPEN_TASKS.includes(task.kind)
 
 /** Where the farm cooks until the Kitchen stands. */
 export const KITCHEN = 'the farmhouse kitchen'
@@ -76,7 +78,7 @@ export function jobWords(pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack,
 }
 
 /** What she did, by task, in the board's order. */
-const DONE_ORDER: readonly TaskKind[] = ['harvest', 'water', 'plant', 'till', 'load', 'care', 'cook', 'forage', 'chop', 'fish', 'mine']
+const DONE_ORDER: readonly TaskKind[] = ['harvest', 'water', 'plant', 'till', 'save-seed', 'load', 'care', 'cook', 'forage', 'chop', 'fish', 'mine', 'ship-surplus']
 export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
   const times = (n: number) => (n === 1 ? 'once' : n === 2 ? 'twice' : `${n} times`)
   return DONE_ORDER.flatMap((kind) => {
@@ -95,6 +97,7 @@ export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
       case 'mine': return [`worked ${plural(n, 'face')}`]
       case 'cook': return [`cooked ${plural(n, 'meal')}`]
       case 'save-seed': return [`saved ${plural(n, 'seed')}`]
+      case 'ship-surplus': return [`set out ${plural(n, 'good')} for tomorrow’s bin`]
     }
   })
 }

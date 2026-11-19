@@ -16,6 +16,8 @@ import {
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
   sendExpedition, removeOrchard, saveCropSeeds, setFieldPlan, setCropReserve, type CropId, type FieldPlan, type RegionId, type RanchHome, type Season,
+  setCollectionCap, setFishingMode, setStationPlan, setStockReserve, setSurplusPlan,
+  type CollectionCap, type FishMode, type FishingSpotId, type StationTarget, type SurplusPlan,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -103,6 +105,11 @@ export const saveSeeds = (crop: CropId, grade: number, improve: boolean, count: 
   change((s) => saveCropSeeds(s, crop, grade, improve, count, useReserved))
 export const planFieldRow = (plot: number, row: number, season: Season, plan: FieldPlan | null) => change((s) => setFieldPlan(s, plot, row, season, plan))
 export const reserveCrop = (crop: CropId, grade: number, count: number) => change((s) => setCropReserve(s, crop, grade, count))
+export const reserveGood = (id: string, count: number) => change((s) => setStockReserve(s, id, count))
+export const planSurplus = (plan: SurplusPlan | null) => change((s) => setSurplusPlan(s, plan))
+export const planStation = (station: StationId, targets: readonly StationTarget[]) => change((s) => setStationPlan(s, station, targets))
+export const pickCollectionCap = (kind: AnimalKind, cap: CollectionCap) => change((s) => setCollectionCap(s, kind, cap))
+export const pickFishingMode = (spot: FishingSpotId, mode: FishMode) => change((s) => setFishingMode(s, spot, mode))
 export const removeOrchardAt = (tile: number) => change((s) => removeOrchard(s, tile))
 /** Harvests a ripe tile: what it brought. */
 export const harvestAt = (tile: number): Promise<HarvestReceipt> => act((s) => {
@@ -125,7 +132,7 @@ export const fishAt = (spot: string): Promise<Measured | null> => act((s) => {
   return { save: done.save, result: done.caught }
 })
 /** Starts a load at a station, ready the next morning. */
-export const loadAt = (station: StationId, item: string, count: number) => change((s) => startLoad(s, station, item, count))
+export const loadAt = (station: StationId, item: string, count: number, useReserved = false) => change((s) => startLoad(s, station, item, count, useReserved))
 /** Buys a station's next level: its gold now, the level the next morning. Free of actions. */
 export const upgradeAt = (station: StationId) => change((s) => upgradeStation(s, station))
 

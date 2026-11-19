@@ -13,8 +13,9 @@ import { spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
 import { TALENT_D } from '../farm/talents'
-import { goodOf, isCropId } from '../goods/ids'
-import { discoverOutput } from '../goods/discovery'
+import { goodOf } from '../goods/ids'
+import type { FishMode } from '../goods/production-catalogue'
+import { discoverOutput, discoverStock } from '../goods/discovery'
 import { SaveRuleError } from '../save/rules'
 import type { FarmSave } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
@@ -24,6 +25,7 @@ import {
   type WorkTerms,
 } from './kinds'
 import { FISHERY, FOREST } from './tables'
+import { catchGrade } from './fishing-grades'
 import { draw } from '../farm/draw'
 
 /** A forage's haul: two of the area's season's finds. */
@@ -125,10 +127,7 @@ export function forageAt<S extends FarmSave>(save: S, area: string, by: Gatherer
     got.push(stockKey(good, stars))
   }
   return {
-    save: got.reduce((state, entry) => {
-      const id = entry.slice(0, entry.lastIndexOf('@'))
-      return isCropId(id) ? discoverOutput(state, id) : state
-    }, { ...save, items, today: hauled(save, area), farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } }),
+    save: discoverStock({ ...save, items, today: hauled(save, area), farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } }, got),
     haul: { where: area, items: got },
   }
 }
@@ -153,7 +152,7 @@ export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer):
     got.push(stockKey(log, stars))
   }
   const counts = bump(bump(save.farm.counts, LOGS_CHOPPED, got.length), HOME_COUNT.forest, got.length)
-  return { save: { ...save, items, today: hauled(save, area), farm: { ...save.farm, counts } }, haul: { where: area, items: got } }
+  return { save: discoverStock({ ...save, items, today: hauled(save, area), farm: { ...save.farm, counts } }, got), haul: { where: area, items: got } }
 }
 
 /** Fishes a spot: one action, one catch of its season's fish (`draw(uid, day, 'fish:<spot>', n)`, its stars
@@ -162,11 +161,12 @@ export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer):
  * when nothing bit. Refused where his reach doesn't go yet. */
 export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured | null } {
   open(save, 'fishery', spot)
-  const done = fishAt(spend(save, 'fish'), spot, farmerGatherer(save, 'fishery', 1))
+  const mode = save.farm.fishingModes?.[spot as FishingSpotId] ?? 'standard'
+  const done = fishAt(spend(save, 'fish'), spot, farmerGatherer(save, 'fishery', 1), mode, undefined, true)
   return { save: done.save, haul: done.haul, caught: done.caught[0] ?? null }
 }
 /** A cast itself, spending nothing: `by.count` fish (half at a thin spot, `haulAt`), each measured as it lands. */
-export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer): { save: S; haul: Haul; caught: Measured[] } {
+export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, mode: FishMode = 'standard', aptitude?: number, manual = false): { save: S; haul: Haul; caught: Measured[] } {
   let next: S = { ...save, today: hauled(save, spot) }
   const caught: Measured[] = []
   const casts = haulAt(save, spot, by.count)
@@ -177,13 +177,13 @@ export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer):
     const cm = fishSize(good, by.skill, draw(next.account.uid, next.calendar.day, 'size:farmer', before))
     const best = next.diary.records[sizeRecord(good)] ?? 0
     const records = cm > best ? { ...next.diary.records, [sizeRecord(good)]: cm } : next.diary.records
-    next = {
-      ...next, items: addGoods(next.items, good, stars, 1),
-      farm: { ...next.farm, counts: bump(next.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...next.diary, records },
-    }
-    caught.push({ fish: good, stars, cm, record: cm > best })
+    const picked = catchGrade(next, good, mode, aptitude, manual)
+    next = discoverOutput(picked.save, picked.id)
+    next = { ...next, items: addGoods(next.items, picked.id, stars, 1),
+      farm: { ...next.farm, counts: bump(next.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...next.diary, records } }
+    caught.push({ fish: good, stars, cm, record: cm > best, ...(picked.id === good ? {} : { gradeId: picked.id }) })
   }
-  return { save: next, haul: { where: spot, items: caught.map((c) => stockKey(c.fish, c.stars)) }, caught }
+  return { save: next, haul: { where: spot, items: caught.map((c) => stockKey(c.gradeId ?? c.fish, c.stars)) }, caught }
 }
 
 /** The areas or spots in their order, each with its name, the Farm Rank it opens at and what holds it back now. */

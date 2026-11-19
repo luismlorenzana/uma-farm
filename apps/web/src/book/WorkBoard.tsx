@@ -12,6 +12,8 @@ import {
   canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   MAX_SEED_TARGET, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
+  ANIMAL_HOME, availableStock, baseGoodId, CATALOGUE, fieldChores, fieldTiles, FISH_MODES, FISH_MODE_NAMES, FISH_PROMOTION, goodCount, goodName, goodOf,
+  harvestGrade, HOME_NAMES, loadsLeft, loadsToday, MAX_SURPLUS, needsWater, parseStockKey, seedOutput, stationJobUnits, type FishMode, type FishingSpotId,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -19,7 +21,8 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
-import { copyHandTask, setHandTasks } from '../loop/actions'
+import { copyHandTask, planSurplus, setHandTasks } from '../loop/actions'
+import { Notes, useAct } from '../loop/FarmPanels'
 import { useTalents } from '../loop/talents'
 import { plural, shortDate } from '../loop/words'
 import { useMaster } from '../master/master'
@@ -41,7 +44,8 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const talents = useTalents()
   const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const hands = handsInOrder(save)
-  const tonight = new Map(handsTonight(save, save, talents.of, pack).lines.map((line) => [line.id, line]))
+  const forecast = handsTonight(save, save, talents.of, pack)
+  const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
   const adding = new URLSearchParams(location.search).get('task')
   return (
     <section aria-label="The work board" className="space-y-2" data-book="board" data-hands={hands.length}>
@@ -50,12 +54,16 @@ export function WorkBoard({ save }: { save: FarmSave }) {
         <HelpButton title="The work board" label="About the work board">
           <p>A friend you invite to work is a farmhand. She keeps her life in town, and comes to the farm on her farm days, the days it leaves free. There she gives the farm 3 actions: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
           <p>She works your tasks overnight, before the crops grow: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The morning says what she did.</p>
-          <p>Every task has an aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
+          <p>Production tasks train her aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
         </HelpButton>
       </div>
+      {hands.length > 0 && <>
+        <ProductionForecast before={save} after={forecast.save} pack={pack} />
+        <SurplusEditor save={save} />
+      </>}
       {hands.length === 0 ? (
         <p className="rounded-md border border-dashed border-hairline-strong px-3 py-3 text-[14px] text-ink-soft" data-no-hands>
           No farmhands yet. Once she’s a friend (Friendship 3), invite her to work: her menu in town.
@@ -118,19 +126,37 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
         ? <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
         : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away)}</p>
         : <p className="text-[13px] font-semibold" data-in-town>In town today{back ? ` · back ${shortDate(back)}` : ''}</p>}
+      {working && !worksOn(save, pack, id, save.calendar.day + 1) && (
+        <p className="text-[12px] text-ink-soft">{awayOn(save, id, save.calendar.day + 1) ? 'Away tomorrow' : 'In town tomorrow'}</p>
+      )}
       {tasks.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-no-tasks>No tasks yet: add one, and she starts tonight.</p>
       ) : (
         <ol className="divide-y divide-hairline rounded-md border border-hairline" aria-label={`${name}’s tasks`} data-tasks={tasks.length}>
           {tasks.map((task, i) => {
             const aptitude = taskAptitude(task)
-            const level = aptitudeOf(uma, aptitude, (a) => talentOf(id, a)).level
+            const level = aptitude ? aptitudeOf(uma, aptitude, (a) => talentOf(id, a)).level : 0
             const planned = (task.kind === 'plant' || task.kind === 'harvest') && taskTiles(task).some((tile) => plantingPlan(save, tile) !== undefined)
+            const target = task.kind === 'load' && save.farm.stationPlans?.[task.station]
+            const mode = task.kind === 'fish' ? (task.mode ?? save.farm.fishingModes?.[task.spot]) : undefined
+            const unlock = mode && mode !== 'standard' ? FISH_PROMOTION[mode].aptitude : 0
+            let seedWait: string | null = null
+            if (task.kind === 'save-seed' && (tonight?.done['save-seed'] ?? 0) === 0) {
+              const crop = task.crop ?? 'carrot'
+              const input = cropGoodId(crop, task.grade)
+              if (!seedOutput(save, crop, task.grade, task.improve)) seedWait = 'Waiting for crop knowledge'
+              else if (input && !availableStock(save, input)) seedWait = `Waiting for unreserved ${goodName(input)}`
+            }
             return (
               <li key={`${i}:${taskWords(task, plots)}`} className="flex min-h-11 items-center gap-1 pl-2" data-task={task.kind}>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px] font-semibold" data-task-words>{taskWords(task, plots)}</span>
-                  <span className="block truncate text-[11px] text-ink-soft" data-task-aptitude>{APTITUDE_NAMES[aptitude]} {level}{runsOn(task) ? ' · shares what’s left' : ''}{planned ? ' · follows row plan' : ''}</span>
+                  <span className="block truncate text-[11px] text-ink-soft" data-task-aptitude>
+                    {aptitude ? `${APTITUDE_NAMES[aptitude]} ${level}` : save.farm.surplus ? 'Shared crate · respects reserves' : 'Set a surplus plan'}
+                    {runsOn(task) ? ' · shares what’s left' : ''}{planned ? ' · follows row plan' : ''}{target ? ' · follows station targets' : ''}
+                    {level < unlock ? ` · grade work at level ${unlock}` : ''}
+                  </span>
+                  {seedWait && <span className="block text-[11px] text-ink-soft">{seedWait}</span>}
                 </span>
                 {cover.length > 0 && (
                   <select aria-label={`Copy ${taskWords(task, plots)} to another Uma`} value="" className="min-h-11 max-w-24 bg-panel text-[12px] text-ink"
@@ -154,6 +180,71 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
         {tasks.length >= MAX_TASKS ? `${MAX_TASKS} tasks at most` : 'Add a task'}
       </Button>
     </li>
+  )
+}
+
+function ProductionForecast({ before, after, pack }: { before: FarmSave; after: FarmSave; pack: StoryPack | null }) {
+  const chores = pack ? fieldChores(after, pack).tiles : new Set<number>()
+  const tiles = fieldTiles(after)
+  const water = tiles.filter((tile, index) => needsWater(tile) && !chores.has(index)).length
+  const waiting = tiles.filter((tile, index) => tile.ready && harvestGrade(after, tile, index, 0) === null).length
+  const shortages = RANCH_HOMES.flatMap((home) => {
+    const unfed = after.ranch.animals.filter((a) => ANIMAL_HOME[a.kind] === home && !a.fed).length
+    return unfed ? [`${HOME_NAMES[home]} · ${unfed} still need feed`] : []
+  })
+  const loads = STATIONS.flatMap((station) => loadsToday(after, station).slice(loadsToday(before, station).length).map((load) =>
+    `${farmPlace(station)?.name} · ${goodName(parseStockKey(load.item)!.id)} ×${load.count}`))
+  const loadBlocks = STATIONS.flatMap((station) => {
+    const target = after.farm.stationPlans?.[station]?.find(({ output, target }) => goodCount(after.items, output)
+      + loadsToday(after, station).reduce((sum, load) => sum + (parseStockKey(load.item)?.id === output ? load.count : 0), 0) < target)
+    if (!target) return []
+    const input = goodOf(target.output)?.input
+    const reason = loadsLeft(after, station) === 0 ? 'All load slots filled'
+      : input && availableStock(after, input) < stationJobUnits(target.output) ? `Needs unreserved ${goodName(input)}` : 'Load still open'
+    return [`${farmPlace(station)?.name} · ${reason}`]
+  })
+  const lines = [
+    ...(water ? [`Water · ${plural(water, 'tile')} uncovered`] : []),
+    ...(waiting ? [`Harvest · ${plural(waiting, 'tile')} waiting for grade work`] : []),
+    ...shortages, ...loads, ...loadBlocks,
+  ]
+  return lines.length ? <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-ink-soft" aria-label="Tonight’s production">
+    {lines.slice(0, 6).map((line, i) => <li key={`${i}:${line}`}>{line}</li>)}
+  </ul> : null
+}
+
+function SurplusEditor({ save }: { save: FarmSave }) {
+  const plan = save.farm.surplus
+  const goods = plan?.goods ?? []
+  const [id, choose] = useState('')
+  const [limit, setLimit] = useState(plan?.limit ?? MAX_SURPLUS)
+  const { note, error, busy, run } = useAct('surplus')
+  const valid = Number.isInteger(limit) && limit > 0 && limit <= MAX_SURPLUS
+  const edit = (next: string[]) => run(planSurplus(next.length ? { goods: next, limit } : null).then(() => { choose(''); return null }))
+  return (
+    <details className="rounded-md border border-hairline bg-panel px-3 text-[13px]">
+      <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Surplus crate · {plan ? `up to ${plan.limit}` : 'Off'}</summary>
+      <div className="max-w-lg space-y-2 pb-2">
+        <p className="text-ink-soft">Assign Ship surplus to a farmhand. One shared crate goes into tomorrow’s bin.</p>
+        {goods.map((good) => <div key={good} className="flex items-center gap-1">
+          <span className="min-w-0 flex-1">{goodName(good)}</span>
+          <Button variant="secondary" size="sm" disabled={busy || !valid} onClick={() => edit(goods.filter((other) => other !== good))}
+            aria-label={`Remove ${goodName(good)} from surplus`}>×</Button>
+        </div>)}
+        <select aria-label="Add exact good to surplus" value={id} className="min-h-11 w-full bg-panel px-2" onChange={(e) => choose(e.currentTarget.value)}>
+          <option value="">Choose exact good</option>
+          {CATALOGUE.filter((good) => !goods.includes(good.id)).map((good) =>
+            <option key={good.id} value={good.id}>{itemNameOf(baseGoodId(good.id))} · G{good.grade}</option>)}
+        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <label>Crate limit <input type="number" min={1} max={MAX_SURPLUS} className="min-h-11 w-16 rounded-sm border border-hairline bg-panel px-1"
+            value={limit} onChange={(e) => setLimit(Number(e.currentTarget.value))} /></label>
+          <Button size="sm" disabled={busy || !id || !valid || goods.length >= MAX_SURPLUS} onClick={() => edit([...goods, id])}>Add good</Button>
+          {plan && <Button size="sm" variant="secondary" disabled={busy || !valid || limit === plan.limit} onClick={() => edit(goods)}>Set limit</Button>}
+        </div>
+        <Notes note={note} error={error} />
+      </div>
+    </details>
   )
 }
 
@@ -185,22 +276,24 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   const [improve, setImprove] = useState(true)
   const [target, setTarget] = useState(1)
   const [where, setWhere] = useState<string | null>(null)
+  const [fishMode, setFishMode] = useState<FishMode | ''>('')
+  const [feedOnly, setFeedOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const tile = (TILE_TASKS as readonly string[]).includes(kind)
   const tiles = rows.flatMap(rowTiles)
   const on = plot > 0 ? { plot } : {}
   const canImprove = cropGoodId(seedCrop, seedGrade + 1) !== undefined
-  const task: FarmTask | null = kind === 'cook' ? { kind }
+  const task: FarmTask | null = kind === 'cook' || kind === 'ship-surplus' ? { kind }
     : kind === 'save-seed' ? Number.isInteger(target) && target >= 1 && target <= MAX_SEED_TARGET
       ? { kind, crop: seedCrop, grade: seedGrade, target, improve: canImprove && improve } : null
     : tile
     ? (tiles.length === 0 ? null : kind === 'plant' ? { kind, tiles, ...on, ...(crop ? { crop } : {}) } : { kind: kind as Exclude<TileTaskKind, 'plant'>, tiles, ...on })
     : where === null ? null
       : kind === 'load' ? { kind, station: where as StationId }
-        : kind === 'care' ? { kind, home: where as RanchHome }
+        : kind === 'care' ? { kind, home: where as RanchHome, ...(feedOnly ? { feedOnly: true } : {}) }
           : kind === 'mine' ? { kind, dig: where as DigId }
-            : kind === 'fish' ? { kind, spot: where as 'pond' } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
+            : kind === 'fish' ? { kind, spot: where as FishingSpotId, ...(fishMode ? { mode: fishMode } : {}) } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
   const pick = (next: TaskKind) => { setKind(next); setWhere(null); setError(null) }
   const add = () => {
     if (!task) return
@@ -231,6 +324,8 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           <p className="text-[14px] text-ink-soft" data-cook-where>
             In {KITCHEN}: a batch an action from two goods of food, ★2 goods first, until the pantry holds tonight’s meals for everyone.
           </p>
+        ) : kind === 'ship-surplus' ? (
+          <p className="text-[14px] text-ink-soft">Ships the shared surplus crate after the bin has paid, ready for the following evening.</p>
         ) : kind === 'save-seed' ? (
           <fieldset className="space-y-2">
             <legend className="text-micro pb-1">Seed to save</legend>
@@ -317,6 +412,15 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
                 </li>
               ))}
             </ul>
+            {kind === 'care' && <label className="flex min-h-11 items-center gap-2 text-[14px]">
+              <input type="checkbox" checked={feedOnly} onChange={(e) => setFeedOnly(e.currentTarget.checked)} /> Feed only
+            </label>}
+            {kind === 'fish' && <label className="flex min-h-11 flex-wrap items-center gap-2 text-[14px]">Catch mode
+              <select value={fishMode} className="min-h-11 bg-panel" onChange={(e) => setFishMode(e.currentTarget.value as FishMode | '')}>
+                <option value="">Follow spot plan</option>
+                {FISH_MODES.map((mode) => <option key={mode} value={mode}>{FISH_MODE_NAMES[mode]}</option>)}
+              </select>
+            </label>}
           </fieldset>
         )}
       </div>

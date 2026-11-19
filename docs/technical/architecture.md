@@ -356,6 +356,10 @@ A rescue that fails to write is logged and never hides why the upload was refuse
   v5 grows in place while the game is being built; a shape its fields can't carry is v6.
 - **Only a player's change moves `account.updatedAt`** (`touched`). The conflict rule (`resolveConflict`) compares it:
   the newer wins whole, a tie keeps the device's.
+- **Graded production grows v5 in place.** The shared reader accepts legacy pending loads and livestock and
+  validates the new stock IDs, row and station plans, collection caps, fish progress and surplus plan. The deploy
+  verifies the API reader before it publishes the web app. An offline older client keeps its local copy if the
+  new fields fail its sync parse. Any rollback build must retain the graded save reader and catalogue.
 - **The production-save rules:** never move `save.account.updatedAt` by hand; no server ever writes into a save; a stale
   server date means stop and ask the owner.
 

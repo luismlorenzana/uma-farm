@@ -109,8 +109,7 @@ the result ([expeditions](../game-mechanics.md#expeditions)).
 
 | Packet | What | Status |
 |---|---|---|
-| [F99](tasks/F99-farm-rework.md) | **The roster-run farm**, with crop and ingredient grades, 51 plantables and recurring Uma production plans | Fields and orchards implemented · ranch and stations queued |
-| [F98](tasks/F98-restaurant.md) | **The Restaurant**, with eight recipe stages, 120 new recipes and farm ingredient discovery | Design packet ready · implement after F99 |
+| [F98](tasks/F98-restaurant.md) | **The Restaurant**, with eight recipe stages, 120 new recipes and farm ingredient discovery | Next · farm sources audited |
 
 The Forge remains in Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm).
 

@@ -361,7 +361,7 @@ export interface Love {
 /** The work board's tasks: the field's (a plot and a list of its tiles), a station's load, a forest area's forage or chop,
  * a fishing spot's catch, the Coop's or the Barn's care, a face at the Mine or the Quarry, and cooking in the farm's
  * kitchen. */
-export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'save-seed', 'load', 'forage', 'chop', 'fish', 'care', 'mine', 'cook'] as const
+export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'save-seed', 'load', 'forage', 'chop', 'fish', 'care', 'mine', 'cook', 'ship-surplus'] as const
 export type TaskKind = typeof TASK_KINDS[number]
 /** The field's tasks, each over a list of tiles. */
 export const TILE_TASKS = ['harvest', 'water', 'plant', 'till'] as const
@@ -376,13 +376,16 @@ export type FarmTask =
   | { kind: 'save-seed'; crop?: CropId; grade: number; improve: boolean; target: number }
   | { kind: 'load'; station: StationId }
   | { kind: 'forage' | 'chop'; area: ForestAreaId }
-  | { kind: 'fish'; spot: FishingSpotId }
-  | { kind: 'care'; home: RanchHome }
+  | { kind: 'fish'; spot: FishingSpotId; mode?: import('../goods/production-catalogue').FishMode }
+  | { kind: 'care'; home: RanchHome; feedOnly?: true }
   | { kind: 'mine'; dig: DigId }
   | { kind: 'cook' }
+  | { kind: 'ship-surplus' }
 /** The most tasks one farmhand's board holds. */
 export const MAX_TASKS = 6
 export type FieldPlan = { crop: null; harvestNext: boolean } | { crop: CropId; grade: number; harvestNext: boolean }
+export interface StationTarget { output: string; target: number }
+export interface SurplusPlan { goods: string[]; limit: number }
 /** Her aptitudes: one for each task, a station's load one for each station; the Coop's and the Barn's care are one, and
  * so are the faces at either dig; cooking is the Cook task's. */
 export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter', 'cook'] as const
@@ -662,6 +665,12 @@ export interface SaveV5 {
     /** A Spring carrot plan by zero-based plot and row. */
     carrotRows?: Record<string, { grade: CarrotGrade; harvestNext: boolean }>
     fieldPlans?: Record<string, FieldPlan>
+    collectionCaps?: Partial<Record<AnimalKind, import('../goods/production-catalogue').CollectionCap>>
+    stationPlans?: Partial<Record<StationId, StationTarget[]>>
+    surplus?: SurplusPlan
+    fishingModes?: Partial<Record<FishingSpotId, import('../goods/production-catalogue').FishMode>>
+    manualCatches?: number
+    fishRemainders?: Record<string, number>
   }
   homestead: Homestead
   /** Her route's event ids played, in order. */

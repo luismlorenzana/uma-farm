@@ -22,6 +22,7 @@ import { buildLock, heldFor, payBuild, pickFor } from './builds'
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS } from './calendar'
 import { upkeepOf } from './economy'
 import { farmRankOf } from './farm'
+import { playProductionFarm, PRODUCTION_CREWS } from './production-scale.fixture'
 import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
 import { expeditionMemberBlock, expeditionMemberPower, expeditionPower, expeditionSlots, EXPEDITION_FAMILIES, EXPEDITION_REGIONS, MAX_EXPEDITION_SUPPLIES, sendExpedition } from '../expeditions/expeditions'
 import { dishesHeld } from '../kitchen/kitchen'
@@ -39,7 +40,7 @@ import { clearPlot, FIELD_PLOTS, plotLock } from '../fields/plots'
 import { digBuilt, stairsLock, takeStairs } from '../gathering/digs'
 import { chop, fish, FULL_HAULS, reachList } from '../gathering/hauls'
 import { STATIONS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
-import { levelLock, LOAD_SIZE, loadsADay, nextStationLevel, stationLevel, stationOptions, upgradeStation } from '../gathering/stations'
+import { levelLock, LOAD_SIZE, loadsADay, nextStationLevel, setStationPlan, stationLevel, stationOptions, upgradeStation } from '../gathering/stations'
 import { goodOf, LEGACY_CROP_IDS, seedId, type CropId } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { animalLock, animalsIn, ANIMALS, buyAnimal, buyFodder, FODDER_PRICE, homeBuilt, siloRoom } from '../ranch/ranch'
@@ -581,12 +582,15 @@ function measure(save: SaveV4): { work: Work; real: number; idleish: number; act
   return { work, real, idleish, actions }
 }
 
-/** Fish for the post's fillets when its build materials are still short. The Smokehouse loads them overnight. */
-function fishForPost(start: SaveV4): SaveV4 {
-  const place = farmPlace('expeditions') as BuildPlace
-  const needed = place.opens.cost.goods.find((line) => line.family === 'fish')!
-  if (placeBuilt(start, 'expeditions') || start.farm.builds.includes('expeditions')
-    || farmRankOf(start.farm.points) < place.opens.rank || heldFor(start.items, needed) >= needed.count) return start
+/** Supply the Smokehouse first and then the fillets for the post and Boat. */
+function fishForBuilds(start: SaveV4): SaveV4 {
+  const rank = farmRankOf(start.farm.points)
+  const needed = (['smokehouse', 'expeditions', 'boat'] as const).flatMap((id) => {
+    const { opens } = farmPlace(id) as BuildPlace
+    if (placeBuilt(start, id) || start.farm.builds.includes(id) || rank < opens.rank || (opens.after && !placeBuilt(start, opens.after))) return []
+    return opens.cost.goods.filter((line) => line.family === 'fish' && heldFor(start.items, line) < line.count)
+  })[0]
+  if (!needed) return start
   const spot = reachList(start, 'fishery').filter((s) => s.lock === null).at(-1)?.id as FishingSpotId | undefined
   if (!spot) return start
   let save = start
@@ -626,9 +630,18 @@ function play(start: SaveV4, stage: Stage, log: Day[], expeditions: boolean): Sa
   // The Kitchen, once it stands: his play (the casual bot), then the staff meal; and a recipe for the goods the farm holds
   // most of, bought in town at the day's end with spare gold. Then logs for the next build, by his own hand.
   const kitchen = botKitchen(save, 'casual', PACK)
-  save = chopForBuilds(expeditions ? sendStrongest(fishForPost(kitchen.save)) : kitchen.save)
+  save = chopForBuilds(expeditions ? sendStrongest(fishForBuilds(kitchen.save)) : kitchen.save)
   const recipe = botRecipe(save, spare(save))
   save = tendByHand(save)
+  // Keep construction supplied when planks compete with the Sawmill's new food jobs.
+  if (stationLevel(save, 'sawmill') && planFor(expeditions).some((id) => {
+    const place = farmPlace(id) as BuildPlace
+    return !placeBuilt(save, id) && place.opens.cost.goods.some((line) => line.family === 'woods' && line.refined)
+  })) {
+    const planks = [...new Set(stationOptions(save, 'sawmill').filter((o) => o.job === 'planks')
+      .sort((a, b) => b.held - a.held).map((o) => o.output))].slice(0, 6)
+    if (planks.length) save = setStationPlan(save, 'sawmill', planks.map((output) => ({ output, target: 99 })))
+  }
   const plan = assign(save)
   save = ship(plan.save, expeditions)
   if (actionsLeft(save) > 0) save = spendActions(goToTown(save), actionsLeft(goToTown(save)))
@@ -775,6 +788,26 @@ describe('expeditions at farm scale', () => {
     expect(last.filter((day) => day.short)).toEqual([])
     for (const morning of run.mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
   }, 60000)
+})
+
+describe('F99 fixed production plans over four years', () => {
+  it.each(PRODUCTION_CREWS)('plays the recurring farm with %i Umas', (crew) => {
+    const run = playProductionFarm(crew)
+    if (process.env.F99_REPORT === '1') {
+      console.log(JSON.stringify({ crew, first: run.first, seasons: run.seasonGold, absence: run.missingFarmhands, crops: run.cropCount }))
+      console.table(run.years)
+    }
+    expect(run.years).toHaveLength(4)
+    expect(run.save.gold).toBeGreaterThan(0)
+    expect(run.cropCount).toBeGreaterThanOrEqual(4)
+    if (crew >= 10) {
+      expect(run.missingFarmhands).toBe(24)
+      expect(run.save.expeditionLog?.filter((trip) => trip.region === 'sky-ruins')).toHaveLength(2)
+      expect(run.years.every((year) => year.share >= 80 && year.typicalFree >= 8)).toBe(true)
+      expect(Object.values(run.first).every((day) => day !== null)).toBe(true)
+      expect(run.years.slice(1).every((year) => year.repeats > 0)).toBe(true)
+    }
+  }, 60_000)
 })
 
 describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', () => {

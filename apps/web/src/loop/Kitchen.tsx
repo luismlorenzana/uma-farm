@@ -5,7 +5,7 @@
 // two more from Fine. Part of the homestead's chunk.
 import {
   actionCost, actionsLeft, BATCH_GOODS, BATCH_MEALS, batchBlock, batchStars, foodHeld, itemNameOf, MEALS_A_DAY, pantryMeals, plainBatch, tableTonight, TAKEOUT_PRICE,
-  WELL_FED_STARS, type FoodHeld, type SaveV4,
+  goodName, usesReserve, WELL_FED_STARS, type FoodHeld, type SaveV4,
 } from '@farm/domain'
 import { Button, HelpButton } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
@@ -36,6 +36,7 @@ export function Kitchen({ save, busy, onCook, onStove }: { save: SaveV4; busy: b
   const [chosen, setChosen] = useState<string[] | null>(null)
   // Your picks while they're still held, else the plain rule's.
   const picks = chosen && batchBlock(save, chosen) === null ? chosen : plainBatch(save) ?? []
+  const protectedStock = usesReserve(save, picks)
   const why = actionsLeft(save) < actionCost('batch') ? 'No actions left today.' : batchBlock(save, picks.length === BATCH_GOODS ? picks : null)
   const stored = pantryMeals(save)
   // A play under way at the stove: nothing else cooks until it's settled.
@@ -73,7 +74,7 @@ export function Kitchen({ save, busy, onCook, onStove }: { save: SaveV4; busy: b
                   className={`flex min-h-11 w-full items-center gap-1.5 rounded-md border px-2 text-left text-[13px] ${n > 0 ? 'border-accent bg-accent/10 font-semibold' : 'border-hairline'}`}
                   data-food-key={row.key}>
                   <ItemIcon id={row.id} size={24} />
-                  <span className="min-w-0 flex-1 truncate">{itemNameOf(row.id)} ★{row.stars}</span>
+                  <span className="min-w-0 flex-1 truncate">{goodName(row.id)} ★{row.stars}</span>
                   <span className="shrink-0 text-[12px] text-ink-soft tabular-nums">{n > 0 ? `${n}/${row.count}` : `×${row.count}`}</span>
                 </button>
               </li>
@@ -83,10 +84,10 @@ export function Kitchen({ save, busy, onCook, onStove }: { save: SaveV4; busy: b
       )}
       <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" disabled={busy || why !== null || stoveBusy} onClick={() => onCook(picks)} data-action="cook-batch" data-why={why ?? undefined}>
-          {`Cook a batch · ${actionCost('batch')}`}
+          {`${protectedStock ? 'Cook with reserve' : 'Cook a batch'} · ${actionCost('batch')}`}
         </Button>
         <Button disabled={busy || why !== null || stoveBusy} onClick={() => onStove(picks)} data-action="stove-batch" data-why={why ?? undefined}>
-          {`At the stove · ${actionCost('batch')}`}
+          {`${protectedStock ? 'Stove with reserve' : 'At the stove'} · ${actionCost('batch')}`}
         </Button>
       </div>
       {held.length > 0 && (

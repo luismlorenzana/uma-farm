@@ -4,14 +4,15 @@
 import {
   actionsLeft, CROPS, cropBaseGrade, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
   type HarvestReceipt,
-  type StationId,
+  baseGoodId, FISH_MODES, FISH_MODE_NAMES, FISH_PROMOTION, goodCount, gradeVariants, MAX_PRODUCTION_TARGET, MAX_STATION_TARGETS,
+  stationRecipes, type FishingSpotId, type FishMode, type StationId, type StationTarget,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
-import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, removeOrchardAt, tillAt, upgradeAt, waterAt } from './actions'
+import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, pickFishingMode, planStation, plantAt, removeOrchardAt, tillAt, upgradeAt, waterAt } from './actions'
 import { reachRows, stationView, thinWords, tileView, tileWhere, type TileAction } from './farm-view'
 import { actionWords, plural } from './words'
 
@@ -166,8 +167,11 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
                       onClick={() => run(chopAt(row.id).then((haul) => `Chopped · +${goodsWords(haul.items)}`))}>Chop · 1</Button>
                   </>
                 ) : (
-                  <Button size="sm" className="flex-1" disabled={busy || out} data-action="fish"
-                    onClick={() => run(fishAt(row.id).then((c) => (c ? `${itemNameOf(c.fish)} ★${c.stars} · ${c.cm} cm${c.record ? ', a record' : ''}` : 'Nothing bit: it’s thin here today')))}>Fish · 1</Button>
+                  <div className="w-full space-y-1.5">
+                    <CatchMode save={save} spot={row.id as FishingSpotId} species={row.finds} busy={busy} run={run} />
+                    <Button size="sm" className="w-full" disabled={busy || out} data-action="fish"
+                      onClick={() => run(fishAt(row.id).then((c) => (c ? `${goodName(c.gradeId ?? c.fish)} ★${c.stars} · ${c.cm} cm${c.record ? ', a record' : ''}` : 'Nothing bit: it’s thin here today')))}>Fish · 1</Button>
+                  </div>
                 )}
               </div>
             )}
@@ -176,6 +180,30 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
       </ul>
       <ActionsLeft save={save} />
     </div>
+  )
+}
+
+function CatchMode({ save, spot, species, busy, run }: {
+  save: FarmSave; spot: FishingSpotId; species: string[]; busy: boolean; run: (promise: Promise<string | null>) => void
+}) {
+  const mode = save.farm.fishingModes?.[spot] ?? 'standard'
+  const rule = mode === 'standard' ? null : FISH_PROMOTION[mode]
+  const caught = save.farm.manualCatches ?? 0
+  return (
+    <>
+      <label className="flex min-h-11 flex-wrap items-center gap-1.5 text-[13px]">Catch mode
+        <select className="min-h-11 bg-panel px-1" value={mode} disabled={busy}
+          onChange={(e) => run(pickFishingMode(spot, e.currentTarget.value as FishMode).then(() => null))}>
+          {FISH_MODES.map((key) => <option key={key} value={key}>{FISH_MODE_NAMES[key]}</option>)}
+        </select>
+      </label>
+      {rule && <p className="text-[12px] text-ink-soft" data-fish-progress>
+        {caught < rule.manual ? `Manual catches · ${caught} of ${rule.manual}`
+          : species.filter((id) => gradeVariants(id)[rule.step]).map((id) =>
+              `${itemNameOf(id)} ${save.farm.fishRemainders?.[`${id}:${rule.step}`] ?? 0}/${rule.every}`).join(' · ')
+            || 'No eligible species this season'}
+      </p>}
+    </>
   )
 }
 
@@ -214,19 +242,30 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
       {!full && view.options.length === 0 && <p className="text-[14px] text-ink-soft" data-station-empty>Nothing to process yet: bring its goods home first.</p>}
       {view.options.length > 0 && (
         <ul className="space-y-1.5" aria-label="What it can make">
-          {view.options.map((o) => (
+          {view.options.map((o) => {
+            const normal = Math.min(o.most, Math.floor(o.available / o.units))
+            const load = (count: number, useReserved: boolean) =>
+              run(loadAt(station, o.item, count, useReserved).then(() => `Loaded ${count} · ready tomorrow`))
+            return (
             <li key={o.item} className="flex min-h-12 items-center gap-2.5 rounded-sm border border-hairline bg-panel px-2 py-1" data-option={o.item}>
               <ItemIcon id={o.output} size={32} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] font-semibold">{words(o.item)}</span>
-                <span className="block text-[12px] text-ink-soft">From {itemNameOf(o.input)} · {o.held} held</span>
+                <span className="block text-[14px] font-semibold">{words(o.item)}</span>
+                <span className="block text-[12px] text-ink-soft">
+                  {o.units > 1 ? `${o.units} × ` : 'From '}{goodName(o.input)} · {o.available === o.held ? `${o.held} held` : `${o.available} available`}
+                </span>
               </span>
-              <Button size="sm" disabled={busy || out} data-action="load"
-                onClick={() => run(loadAt(station, o.item, o.most).then(() => `Loaded ${o.most} · ready tomorrow`))}>Load {o.most}</Button>
+              <div className="grid gap-1">
+                {normal > 0 && <Button size="sm" disabled={busy || out} data-action="load" onClick={() => load(normal, false)}>Load {normal}</Button>}
+                {normal < o.most && <Button size="sm" variant="secondary" disabled={busy || out} data-action="load-reserve"
+                  onClick={() => load(o.most, true)}>Use reserve · load {o.most}</Button>}
+              </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
+      <StationTargets key={station} save={save} station={station} level={view.level} />
       {view.next && (
         <div className="flex min-h-12 items-center gap-2.5 rounded-sm border border-hairline bg-panel px-2.5 py-1.5" data-next-level={view.next.level}>
           <span className="min-w-0 flex-1 text-[14px]">
@@ -241,5 +280,45 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
       )}
       <ActionsLeft save={save} />
     </div>
+  )
+}
+
+function StationTargets({ save, station, level }: { save: FarmSave; station: StationId; level: number }) {
+  const targets = save.farm.stationPlans?.[station] ?? []
+  const choices = stationRecipes(station, level).filter((g) => targets.every((entry) => entry.output !== g.id))
+  const [output, choose] = useState('')
+  const [count, setCount] = useState(4)
+  const { note, error, busy, run } = useAct(station)
+  const valid = Number.isInteger(count) && count > 0 && count <= MAX_PRODUCTION_TARGET
+  const edit = (next: StationTarget[]) => run(planStation(station, next).then(() => { choose(''); return null }))
+  return (
+    <details className="rounded-md border border-hairline px-2 text-[13px]">
+      <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Roster load targets · {targets.length || 'Automatic'}</summary>
+      <div className="space-y-2 pb-2">
+        {targets.map((entry, i) => (
+          <div key={entry.output} className="flex items-center gap-1">
+            <p className="min-w-0 flex-1">{goodName(entry.output)} · {goodCount(save.items, entry.output)}/{entry.target}</p>
+            {i > 0 && <Button size="sm" variant="secondary" disabled={busy} aria-label={`Prioritize ${goodName(entry.output)}`}
+              onClick={() => edit(targets.map((t, k) => k === i - 1 ? entry : k === i ? targets[i - 1]! : t))}>↑</Button>}
+            <Button size="sm" variant="secondary" disabled={busy} aria-label={`Remove ${goodName(entry.output)} target`}
+              onClick={() => edit(targets.filter((t) => t.output !== entry.output))}>×</Button>
+          </div>
+        ))}
+        {targets.length < MAX_STATION_TARGETS && choices.length > 0 && (
+          <>
+            <select aria-label="Exact output" className="min-h-11 w-full bg-panel" value={output} onChange={(e) => choose(e.currentTarget.value)}>
+              <option value="">Choose exact output</option>
+              {choices.map((good) => <option key={good.id} value={good.id}>{itemNameOf(baseGoodId(good.id))} · G{good.grade}</option>)}
+            </select>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <label>Keep <input type="number" min={1} max={MAX_PRODUCTION_TARGET} value={count} className="min-h-11 w-14 rounded-sm border border-hairline bg-panel px-1"
+                onChange={(e) => setCount(Number(e.currentTarget.value))} /></label>
+              <Button size="sm" disabled={busy || !output || !valid} onClick={() => edit([...targets, { output, target: count }])}>Add target</Button>
+            </div>
+          </>
+        )}
+        <Notes note={note} error={error} />
+      </div>
+    </details>
   )
 }

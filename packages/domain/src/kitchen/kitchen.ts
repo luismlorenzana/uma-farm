@@ -27,6 +27,7 @@
 // account's, the day's and the farm's count of plays (`farm.counts.plays`), so every play differs and a replay is the
 // same. Pure; never stamps.
 import { actionCost, actionsLeft, spend, spendForEvent, type SpecialDays } from '../farm/actions'
+import { discoverOutput } from '../goods/discovery'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { aptitudeOf, aptitudeYield, handDay } from '../farm/farmhands'
@@ -377,7 +378,9 @@ export function finishPlay<S extends FarmSave>(save: S, taps: readonly StoveTap[
     counts[`cooked:${d.dish}`] = (counts[`cooked:${d.dish}`] ?? 0) + d.count
   }
   const best = taps ? { ...workshops.best, kitchen: Math.max(workshops.best.kitchen ?? 0, score) } : workshops.best
-  let next: S = { ...save, items, farm: { ...save.farm, counts }, workshops: { ...workshops, best } }
+  let next = save
+  for (const dish of dishes) if (dish.count > 0) next = discoverOutput(next, dish.dish)
+  next = { ...next, items, farm: { ...next.farm, counts }, workshops: { ...workshops, best } }
   if (play.assistant && next.roster[play.assistant]) {
     const id = play.assistant
     const uma = next.roster[id]!
@@ -394,7 +397,8 @@ function finishContest<S extends FarmSave>(save: S, play: PlayInProgress, score:
   const line = play.menu![0]!
   const stars = dishStars(line.main, line.side, tier.lift)
   const counts = { ...save.farm.counts, [`cooked:${line.dish}`]: (save.farm.counts[`cooked:${line.dish}`] ?? 0) + 1 }
-  let next: S = { ...save, workshops: { ...save.workshops, current: null }, items: addGoods(save.items, line.dish, stars, 1), farm: { ...save.farm, counts } }
+  const proof = discoverOutput(save, line.dish)
+  let next: S = { ...proof, workshops: { ...save.workshops, current: null }, items: addGoods(save.items, line.dish, stars, 1), farm: { ...proof.farm, counts } }
   const cook = play.assistant && next.roster[play.assistant] ? play.assistant : null
   if (cook) {
     const uma = next.roster[cook]!

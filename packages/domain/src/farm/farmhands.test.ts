@@ -143,11 +143,11 @@ describe('her night', () => {
     const morning = night(save)
     // Three actions each: A waters three tiles (Watering 2: a tile an action), B casts three times.
     expect(fieldTiles(morning).filter((t) => t.growth === 1)).toHaveLength(3)
-    expect(morning.summary!.work.slice(0, 2)).toEqual([
+    expect(morning.summary!.work.filter((line) => line.kind === 'farmhand')).toEqual([
       { kind: 'farmhand', id: A, actions: 3, spent: 3, half: false, fed: false, tasks: 1, done: { water: 3 }, items: 0 },
       { kind: 'farmhand', id: B, actions: 3, spent: 3, half: false, fed: false, tasks: 1, done: { fish: 3 }, items: 3 },
     ])
-    expect(morning.summary!.work[2]).toEqual({ kind: 'grew', tiles: 3, ripe: 0 })
+    expect(morning.summary!.work).toContainEqual({ kind: 'grew', tiles: 3, ripe: 0 })
     expect(Object.keys(morning.items).filter((id) => id === 'carp' || id === 'trout').length).toBeGreaterThan(0)
     expect(morning.roster[A]!.practice).toEqual({ water: 3 })
     expect(morning.roster[B]!.practice).toEqual({ fish: 3 })
@@ -250,14 +250,14 @@ describe('her night', () => {
     save = cookMeal(cookMeal(save, 'breakfast').save, 'dinner').save
     // The meal's day: her three; the morning after, well fed: four; the day after that, three again.
     let morning = night(save)
-    expect(morning.summary!.work[0]).toMatchObject({ id: A, actions: 3, fed: false })
+    expect(morning.summary!.work.find((line) => line.kind === 'farmhand')).toMatchObject({ id: A, actions: 3, fed: false })
     expect(morning.today.fed).toEqual([A, B])
     expect(fedThisMorning(morning)).toEqual([A, B])
     morning = night(morning)
-    expect(morning.summary!.work[0]).toMatchObject({ id: A, actions: 4, spent: 4, fed: true })
+    expect(morning.summary!.work.find((line) => line.kind === 'farmhand')).toMatchObject({ id: A, actions: 4, spent: 4, fed: true })
     expect(morning.today.fed).toBeUndefined()
     morning = night(morning)
-    expect(morning.summary!.work[0]).toMatchObject({ actions: 3, fed: false })
+    expect(morning.summary!.work.find((line) => line.kind === 'farmhand')).toMatchObject({ actions: 3, fed: false })
   })
 
   it('reads half pace from the day as it was left, before the night counts another short night', () => {
@@ -265,9 +265,9 @@ describe('her night', () => {
     save = { ...save, gold: 0, farm: { ...save.farm, owed: 50, short: 1 } }
     // One short night so far: tonight she works at full pace, though tonight is short again.
     const once = night(save)
-    expect(once.summary!.work[0]).toMatchObject({ actions: 3, half: false })
+    expect(once.summary!.work.find((line) => line.kind === 'farmhand')).toMatchObject({ actions: 3, half: false })
     expect(once.farm.short).toBe(2)
-    expect(night(once).summary!.work[0]).toMatchObject({ actions: 1, spent: 1, half: true })
+    expect(night(once).summary!.work.find((line) => line.kind === 'farmhand')).toMatchObject({ actions: 1, spent: 1, half: true })
   })
 
   it('costs no upkeep: her meals on her farm days are her cost; once she\'s a spouse in her room, she\'s a resident', () => {
@@ -333,7 +333,7 @@ describe('the ranch and the mine on the board', () => {
     let save = tasks(ranch(), B, [{ kind: 'mine', dig: 'mine' }])
     save = tasks(save, A, [{ kind: 'care', home: 'coop' }])
     const morning = night(save)
-    expect(morning.summary!.work[1]).toMatchObject({ kind: 'farmhand', id: B, spent: 3, done: { mine: 3 } })
+    expect(morning.summary!.work.find((line) => line.kind === 'farmhand' && line.id === B)).toMatchObject({ kind: 'farmhand', id: B, spent: 3, done: { mine: 3 } })
     expect(morning.places.mine).toEqual({ deepest: 1, stairs: 2 })
     expect(morning.roster[B]!.practice).toEqual({ mine: 3 })
     expect(morning.roster[B]!.ranks.mining.points).toBe(10)
@@ -373,7 +373,7 @@ describe('the plots on the board', () => {
     expect(morning.fields.plots[1]!.tiles.slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
     expect(morning.fields.plots[1]!.tiles.slice(3, FIELD_COLUMNS).every((t) => t.growth === 0)).toBe(true)
     expect(morning.fields.plots[0]!.tiles.slice(0, FIELD_COLUMNS).every((t) => t.growth === 0)).toBe(true)
-    expect(morning.summary!.work[0]).toMatchObject({ kind: 'farmhand', id: A, spent: 3, done: { water: 3 } })
+    expect(morning.summary!.work.find((line) => line.kind === 'farmhand')).toMatchObject({ kind: 'farmhand', id: A, spent: 3, done: { water: 3 } })
     // At Watering 6, one action waters every dry tile of hers in plot 2's first row, and none of plot 1's.
     save = practice(save, A, 'water', APTITUDE_POINTS[TRICK_AT.waterRow - 1]!)
     const after = handsTonight(save, save, talentsD, null).save

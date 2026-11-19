@@ -14,6 +14,7 @@ import { itemNameOf } from '../items/lines'
 import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
 import { round5 } from '../farm/round'
 import { PLANTABLE_ADDITIONS, RARE_CROPS, type NewCropId } from '../fields/plantables'
+import { ANIMAL_PRODUCTS, FOOD_CONVERSIONS } from './production-catalogue'
 
 /** The families the 284 goods come from: uma-art's fifteen, then the ranch's eggs and milk (uma-art's `eggs-milk` line,
  * a family of the farm's). */
@@ -36,6 +37,9 @@ export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
 
 /** The ranch's eggs and milk, G1 → G4: on uma-art's items atlas from 2.30.0, row 38. */
 export const EGGS_MILK = ['egg', 'milk', 'duck-egg', 'goat-milk'] as const
+export const ANIMAL_PRODUCT_IDS = Object.values(ANIMAL_PRODUCTS)
+const animalProducts: ReadonlySet<string> = new Set(ANIMAL_PRODUCT_IDS)
+export const isAnimalProduct = (id: string): boolean => animalProducts.has(id)
 
 /** Each family's ten raw ids, G1 → G10, and their refined forms where the farm keeps them (the vegetables' refined forms
  * leave the game; the expeditions' loot is raw only). */
@@ -148,6 +152,9 @@ export interface Good {
   price: number
   /** A refined good's input (its family's raw good of the same grade), or null for a raw one. */
   input: string | null
+  /** A variant shares its ingredient and market crate with this stable base ID. */
+  base?: string
+  conversion?: { job: typeof FOOD_CONVERSIONS[number]['job']; level: number; units: number }
 }
 
 /** A raw good's price ★1: a crop's own, else the ladder's. Grains and vegetables are all crops. */
@@ -178,24 +185,52 @@ const addedGoods: Good[] = PLANTABLE_ADDITIONS.filter(([id]) => !oldGoods.has(id
 }))
 const gradedCrops = new Map<string, { crop: CropId; grade: number }>()
 const cropsByGrade = new Map<CropId, readonly Good[]>()
-/** Keep legacy family and grade lookups on GOODS. Inventory uses the full catalogue. */
-export const CATALOGUE = [...GOODS, ...addedGoods].flatMap((g) => {
-  if (!isCropId(g.id)) return [g]
-  const crop = g.id
-  const ladder = canSaveCropSeed(crop) ? Array.from({ length: Math.min(3, 11 - g.grade) }, (_, step): Good => ({
-    ...g, id: step === 0 ? crop : `${crop}-grade-${g.grade + step}`, grade: g.grade + step,
-    price: step === 0 ? g.price : round5(g.price * (step === 1 ? 1.2 : 1.45)),
-  })) : [g]
-  cropsByGrade.set(crop, ladder)
-  for (const variant of ladder) gradedCrops.set(variant.id, { crop, grade: variant.grade })
+const rawLadders = new Map<string, readonly Good[]>()
+const gradedId = (id: string, grade: number): string => `${id}-grade-${grade}`
+
+function rawGrades(good: Good): readonly Good[] {
+  const ladder: Good[] = [good]
+  for (let step = 1; step <= 2 && good.grade + step <= 10; step++) {
+    ladder.push({ ...good, base: good.id, id: gradedId(good.id, good.grade + step), grade: good.grade + step,
+      price: round5(good.price * (step === 1 ? 1.2 : 1.45)) })
+  }
   return ladder
+}
+
+function refinedGrades(base: Good, inputs: readonly Good[]): Good[] {
+  const units = base.conversion?.units ?? 1
+  return inputs.map((input, i) => ({
+    ...base, ...(i === 0 ? {} : { base: base.id }), id: i === 0 ? base.id : gradedId(base.id, input.grade),
+    grade: input.grade, input: input.id, price: units === 1 ? refinedPrice(input.price) : round5(input.price * units * 1.25),
+  }))
+}
+
+/** Keep legacy family and grade lookups on GOODS. Inventory uses the full catalogue. */
+const bases = [...GOODS, ...addedGoods]
+for (const good of bases) {
+  if (good.refined) continue
+  const { id } = good
+  const ladder = (isCropId(id) && canSaveCropSeed(id)) || isAnimalProduct(id) || good.family === 'fish' ? rawGrades(good) : [good]
+  rawLadders.set(id, ladder)
+  if (!isCropId(id)) continue
+  cropsByGrade.set(id, ladder)
+  for (const variant of ladder) gradedCrops.set(variant.id, { crop: id, grade: variant.grade })
+}
+const conversions = FOOD_CONVERSIONS.flatMap(({ input, output, ...conversion }) => {
+  const inputs = rawLadders.get(input)!
+  return refinedGrades({ ...inputs[0]!, id: output, crop: false, refined: true, conversion }, inputs)
 })
+const standardCatalogue = bases.flatMap((good) => good.input ? refinedGrades(good, rawLadders.get(good.input)!) : [...rawLadders.get(good.id)!])
+export const CATALOGUE = [...standardCatalogue, ...conversions]
 export const cropGradeOf = (id: string) => gradedCrops.get(id)
 export const cropGrades = (crop: CropId): readonly Good[] => cropsByGrade.get(crop)!
 export const cropBaseGrade = (crop: CropId): number => cropGrades(crop)[0]!.grade
 export const cropGoodId = (crop: CropId, grade: number): string | undefined => cropGrades(crop).find((g) => g.grade === grade)?.id
-export const baseGoodId = (id: string): string => cropGradeOf(id)?.crop ?? id
 const GOOD_BY_ID = new Map(CATALOGUE.map((g) => [g.id, g]))
+export const baseGoodId = (id: string): string => GOOD_BY_ID.get(id)?.base ?? id
+export const gradeVariants = (id: string): readonly Good[] => rawLadders.get(id) ?? []
+export const gradeStepId = (id: string, step: number): string => rawLadders.get(id)?.[step]?.id ?? id
+export const isBaseFish = (id: string): boolean => rawLadders.get(id)?.[0]?.family === 'fish'
 export const GOOD_IDS: readonly string[] = CATALOGUE.map((g) => g.id)
 
 // --- The rings ---------------------------------------------------------------------------------
@@ -220,7 +255,8 @@ export const ringName = (grade: number): string => `${RING_METALS[grade - 1] ?? 
 /** A good's family, grade, form, price ★1 and input, or undefined for anything else (a seed has no price). The rings are
  * here too, so the bin prices them and the screens name them. */
 export const goodOf = (id: string): Good | undefined => GOOD_BY_ID.get(id) ?? RING_BY_ID.get(id)
-const REFINED_OF = new Map(GOODS.flatMap((g) => (g.input ? [[g.input, g.id] as const] : [])))
+const REFINED_OF = new Map(standardCatalogue.flatMap((g) => (g.input ? [[g.input, g.id] as const] : [])))
+for (const good of conversions) if (!REFINED_OF.has(good.input!)) REFINED_OF.set(good.input!, good.id)
 /** What a raw good refines into at a station, or null (the vegetables' and the expeditions' have none). */
 export const refinedOf = (id: string): string | null => REFINED_OF.get(id) ?? null
 /** One of the 284 goods (the rings apart). */
@@ -270,8 +306,8 @@ export function dishName(id: string): string {
 export function goodName(id: string): string {
   const seed = SEEDS.get(id)
   if (seed) return `${itemNameOf(seed.crop)}${seed.grade ? ` G${seed.grade}` : ''} seeds${seed.own ? ' (own)' : ''}`
-  const variant = cropGradeOf(id)
-  if (variant && variant.crop !== id) return `${itemNameOf(variant.crop)} G${variant.grade}`
+  const variant = GOOD_BY_ID.get(id)
+  if (variant?.base) return `${itemNameOf(variant.base)} G${variant.grade}`
   const ring = RING_BY_ID.get(id)
   if (ring) return ringName(ring.grade)
   return id.startsWith('dish-') ? dishName(id) : itemNameOf(id)

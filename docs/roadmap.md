@@ -149,8 +149,7 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.4 **The roster-run farm** | [Fields and orchards](game-mechanics.md#the-crops) have 51 plantables, saved seed, skilled harvests and seasonal row plans. The [farm rework packet](handoff/tasks/F99-farm-rework.md) continues with ranch and stations, and fishing. |
-| 2.5 **The Restaurant's and the Forge's games** | The [Restaurant packet](handoff/tasks/F98-restaurant.md) follows the farm rework, using its exact-grade discoveries. The Forge's merge game follows separately. |
+| 2.5 **The Restaurant's and the Forge's games** | The [Restaurant packet](handoff/tasks/F98-restaurant.md) uses the farm's exact-grade discoveries. The Forge's merge game follows separately. |
 | 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |
 
 How each workshop is built:
@@ -160,11 +159,6 @@ How each workshop is built:
 - **Its art:** the kit's frames and icons drawn in code by Claude; its people drawn by ChatGPT.
 - **The save:** v5 grows in place. A new version comes only when a save shape must change in a way old fields can't
   carry, and then with a migration, never a start-over: the farm is kept.
-
-**Farm expansion after the Restaurant.** Explore a larger seasonal crop and fruit catalogue, grade improvement through
-saved seeds or skilled farmhands, and corresponding grades for animal goods, processing and fishing. The
-[Restaurant packet](handoff/tasks/F98-restaurant.md#farm-expansion-for-a-follow-up) records the research and candidate
-scope. Open a separate packet when this work starts.
 
 ### Phase 3: Feel and polish
 

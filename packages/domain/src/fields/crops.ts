@@ -33,13 +33,13 @@ const crop = (id: CropId, seasons: readonly Season[], tier: SeedTier, seed: numb
 
 /** The crops, in table order. */
 const ORIGINAL_CROPS: Readonly<Record<LegacyCropId, Crop>> = {
-  carrot: crop('carrot', ['spring'], 1, 20, 4, 1, null),
+  carrot: crop('carrot', ['spring'], 1, 20, 4, 1, null, 'sawmill'),
   potato: crop('potato', ['spring'], 1, 35, 6, 2, null),
   mint: crop('mint', ['spring'], 1, 40, 4, 1, 3, 'sawmill'),
   onion: crop('onion', ['spring', 'autumn'], 2, 30, 5, 1, null),
   cabbage: crop('cabbage', ['spring', 'winter'], 2, 90, 8, 1, null),
   asparagus: crop('asparagus', ['spring'], 4, 150, 10, 1, null),
-  tomato: crop('tomato', ['summer'], 1, 50, 7, 1, 3),
+  tomato: crop('tomato', ['summer'], 1, 50, 7, 1, 3, 'sawmill'),
   basil: crop('basil', ['summer'], 1, 40, 4, 1, 3, 'sawmill'),
   'bell-pepper': crop('bell-pepper', ['summer'], 1, 60, 6, 1, 3),
   eggplant: crop('eggplant', ['summer'], 2, 70, 6, 1, 4),
@@ -64,7 +64,7 @@ const ORIGINAL_CROPS: Readonly<Record<LegacyCropId, Crop>> = {
 export const CROPS = {
   ...ORIGINAL_CROPS,
   ...Object.fromEntries(PLANTABLE_ADDITIONS.map(([id, p]) => [id, {
-    ...crop(id, [p.season], p.rank, p.seed, p.days, p.yield, p.regrows ?? null, p.woody && refinedOf(id) ? 'mill' : null),
+    ...crop(id, [p.season], p.rank, p.seed, p.days, p.yield, p.regrows ?? null, refinedOf(id) ? 'mill' : null),
     ...(p.woody ? { woody: p.woody } : {}),
   }])),
 } as Readonly<Record<CropId, Crop>>

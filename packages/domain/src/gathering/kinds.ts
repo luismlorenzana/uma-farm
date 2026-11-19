@@ -109,6 +109,8 @@ export const sizeRecord = (fish: string): string => `size:${fish}`
 /** A catch, measured as it lands. */
 export interface Measured {
   fish: string
+  /** Exact stock ID when the catch was promoted, while length stays on its species. */
+  gradeId?: string
   stars: number
   cm: number
   /** The biggest of its kind so far. */

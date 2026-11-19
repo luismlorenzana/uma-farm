@@ -21,6 +21,7 @@
 import { addBond, BOND_POINTS, placesToday } from '../farm/bonds'
 import { awayOn } from '../expeditions/presence'
 import { draw } from '../farm/draw'
+import { discoverStock } from '../goods/discovery'
 import { opened } from '../farm/places'
 import { rankQuality } from '../farm/rank-rules'
 import { talentQuality, talentsD, type TalentOf } from '../farm/talents'
@@ -188,7 +189,7 @@ export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = 
     }
     chores.push({ id, items: left, watered: 0 })
   }
-  return { save: items === save.items ? save : { ...save, items }, chores }
+  return { save: items === save.items ? save : discoverStock({ ...save, items }, chores.flatMap((c) => c.items)), chores }
 }
 
 // --- Morning items ----------------------------------------------------------------------------------------

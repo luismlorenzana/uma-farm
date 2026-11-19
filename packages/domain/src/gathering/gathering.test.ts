@@ -255,7 +255,7 @@ describe('the stations\' loads', () => {
     const morning = endDay(loaded, {}, LATER)
     expect(morning.items['pine-plank']).toEqual([0, 0, 3, 0, 0])
     expect(morning.loads).toEqual({})
-    expect(morning.summary!.work).toEqual([{ kind: 'load', station: 'sawmill', item: 'pine-plank@3', count: 3 }])
+    expect(morning.summary!.work).toEqual([{ kind: 'discovery', id: 'pine-plank' }, { kind: 'load', station: 'sawmill', item: 'pine-plank@3', count: 3 }])
     expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 
@@ -345,7 +345,9 @@ describe('the stations\' loads', () => {
     expect(stationJobOf('wool-cloth')).toBe('weaving')
     expect(stationJobOf('carrot')).toBeNull()
     expect(stationJobOf('egg')).toBeNull()
-    expect(STATION_JOB_IDS).toHaveLength(10)
+    expect(stationJobOf('carrot-pickles-grade-2')).toBe('preserving')
+    expect(stationJobOf('cultured-yogurt-grade-3')).toBe('dairy')
+    expect(STATION_JOB_IDS).toHaveLength(12)
   })
 
   it('makes preserves overnight too', () => {

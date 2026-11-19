@@ -41,9 +41,10 @@ export function iconFrame(id: string): IconFrame | null {
   const dish = /^dish-([a-z-]+)-(10|[1-9])$/.exec(id)
   const row = dish ? DISH_ROW[dish[1]!] : undefined
   if (dish && row !== undefined) return { sheet: 'dishes', x: (Number(dish[2]) - 1) * ATLAS_CELL, y: row * ATLAS_CELL }
-  const base = seedOf(id)?.crop ?? baseGoodId(id)
+  const good = goodOf(id)
+  const base = good?.conversion && good.input ? baseGoodId(good.input) : seedOf(id)?.crop ?? baseGoodId(id)
   const field = FIELD_ART.indexOf(base)
   if (field >= 0) return { sheet: 'field-produce', x: (field % 6) * ATLAS_CELL, y: Math.floor(field / 6) * ATLAS_CELL }
-  const good = goodOf(base)
-  return good ? { sheet: 'items', x: (good.grade - 1) * ATLAS_CELL, y: (GOOD_ROW[good.family] + (good.refined ? 1 : 0)) * ATLAS_CELL } : null
+  const frame = goodOf(base)
+  return frame ? { sheet: 'items', x: (frame.grade - 1) * ATLAS_CELL, y: (GOOD_ROW[frame.family] + (frame.refined ? 1 : 0)) * ATLAS_CELL } : null
 }

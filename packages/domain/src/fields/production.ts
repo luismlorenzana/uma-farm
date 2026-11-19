@@ -1,6 +1,7 @@
 import { spend } from '../farm/actions'
 import { dateOf, SEASONS, type Season } from '../farm/calendar'
 import { farmRankOf } from '../farm/farm'
+import { setStockReserve } from '../farm/production'
 import { canSaveCropSeed, cropBaseGrade, cropGoodId, cropSeedId, seedId, type CropId } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
 import { SaveRuleError } from '../save/rules'
@@ -81,13 +82,9 @@ export function harvestGrade(save: Pick<FarmSave, 'farm' | 'calendar'>, tile: Ti
 }
 
 export function setCropReserve<S extends FarmSave>(save: S, crop: CropId, grade: number, count: number): S {
-  if (!Number.isInteger(count) || count < 0 || count > MAX_SEED_TARGET) throw new SaveRuleError('bad-count', 'Keep 0 to 99 units.')
   const id = cropGoodId(crop, grade)
   if (!id) throw new SaveRuleError('no-items', 'Unknown crop grade.')
-  const reserves = { ...save.farm.reserves }
-  if (count > 0) reserves[id] = count
-  else delete reserves[id]
-  return { ...save, farm: { ...save.farm, reserves } }
+  return setStockReserve(save, id, count)
 }
 
 export const seedKnowledge = (crop: CropId, grade: number): number | undefined =>

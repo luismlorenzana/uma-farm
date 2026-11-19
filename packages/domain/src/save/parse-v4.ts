@@ -14,6 +14,7 @@ import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/far
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
 import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
 import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
+import { FISH_MODES } from '../goods/production-catalogue'
 import { isStockId, parseStockKey } from './warehouse'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
@@ -97,10 +98,17 @@ function parseTask(value: unknown, path: string): FarmTask {
     }
     case 'load': return { kind, station: oneOf(object(value, path, ['kind', 'station']).station, `${path}.station`, STATIONS) }
     case 'forage': case 'chop': return { kind, area: oneOf(object(value, path, ['kind', 'area']).area, `${path}.area`, FOREST_AREAS) }
-    case 'fish': return { kind, spot: oneOf(object(value, path, ['kind', 'spot']).spot, `${path}.spot`, FISHING_SPOTS) }
-    case 'care': return { kind, home: oneOf(object(value, path, ['kind', 'home']).home, `${path}.home`, RANCH_HOMES) }
+    case 'fish': {
+      const o = object(value, path, ['kind', 'spot', 'mode'])
+      return { kind, spot: oneOf(o.spot, `${path}.spot`, FISHING_SPOTS), ...(o.mode === undefined ? {} : { mode: oneOf(o.mode, `${path}.mode`, FISH_MODES) }) }
+    }
+    case 'care': {
+      const o = object(value, path, ['kind', 'home', 'feedOnly'])
+      if (o.feedOnly !== undefined && o.feedOnly !== true) fail(`${path}.feedOnly`, 'expected true')
+      return { kind, home: oneOf(o.home, `${path}.home`, RANCH_HOMES), ...(o.feedOnly === true ? { feedOnly: true as const } : {}) }
+    }
     case 'mine': return { kind, dig: oneOf(object(value, path, ['kind', 'dig']).dig, `${path}.dig`, DIGS) }
-    case 'cook': return (object(value, path, ['kind']), { kind })
+    case 'cook': case 'ship-surplus': return (object(value, path, ['kind']), { kind })
   }
 }
 

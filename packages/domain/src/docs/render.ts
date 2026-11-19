@@ -43,7 +43,7 @@ import {
 import {
   CHALLENGES, daysToRank, PLACE_ACTIVITY, RANK_BENEFITS, rankPointsForDay,
 } from '../farm/rank-rules'
-import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type FishingSpotId, type ForestAreaId, type StationId } from '../gathering/ids'
+import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobLevel, stationJobOf, stationJobUnits, STATIONS, type FishingSpotId, type ForestAreaId, type StationId } from '../gathering/ids'
 import { gatherQuality, sizeSkill, type WorkTerms } from '../gathering/kinds'
 import { FISH_SIZES, FISHERY, FOREST, STATION_JOB_RULES } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
@@ -510,9 +510,10 @@ function digFloors(): string {
 /** Every station job's input → output, with both prices ★1. */
 function stationRecipes(): string {
   return STATION_JOB_IDS.map((job) => {
-    const rows = GOODS.filter((good) => good.refined && stationJobOf(good.id) === job)
-      .map((good) => [`G${good.grade}`, itemNameOf(good.input!), g(starPrice(good.input!, 1)), itemNameOf(good.id), g(starPrice(good.id, 1))])
-    return `##### ${STATION_JOB_RULES[job].name} (${farmPlace(STATION_JOBS[job].station)!.name})\n\n${table(['Grade', 'In', '★1', 'Out', '★1'], rows)}`
+    const rows = CATALOGUE.filter((good) => good.refined && !good.base && stationJobOf(good.id) === job)
+      .map((good) => [`G${good.grade}`, `${stationJobUnits(good.id)} × ${itemNameOf(good.input!)}`, g(starPrice(good.input!, 1)),
+        itemNameOf(good.id), g(starPrice(good.id, 1)), String(stationJobLevel(good.id))])
+    return `##### ${STATION_JOB_RULES[job].name} (${farmPlace(STATION_JOBS[job].station)!.name})\n\n${table(['Base grade', 'In', '★1 each', 'Out', '★1 each', 'Level'], rows)}`
   }).join('\n\n')
 }
 
@@ -564,20 +565,22 @@ function farmhandDay(): string {
 /** The work board's tasks: what each works over, an action, when it stops, its aptitude and the activity it reads. */
 function workBoard(): string {
   const rows: Cell[][] = TASK_KINDS.map((kind) => {
+    if (kind === 'ship-surplus') return [TASK_NAMES[kind], 'Exact goods on the surplus plan', 'Move one shared crate of up to 50 goods into the bin for the following day',
+      'After one crate, or when no stock is above reserve', '—', '—']
     const aptitude = kind === 'load' ? 'mill' : kind === 'save-seed' ? 'plant' : kind
     const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'A plot’s tiles you choose (the board offers each plot’s rows)' : kind === 'load' ? 'A built station'
       : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor'
         : kind === 'cook' ? 'The farmhouse kitchen (the Kitchen’s, once it stands)' : kind === 'save-seed' ? 'One crop and grade in the Warehouse' : 'An area the farm reaches'
-    const each: Record<TaskKind, string> = {
+    const each: Record<Exclude<TaskKind, 'ship-surplus'>, string> = {
       harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
       water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
       plant: `An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; ${tilesAt('plant', TRICK_AT.plantTwo)}`,
       till: `A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing ${TRICK_AT.tillInOne}`,
       'save-seed': 'Up to four units of produce of one grade become saved seed',
-      load: `A load of the good the station holds most of, up to ${LOAD_SIZE} (${BIG_LOAD} from her level ${TRICK_AT.bigLoad}), until the station holds its loads for the day: one a level`,
+      load: `A load toward its exact stock targets, or the eligible input most held, up to ${LOAD_SIZE} (${BIG_LOAD} with her aptitude). Protects reserves and shares the station’s slots`,
       forage: `A haul of ${FORAGE_HAUL} finds (${FORAGE_HAUL + 1} from Foraging ${TRICK_AT.forageThree})`,
       chop: `${CHOP_LOGS} logs (${CHOP_LOGS + 1} from Chopping ${TRICK_AT.chopThree})`,
-      fish: `A cast: one fish (two casts from Fishing ${TRICK_AT.castTwo})`,
+      fish: `A cast: one fish (two casts from Fishing ${TRICK_AT.castTwo}), with grade promotion in the selected mode when qualified`,
       care: `A hungry animal fed from the silo (two from Animal care ${TRICK_AT.feedTwo}), else grass cut on a weeds tile for it; then the building’s goods collected, +${per(aptitudeQuality(2))} quality a level above 1; then an animal cared for (two from Animal care ${TRICK_AT.careTwo}), +1 fondness a level above 1`,
       mine: `A face on the deepest floor: ${FACE_FINDS} finds by her yield (${FACE_FINDS + 1} from Mining ${TRICK_AT.digThree}), a face more toward its stairs; the farmer takes them`,
       cook: `A batch from ${BATCH_GOODS} goods of food by the plain rule: ${COOK_BATCH[0]} meals at Cooking 1, up to ${COOK_BATCH.at(-1)} at Cooking ${COOK_BATCH.length}, into the pantry`,

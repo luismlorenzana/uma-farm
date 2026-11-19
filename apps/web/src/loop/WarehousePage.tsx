@@ -4,8 +4,8 @@
 // star in, and Ship · 1 action ships the crate, then goes back to the bin. Drawn on the kit's Chip, Sheet and Button:
 // the kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
 import {
-  actionsLeft, binTotal, canSaveCropSeed, CROP_IDS, CROPS, cropBaseGrade, cropGoodId, cropGradeOf, cropGrades, crateWorth, discovered, goodOf, itemNameOf,
-  MAX_SEED_TARGET, SEASON_NAMES, SEED_BATCH, seedKnowledge, seedOf, seedOutput, type CropId, type CrateLine, type FarmSave,
+  actionsLeft, availableStock, baseGoodId, binTotal, canSaveCropSeed, CATALOGUE, cropBaseGrade, cropGoodId, cropGradeOf, crateWorth, discovered, goodName,
+  goodOf, ingredientSources, isGoodId, itemNameOf, MAX_PRODUCTION_TARGET, SEED_BATCH, seedKnowledge, seedOf, seedOutput, type CropId, type CrateLine, type FarmSave,
 } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -13,19 +13,28 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
-import { reserveCrop, saveSeeds, shipPicked } from './actions'
+import { reserveGood, saveSeeds, shipPicked } from './actions'
 import { Notes, useAct } from './FarmPanels'
-import { easedWords, firstTab, goldWords, starWords, warehouseTabs, type GoodRow, type Shelf, type StarCell } from './goods-view'
+import { easedWords, firstTab, goldWords, goodFacts, shelfOf, starWords, warehouseTabs, type GoodRow, type Shelf, type StarCell } from './goods-view'
 
 export default function WarehousePage() {
   const save = useLoopSave()
   const [params] = useSearchParams()
   if (!save) return null
-  return <Warehouse save={save} picking={params.get('pick') === 'bin'} />
+  const good = params.get('good')
+  return <Warehouse key={good ?? ''} save={save} picking={params.get('pick') === 'bin'} initialGood={good} />
 }
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 const crateKey = (id: string, stars: number) => `${id}@${stars}`
+const choicesByShelf = new Map<Shelf, typeof CATALOGUE>()
+for (const good of CATALOGUE.filter((g) => !g.base)) {
+  const shelf = shelfOf(good)
+  if (shelf === 'seeds' || shelf === 'mining' || shelf === 'loot') continue
+  const choices = choicesByShelf.get(shelf)
+  if (choices) choices.push(good)
+  else choicesByShelf.set(shelf, [good])
+}
 
 /** The crate's lines from what's picked. */
 function crateLines(crate: Readonly<Record<string, number>>): CrateLine[] {
@@ -35,23 +44,35 @@ function crateLines(crate: Readonly<Record<string, number>>): CrateLine[] {
   })
 }
 
-function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
+function Warehouse({ save, picking, initialGood }: { save: FarmSave; picking: boolean; initialGood: string | null }) {
   const leave = useLeave()
   const tabs = useMemo(() => warehouseTabs(save), [save])
-  const [shelf, setShelf] = useState<Shelf>(() => firstTab(tabs, picking))
-  const [open, setOpen] = useState<string | null>(null)
+  const [shelf, setShelf] = useState<Shelf>(() => {
+    const good = initialGood ? goodOf(initialGood) : undefined
+    return good ? shelfOf(good) : tabs.find((tab) => tab.rows.some((row) => row.id === initialGood))?.shelf ?? firstTab(tabs, picking)
+  })
+  const [open, setOpen] = useState<string | null>(initialGood)
   const [error, setError] = useState<string | null>(null)
   const [crate, setCrate] = useState<Record<string, number>>({})
   const [busy, setBusy] = useState(false)
-  const [discoveryCrop, setDiscoveryCrop] = useState<CropId>('carrot')
+  const [discoveries, setDiscoveries] = useState<Partial<Record<Shelf, string>>>({})
   const [gradeFilter, setGradeFilter] = useState(0)
   const tab = tabs.find((t) => t.shelf === shelf) ?? tabs[0]!
   const rows = tabs.flatMap((t) => t.rows)
+  const choices = choicesByShelf.get(tab.shelf) ?? []
+  const selected = discoveries[tab.shelf] ?? (tab.shelf === 'crops' ? 'carrot' : choices[0]?.id)
   const visibleRows = tab.rows.filter((row) => {
     if (gradeFilter === 0) return true
     const seed = seedOf(row.id)
     return (seed ? seed.grade ?? cropBaseGrade(seed.crop) : goodOf(row.id)?.grade) === gradeFilter
   })
+  const gradeGroups = new Map<string, GoodRow[]>()
+  for (const row of visibleRows) {
+    const id = baseGoodId(row.id)
+    const group = gradeGroups.get(id)
+    if (group) group.push(row)
+    else gradeGroups.set(id, [row])
+  }
   const openRow = open === null ? undefined : rows.find((row) => row.id === open)
   const held = (id: string, stars: number) => rows.find((r) => r.id === id)?.cells[stars - 1]?.count ?? 0
   const pick = (id: string, stars: number) => setCrate((c) => {
@@ -98,15 +119,15 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
               {Array.from({ length: 10 }, (_, i) => i + 1).map((grade) => <option key={grade} value={grade}>G{grade}</option>)}
             </select>
           </label>
-          {!picking && (tab.shelf === 'crops' || tab.shelf === 'fruits') && (
-            <div className="flex flex-wrap items-center gap-2 text-[13px]" aria-label="Crop discoveries">
-              <label className="flex items-center gap-2 font-semibold">Crop discoveries
-                <select className="min-h-11 rounded-sm border border-hairline-strong bg-panel px-2 font-normal" value={discoveryCrop}
-                  onChange={(e) => setDiscoveryCrop(e.currentTarget.value as CropId)}>
-                  {CROP_IDS.map((crop) => <option key={crop} value={crop}>{itemNameOf(crop)}</option>)}
+          {!picking && selected && (
+            <div className="flex flex-wrap items-center gap-2 text-[13px]" aria-label="Ingredient discoveries">
+              <label className="flex items-center gap-2 font-semibold">{tab.shelf === 'crops' ? 'Crop discoveries' : 'Discoveries'}
+                <select className="min-h-11 max-w-52 rounded-sm border border-hairline-strong bg-panel px-2 font-normal" value={selected}
+                  onChange={(e) => setDiscoveries({ ...discoveries, [tab.shelf]: e.currentTarget.value })}>
+                  {choices.map((good) => <option key={good.id} value={good.id}>{goodName(good.id)}</option>)}
                 </select>
               </label>
-              {cropGrades(discoveryCrop).map((g) => (
+              {CATALOGUE.filter((g) => baseGoodId(g.id) === selected).map((g) => (
                 <Button key={g.id} variant="secondary" size="sm" className="min-h-11" data-crop-discovery={g.grade} onClick={() => setOpen(g.id)}>
                   G{g.grade} · {discovered(save, g.id) ? 'Discovered' : 'Undiscovered'}
                 </Button>
@@ -115,9 +136,9 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
           )}
           {visibleRows.length === 0 && <p className="rounded-md border border-hairline bg-panel p-4 text-center text-[14px] text-ink-soft">{gradeFilter ? 'Nothing at this grade.' : 'Nothing here yet.'}</p>}
           <ul className="grid gap-1.5 @xl:grid-cols-2" data-shelf-rows={tab.shelf}>
-            {visibleRows.map((row) => (
-              <li key={row.id}>
-                <GoodLine row={row} picking={picking} crate={crate} onOpen={() => setOpen(row.id)} onPick={pick} onPickAll={pickAll} />
+            {[...gradeGroups].map(([id, group]) => (
+              <li key={id} className="space-y-1.5">
+                {group.map((row) => <GoodLine key={row.id} row={row} picking={picking} crate={crate} onOpen={() => setOpen(row.id)} onPick={pick} onPickAll={pickAll} />)}
               </li>
             ))}
           </ul>
@@ -138,7 +159,7 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
           </div>
         </div>
       )}
-      <GoodSheet save={save} row={openRow} crop={open ? cropGradeOf(open) : undefined} onClose={() => setOpen(null)} onShipAll={shipAll} busy={busy || left === 0} error={error} />
+      <GoodSheet save={save} id={open} row={openRow} onClose={() => setOpen(null)} onShipAll={shipAll} busy={busy || left === 0} error={error} />
     </div>
   )
 }
@@ -220,15 +241,18 @@ function GoodLine({ row, picking, crate, onOpen, onPick, onPickAll }: {
 }
 
 /** A good's sheet: its family, grade and form, what it refines into or from, its stars, and Ship all · 1 action. */
-function GoodSheet({ save, row, crop, onClose, onShipAll, busy, error }: {
-  save: FarmSave; row: GoodRow | undefined; crop: ReturnType<typeof cropGradeOf>; onClose: () => void; onShipAll: (row: GoodRow) => void; busy: boolean; error: string | null
+function GoodSheet({ save, id, row, onClose, onShipAll, busy, error }: {
+  save: FarmSave; id: string | null; row: GoodRow | undefined; onClose: () => void; onShipAll: (row: GoodRow) => void; busy: boolean; error: string | null
 }) {
+  const good = id === null ? undefined : goodOf(id)
+  const crop = id === null ? undefined : cropGradeOf(id)
+  const sources = good ? ingredientSources(good.id) : []
   const reserved = row ? Math.min(row.total, save.farm.reserves?.[row.id] ?? 0) : 0
   return (
     <Sheet
-      open={row !== undefined || crop !== undefined}
+      open={row !== undefined || good !== undefined}
       onClose={onClose}
-      title={crop ? `${itemNameOf(crop.crop)} G${crop.grade}` : row?.name}
+      title={crop ? `${itemNameOf(crop.crop)} G${crop.grade}` : row?.name ?? (good && `${itemNameOf(baseGoodId(good.id))} G${good.grade}`)}
       footer={row?.sells
         ? <Button className="w-full" disabled={busy} onClick={() => onShipAll(row)} data-action="ship-all">{reserved ? 'Ship all, including reserve' : 'Ship all'} · {goldWords(row.worth)} · 1 action</Button>
         : undefined}
@@ -248,35 +272,53 @@ function GoodSheet({ save, row, crop, onClose, onShipAll, busy, error }: {
           {error && <p role="status" className="text-[13px] text-danger">{error}</p>}
         </div>
       )}
+      {good && !row && <p className="pb-2 text-[14px] text-ink-soft">{goodFacts(good)} · none held</p>}
+      {good && sources.length > 0 && (
+        <div className="space-y-1 pb-2 text-[13px] text-ink-soft">
+          <p className="font-semibold">{discovered(save, good.id) ? 'Discovered' : 'Undiscovered'}</p>
+          {sources.map((source) => <p key={source.label}>{source.label} · Rank {source.rank}</p>)}
+        </div>
+      )}
+      {good && isGoodId(good.id) && <ReservePanel key={good.id} save={save} id={good.id} grade={good.grade} />}
       {crop && <CropSeedPanel key={`${crop.crop}:${crop.grade}`} save={save} {...crop} held={row?.total ?? 0} />}
     </Sheet>
+  )
+}
+
+function ReservePanel({ save, id, grade }: { save: FarmSave; id: string; grade: number }) {
+  const floor = save.farm.reserves?.[id] ?? 0
+  const [reserve, setReserve] = useState(floor)
+  const { note, error, busy, run } = useAct(id)
+  return (
+    <div className="space-y-1.5 border-t border-hairline py-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex min-h-11 items-center gap-2 text-[14px]">Reserve G{grade}
+          <input type="number" min={0} max={MAX_PRODUCTION_TARGET} value={reserve} onChange={(e) => setReserve(Number(e.currentTarget.value))}
+            className="min-h-11 w-16 rounded-sm border border-hairline-strong bg-panel px-2" />
+        </label>
+        <Button variant="secondary" size="sm" disabled={busy || reserve === floor || !Number.isInteger(reserve) || reserve < 0 || reserve > MAX_PRODUCTION_TARGET}
+          onClick={() => run(reserveGood(id, reserve).then(() => 'Reserve saved'))}>Set reserve</Button>
+      </div>
+      {floor > 0 && <p className="text-[12px] text-ink-soft">{availableStock(save, id)} available · keep {floor}</p>}
+      <Notes note={note} error={error} />
+    </div>
   )
 }
 
 function CropSeedPanel({ save, crop, grade, held }: { save: FarmSave; crop: CropId; grade: number; held: number }) {
   const id = cropGoodId(crop, grade)!
   const floor = save.farm.reserves?.[id] ?? 0
-  const [reserve, setReserve] = useState(floor)
   const [count, setCount] = useState(1)
   const { note, error, busy, run } = useAct(id)
   const max = Math.min(SEED_BATCH, held)
   const required = seedKnowledge(crop, grade)
   const canImprove = seedOutput(save, crop, grade, true) !== undefined
-  const seasons = CROPS[crop].seasons.map((season) => SEASON_NAMES[season]).join(' · ')
   const takesReserve = count > held - floor
   const locked = busy || actionsLeft(save) === 0 || !Number.isInteger(count) || count < 1 || count > max
   const convert = (improve: boolean) => run(saveSeeds(crop, grade, improve, count, takesReserve)
     .then(() => `Saved ${count} × ${itemNameOf(crop)} G${improve ? grade + 1 : grade} seed`))
   return (
-    <div className="space-y-2 border-t border-hairline pt-2" aria-label="Crop seed and reserve">
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="flex min-h-11 items-center gap-2 text-[14px]">Reserve G{grade}
-          <input type="number" min={0} max={MAX_SEED_TARGET} value={reserve} onChange={(e) => setReserve(Number(e.currentTarget.value))}
-            className="min-h-11 w-16 rounded-sm border border-hairline-strong bg-panel px-2" />
-        </label>
-        <Button variant="secondary" size="sm" disabled={busy || reserve === floor || !Number.isInteger(reserve) || reserve < 0 || reserve > MAX_SEED_TARGET}
-          onClick={() => run(reserveCrop(crop, grade, reserve).then(() => 'Reserve saved'))}>Set reserve</Button>
-      </div>
+    <div className="space-y-2 border-t border-hairline pt-2" aria-label="Crop seed">
       {held > 0 && canSaveCropSeed(crop) && (
         <>
           <label className="flex min-h-11 items-center gap-2 text-[14px]">Units for seed
@@ -291,12 +333,6 @@ function CropSeedPanel({ save, crop, grade, held }: { save: FarmSave; crop: Crop
         </>
       )}
       {held === 0 && <p className="text-[13px] text-ink-soft">No G{grade} held.</p>}
-      {!discovered(save, id) && (
-        <p className="text-[12px] text-ink-soft">
-          {grade === cropBaseGrade(crop) ? `${seasons} · ${CROPS[crop].tier === 'rare' ? 'Rare seed from farm rewards' : `Shop seed · Farm Rank ${CROPS[crop].tier}`}`
-            : `${seasons} · Plant G${grade} seed, or assign Harvesting ${grade === cropBaseGrade(crop) + 1 ? 4 : 7} to upgrade G${grade - 1}.`}
-        </p>
-      )}
       <Notes note={note} error={error} />
     </div>
   )

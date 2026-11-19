@@ -33,8 +33,10 @@ export const STATION_JOBS = {
   'sugars-oils': { station: 'mill', families: ['sweets', 'nuts-seeds'] },
   preserves: { station: 'mill', families: ['fruits'] },
   weaving: { station: 'mill', families: ['fibers'] },
+  dairy: { station: 'mill', families: ['eggs-milk'] },
   planks: { station: 'sawmill', families: ['woods'] },
   drying: { station: 'sawmill', families: ['mushrooms', 'herbs-spices'] },
+  preserving: { station: 'sawmill', families: ['vegetables', 'eggs-milk'] },
   smoking: { station: 'smokehouse', families: ['fish'] },
   smelting: { station: 'smelter', families: ['ores'] },
   cutting: { station: 'cutter', families: ['crystals'] },
@@ -47,5 +49,9 @@ export const STATION_JOB_IDS = Object.keys(STATION_JOBS) as StationJobId[]
 export function stationJobOf(output: string): StationJobId | null {
   const good = goodOf(output)
   if (!good?.refined) return null
+  if (good.conversion) return good.conversion.job
   return STATION_JOB_IDS.find((job) => (STATION_JOBS[job].families as readonly GoodFamily[]).includes(good.family)) ?? null
 }
+
+export const stationJobLevel = (output: string): number => goodOf(output)?.conversion?.level ?? 1
+export const stationJobUnits = (output: string): number => goodOf(output)?.conversion?.units ?? 1

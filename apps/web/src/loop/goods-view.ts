@@ -15,11 +15,11 @@ export const starWords = (stars: number): string => `★${stars}`
 /** The Warehouse's tabs: the crops, the forest's six families, fish, mining and seeds; the expeditions' loot
  * only when the Warehouse holds some (none can be had yet); the rings and dishes (the bench's, the reception's, the
  * Kitchen's) likewise. */
-export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds', 'loot', 'rings', 'dishes'] as const
+export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'ranch', 'fish', 'mining', 'seeds', 'loot', 'rings', 'dishes'] as const
 export type Shelf = typeof SHELVES[number]
 const SHELF_NAMES: Readonly<Record<Shelf, string>> = {
   crops: 'Crops', woods: 'Woods', mushrooms: 'Mushrooms', 'herbs-spices': 'Herbs and spices', fruits: 'Fruits', 'nuts-seeds': 'Nuts and seeds',
-  sweets: 'Sweets', fish: 'Fish', mining: 'Mining', seeds: 'Seeds', loot: 'Loot', rings: 'Rings', dishes: 'Dishes',
+  sweets: 'Sweets', ranch: 'Ranch', fish: 'Fish', mining: 'Mining', seeds: 'Seeds', loot: 'Loot', rings: 'Rings', dishes: 'Dishes',
 }
 /** The tabs shown only while something is on them. */
 const WHEN_HELD: ReadonlySet<Shelf> = new Set(['loot', 'rings', 'dishes'])
@@ -33,6 +33,7 @@ const orderOf = (id: string): number => ORDER.get(id) ?? Infinity
 export function shelfOf(good: Pick<Good, 'family' | 'crop'>): Shelf {
   if (good.family === 'fruits') return 'fruits'
   if (good.crop || good.family === 'grains' || good.family === 'vegetables') return 'crops'
+  if (good.family === 'eggs-milk' || good.family === 'fibers') return 'ranch'
   if (MINING.has(good.family)) return 'mining'
   if (LOOT.has(good.family)) return 'loot'
   if (good.family === 'rings') return 'rings'
