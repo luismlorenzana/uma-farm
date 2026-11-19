@@ -36,7 +36,7 @@ uma-platform, never in a copy here.
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
 | `@luismlorenzana/uma-kit` | 0.20.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame with its left rail and top bar (0.20.0's landscape variants), its side panels (regular and wide) and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album |
 | `@luismlorenzana/uma-art` | 2.30.0 | web | The bar's, map's, item and emote art |
-| `@luismlorenzana/uma-data` | 1.9.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0, its profile pictures from 1.9.0); test fixtures from `/testing` |
+| `@luismlorenzana/uma-data` | 1.10.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0, its profile pictures from 1.9.0); test fixtures from `/testing` |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The Warehouse's stock types (the work engine's screens are retired with the work board) |
 | `@luismlorenzana/uma-server` | 0.2.0 | api | The owner guard, the master data proxy, the private pack route |
 
@@ -498,3 +498,7 @@ Lists in the mechanics document that come straight from the rules are rendered f
   makes of the code today, or names an unknown key.
 - **`pnpm docs:update`** (`UPDATE_DOCS=1`, the domain's docs test) rewrites every block in place. Run it in the same
   change as any rule a block shows.
+
+### Outfit-specific cast art
+
+Dialogue portraits and illustrations resolve a sister’s `s<outfitId>` through the neutral outfits set. The release client requests her `outfit:<outfitId>` family entry and validates both IDs. Original numeric character entries remain separate. A missing sister entry uses the existing blank-bust fallback.
