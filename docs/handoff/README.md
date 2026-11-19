@@ -111,7 +111,9 @@ one through the farm's exact ingredient discoveries. Sell cooked dishes, cook wi
 
 ## Open packets
 
-The Forge is next in Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm).
+There are no open implementation packets. The Forge is [deferred pending a redesign](../roadmap.md#deferred).
+The active roadmap covers [festivals and the long game](../roadmap.md#phase-2-the-whole-farm),
+[feel and polish](../roadmap.md#phase-3-feel-and-polish) and [reliability](../roadmap.md#phase-4-steady).
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
