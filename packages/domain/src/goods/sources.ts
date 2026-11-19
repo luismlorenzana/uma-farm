@@ -5,7 +5,8 @@ import { reachOf } from '../gathering/hauls'
 import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOBS, stationJobLevel, stationJobOf, stationJobUnits } from '../gathering/ids'
 import { FISHERY, FOREST } from '../gathering/tables'
 import { ANIMALS, HOME_NAMES } from '../ranch/ranch'
-import { baseGoodId, cropGradeOf, goodName, goodOf, isBaseFish } from './ids'
+import { baseGoodId, cropGradeOf, goodOf, isBaseFish } from './ids'
+import { goodName } from './names'
 import { FISH_PROMOTION } from './production-catalogue'
 
 export interface IngredientSource {

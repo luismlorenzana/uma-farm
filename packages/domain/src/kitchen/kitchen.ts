@@ -28,6 +28,8 @@
 // same. Pure; never stamps.
 import { actionCost, actionsLeft, spend, spendForEvent, type SpecialDays } from '../farm/actions'
 import { discoverOutput } from '../goods/discovery'
+import { goodName } from '../goods/names'
+import { exactHeld, knowsRestaurantRecipe, restaurantRecipe } from '../restaurant/recipes'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { aptitudeOf, aptitudeYield, handDay } from '../farm/farmhands'
@@ -42,7 +44,7 @@ import { perkLineOf } from '../romance/perks'
 import { receptionDays } from '../romance/wedding'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
-import { isDishId, MENU_RECIPES, type FarmSave, type MenuLine, type PlayInProgress, type StaffMeal, type StovePlay } from '../save/v4'
+import { isDishId, MENU_RECIPES, type ExactMenuLine, type FarmSave, type LegacyMenuLine, type MenuLine, type PlayInProgress, type StaffMeal, type StovePlay } from '../save/v4'
 import { bookedForExpedition } from '../expeditions/presence'
 import { availableDishes } from '../expeditions/stock'
 import { addGoods, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
@@ -109,7 +111,7 @@ function begin<S extends FarmSave>(save: S, play: Omit<PlayInProgress, 'workshop
  * plain rule's when none) out of the Warehouse now, and the play under way, 30 s on its seed. Refused as the plain batch
  * is (`batchBlock`), while a play is under way (`busy`), and with no action left. Never stamps. */
 export function startStoveBatch<S extends FarmSave>(save: S, picks: readonly string[] | null = null): S {
-  if (save.workshops.current) throw new SaveRuleError('busy', 'A play is under way.')
+  if (save.workshops.current || save.workshops.restaurant?.shift) throw new SaveRuleError('busy', 'A play is under way.')
   const block = batchBlock(save, picks)
   if (block) throw new SaveRuleError(block === 'A batch takes two goods.' ? 'bad-count' : block === 'Only food goes in a batch.' ? 'bad-job' : 'no-items', block)
   const goods = [...(picks ?? plainBatch(save)!)]
@@ -162,7 +164,7 @@ export const sidesHeld = (save: Pick<FarmSave, 'items'>, dish: string): FoodHeld
 /** A recipe on the menu with `count` dishes, its main and side the defaults: the star held most (ties the lower) that
  * still covers it after what the rest of the menu takes (`taken`), else the star held most; with none held, its main's
  * raw good ★1 and its side's first good ★1, so the refusal can say what's short. */
-export function menuLine(save: Pick<FarmSave, 'items'>, dish: string, count: number, taken: ReadonlyMap<string, number> = new Map()): MenuLine {
+export function menuLine(save: Pick<FarmSave, 'items'>, dish: string, count: number, taken: ReadonlyMap<string, number> = new Map()): LegacyMenuLine {
   const recipe = recipeOf(dish)!
   const pick = (rows: FoodHeld[], need: number) => (rows.find((r) => r.count - (taken.get(r.key) ?? 0) >= need) ?? rows[0])?.key
   const main = pick(mainsHeld(save, dish), MAINS_A_DISH * count) ?? stockKey(recipe.mains[0]!, 1)
@@ -186,14 +188,14 @@ export function canMake(save: Pick<FarmSave, 'items'>, dish: string): number {
 /** The menu to start: up to three known recipes the Warehouse can make the most of (the known order on a tie), sharing
  * the base evenly, each ingredient at its default after what the lines before it take; with none it can make, the first
  * known. Empty before the Kitchen. */
-export function defaultMenu(save: Pick<FarmSave, 'items' | 'buildings' | 'workshops'>): MenuLine[] {
+export function defaultMenu(save: Pick<FarmSave, 'items' | 'buildings' | 'workshops'>): LegacyMenuLine[] {
   const base = kitchenBase(save)
   const known = knownRecipes(save)
   if (base === 0 || known.length === 0) return []
   const making = known.map((dish, i) => ({ dish, i, can: canMake(save, dish) })).filter((r) => r.can > 0).sort((a, b) => b.can - a.can || a.i - b.i).slice(0, MENU_RECIPES)
   const dishes = (making.length > 0 ? making.sort((a, b) => a.i - b.i).map((r) => r.dish) : [known[0]!])
   const shares = shareEvenly(base, dishes.length)
-  const menu: MenuLine[] = []
+  const menu: LegacyMenuLine[] = []
   for (const [i, dish] of dishes.entries()) menu.push(menuLine(save, dish, shares[i]!, menuTakes(menu)))
   return menu
 }
@@ -202,6 +204,10 @@ export function defaultMenu(save: Pick<FarmSave, 'items' | 'buildings' | 'worksh
 export function menuTakes(menu: readonly MenuLine[]): Map<string, number> {
   const takes = new Map<string, number>()
   for (const line of menu) {
+    if ('inputs' in line) {
+      for (const { key, count } of line.inputs) takes.set(key, (takes.get(key) ?? 0) + count)
+      continue
+    }
     takes.set(line.main, (takes.get(line.main) ?? 0) + MAINS_A_DISH * line.count)
     takes.set(line.side, (takes.get(line.side) ?? 0) + SIDES_A_DISH * line.count)
   }
@@ -210,26 +216,49 @@ export function menuTakes(menu: readonly MenuLine[]): Map<string, number> {
 
 /** Why a menu can't be cooked, or null: a recipe once each, known, one to three, sharing the level's base whole; each
  * ingredient its recipe's main or side, held: "Short 2 Carp." */
-export function menuBlock(save: Pick<FarmSave, 'items' | 'buildings' | 'workshops'>, menu: readonly MenuLine[]): string | null {
+type MenuSave = Pick<FarmSave, 'items' | 'buildings' | 'workshops'> & Partial<Pick<FarmSave, 'calendar' | 'expeditions' | 'crops' | 'farm' | 'diary'>>
+
+function exactBlock(save: MenuSave, line: ExactMenuLine): string | null {
+  const recipe = restaurantRecipe(line.dish)
+  if (!recipe || !save.farm || !save.crops || !save.diary
+    || !knowsRestaurantRecipe({ workshops: save.workshops, farm: save.farm, crops: save.crops, diary: save.diary }, recipe)) return 'You don’t know that recipe.'
+  const remaining = new Map(recipe.ingredients.map(({ id, count }) => [id, count * line.count]))
+  const keys = new Set<string>()
+  for (const { key, count } of line.inputs) {
+    const at = parseStockKey(key)
+    const need = at ? remaining.get(at.id) : undefined
+    if (!at || need === undefined || !Number.isInteger(count) || count < 1 || count > need || keys.has(key)) return 'Choose the exact recipe ingredients.'
+    keys.add(key)
+    remaining.set(at.id, need - count)
+  }
+  return [...remaining.values()].some((count) => count > 0) ? 'Choose the exact recipe ingredients.' : null
+}
+
+export function menuBlock(save: MenuSave, menu: readonly MenuLine[]): string | null {
   const base = kitchenBase(save)
   if (menu.length === 0) return 'Choose a recipe.'
   if (menu.length > MENU_RECIPES) return `${MENU_RECIPES} recipes at most.`
   if (new Set(menu.map((l) => l.dish)).size !== menu.length) return 'A recipe once on the menu.'
   for (const line of menu) {
+    if (!Number.isInteger(line.count) || line.count < 1) return 'Each recipe makes a dish or more.'
+    if ('inputs' in line) {
+      const block = exactBlock(save, line)
+      if (block) return block
+      continue
+    }
     const recipe = recipeOf(line.dish)
     if (!recipe || !knowsRecipe(save, line.dish)) return 'You don’t know that recipe.'
-    if (!Number.isInteger(line.count) || line.count < 1) return 'Each recipe makes a dish or more.'
     const main = parseStockKey(line.main)
     const side = parseStockKey(line.side)
     if (!main || !isMainOf(recipe, main.id)) return `That isn’t a main for ${line.dish}.`
     if (!side || !isSideOf(recipe, side.id)) return `That isn’t a side for ${line.dish}.`
   }
   const made = menu.reduce((n, l) => n + l.count, 0)
-  if (made !== base) return `The menu shares ${base} dishes.`
+  if (menu.some((line) => 'inputs' in line) ? made > base : made !== base) return `The menu shares ${base} dishes.`
   for (const [key, need] of menuTakes(menu)) {
     const at = parseStockKey(key)!
-    const held = save.items[at.id]?.[at.stars - 1] ?? 0
-    if (held < need) return `Short ${need - held} ${itemNameOf(at.id)}.`
+    const held = exactHeld(save, at.id, at.stars)
+    if (held < need) return `Short ${need - held} ${goodName(at.id)}.`
   }
   return null
 }
@@ -256,6 +285,7 @@ export function assistantLock(save: FarmSave, id: string, pack: SchedulePack | n
   if (!day) return 'Only a farmhand assists.'
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (!worksOn(save, pack, id)) return 'She’s in town today.'
+  if (save.today.server === id) return 'She’s serving today.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
 }
 
@@ -274,7 +304,7 @@ export function cooksDishes(save: FarmSave, pack: PerkPack | null): number {
 export function kitchenPlayBlock(save: FarmSave, menu: readonly MenuLine[], assistant: string | null = null): string | null {
   if (!placeBuilt(save, 'kitchen')) return 'Build the Kitchen first.'
   if (kitchenPlayedToday(save)) return 'The Kitchen plays once a day.'
-  if (save.workshops.current) return 'A play is under way.'
+  if (save.workshops.current || save.workshops.restaurant?.shift) return 'A play is under way.'
   if (actionsLeft(save) < actionCost('kitchen')) return 'No actions left today.'
   const block = menuBlock(save, menu)
   if (block) return block
@@ -288,7 +318,7 @@ export function kitchenPlayBlock(save: FarmSave, menu: readonly MenuLine[], assi
 export function startKitchenPlay<S extends FarmSave>(save: S, menu: readonly MenuLine[], assistant: string | null = null): S {
   if (!placeBuilt(save, 'kitchen')) throw new SaveRuleError('locked', 'Build the Kitchen first.')
   if (kitchenPlayedToday(save)) throw new SaveRuleError('busy', 'The Kitchen plays once a day.')
-  if (save.workshops.current) throw new SaveRuleError('busy', 'A play is under way.')
+  if (save.workshops.current || save.workshops.restaurant?.shift) throw new SaveRuleError('busy', 'A play is under way.')
   const spent = spend(save, 'kitchen')
   const block = menuBlock(save, menu) ?? (assistant === null ? null : assistantLock(save, assistant))
   if (block) throw new SaveRuleError(block.startsWith('Short') ? 'no-items' : 'bad-job', block)
@@ -300,7 +330,16 @@ export function startKitchenPlay<S extends FarmSave>(save: S, menu: readonly Men
   const played = { ...spent.workshops.played, kitchen: save.calendar.day }
   const today = assistant === null ? spent.today : { ...spent.today, assistant }
   const next = { ...spent, items, today, workshops: { ...spent.workshops, played } }
-  return begin(next, { play: 'kitchen', length: STOVE_SECONDS.kitchen, menu: menu.map((l) => ({ ...l })), ...(assistant === null ? {} : { assistant }) })
+  return begin(next, { play: 'kitchen', length: STOVE_SECONDS.kitchen,
+    menu: menu.map((line) => 'inputs' in line ? { ...line, inputs: line.inputs.map((input) => ({ ...input })) } : { ...line }),
+    ...(assistant === null ? {} : { assistant }) })
+}
+
+function menuStars(line: MenuLine, lift: number): number {
+  if (!('inputs' in line)) return dishStars(line.main, line.side, lift)
+  const count = line.inputs.reduce((n, input) => n + input.count, 0)
+  const stars = line.inputs.reduce((n, input) => n + input.count * parseStockKey(input.key)!.stars, 0)
+  return Math.min(5, Math.floor(stars / count) + lift)
 }
 
 /** The dishes a play makes: round(base × the tier's factor × the assistant's term) plus a cook's chores, the extra over
@@ -319,7 +358,7 @@ export function kitchenMakes(menu: readonly MenuLine[], tier: Pick<PlayTier, 'fa
     counts[i]! += 1
     left--
   }
-  return menu.map((l, i) => ({ dish: l.dish, stars: dishStars(l.main, l.side, tier.lift), count: counts[i]! }))
+  return menu.map((l, i) => ({ dish: l.dish, stars: menuStars(l, tier.lift), count: counts[i]! }))
 }
 
 // --- A play's end -----------------------------------------------------------------------------------------------------
@@ -395,7 +434,7 @@ export function finishPlay<S extends FarmSave>(save: S, taps: readonly StoveTap[
  * (`farm.counts['cooked:<dish>']` one more), its cook's point of Cooking practice, then the judging. */
 function finishContest<S extends FarmSave>(save: S, play: PlayInProgress, score: number, tier: PlayTier, stopped: boolean): { save: S; result: PlayResult } {
   const line = play.menu![0]!
-  const stars = dishStars(line.main, line.side, tier.lift)
+  const stars = menuStars(line, tier.lift)
   const counts = { ...save.farm.counts, [`cooked:${line.dish}`]: (save.farm.counts[`cooked:${line.dish}`] ?? 0) + 1 }
   const proof = discoverOutput(save, line.dish)
   let next: S = { ...proof, workshops: { ...save.workshops, current: null }, items: addGoods(save.items, line.dish, stars, 1), farm: { ...proof.farm, counts } }

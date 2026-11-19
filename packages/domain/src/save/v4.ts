@@ -23,6 +23,7 @@ import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import type { FishingSpotId, ForestAreaId, StationId } from '../gathering/ids'
 import { seedId, type CarrotGrade, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
+import { isRestaurantDish } from '../restaurant/rules'
 import type { Account, OlderSave } from './save'
 
 /** A master outfit id: the look a character id plays (`outfitOf`). Older rules still name roster ids with it. */
@@ -203,12 +204,18 @@ export const STOVE_PLAYS = ['batch', 'kitchen', 'contest'] as const
 export type StovePlay = typeof STOVE_PLAYS[number]
 /** One recipe on the Kitchen's menu: its dish, its share of the base, and its ingredients at one good and one star each
  * (stock keys): two of its main a dish, one of its side. */
-export interface MenuLine {
+export interface LegacyMenuLine {
   dish: string
   count: number
   main: string
   side: string
 }
+export interface ExactMenuLine {
+  dish: string
+  count: number
+  inputs: import('../restaurant/rules').StockPortions[]
+}
+export type MenuLine = LegacyMenuLine | ExactMenuLine
 /** The most dishes a menu line or a play's base holds: the Kitchen's top level's. Here so the save's parse reads it
  * without the Kitchen's rules. */
 export const MAX_KITCHEN_BASE = 15
@@ -237,10 +244,11 @@ export interface StaffMeal {
 
 /** The 80 dishes are `dish-<family>-<grade>` (uma-art's dishes atlas). */
 export const DISH_FAMILIES = ['grains', 'vegetables', 'fruits', 'herbs-spices', 'mushrooms', 'nuts-seeds', 'sweets', 'fish'] as const
-export const isDishId = (id: string): boolean => {
+export const isLegacyDishId = (id: string): boolean => {
   const m = /^dish-([a-z-]+)-(\d+)$/.exec(id)
   return !!m && (DISH_FAMILIES as readonly string[]).includes(m[1]!) && Number(m[2]) >= 1 && Number(m[2]) <= 10 && String(Number(m[2])) === m[2]
 }
+export const isDishId = (id: string): boolean => isLegacyDishId(id) || isRestaurantDish(id)
 
 /** The expedition regions. */
 export const REGION_IDS = ['old-fort-ruins', 'echo-cave', 'hilltop-track', 'misty-marsh', 'sunken-temple', 'ember-peak', 'sky-ruins'] as const
@@ -496,6 +504,7 @@ export interface TodayV4 {
   /** The Cooking Contest's cook today: one of her actions tonight is the Contest's. Absent with none (the save grows it
    * in place). */
   cook?: CharacterId
+  server?: CharacterId
 }
 
 /** The household's meals: one of each a day, once anyone is married. */
@@ -640,7 +649,7 @@ export interface SaveV5 {
   /** The workshops: the day of each one's last play (the Kitchen's, once a day), the play at the stove under way, the
    * recipes learnt (her signature dishes and those bought; the Kitchen's first three are known once it stands) and each
    * workshop's best score. A save from before the stove has no play under way. */
-  workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number> }
+  workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number>; restaurant?: import('../restaurant/rules').RestaurantState }
   expeditions: Expedition[]
   expeditionLog?: ExpeditionReturn[]
   /** Bond points by pair: `pairKey` of character ids. */

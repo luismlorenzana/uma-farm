@@ -99,7 +99,10 @@ import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOMESTEAD_ROW_MARRIED, HO
 import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
 import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES, type Beat } from '../story/bench'
-import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
+import { RING_GOODS } from '../goods/ids'
+import { DISH_WORDS, dishName, goodName } from '../goods/names'
+import { RESTAURANT_RECIPES } from '../restaurant/recipes'
+import { RESTAURANT_STAGES } from '../restaurant/rules'
 import { BIG_EVENTS, EVENING_SCENES, EVENT_LIMITS, LIFE_EVENTS, OCCASIONS, RUNGS, type Route, type Step, type Together, type UmaBible } from '../story/authored'
 import { DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, TALK_STAGES, WORK_WORDS } from '../story/default-story'
 import { TASTES } from '../romance/chats'
@@ -909,7 +912,7 @@ const LINE_TEN: Readonly<Record<PerkLine, string>> = {
   foraging: 'Her haul ×1.1, and her Sawmill batch ×1.1', fishing: 'Her catch ×1.1, and her Smokehouse batch ×1.1',
   mining: 'Her haul ×1.1, and her Smelter batch ×1.1', quarry: 'Her haul ×1.1, and her Cutter batch ×1.1',
   ranch: 'The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars',
-  cooking: 'As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes', serving: '+10% tips as the Restaurant’s server',
+  cooking: 'As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes', serving: '+10 percentage points to the tip rate and +0.75 s per ticket as the Restaurant’s server, again at R5',
   forging: '+10% goods as the Forge’s assistant',
 }
 /** A morning item by her line, in full. */
@@ -917,7 +920,7 @@ const LINE_ITEM: Readonly<Record<PerkLine, string>> = {
   farming: 'A ★2+ crop of the season', foraging: 'A ★2+ good of her rank’s deepest forest area this season', fishing: 'A ★2+ fish of her deepest spot this season',
   mining: 'A ★2+ ore of the Mine’s deepest floor reached', quarry: 'A ★2+ stone or gem of the Quarry’s deepest floor reached',
   ranch: 'A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none)', cooking: 'A ★2+ dish (a crop of the season for now: the dishes come to the morning items later)',
-  serving: 'A ★2+ dish (a crop of the season meanwhile)', forging: 'A ★2+ Fitting (a crop of the season meanwhile)',
+  serving: 'A ★2+ crop of the season', forging: 'A ★2+ Fitting (a crop of the season meanwhile)',
 }
 const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
   farming: 'Waters one dry growing tile (step 2)',
@@ -925,7 +928,7 @@ const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
   fishing: 'One fish from her deepest spot this season, at a day’s haul’s stars (step 4)',
   mining: 'One ore from the Mine’s deepest floor reached, at a face’s stars (step 4)', quarry: 'One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4)',
   ranch: '+5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3)',
-  cooking: '+1 dish on every Kitchen play while she’s on the farm: a spouse in her room, or a farmhand on her farm day (the chores don’t bank: a day without a play makes none)', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
+  cooking: '+1 dish on every Kitchen play while she’s on the farm: a spouse in her room, or a farmhand on her farm day (the chores don’t bank: a day without a play makes none)', serving: 'One 4 s grace order per chore on the day’s shift', forging: '+5% refund on the Forge’s next tool',
 }
 /** What "her line" means for each template, and whether it acts yet. */
 function perkLines(): string {
@@ -935,7 +938,8 @@ function perkLines(): string {
     const built = place?.opens.by === 'build' && place.opens.game
     const now = CHORE_LINES.includes(line) ? (opens === null ? 'Yes' : `Yes, once ${line === 'ranch' ? 'the Coop or the Barn' : `the ${place?.name ?? opens}`} stands`)
       : line === 'cooking' ? 'Yes, once the Kitchen stands: its +10% and its chores (the morning item later)'
-        : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
+        : line === 'serving' ? 'Yes, once the Restaurant stands'
+          : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
     return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], LINE_ITEM[line], now]
   }))
 }
@@ -964,7 +968,7 @@ function signatureDishes(): string {
     mining: `The top grade of the Mine’s deepest floor reached (floors 1–3: G${floorTopGrade(1)} … floor 27 on: G${floorTopGrade(27)}); G1 before it stands`,
     quarry: `The top grade of the Quarry’s deepest floor reached (floors 1–3: G${floorTopGrade(1)} … floor 27 on: G${floorTopGrade(27)}); G1 before it stands`,
     ranch: `The top grade of the goods the farm’s animals give (an Egg G${goodOf('egg')!.grade} … Cashmere Fleece G${goodOf('cashmere-fleece')!.grade}); G1 with none`,
-    cooking: 'The top grade of the dishes the Kitchen has cooked (`farm.counts[\'cooked:<dish>\']`); G1 before its first play', serving: 'G1 until the Restaurant’s game is built', forging: 'G1 until the Forge’s game is built',
+    cooking: 'The top grade of the dishes the Kitchen has cooked (`farm.counts[\'cooked:<dish>\']`); G1 before its first play', serving: 'The last Restaurant stage cleared, G1 before the first clear', forging: 'G1 until the Forge’s game is built',
   }
   return table(['Her line', 'Her dish kind', 'Its grade', 'At G1'], PERK_LINES.map((line) => [PERK_LINE_NAME[line], DISH_WORDS[LINE_DISH[line]], grade[line], dishName(dishId(LINE_DISH[line], 1))]))
     + '\n\nHer loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).'
@@ -1316,6 +1320,21 @@ function recipeKinds(): string {
     DISH_WORDS[k], `${FAMILY_NAMES[k].toLowerCase()} of its grade, raw or refined`, SIDE_WORDS[RECIPE_SIDE[k]] ?? RECIPE_SIDE[k],
   ]))
 }
+function restaurantStages(): string {
+  return table(['Stage', 'Recipe page', 'Dish types', 'Covers to clear', 'Time'], RESTAURANT_STAGES.map((stage, i) =>
+    [i + 1, stage.name, stage.types, `${stage.target} of ${stage.tickets}`, `${stage.seconds} s`]))
+}
+
+function restaurantRecipes(): string {
+  return table(['Recipe', 'Id', 'Grade', 'Exact ingredients per dish', '★1 base'], RESTAURANT_RECIPES.map((recipe) => [
+    recipe.name, `\`${recipe.id}\``, `G${recipe.grade}`,
+    recipe.ingredients.map(({ id, count, grade }) => {
+      const name = goodName(id)
+      return `${count} × ${name.endsWith(` G${grade}`) ? name : `${name} G${grade}`}`
+    }).join(' + '), `${recipe.price.toLocaleString('en-US')}g`,
+  ]))
+}
+
 /** The 80 recipes: each dish, its ingredients and its price at the shop's shelf. */
 function recipesBlock(): string {
   return table(['Dish', 'Id', 'Takes', 'At the shop'], RECIPES.map((r) => [
@@ -1416,6 +1435,7 @@ export function renderBlock(key: string): string | null {
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock,
     'stove-rules': stoveRules, 'play-tiers': playTiers, 'kitchen-levels': kitchenLevels, 'recipe-kinds': recipeKinds, recipes: recipesBlock, 'staff-meal': staffMealBlock,
+    'restaurant-stages': restaurantStages, 'restaurant-recipes': restaurantRecipes,
     'expedition-regions': expeditionRegions, 'expedition-results': expeditionResults,
     'contest-rules': contestRules, 'contest-rivals': contestRivals, 'contest-prizes': contestPrizes, 'contest-scene': contestScene }
   return blocks_[key]?.() ?? null

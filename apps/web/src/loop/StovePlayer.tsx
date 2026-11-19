@@ -47,6 +47,10 @@ export function dressingOf(play: Pick<PlayInProgress, 'play' | 'goods' | 'menu'>
   const menu = play.menu ?? []
   const line = menu[(ticket.id - 1) % Math.max(1, menu.length)]
   if (!line) return { name: 'Dish', icon: null, parts: Array.from({ length: ticket.parts }, () => '') }
+  if ('inputs' in line) {
+    const names = [...new Set(line.inputs.map(({ key }) => key.slice(0, key.lastIndexOf('@'))))].map(dishName)
+    return { name: dishName(line.dish), icon: line.dish, parts: Array.from({ length: ticket.parts }, (_, i) => names[i % names.length] ?? '') }
+  }
   const [main, side] = [name(line.main), name(line.side)]
   return { name: dishName(line.dish), icon: line.dish, parts: ticket.parts === 3 ? [main, main, side] : [main, side] }
 }

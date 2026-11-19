@@ -71,7 +71,7 @@ export const FAVOURITE_ACTIVITIES: readonly Activity[] = ACTIVITIES.filter((a) =
  * kitchen cooking. The Fields' tenders are farming. */
 export const PLACE_ACTIVITY: Readonly<Record<LoopPlaceId, Activity>> = {
   forest: 'foraging', sawmill: 'foraging', fishery: 'fishing', smokehouse: 'fishing', mill: 'farming',
-  mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining', coop: 'ranch', barn: 'ranch', kitchen: 'cooking',
+  mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining', coop: 'ranch', barn: 'ranch', kitchen: 'cooking', restaurant: 'serving',
 }
 
 // --- What a rank gives --------------------------------------------------------------------------------------
@@ -209,11 +209,11 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(5, 1, '1st at a Cooking Contest as the cook', 'the Cooking Contest’s judging, its cook', won('cooking-contest')),
   ],
   serving: [
-    row(1, 5, 'Assist 5 shifts', 'the Restaurant (not built yet)', on('play', () => 1)),
-    row(2, 1, 'Assist a Fine shift', 'the Restaurant (not built yet)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
-    row(3, 100, 'Serve 100 guests', 'the Restaurant (not built yet)', on('guests', (e) => e.guests)),
-    row(4, 1, 'Assist a Masterwork shift', 'the Restaurant (not built yet)', on('play', (e) => yes(e.grade === 'masterwork'))),
-    row(5, 1000, 'Serve 1,000 guests', 'the Restaurant (not built yet)', on('guests', (e) => e.guests)),
+    row(1, 5, 'Assist 5 shifts', 'the Restaurant’s shift, its server', on('play', () => 1)),
+    row(2, 1, 'Assist a Fine shift', 'the Restaurant’s shift, its server', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
+    row(3, 100, 'Serve 100 guests', 'the Restaurant’s shift, its server', on('guests', (e) => e.guests)),
+    row(4, 1, 'Assist a Masterwork shift', 'the Restaurant’s shift, its server', on('play', (e) => yes(e.grade === 'masterwork'))),
+    row(5, 1000, 'Serve 1,000 guests', 'the Restaurant’s shift, its server', on('guests', (e) => e.guests)),
   ],
   forging: [
     row(1, 5, 'Assist 5 Forge plays', 'the Forge’s workshop (not built yet)', on('play', () => 1)),

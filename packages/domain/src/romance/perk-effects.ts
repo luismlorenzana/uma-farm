@@ -35,7 +35,7 @@ import { goodOf } from '../goods/ids'
 import { drawStars, heartsQuality, quality } from '../goods/stars'
 import type { ItemLine } from '../night/summary'
 import { ANIMALS, animalsIn, heartsOf, homeBuilt, keptKinds } from '../ranch/ranch'
-import { ANIMAL_HOME, DISH_FAMILIES, fieldTiles, isDishId, MAX_FONDNESS, RANCH_HOMES, type DigId, type RanchHome } from '../save/v4'
+import { ANIMAL_HOME, DISH_FAMILIES, fieldTiles, isLegacyDishId, MAX_FONDNESS, RANCH_HOMES, type DigId, type RanchHome } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -328,6 +328,7 @@ export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
       return Math.max(1, ...open.map((crop) => goodOf(crop)!).filter((g) => g.family === 'vegetables').map((g) => g.grade))
     }
     case 'cooking': return cookedGrade(save)
+    case 'serving': return Math.max(1, save.workshops.restaurant?.cleared ?? 0)
     default: return 1
   }
 }
@@ -346,7 +347,7 @@ export function cookedGrade(save: Pick<SaveV4, 'farm'>): number {
  * of her line's best place now. */
 export function signatureDish(save: SaveV4, pack: PerkPack, id: string): string {
   const loved = giftsOf(pack, id).loved
-  if (loved !== undefined && isDishId(loved)) return loved
+  if (loved !== undefined && isLegacyDishId(loved)) return loved
   const line = perkLineOf(pack, id) ?? 'farming'
   return dishId(LINE_DISH[line], lineGrade(save, pack, id))
 }

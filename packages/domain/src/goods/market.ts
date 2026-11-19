@@ -13,7 +13,7 @@ import { round5 } from '../farm/round'
 import { MARKET_FLOOR, type StarCounts, type Warehouse } from '../save/v4'
 import { baseGoodId, goodOf } from './ids'
 import { DEMAND_LIFT } from './rule'
-import { inDemand, starFactor } from './prices'
+import { basePrice, inDemand, starFactor } from './prices'
 
 /** A crate: this many of one good in a night, any stars, sell at the good's price today. */
 export const CRATE = 50
@@ -35,9 +35,7 @@ export const easedPercent = (steps: number): number => Math.round(EASE_STEP * 10
 /** What one of a good at `stars` sells for on `day`, eased by `steps`: price ★1 × the star's factor × demand × the ease,
  * rounded to 5g once. */
 export function easedPrice(id: string, stars: number, day: number, steps: number): number {
-  const good = goodOf(id)
-  if (!good) throw new RangeError(`${id} has no price`)
-  return round5(good.price * starFactor(stars) * (inDemand(id, day) ? 1 + DEMAND_LIFT : 1) * easeFactor(steps))
+  return round5(basePrice(id) * starFactor(stars) * (inDemand(id, day) ? 1 + DEMAND_LIFT : 1) * easeFactor(steps))
 }
 
 /** One star's line of a good in the night's bin: how many, their gold, and the deepest step its units sold at (0: none). */

@@ -7,7 +7,8 @@ import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { FISHING_SPOTS, isStation, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
-import { cropBaseGrade, cropGoodId, goodOf, GOOD_IDS, gradeVariants, isBaseFish, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS, type CarrotGrade } from '../goods/ids'
+import { cropBaseGrade, cropGoodId, goodOf, GOOD_IDS, gradeVariants, isBaseFish, isCropId, isGoodId, isGoodOrRingId, isSeedId, isShippableId, isWarehouseId, RING_IDS, type CarrotGrade } from '../goods/ids'
+import { isRestaurantDish, LAST_STAGE, MAX_TRAY, RECIPES_PER_STAGE, restaurantStage, WRONG_PLATE_MS, type RestaurantResult, type RestaurantState, type StockPortions } from '../restaurant/rules'
 import { FISH_MODES, FISH_PROMOTION, MAX_PRODUCTION_TARGET, MAX_STATION_TARGETS, MAX_SURPLUS, type CollectionCap } from '../goods/production-catalogue'
 import { established, orchardOf, RARE_CROPS } from '../fields/plantables'
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
@@ -15,18 +16,16 @@ import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, 
 import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
   MARKET_FLOOR, MAX_FIELD_TILES, MAX_KITCHEN_BASE, MAX_PLOTS, MEAL_KEEPS, MENU_RECIPES, STATION_MAX_LEVEL, STOVE_PLAYS,
-  isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
+  isDishId, isLegacyDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   EXPEDITION_OUTCOMES, REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
   type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV5, type StarCounts,
   type StationLoad, type StationTarget, type SurplusPlan, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
-/** The places an Uma works: the forest, the Fishery and their stations; the Mine, the Quarry and theirs; the Coop and
- * the Barn; the kitchen (the farmhouse's, until the Kitchen stands). What the night's `worked` and `made` name, kept for
- * the farmhands; four slots each. */
+/** Work places with four notification slots each. Restaurant service has no scheduled output. */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter', 'coop', 'barn', 'kitchen'] as const
-export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
+export type LoopPlaceId = typeof LOOP_WORK_PLACES[number] | 'restaurant'
 export const LOOP_SLOTS = 4
 
 /** The most goal lines one morning can hold: every Farm Rank, every milestone and row, every place built overnight. */
@@ -245,16 +244,72 @@ export function parseTools(value: unknown, path: string): Record<ToolId, ToolTie
 }
 
 export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>): SaveV5['workshops'] {
-  const o = object(value, path, ['played', 'current', 'recipes', 'best'])
+  const o = object(value, path, ['played', 'current', 'recipes', 'best', 'restaurant'])
   const p = object(o.played, `${path}.played`, WORKSHOP_IDS)
   const played = Object.fromEntries(WORKSHOP_IDS.map((w) => [w, count(p[w], `${path}.played.${w}`)])) as Record<WorkshopId, number>
   const current = o.current === null ? null : parsePlay(o.current, `${path}.current`, roster)
-  const recipes = unique(list(o.recipes, `${path}.recipes`, 0, 80).map((v, i) => (typeof v === 'string' && isDishId(v) ? v : fail(`${path}.recipes.${i}`, 'unknown dish'))), `${path}.recipes`)
-  return { played, current, recipes, best: counts(o.best, `${path}.best`, (k) => KEY.test(k), 'expected an id', amount) }
+  const recipes = unique(list(o.recipes, `${path}.recipes`, 0, 80).map((v, i) => (typeof v === 'string' && isLegacyDishId(v) ? v : fail(`${path}.recipes.${i}`, 'unknown dish'))), `${path}.recipes`)
+  return { played, current, recipes, best: counts(o.best, `${path}.best`, (k) => KEY.test(k), 'expected an id', amount),
+    ...(o.restaurant === undefined ? {} : { restaurant: parseRestaurant(o.restaurant, `${path}.restaurant`) }) }
 }
 
 /** A stove's stock key: a good or a dish the Warehouse holds, at its stars. */
 const stoveKey = (value: unknown, path: string): string => (typeof value === 'string' && parseStockKey(value) !== null ? value : fail(path, 'expected <good>@<stars>'))
+
+function portions(value: unknown, path: string, maxLines: number, maxCount: number): StockPortions[] {
+  return unique(list(value, path, 1, maxLines).map((v, i) => {
+    const at = `${path}.${i}`
+    const row = object(v, at, ['key', 'count'])
+    return { key: stoveKey(row.key, `${at}.key`), count: int(row.count, `${at}.count`, 1, maxCount) }
+  }), path, (line) => line.key)
+}
+
+function parseRestaurantResult(value: unknown, path: string): RestaurantResult {
+  const o = object(value, path, ['day', 'stage', 'covers', 'sales', 'tips', 'grade', 'cleared', 'opened', 'learned'])
+  const stage = int(o.stage, `${path}.stage`, 1, LAST_STAGE)
+  return {
+    day: day(o.day, `${path}.day`), stage, covers: int(o.covers, `${path}.covers`, 0, restaurantStage(stage)!.tickets),
+    sales: amount(o.sales, `${path}.sales`), tips: amount(o.tips, `${path}.tips`),
+    grade: oneOf(o.grade, `${path}.grade`, ['rough', 'good', 'fine', 'masterwork'] as const),
+    cleared: bool(o.cleared, `${path}.cleared`), opened: bool(o.opened, `${path}.opened`), learned: int(o.learned, `${path}.learned`, 0, RECIPES_PER_STAGE),
+  }
+}
+
+function parseRestaurant(value: unknown, path: string): RestaurantState {
+  const o = object(value, path, ['cleared', 'shift', 'last'])
+  const cleared = int(o.cleared, `${path}.cleared`, 0, LAST_STAGE)
+  const last = o.last === null ? null : parseRestaurantResult(o.last, `${path}.last`)
+  if (o.shift === null) return { cleared, last, shift: null }
+  const at = `${path}.shift`
+  const row = object(o.shift, at, ['day', 'stage', 'started', 'seed', 'tray', 'tickets', 'served', 'penalty', 'graces', 'tipRate'])
+  const stage = int(row.stage, `${at}.stage`, 1, Math.min(cleared + 1, LAST_STAGE))
+  const rule = restaurantStage(stage)!
+  const tray = portions(row.tray, `${at}.tray`, MAX_TRAY, MAX_TRAY)
+  const types = new Set(tray.map((line) => parseStockKey(line.key)!.id))
+  const volume = tray.reduce((n, line) => n + line.count, 0)
+  if ([...types].some((id) => !isDishId(id)) || types.size < rule.types || types.size > MENU_RECIPES || volume < rule.tickets || volume > MAX_TRAY) fail(`${at}.tray`, 'invalid stocking')
+  const left = tray.map((row) => row.count)
+  const length = rule.seconds * 1000
+  let previous = -1
+  const tickets = list(row.tickets, `${at}.tickets`, rule.tickets, rule.tickets).map((v, i) => {
+    const here = `${at}.tickets.${i}`
+    const ticket = object(v, here, ['plate', 'opens', 'closes'])
+    const plate = int(ticket.plate, `${here}.plate`, 0, tray.length - 1)
+    if (left[plate]! <= 0) fail(here, 'too many tickets for the tray')
+    left[plate]!--
+    const opens = int(ticket.opens, `${here}.opens`, previous + 1, length - 1)
+    previous = opens
+    const closes = int(ticket.closes, `${here}.closes`, opens + 1, length)
+    return { plate, opens, closes }
+  })
+  const served = unique(list(row.served, `${at}.served`, 0, tickets.length).map((v, i) => int(v, `${at}.served.${i}`, 0, tickets.length - 1)), `${at}.served`)
+  return { cleared, last, shift: {
+    day: day(row.day, `${at}.day`), stage, started: int(row.started, `${at}.started`, 0, Number.MAX_SAFE_INTEGER),
+    seed: int(row.seed, `${at}.seed`, 1000, 9999), tray, tickets, served,
+    penalty: int(row.penalty, `${at}.penalty`, 0, length + WRONG_PLATE_MS),
+    graces: int(row.graces, `${at}.graces`, 0, MAX_TRAY), tipRate: int(row.tipRate, `${at}.tipRate`, 5, 25),
+  } }
+}
 
 /** A play at the stove under way: a batch's two goods, the Kitchen's menu (one to three recipes, each once, a share of
  * 1–15, its main and side at one good and star) with an assistant on the roster or none, or the Cooking Contest's one
@@ -277,10 +332,23 @@ function parsePlay(value: unknown, path: string, roster: ReadonlySet<string>): P
   if (c.assistant !== undefined) out.assistant = member(c.assistant, `${path}.assistant`, roster)
   out.menu = unique(list(c.menu, `${path}.menu`, 1, MENU_RECIPES).map((v, i): MenuLine => {
     const at = `${path}.menu.${i}`
-    const m = object(v, at, ['dish', 'count', 'main', 'side'])
-    return { dish: typeof m.dish === 'string' && isDishId(m.dish) ? m.dish : fail(`${at}.dish`, 'unknown dish'), count: int(m.count, `${at}.count`, 1, MAX_KITCHEN_BASE),
+    const m = object(v, at, ['dish', 'count', 'main', 'side', 'inputs'])
+    const dish = typeof m.dish === 'string' && isDishId(m.dish) ? m.dish : fail(`${at}.dish`, 'unknown dish')
+    const count = int(m.count, `${at}.count`, 1, MAX_KITCHEN_BASE)
+    if (isRestaurantDish(dish)) {
+      if (play !== 'kitchen' || m.main !== undefined || m.side !== undefined) fail(at, 'exact dishes belong to the Kitchen')
+      const inputs = portions(m.inputs, `${at}.inputs`, 20, MAX_KITCHEN_BASE * 4)
+      if (inputs.some(({ key }) => {
+        const id = parseStockKey(key)!.id
+        return !isGoodId(id) && !isRestaurantDish(id)
+      })) fail(at, 'expected recipe ingredients')
+      return { dish, count, inputs }
+    }
+    if (m.inputs !== undefined) fail(at, 'expected main and side')
+    return { dish, count,
       main: stoveKey(m.main, `${at}.main`), side: stoveKey(m.side, `${at}.side`) }
   }), `${path}.menu`, (m) => m.dish)
+  if (out.menu.reduce((n, line) => n + line.count, 0) > MAX_KITCHEN_BASE) fail(`${path}.menu`, 'too many dishes')
   if (play === 'contest' && (out.menu.length !== 1 || out.menu[0]!.count !== 1)) fail(`${path}.menu`, 'the Contest cooks one dish')
   return out
 }
@@ -352,7 +420,7 @@ export function keys(value: unknown, path: string): string[] {
 export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
   const o = object(value, path, ['shipped', 'milestones', 'records', 'read', 'notes'])
   return {
-    shipped: counts(o.shipped, `${path}.shipped`, isGoodOrRingId, 'unknown good'),
+    shipped: counts(o.shipped, `${path}.shipped`, (id) => isGoodOrRingId(id) || isDishId(id), 'unknown good'),
     milestones: keys(o.milestones, `${path}.milestones`),
     records: counts(o.records, `${path}.records`, (k) => KEY.test(k), 'expected an id', amount),
     read: keys(o.read, `${path}.read`),
@@ -494,7 +562,7 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV5['
     income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
     // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
-    market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isGoodOrRingId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),
+    market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isShippableId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),
     ...(o.discoveries === undefined ? {} : { discoveries: counts(o.discoveries, `${path}.discoveries`, (id) => isGoodId(id) || isDishId(id), 'unknown ingredient', (v, at) => int(v, at, 0, today)) }),
     ...(o.cropProofs === undefined ? {} : o.cropProofs === true ? { cropProofs: true as const } : fail(`${path}.cropProofs`, 'expected true')),
     ...(o.reserves === undefined ? {} : { reserves: counts(o.reserves, `${path}.reserves`, isGoodId, 'unknown reserve ingredient', (v, at) => int(v, at, 1, MAX_PRODUCTION_TARGET)) }),
@@ -533,7 +601,7 @@ export function parseBinLines(value: unknown, path: string): BinSale[] {
     const at = `${path}.${i}`
     const b = object(v, at, ['kind', 'id', 'stars', 'count', 'gold', 'demand', 'eased'])
     oneOf(b.kind, `${at}.kind`, ['sold'] as const)
-    const id = typeof b.id === 'string' && isGoodOrRingId(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
+    const id = typeof b.id === 'string' && isShippableId(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
     return {
       kind: 'sold', id, stars: int(b.stars, `${at}.stars`, 1, MAX_STARS), count: int(b.count, `${at}.count`, 1, Number.MAX_SAFE_INTEGER), gold: count(b.gold, `${at}.gold`),
       demand: bool(b.demand, `${at}.demand`),
@@ -593,10 +661,12 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
 export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
   const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, MAX_FIELD_TILES)
   const loads = new Map<string, number>()
-  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 4 + MAX_FIELD_TILES + RARE_CROPS.length).map((v, i): WorkLine => {
+  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 6 + MAX_FIELD_TILES + RARE_CROPS.length).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition', 'discovery', 'seed-prize'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition', 'discovery', 'seed-prize', 'restaurant', 'learned-recipes'] as const)
     if (kind === 'expedition') return { kind, ...parseExpeditionReturn(v, at, roster, true) }
+    if (kind === 'restaurant') return { kind, result: parseRestaurantResult(object(v, at, ['kind', 'result']).result, `${at}.result`) }
+    if (kind === 'learned-recipes') return { kind, count: int(object(v, at, ['kind', 'count']).count, `${at}.count`, 1, LAST_STAGE * RECIPES_PER_STAGE) }
     if (kind === 'discovery') {
       const id = object(v, at, ['kind', 'id']).id
       return { kind, id: typeof id === 'string' && (isGoodId(id) || isDishId(id)) ? id : fail(`${at}.id`, 'unknown ingredient') }
@@ -609,7 +679,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
       return { kind, home: oneOf(r.home, `${at}.home`, RANCH_HOMES), fed: animals(r.fed, `${at}.fed`), hungry: animals(r.hungry, `${at}.hungry`), ready: animals(r.ready, `${at}.ready`) }
     }
     if (kind === 'farmhand') {
-      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen'])
+      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen', 'restaurant'])
       const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
       return {
         kind, id: member(f.id, `${at}.id`, roster), actions, spent: int(f.spent, `${at}.spent`, 0, actions), half: bool(f.half, `${at}.half`), fed: bool(f.fed, `${at}.fed`),
@@ -617,6 +687,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
         done: counts(f.done, `${at}.done`, (k) => (TASK_KINDS as readonly string[]).includes(k), 'unknown task'), items: count(f.items, `${at}.items`),
         // Her action at the Kitchen's play as its assistant (F92); older lines have none.
         ...(f.kitchen !== undefined ? { kitchen: int(f.kitchen, `${at}.kitchen`, 1, actions) } : {}),
+        ...(f.restaurant !== undefined ? { restaurant: int(f.restaurant, `${at}.restaurant`, 1, 1) } : {}),
       }
     }
     if (kind === 'load') {
@@ -638,7 +709,8 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
   }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? loadKey(w.station) : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
-    : w.kind === 'expedition' ? `expedition:${w.party[0]}:${w.left}` : w.kind === 'discovery' ? `discovery:${w.id}` : `${w.kind}:${w.crop}`))
+    : w.kind === 'expedition' ? `expedition:${w.party[0]}:${w.left}` : w.kind === 'discovery' ? `discovery:${w.id}`
+      : w.kind === 'restaurant' || w.kind === 'learned-recipes' ? w.kind : `${w.kind}:${w.crop}`))
   // A station's loads: one a level, so up to its top level's (each its own line, in the order started).
   function loadKey(station: string): string {
     const n = (loads.get(station) ?? 0) + 1

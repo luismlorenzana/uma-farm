@@ -64,6 +64,7 @@ export function dayChips(day: HandDay): string[] {
   return [
     ...(day.settled > 0 ? [`+${day.settled} settled in`] : []), ...(day.spouse > 0 ? [`+${day.spouse} married`] : []),
     ...(day.fed > 0 ? [`+${day.fed} well fed`] : []), ...(day.half ? ['half pace'] : []), ...(day.kitchen > 0 ? [`${day.kitchen} at the Kitchen`] : []),
+    ...(day.restaurant ? ['1 at the Restaurant'] : []),
   ]
 }
 
@@ -107,7 +108,7 @@ export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
  * tonight". */
 export function nightWords(line: FarmhandLine): string {
   if (line.spent === 0) return line.tasks === 0 ? 'No tasks: set her tasks' : 'Nothing to do tonight'
-  const did = [...(line.kitchen ? ['assisted at the Kitchen'] : []), ...doneWords(line.done)]
+  const did = [...(line.kitchen ? ['assisted at the Kitchen'] : []), ...(line.restaurant ? ['served at the Restaurant'] : []), ...doneWords(line.done)]
   return [`${line.spent} of ${plural(line.actions, 'action')}`, ...did, ...(line.items > 0 ? [`+${plural(line.items, 'good')}`] : [])].join(' · ')
 }
 

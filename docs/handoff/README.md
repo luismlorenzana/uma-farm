@@ -105,13 +105,13 @@ kept ([farmhands](../game-mechanics.md#farmhands), [the retired Dorm](../game-me
 of seven regions for two to five days. They bring loot, rank points and bonds home. The morning and the post's log show
 the result ([expeditions](../game-mechanics.md#expeditions)).
 
+**The Restaurant is in** (F98). Build at Farm Rank 7, clear eight shifts to open 120 recipes, and learn each
+one through the farm's exact ingredient discoveries. Sell cooked dishes, cook with them, or save them for meals.
+[The Restaurant](../game-mechanics.md#the-restaurant) records the rules and the roster playthroughs.
+
 ## Open packets
 
-| Packet | What | Status |
-|---|---|---|
-| [F98](tasks/F98-restaurant.md) | **The Restaurant**, with eight recipe stages, 120 new recipes and farm ingredient discovery | Next · farm sources audited |
-
-The Forge remains in Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm).
+The Forge is next in Phase 2.5 on the [roadmap](../roadmap.md#phase-2-the-whole-farm).
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 

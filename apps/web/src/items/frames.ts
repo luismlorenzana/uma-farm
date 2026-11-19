@@ -1,7 +1,7 @@
 // Copied from uma-rpg apps/web/src/items/frames.ts at 30a322a, cut to the farm's goods and seeds, and the Kitchen's
 // dishes. Where an icon sits on uma-art's items and dishes atlases, computed from the ids so the atlas index never ships
 // in the main chunk; frames.test.ts pins every position against them.
-import { baseGoodId, goodOf, seedOf, type GoodFamily } from '@farm/domain'
+import { baseGoodId, goodOf, restaurantRecipe, seedOf, type GoodFamily } from '@farm/domain'
 
 export const ATLAS_CELL = 32
 export type Sheet = 'items' | 'dishes' | 'field-produce'
@@ -38,6 +38,12 @@ const DISH_ROW: Readonly<Record<string, number>> = {
 /** A good's icon, a seed's crop until the seed-packet badge ships, a dish's (`dish-<family>-<grade>`), or null for an id
  * the farm doesn't hold. */
 export function iconFrame(id: string): IconFrame | null {
+  const recipe = restaurantRecipe(id)
+  if (recipe) {
+    const main = recipe.ingredients.find(({ id }) => goodOf(id) !== undefined)
+    const family = main ? goodOf(main.id)!.family : 'grains'
+    return { sheet: 'dishes', x: (recipe.grade - 1) * ATLAS_CELL, y: (DISH_ROW[family] ?? DISH_ROW.sweets!) * ATLAS_CELL }
+  }
   const dish = /^dish-([a-z-]+)-(10|[1-9])$/.exec(id)
   const row = dish ? DISH_ROW[dish[1]!] : undefined
   if (dish && row !== undefined) return { sheet: 'dishes', x: (Number(dish[2]) - 1) * ATLAS_CELL, y: row * ATLAS_CELL }

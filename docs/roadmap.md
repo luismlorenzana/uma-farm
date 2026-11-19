@@ -149,7 +149,7 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.5 **The Restaurant's and the Forge's games** | The [Restaurant packet](handoff/tasks/F98-restaurant.md) uses the farm's exact-grade discoveries. The Forge's merge game follows separately. |
+| 2.5 **The Forge's game** | The Forge's merge game and tool upgrades. |
 | 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |
 
 How each workshop is built:

@@ -68,6 +68,7 @@ export function expeditionMemberBlock(save: FarmSave, id: string): string | null
   if (save.roster[id]?.farmhand === undefined) return 'Only farmhands can go.'
   if (bookedForExpedition(save, id)) return 'Already in a party.'
   if (save.today.assistant === id || save.today.cook === id || save.workshops.current?.assistant === id) return 'Cooking today.'
+  if (save.today.server === id) return 'Serving today.'
   return null
 }
 

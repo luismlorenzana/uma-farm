@@ -12,12 +12,12 @@ import {
   actionCost, actionsLeft, aptitudeOf, APTITUDE_NAMES, assistantLock, assistantTerm, defaultMenu, dishesHeld, dishName, handDay, handsWorking, ingredientName, kitchenBase, kitchenBuilt,
   kitchenLevel, kitchenLevelLock, kitchenPlayBlock, kitchenPlayedToday, knownRecipes, KITCHEN_LEVELS, levelLockWords, mainsHeld, MEALS_A_DAY, MENU_RECIPES, menuLine, MOUTHS_A_DISH,
   nextKitchenLevel, recipeWords, shareEvenly, sidesHeld, staffBlock, staffDays, staffPicks, staffTable, stoveSeed,
-  availableStock, menuTakes, parseStockKey, type MenuLine, type SaveV4,
+  availableStock, exactMenuLine, goodName, knownRestaurantRecipes, menuTakes, parseStockKey, restaurantRecipe, type MenuLine, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
@@ -25,6 +25,7 @@ import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { ContestCard } from './Contest'
 import { serveTheStaffMeal, startKitchen, upgradeTheKitchen } from './kitchen-actions'
+import MealDishes from './MealDishes'
 import { useTalents } from './talents'
 import { plural } from './words'
 
@@ -84,6 +85,7 @@ function Kitchen({ save, onClose }: { save: SaveV4; onClose: () => void }) {
         </div>
         <div className="space-y-3">
           <StaffMeal save={save} busy={busy} onServe={(picks) => void act(() => serveTheStaffMeal(picks), 'Served: tonight’s table eats it.')} />
+          <MealDishes save={save} />
           <Level save={save} busy={busy} onUpgrade={() => void act(() => upgradeTheKitchen(), 'Its next level comes tomorrow.')} />
           <Recipes save={save} />
         </div>
@@ -103,7 +105,18 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
   const base = kitchenBase(save)
   const [chosen, setChosen] = useState<MenuLine[] | null>(null)
   const [assistant, setAssistant] = useState<string | null>(null)
-  const menu = chosen ?? defaultMenu(save)
+  const [exactPick, setExactPick] = useState('')
+  const learned = knownRestaurantRecipes(save)
+  const picked = learned.find((recipe) => recipe.id === exactPick) ?? learned[0]
+  const draft = chosen ?? defaultMenu(save)
+  const taken = menuTakes(draft.filter((line) => !('inputs' in line)))
+  const menu = draft.map((line) => {
+    if (!('inputs' in line)) return line
+    const exact = exactMenuLine(save, restaurantRecipe(line.dish)!, line.count, taken)
+    for (const input of exact.inputs) taken.set(input.key, (taken.get(input.key) ?? 0) + input.count)
+    return exact
+  })
+  const hasExact = menu.some((line) => 'inputs' in line)
   const known = knownRecipes(save)
   const made = menu.reduce((n, l) => n + l.count, 0)
   const helper = assistant && assistantLock(save, assistant, pack) === null ? assistant : null
@@ -118,6 +131,7 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
   const hands = handsWorking(save, pack).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
   const set = (next: MenuLine[]) => setChosen(next)
   const reshare = (lines: MenuLine[]) => {
+    if (lines.some((line) => 'inputs' in line)) return lines
     const shares = shareEvenly(base, lines.length)
     return lines.map((l, i) => ({ ...l, count: shares[i]! }))
   }
@@ -148,28 +162,49 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
                   <button type="button" className="grid size-11 shrink-0 place-items-center text-ink-soft" aria-label={`Take ${dishName(line.dish)} off the menu`} disabled={busy || menu.length === 1}
                     onClick={() => set(reshare(menu.filter((_, k) => k !== i)))} data-action="menu-remove">✕</button>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5">
+                {'inputs' in line ? <p className="text-[12px] text-ink-soft">
+                  {restaurantRecipe(line.dish)?.ingredients.map(({ id, count, grade }) => {
+                    const name = goodName(id)
+                    return `${line.count * count} × ${name.endsWith(` G${grade}`) ? name : `${name} G${grade}`}`
+                  }).join(' · ')}
+                </p> : <div className="grid grid-cols-2 gap-1.5">
                   <Chip label="Main" text={`2 × ${ingredientName(line.main)}`} id={line.main} disabled={busy || mains.length < 2}
-                    onTap={() => set(menu.map((l, k) => (k === i ? { ...l, main: cycle(mains, l.main) } : l)))} data="main" />
+                    onTap={() => set(menu.map((l, k) => (k === i ? { ...line, main: cycle(mains, line.main) } : l)))} data="main" />
                   <Chip label="Side" text={ingredientName(line.side)} id={line.side} disabled={busy || sides.length < 2}
-                    onTap={() => set(menu.map((l, k) => (k === i ? { ...l, side: cycle(sides, l.side) } : l)))} data="side" />
-                </div>
+                    onTap={() => set(menu.map((l, k) => (k === i ? { ...line, side: cycle(sides, line.side) } : l)))} data="side" />
+                </div>}
               </li>
             )
           })}
         </ul>
       )}
-      {menu.length < MENU_RECIPES && known.some((d) => !menu.some((l) => l.dish === d)) && (
+      {menu.length < MENU_RECIPES && (!hasExact || made < base) && known.some((d) => !menu.some((l) => l.dish === d)) && (
         <div className="flex flex-wrap gap-1.5" aria-label="Add a recipe">
           {known.filter((d) => !menu.some((l) => l.dish === d)).map((dish) => (
-            <button key={dish} type="button" disabled={busy} onClick={() => set(reshare([...menu, menuLine(save, dish, 0)]))}
+            <button key={dish} type="button" disabled={busy} onClick={() => set(reshare([...menu, menuLine(save, dish, hasExact ? 1 : 0, menuTakes(menu))]))}
               className="flex min-h-11 items-center gap-1 rounded-full border border-hairline px-2.5 text-[13px]" data-add-recipe={dish}>
               <ItemIcon id={dish} size={20} />+ {dishName(dish)}
             </button>
           ))}
         </div>
       )}
-      <p className={`text-[13px] ${made === base ? 'text-ink-soft' : 'font-semibold text-danger'}`} data-menu-dishes={made}>Dishes · {made} of {base}</p>
+      {(save.workshops.restaurant || picked) && (
+        <div className="space-y-1">
+          <Link to="/?sheet=restaurant&recipes=1" className="flex min-h-11 items-center text-[13px] font-semibold text-accent">Restaurant recipes · {learned.length} learned ›</Link>
+          {picked && <div className="flex gap-1">
+            <select aria-label="Learned Restaurant recipe" value={picked.id} onChange={(e) => setExactPick(e.target.value)}
+              className="min-h-11 min-w-0 flex-1 rounded border border-hairline bg-panel px-2 text-[13px]">
+              {learned.map((recipe) => <option key={recipe.id} value={recipe.id}>{recipe.name} · G{recipe.grade}</option>)}
+            </select>
+            <Button variant="secondary" disabled={busy || (chosen !== null && (made >= base || menu.length >= MENU_RECIPES)) || menu.some((line) => line.dish === picked.id)}
+              onClick={() => {
+                const picks = chosen === null ? [] : menu
+                set([...picks, exactMenuLine(save, picked, 1, menuTakes(picks))])
+              }}>Add</Button>
+          </div>}
+        </div>
+      )}
+      <p className={`text-[13px] ${hasExact ? made <= base ? 'text-ink-soft' : 'font-semibold text-danger' : made === base ? 'text-ink-soft' : 'font-semibold text-danger'}`} data-menu-dishes={made}>Dishes · {made} of {base}</p>
       <div className="space-y-1" aria-label="The assistant">
         <h4 className="text-micro">Assistant</h4>
         <div className="flex flex-wrap gap-1.5">
@@ -191,7 +226,7 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
         {hands.length === 0 && <p className="text-[12px] text-ink-faint">A farmhand with an action tonight can assist: one of her actions is the play’s.</p>}
       </div>
       <Button className="w-full" disabled={busy || why !== null} onClick={() => onPlay(menu, helper)} data-action="kitchen-play" data-why={why ?? undefined}>
-        {`${useReserve ? 'Play with reserve' : 'Play'} · ${actionCost('kitchen')} · ${plural(base, 'dish', 'dishes')}`}
+        {`${useReserve ? 'Play with reserve' : 'Play'} · ${actionCost('kitchen')} · ${plural(hasExact ? made : base, 'dish', 'dishes')}`}
       </Button>
       <p className="text-[12px] text-ink-faint" data-kitchen-why>{why ?? `Seed ${stoveSeed(save)} · 60 seconds at the stove · ${actionsLeft(save)} actions left`}</p>
     </section>
@@ -209,7 +244,7 @@ function Head({ title, help = false }: { title: string; help?: boolean }) {
           <p>Rough makes the dishes as they are; Good a quarter more; Fine half again and a star more; Masterwork twice as many and two stars more.</p>
           <p>An assistant makes more: her Cooking and her cooking rank. One of her actions tonight is the play’s.</p>
           <p>The staff meal, free once a day, feeds tonight’s table from your dishes: one dish for every {MOUTHS_A_DISH} at the table, in place of their {MEALS_A_DAY} meals. Everyone who eats it is well fed: ★1–2 through tomorrow, ★3–4 two days, ★5 three.</p>
-          <p>Dishes don’t ship. They feed the staff meal, make gifts and a wedding’s reception.</p>
+          <p>Restaurant dishes can ship. All dishes can be saved for meals or served at the Restaurant.</p>
         </HelpButton>
       )}
     </div>

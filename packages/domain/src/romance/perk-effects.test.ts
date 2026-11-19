@@ -3,7 +3,8 @@
 // keepsake, her signature dish, breakfast, the format's keepsake and pet name, and the save's new fields and lines.
 // Invented ids only: the stand-ins 9000001–9000003 and a 9000004 built here.
 import { describe, expect, it } from 'vitest'
-import { dishName, goodOf } from '../goods/ids'
+import { goodOf } from '../goods/ids'
+import { dishName } from '../goods/names'
 import { floorFinds, floorTopGrade } from '../gathering/digs'
 import { extrasShare, extrasTonight, bondOf } from '../farm/bonds'
 import { draw } from '../farm/draw'

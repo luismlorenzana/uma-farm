@@ -85,6 +85,7 @@ export interface HandDay {
   /** Of them, the Kitchen's: 1 when she's its play's assistant today (`today.assistant`), 1 more when she's the Cooking
    * Contest's cook (`today.cook`), never more than she has. */
   kitchen: number
+  restaurant?: number
 }
 
 /** Her actions today, or null for one who isn't a farmhand. */
@@ -97,7 +98,8 @@ export function handDay(save: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 't
   const all = HAND_ACTIONS + settled + spouse + fed
   const actions = atPace(all, save)
   const kitchen = Math.min(actions, (save.today.assistant === id ? 1 : 0) + (save.today.cook === id ? 1 : 0))
-  return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions, kitchen }
+  return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions, kitchen,
+    ...(save.today.server === id && actions > kitchen ? { restaurant: 1 } : {}) }
 }
 
 /** The farmhands in the order they work: by the day you invited them, then by id. */
@@ -539,9 +541,10 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   for (const id of handsWorking(save, story)) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
-    let left = hand.actions - hand.kitchen
+    let left = hand.actions - hand.kitchen - (hand.restaurant ?? 0)
     const done: Partial<Record<TaskKind, number>> = {}
     const spentAt = new Map<WorkPlace, number>(hand.kitchen > 0 ? [['kitchen', hand.kitchen]] : [])
+    if (hand.restaurant) spentAt.set('restaurant', hand.restaurant)
     const madeAt = new Map<WorkPlace, string[]>()
     let items = 0
     const work = (task: FarmTask): boolean => {
@@ -574,6 +577,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     out.lines.push({
       kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
       ...(hand.kitchen > 0 ? { kitchen: hand.kitchen } : {}),
+      ...(hand.restaurant ? { restaurant: hand.restaurant } : {}),
     })
     // Her place today: where she spent the most actions, the first she worked on a tie.
     const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)

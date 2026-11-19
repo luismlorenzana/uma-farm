@@ -9,7 +9,7 @@
 // Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
 // Loaded on demand.
 import {
-  atHome, awayOn, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
+  atHome, awayOn, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, knownRestaurantRecipes, loansOwed, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
@@ -21,6 +21,7 @@ import { gold, loanWords, projectName, projectNames, upkeepLines } from '../loop
 import { useTalents } from '../loop/talents'
 import { plural } from '../loop/words'
 import { WorkBoard } from './WorkBoard'
+import MealDishes from '../loop/MealDishes'
 
 const n = (value: number): string => value.toLocaleString('en-US')
 
@@ -135,6 +136,12 @@ function Money({ save }: { save: FarmSave }) {
             </span>
             <span className="shrink-0 font-semibold">Kitchen ›</span>
           </Link>
+          <MealDishes save={save} />
+          {placeBuilt(save, 'restaurant') && <Link to={withParam(location, 'sheet', 'restaurant')}
+            className="flex min-h-11 items-center justify-between gap-2 text-[13px]">
+            <span className="text-ink-soft">{knownRestaurantRecipes(save).length}/120 recipes learned</span>
+            <span className="font-semibold">Restaurant ›</span>
+          </Link>}
         </div>
       </div>
       {save.farm.owed > 0 && (

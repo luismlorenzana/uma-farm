@@ -102,7 +102,7 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('kitchen', 'Kitchen', 'workshop', 3, 2, 'kitchen', 'Dishes, and the staff meal.', build(3, 3000, [logs(40), vegetables(20)], true)),
   place('mine', 'Mine', 'gathering', 4, 0, 'mine', 'Ore, floor by floor.', build(4, 10000, [planks(60)], true)),
   place('smelter', 'Smelter', 'station', 4, 1, 'mine-workbench', 'Ore into ingots.', build(4, 8000, [planks(40), logs(40)], true)),
-  place('restaurant', 'Restaurant', 'workshop', 4, 2, 'party-hall', 'Dishes served for gold and tips.', build(7, 40000, [planks(80), fillets(40), vegetables(30)], false)),
+  place('restaurant', 'Restaurant', 'workshop', 4, 2, 'party-hall', 'Dishes served for gold and tips.', build(7, 40000, [planks(80), fillets(40), vegetables(30)], true)),
   place('quarry', 'Quarry', 'gathering', 5, 0, 'quarry', 'Stone and gems, floor by floor.', build(5, 12000, [planks(50)], true)),
   place('cutter', 'Cutter', 'station', 5, 1, 'den-workbench', 'Gems cut and polished; stone into blocks.', build(5, 10000, [planks(40), logs(40)], true)),
   place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'The ring bench: a ring from three refined goods of one grade, one a day.', build(8, 60000, [planks(120), logs(60)], false)),
