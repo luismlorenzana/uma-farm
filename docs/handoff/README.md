@@ -114,8 +114,12 @@ one through the farm's exact ingredient discoveries. Sell cooked dishes, cook wi
 The four [Festival ground contests](../game-mechanics.md#festival-contests) are complete (F100). The rules include
 the first-year solo playthrough and results from crews of 10, 20 and 50.
 
-The Forge is [deferred pending a redesign](../roadmap.md#deferred). The Uma Book and broader long-game
-progression await the owner's requirements.
+| Packet | Work | Status |
+|---|---|---|
+| [F101 · Uma Library](tasks/F101-uma-library.md) | Portrait bookshelves, individual books, scene collection, discoveries and a relationship journal | Authored |
+
+The Forge is [deferred pending a redesign](../roadmap.md#deferred). The broader long-game progression awaits
+the owner's requirements.
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 

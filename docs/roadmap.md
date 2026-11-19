@@ -99,7 +99,7 @@ Later    Release packs                     ── sets of Umas after the launch 
 Later    Parcels to the other games        ── parked until the farm's own game is done
 ```
 
-Phase 2 continues with the long game. The sea and expeditions (F97), roster-run production (F99), the Restaurant
+Phase 2 continues with the Uma Library and the long game. The sea and expeditions (F97), roster-run production (F99), the Restaurant
 (F98) and the Festival ground contests (F100) are complete. Phase 3 polish and Phase 4 reliability work can proceed alongside Phase 2.
 
 ### Phase 0: Clean slate (done)
@@ -149,7 +149,8 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.6 **The long game** | Reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. |
+| 2.6 **Uma Library** | The [F101 packet](handoff/tasks/F101-uma-library.md) authors the portrait bookshelf, each Uma’s book of unlockable scenes and discoveries, and her relationship journal. Farm achievements live in the Diary. |
+| 2.7 **The long game** | Reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. |
 
 How each workshop is built:
 
