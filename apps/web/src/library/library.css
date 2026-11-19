@@ -11,6 +11,10 @@
 .uma-library h2 { font-size: 20px; font-weight: 700 }
 .uma-library h3 { font-size: 16px; font-weight: 700 }
 .uma-library p { font-size: 13px }
+.lib-greater-love { display: block; width: 100%; height: 7px; border: 0; border-radius: 5px; overflow: hidden; background: var(--color-sunken); accent-color: var(--color-accent) }
+.lib-greater-love::-webkit-progress-bar { background: var(--color-sunken) }
+.lib-greater-love::-webkit-progress-value { background: var(--color-accent) }
+.lib-greater-love::-moz-progress-bar { background: var(--color-accent) }
 .lib-head, .lib-actions { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap }
 .lib-head { justify-content: space-between; min-height: 46px }
 .lib-button {

@@ -19,7 +19,7 @@ import { unknownName } from './story'
 
 /** Keeps a roster's Umas on the cast (`story.ts`'s `keepOnCast`), and the year's festivals (`story.ts`'s
  * `useStoryYear`), loaded with the seam. */
-export { festivalsOf, withCast } from '@farm/domain'
+export { activateLongGame, festivalsOf, withCast } from '@farm/domain'
 
 /** Master data's birthdays as the pack loaded with them: the special days read them through the cast. */
 let birthdays: MasterView['birthdays'] = new Map()
@@ -35,7 +35,13 @@ export async function loadStoryPack(launch: readonly string[] = LAUNCH_CAST): Pr
   const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null, arrived }), masterReady()])
   birthdays = view.birthdays
   // The launch cast (F96): the game's Umas are the Ranker's Tier 1–5, whatever else the story holds.
-  return withLaunchProfessions(launchCast(storyOf(pack, masterCast(view)), launch))
+  const all = storyOf(pack, masterCast(view))
+  const base = withLaunchProfessions(launchCast(all, launch))
+  const extras = new Set((all.world?.expansionCast ?? []).filter(id => !launch.includes(id)))
+  const expansion = all.cast.umas.filter(uma => extras.has(uma.characterId))
+  const expansionProfessions = base.town?.professions?.filter(job => job.partners.every(id => extras.has(id)))
+  const town = base.town?.professions ? { ...base.town, professions: base.town.professions.filter(job => job.partners.every(id => launch.includes(id))) } : base.town
+  return { ...base, town, expansion, expansionProfessions }
 }
 
 /** The special days: the year's festivals (the story's) and the cast's birthdays (her cast entry's, else master data's). */

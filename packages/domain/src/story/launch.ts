@@ -53,9 +53,12 @@ export function withLaunchProfessions(pack: StoryPack): StoryPack {
   const inCast = new Set(pack.cast.umas.map(uma => uma.characterId))
   if (!LAUNCH_CAST.every(id => inCast.has(id))) return pack
   const authored = pack.town?.professions
-  const assigned = new Set(authored?.flatMap(job => job.partners))
-  const complete = assigned.size === LAUNCH_CAST.length && LAUNCH_CAST.every(id => assigned.has(id))
-  return complete ? pack : { ...pack, town: { ...pack.town, professions: bundledProfessions() } }
+  const launch = new Set<string>(LAUNCH_CAST)
+  const assigned = new Set(authored?.filter(job => job.partners.every(id => launch.has(id))).flatMap(job => job.partners))
+  const complete = LAUNCH_CAST.every(id => assigned.has(id))
+  const supported = new Set([...inCast, ...(pack.world?.expansionCast ?? [])])
+  const added = authored?.filter(job => job.partners.every(id => supported.has(id) && !launch.has(id))) ?? []
+  return complete ? pack : { ...pack, town: { ...pack.town, professions: [...bundledProfessions(), ...added] } }
 }
 
 /** The cast kept to `ids`: each one's story entry in the pack's order, then any the pack lacks, bare, in the list's order.

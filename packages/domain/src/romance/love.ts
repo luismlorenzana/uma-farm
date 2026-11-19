@@ -109,7 +109,9 @@ export function rungName(rung: string): string {
 
 /** Her stage and level in words: "Friend · F7", "Close friend" after a "Not yet", "Partner · R4", "Engaged"
  * while the wedding waits, "Spouse · S2"; level 0 of a ladder is its name alone ("New friend", "Partner", "Spouse"). */
-export function levelWords(love: Pick<Love, 'stage' | 'level' | 'friend'>): string {
+export function levelWords(love: Pick<Love, 'stage' | 'level' | 'friend'>, namedRanks = false): string {
+  if (namedRanks && (love.stage === 'friendship' || love.stage === 'confession')) return `Friendship · F${love.level}`
+  if (namedRanks && (love.stage === 'romance' || love.stage === 'proposal')) return `In Love · R${love.level}`
   switch (love.stage) {
     case 'friendship': return love.level === 0 ? 'New friend' : `Friend · F${love.level}`
     case 'confession': return love.friend ? 'Close friend' : 'Friend · F10'

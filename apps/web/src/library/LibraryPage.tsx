@@ -1,6 +1,6 @@
 import {
   archivedDiscoveries, atHome, awayOn, bookDiscoveries, bookHistory, bookMilestones, bookProgress, dateOf, festivalsOf, gradeOf,
-  GRADE_NAMES, LAUNCH_CAST, levelWords, libraryEntryName, NO_BIRTHDAYS, SEASON_NAMES,
+  GRADE_NAMES, LAUNCH_CAST, levelWords, libraryEntryName, longGameEnabled, NO_BIRTHDAYS, SEASON_NAMES,
   type FarmSave, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
@@ -17,11 +17,12 @@ import { useMaster, type MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
+import { MarriedLife } from './MarriedLife'
 import './library.css'
 
 const GalleryPage = lazy(() => import('./LibraryScenes'))
 const PER_TIER = 10
-const BOOK_PAGES = [['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story']] as const
+const BOOK_PAGES = [['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story'], ['married', 'Married Life']] as const
 export const libraryDate = (day: number | null) => {
   if (day === null) return 'Date unknown'
   const { year, season, day: d } = dateOf(day)
@@ -127,8 +128,9 @@ function ShelfView({ save, pack, days, master, params, setShelf }: Base & { para
 }
 
 function OpenBook({ save, pack, days, master, id, params }: Base & { id: string; params: URLSearchParams }) {
-  const page = BOOK_PAGES.find(([key]) => key === params.get('page')) ?? BOOK_PAGES[0]
   const love = save.love[id]!
+  const pages = BOOK_PAGES.filter(([id]) => id !== 'married' || (love.stage === 'spouse' && longGameEnabled(save, pack)))
+  const page = pages.find(([key]) => key === params.get('page')) ?? BOOK_PAGES[0]
   const nameOf = namer(master, pack)
   const name = nameOf(id)
   const index = collectionShelves(save, pack).findIndex(shelf => shelf.ids.includes(id))
@@ -143,8 +145,8 @@ function OpenBook({ save, pack, days, master, id, params }: Base & { id: string;
     </header>
     <div className="lib-spread">
       <aside className="lib-binding">
-        <div className="lib-portrait"><Avatar id={id} size={48} label={name} /><span>{levelWords(love)}</span></div>
-        <nav aria-label="Book pages" className="lib-tabs">{BOOK_PAGES.map(([key, label]) =>
+        <div className="lib-portrait"><Avatar id={id} size={48} label={name} /><span>{levelWords(love, longGameEnabled(save, pack))}</span></div>
+        <nav aria-label="Book pages" className="lib-tabs">{pages.map(([key, label]) =>
           <Link className={button} aria-current={key === page[0] ? 'page' : undefined} key={key} to={libraryHref(id, key)} replace>{label}</Link>)}</nav>
         <ul className="lib-counts">
           {Object.entries({ Scenes: progress.scenes, Discoveries: progress.facts, Milestones: progress.milestones }).map(([label, value]) =>
@@ -161,6 +163,7 @@ function OpenBook({ save, pack, days, master, id, params }: Base & { id: string;
         </>}
         {page[0] === 'scenes' && <Suspense fallback={<p>Loading scenes…</p>}><GalleryPage save={save} pack={pack} days={days} id={id} master={master} /></Suspense>}
         {page[0] === 'history' && <History save={save} pack={pack} id={id} tab={params.get('journal')} />}
+        {page[0] === 'married' && <MarriedLife save={save} pack={pack} id={id} nameOf={nameOf} />}
       </article>
     </div>
   </div>

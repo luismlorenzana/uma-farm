@@ -700,6 +700,29 @@ Scenes with three or more (a family's, a crew's reunion) aren't read yet: they'r
 
 ## The household: `household.json`
 
+The long game reads three optional fields here. The rest of the household file still plays its earlier scenes
+and mornings.
+
+- `celebrations` is keyed by `cohort:5`, `cohort:10` and each successive multiple of five through `cohort:50`,
+  plus `greater-festival`. Each has optional `open`, `each`, `close` and `outfit`, in the household scene
+  format. The game picks participants from the save's actual wedding order. The fiftieth wedding is the
+  closing chapter. The Greater Festival has its own date, 48 farm days later.
+- `duos` is a list of two-character arrays. Both directions come from one entry. Use distinct cast IDs, including
+  a sister's `s<outfitId>` if appropriate. Each Uma can have three partners. The Homestead's Night visits sheet
+  has a Duo editor with an export you can copy into the household file. In-game edits are local to the save.
+- `duoLines` maps each canonical pair key, such as `9000001:9000002`, to scripts under each participant's ID.
+  Each script can override her `sitting`, `bedside`, `farewell`, `morning`, `outfit` and `illustration`.
+  Authors can check the input through the regular pack reader and preview it from Night visits on a save where both
+  partners have True Love.
+
+Each Uma's bible can add `marriedLife.pajamas` with keys `"1"` through `"10"` and
+`marriedLife.anniversary` with keys `"1"` through `"5"`. Each numbered slot takes the same script fields.
+The lines are up to 160 characters each. `outfit` uses a supported story outfit. `illustration` names the scene
+ID from her private gallery manifest, which can have a distinct image for every look. Missing lines or art use
+the appropriate default. Publish the art through the existing portrait or illustration release path.
+Use `pnpm story:scaffold --ids <id> --married-life` to generate missing look scripts marked as defaults.
+`pnpm story:status --ids <id> --married-life` reports authored, default and missing slots.
+
 | Field | What it does | Without it |
 |---|---|---|
 | `scenes` | The household scenes at 5, 10 and 15 married, each `{ "at": 5, "open": […], "each": { "<id>": […] }, "close": […] }`. `open` and `close` speak through narration and the town's people; `each` is one spouse's beat | The game's short card at each: a line, each spouse's line, a line |
@@ -813,6 +836,11 @@ own: the homes and workplaces its Umas' `home`, `job` and `routine` name, and an
 | `kind` | `home`, `work` or `spot`: the map's group (Homes, Workplaces, Elsewhere) | `spot` |
 
 ## The world: `world.json`
+
+Optional `expansionCast` lists additional character IDs already present in `cast.json`. Authors can give them
+bibles, routes and paired professions in the same release. These characters join the playable cast once the
+fiftieth-wedding closing celebration is held. Characters already on a device's roster remain present if a later
+release retires them.
 
 The world the story builds, on screen. **Every part is optional,** and anything missing keeps the game's own words. A
 part with an error is skipped (the smallest part: a name, a line, a festival, a place, a note), the rest plays, and notes

@@ -24,6 +24,7 @@ import type { FishingSpotId, ForestAreaId, StationId } from '../gathering/ids'
 import { seedId, type CarrotGrade, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
 import { isRestaurantDish } from '../restaurant/rules'
+import { ROOMS_PER_WING } from './long-game'
 import type { Account, OlderSave } from './save'
 
 /** A master outfit id: the look a character id plays (`outfitOf`). Older rules still name roster ids with it. */
@@ -519,6 +520,7 @@ export const newTodayV4 = (): TodayV4 => ({ actions: 0, eventActions: 0, town: f
 export interface House {
   name: string
   extended: boolean
+  wings?: number
 }
 /** The homestead. **Who lives where is one source, `love.house`**: a spouse's
  * room is in the house of that number, and she lives on the farm. Nobody else does. */
@@ -547,7 +549,7 @@ export interface Homestead {
 /** A house's rooms: two, four once extended. */
 export const HOUSE_ROOMS = 2
 export const EXTENDED_ROOMS = 4
-export const roomsOf = (house: Pick<House, 'extended'>): number => (house.extended ? EXTENDED_ROOMS : HOUSE_ROOMS)
+export const roomsOf = (house: Pick<House, 'extended' | 'wings'>): number => (house.extended ? EXTENDED_ROOMS : HOUSE_ROOMS) + (house.wings ?? 0) * ROOMS_PER_WING
 /** The homestead's places: the Farmhouse and six houses. */
 export const MAX_HOUSES = 7
 /** The furniture set's pieces. */
@@ -692,6 +694,7 @@ export interface SaveV5 {
   gallery: Record<CharacterId, string[]>
   /** Dated receipts for the Library. Older v5 saves read their existing route and art evidence directly. */
   library?: Record<CharacterId, import('../library/receipts').LibraryReceipts>
+  longGame?: import('./long-game').LongGame
   summary: MorningSummary | null
   /** You and each Uma, by character: her talks so far, the last day you talked and the last you gave her a gift. An
    * older v4 has none. */

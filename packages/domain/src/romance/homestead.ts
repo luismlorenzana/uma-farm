@@ -213,6 +213,12 @@ export function swapRooms(save: SaveV4, a: string, b: string): SaveV4 {
 /** Her room at her wedding (the wedding's step): her default room, at once; with none free she lives in town until one
  * frees. The house she took, or null. */
 export function takeRoom(save: SaveV4, pack: RoomPack, id: string): { save: SaveV4; house: number | null } {
+  const farmhouse = save.homestead.houses[0]!
+  if (save.longGame && save.love[id]?.stage === 'spouse' && save.love[id]?.house === undefined
+    && save.homestead.houses.every((_, i) => freeRooms(save, i) < 1)) {
+    const houses = [{ ...farmhouse, wings: (farmhouse.wings ?? 0) + 1 }, ...save.homestead.houses.slice(1)]
+    save = { ...save, homestead: { ...save.homestead, houses } }
+  }
   const house = roomFor(save, pack, id)
   if (house === null || moveBlock(save, id) !== null) return { save, house: null }
   return { save: moveSpouse(save, id, house), house }

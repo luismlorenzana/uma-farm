@@ -25,6 +25,7 @@ import { CAST_IDS, isCastId } from './cast'
 import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type StoryOutfit } from './look'
 import { EXPEDITION_OUTCOMES, type ExpeditionOutcome } from '../save/v4'
 import { ILLUSTRATION_ID } from '../save/gallery'
+import { ANNIVERSARY_LOOK_POINTS, DUO_LIMIT, PAJAMA_POINTS, duoKey, isCelebration, type Celebration, type Duo, type NightKind } from '../save/long-game'
 import { NO_ILLUSTRATION } from './illustrations'
 import { WEEKDAYS, type TownProfession } from '../town/professions'
 
@@ -261,8 +262,25 @@ export interface Gifts { loved?: string; liked?: string[]; disliked?: string[]; 
 /** Her bible. Only her id is needed (the file's name gives it); the game reads her favourite line, her gifts, her route's
  * beats, her chats, her keepsake, her pet name, her wedding's places and her wishes. Her profile's texts, season and
  * festival are the story's own. */
+export interface NightScript {
+  sitting?: string
+  bedside?: string
+  farewell?: string
+  morning?: string
+  outfit?: StoryOutfit
+  illustration?: string
+  draft?: 'default'
+}
+export const DEFAULT_NIGHT_SCRIPT = {
+  sitting: 'Come sit with me, husband. Tell me about your day.',
+  bedside: 'I’m glad we have a quiet moment together.',
+  farewell: 'Goodnight, husband.',
+  morning: 'Good morning, husband. I’m glad you stayed.',
+} as const
+
 export interface UmaBible {
   characterId: string
+  marriedLife?: Partial<Record<NightKind, Record<string, NightScript>>>
   outfitId?: string | null
   now?: string
   whyTheFarm?: string
@@ -415,6 +433,9 @@ export interface Finale { outfit?: StoryOutfit; open?: Step[]; play?: Play; each
 /** household.json: built for a household the author can't know in advance. Every part optional. */
 export interface Household {
   scenes?: HouseholdScene[]
+  celebrations?: Partial<Record<Celebration, Omit<HouseholdScene, 'at'>>>
+  duos?: Duo[]
+  duoLines?: Record<string, Record<string, NightScript>>
   /** A spouse's house lines, said on a morning in her house. Without hers, the templates by temperament stand in. */
   houseLines?: Record<string, string[]>
   finale?: Finale
@@ -448,6 +469,7 @@ export interface WorldDay { id: string; name: string; kind?: DayKind; season?: S
 /** world.json: the world the story builds, every part optional. */
 export interface World {
   version?: 1
+  expansionCast?: string[]
   names?: WorldNames
   /** The farm's past, a few lines: the Diary's first page, "The farm". */
   history?: string[]
@@ -1382,6 +1404,41 @@ function readGiftLines(v: unknown, f: Findings): GiftLines | undefined {
 }
 
 /** umas/<id>.json: her bible, each part the game reads checked on its own. */
+function nightScript(value: unknown, at: string, f: Findings): NightScript | undefined {
+  if (!isObject(value)) { f.errors.push(`${at}: expected a night scene object; skipped`); return undefined }
+  const out: NightScript = {}
+  if (value.draft === 'default') out.draft = 'default'
+  for (const field of ['sitting', 'bedside', 'farewell', 'morning'] as const) {
+    const line = value[field]
+    if (line !== undefined && shown(line, 160, `${at} ${field}`, f)) out[field] = line
+  }
+  const outfit = readOutfit(value.outfit, at, f)
+  if (outfit) out.outfit = outfit
+  if (typeof value.illustration === 'string' && ILLUSTRATION_ID.test(value.illustration)) out.illustration = value.illustration
+  else if (value.illustration !== undefined) f.errors.push(`${at}: expected a gallery illustration id`)
+  return out
+}
+
+function marriedLife(value: unknown, f: Findings): UmaBible['marriedLife'] {
+  if (value === undefined) return undefined
+  if (!isObject(value)) { f.errors.push('marriedLife is an object; skipped'); return undefined }
+  const out: NonNullable<UmaBible['marriedLife']> = {}
+  for (const kind of ['pajamas', 'anniversary'] as const) {
+    const slots = value[kind]
+    if (slots === undefined) continue
+    if (!isObject(slots)) { f.errors.push(`marriedLife.${kind} is keyed by look number; skipped`); continue }
+    const max = kind === 'pajamas' ? PAJAMA_POINTS.length : ANNIVERSARY_LOOK_POINTS.length
+    out[kind] = {}
+    for (const [number, script] of Object.entries(slots)) {
+      const at = `marriedLife.${kind}.${number}`
+      if (!/^[1-9]\d*$/.test(number) || Number(number) > max) { f.errors.push(`${at}: looks run from 1 to ${max}; skipped`); continue }
+      const read = nightScript(script, at, f)
+      if (read) out[kind]![number] = read
+    }
+  }
+  return out
+}
+
 export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<UmaBible | null> {
   const f = findings()
   if (!isObject(raw)) { f.errors.push('Not a bible (an object); none is read'); return { value: null, ...f } }
@@ -1391,6 +1448,7 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
   const gifts = field(raw, 'gifts', (v) => readGifts(v, isGood, f), 'gifts', f, 'is { loved, liked, disliked }')
   const proposed = new Set(Array.isArray(gifts?.proposed) ? gifts.proposed : [])
   const value = kept<UmaBible>(raw, {
+    marriedLife: marriedLife(raw.marriedLife, f),
     characterId: id,
     profileFacts: field(raw, 'profileFacts', (v) => {
       if (!Array.isArray(v) || v.length > 32) return undefined
@@ -1622,7 +1680,50 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
       })
     }
   }
-  return { value: kept<Household>(raw, { scenes, houseLines, finale }), ...f }
+  const celebrations: NonNullable<Household['celebrations']> = {}
+  if (raw.celebrations !== undefined) {
+    if (!isObject(raw.celebrations)) f.errors.push('celebrations is keyed by celebration id; skipped')
+    else for (const [id, scene] of Object.entries(raw.celebrations)) {
+      if (!isCelebration(id) || !isObject(scene)) { f.errors.push(`Celebration ${id}: unknown celebration or missing scene; skipped`); continue }
+      celebrations[id] = kept<Omit<HouseholdScene, 'at'>>(scene, {
+        outfit: readOutfit(scene.outfit, id, f), open: run(scene.open, `${id} open`, town),
+        each: each(scene.each, `${id} each`), close: run(scene.close, `${id} close`, town),
+      })
+    }
+  }
+  const duos: Duo[] = []
+  if (raw.duos !== undefined) {
+    if (!Array.isArray(raw.duos)) f.errors.push('duos is a list of pairs; skipped')
+    else for (const pair of raw.duos) {
+      if (!Array.isArray(pair) || pair.length !== 2 || pair[0] === pair[1]
+        || pair.some(id => typeof id !== 'string' || !ctx.umas.has(id))) {
+        f.errors.push('Each duo needs two different cast ids; skipped'); continue
+      }
+      const duo = duoKey(pair as Duo).split(':') as Duo
+      if (duos.some(p => duoKey(p) === duoKey(duo)) || duo.some(id => duos.filter(p => p.includes(id)).length >= DUO_LIMIT)) {
+        f.errors.push(`Duo ${duoKey(duo)}: repeated pair or more than three partners; skipped`); continue
+      }
+      duos.push(duo)
+    }
+  }
+  const duoLines: NonNullable<Household['duoLines']> = {}
+  if (raw.duoLines !== undefined) {
+    if (!isObject(raw.duoLines)) f.errors.push('duoLines is keyed by pair id; skipped')
+    else for (const [pair, scripts] of Object.entries(raw.duoLines)) {
+      const duo = duos.find(duo => duoKey(duo) === pair)
+      if (!duo || !isObject(scripts)) { f.errors.push(`Duo lines for ${pair}: expected a listed pair and its two scripts; skipped`); continue }
+      duoLines[pair] = {}
+      for (const id of duo) if (scripts[id] !== undefined) {
+        const read = nightScript(scripts[id], `duoLines.${pair}.${id}`, f)
+        if (read) duoLines[pair]![id] = read
+      }
+    }
+  }
+  return { value: kept<Household>(raw, { scenes, houseLines, finale,
+    celebrations: raw.celebrations === undefined ? undefined : celebrations,
+    duos: raw.duos === undefined ? undefined : duos,
+    duoLines: raw.duoLines === undefined ? undefined : duoLines,
+  }), ...f }
 }
 
 // --- The opening --------------------------------------------------------------------------------------------------------
@@ -1845,5 +1946,6 @@ export function checkWorld(raw: unknown, ctx: Pick<StoryContext, 'isGood'> = {})
   }
   const own = new Set((festivals ?? []).filter((e) => !isFestivalId(e.id)).map((e) => e.id))
   const notes = raw.notes === undefined ? undefined : readNotes(raw.notes, f, { umas: new Set(), ...ctx, festivals: own })
-  return { value: kept<World>(raw, { names, history, festivals, days, places, seasons, notes }), ...f }
+  const expansionCast = raw.expansionCast === undefined ? undefined : idList(raw.expansionCast, 'expansionCast', f, id => STORY_ID.test(id), 'character ids')
+  return { value: kept<World>(raw, { names, history, festivals, days, places, seasons, notes, expansionCast }), ...f }
 }

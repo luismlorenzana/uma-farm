@@ -9,7 +9,7 @@
 // on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
 // (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
-  householdOf, householdPlay, mayPlayHousehold, playOf, promptOf, playSeed, sceneSteps, type HouseholdId, type HouseholdPlay, type SaveV4, type Step, type StoryPack,
+  householdOf, householdPlay, isCelebration, mayPlayHousehold, playOf, promptOf, playSeed, sceneSteps, type HouseholdId, type HouseholdPlay, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -78,7 +78,7 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone, onSkip }
     return play.play ? [steps[0]!, { kind: 'play' }, ...steps.slice(1), { kind: 'card' }] : steps
   }, [play])
   const [index, setIndex] = useState(0)
-  const [place, setPlace] = useState<string>(id === 'finale' ? 'festival' : 'fields')
+  const [place, setPlace] = useState<string>(id === 'finale' || isCelebration(id) ? 'festival' : 'fields')
   const nameOf = namer(master, pack)
   const part = parts[index]
   const next = () => (index + 1 < parts.length ? setIndex(index + 1) : onDone())

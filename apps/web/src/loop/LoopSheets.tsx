@@ -76,8 +76,9 @@ function EndDay() {
     const night = async () => {
       await endTheDay(day.current!)
       // The night's companion greets you as the morning comes up, over the morning's card.
-      const greets = useGame.getState().save?.summary?.hearts.find((h) => h.kind === 'morning')
-      navigate(greets ? `/?life=morning:${greets.id}` : '/', { replace: true })
+      const morning = useGame.getState().save
+      const greets = morning?.summary?.hearts.find((h) => h.kind === 'morning')
+      navigate(morning?.longGame?.morning ? '/?visitMorning=1' : greets ? `/?life=morning:${greets.id}` : '/', { replace: true })
     }
     try {
       await withNightFade(night, reduced)

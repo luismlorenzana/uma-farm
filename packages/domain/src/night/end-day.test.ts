@@ -39,7 +39,7 @@ describe('the night', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
       '1 settleThePlay', '1 noteTonight', '1 payTheBin', '2 farmhandsWork', '2 theFarmEats', '2 settleTheAccounts', '2 growCrops', '3 tendAnimals', '3 ranchNightChores', '4 finishTheLoads', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
       '6 returnTheExpeditions', '6 tickRanks', '6 tickBonds', '6 payLine', '6 shareTheHouses', '6 levelAtNight', '6 countWellFed', '7 witherCrops', '7 turnCalendar',
-      '8 raiseBuildings', '8 checkGoals', '8 unlockTownNotes', '8 openRingBench', '8 householdMilestones',
+      '8 raiseBuildings', '8 checkGoals', '8 unlockTownNotes', '8 openRingBench', '8 householdMilestones', '8 festivalPreparations',
       '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 noteTheFed', '9 buildSummary',
     ])
   })
@@ -51,7 +51,7 @@ describe('the night', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2030-01-01T00:00:00Z'))
     expect(night(save)).toEqual(once)
-    expect(Object.keys(once).sort()).toEqual(SAVE_V5_KEYS.filter((key) => key !== 'expeditionLog' && key !== 'library').sort())
+    expect(Object.keys(once).sort()).toEqual(SAVE_V5_KEYS.filter((key) => !['expeditionLog', 'library', 'longGame'].includes(key)).sort())
     expect(parseSaveV5(json(once))).toEqual(once)
   })
 

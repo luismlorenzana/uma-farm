@@ -149,8 +149,8 @@ festival night, and `festival` triggers and gates.
 - **One of the story's own** is a festival day and nothing more: marked, said, its night, and its triggers.
 - **One festival a day:** a move onto a day another holds is skipped, and that festival keeps the game's day.
 
-A festival day also opens a festival night for the evening, and once the household's finale is reached, the Festival
-of Vows returns on its day each year. Both are the romance's.
+A festival day opens a festival night. After the household holds the Greater Festival, the Festival of Vows
+returns on its scheduled date each year.
 
 ##### Festival contests
 
@@ -530,11 +530,12 @@ The steps as the game lists them:
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
 | 8 | `unlockTownNotes` | Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them |
 | 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning |
-| 8 | `householdMilestones` | Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning |
+| 8 | `householdMilestones` | Household milestones: the first wedding and each set of five through fifty are news once. Five spouses bring the furniture set. The closing celebration is Ready on the fiftieth wedding day. Earlier celebrations open the morning after their milestone wedding |
+| 8 | `festivalPreparations` | A pledged Greater Festival contribution uses the next matching exact-grade farmhand output or expedition return in its preparation window and credits its producer or party |
 | 9 | `serveTheReception` | A wedding’s reception: everyone who lives on the farm (the spouses in their rooms) well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running |
 | 9 | `houseMorningStep` | The house’s morning: each resident of the house slept in +30 (only hers on a birthday-alone night); her breakfast (S1) feeds everyone who lives on the farm with no meal left; each resident at S2+ leaves one more morning item; a house with residents not slept in for 8 nights misses you |
 | 9 | `moveInRooms` | Rooms: the spouses waiting for a room, living in town, take one the morning one frees, in wedding order, by the same default as a wedding’s |
-| 9 | `vowsMorning` | The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight |
+| 9 | `vowsMorning` | The Festival of Vows: after the Greater Festival has been held, its scheduled date returns each year for +50 to every spouse and a festival-night slot. Older households keep the former date until they hold the Greater Festival |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse |
 | 9 | `morningItems` | Morning items: each Uma on the farm this morning (a spouse in her room, a farmhand on her farm day) leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among the spouses in their rooms (the Umas home) whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
@@ -7161,20 +7162,21 @@ houses** you build, name and extend.
 <!-- live:houses -->
 |  | Rooms | Build | Extend | Opens |
 |---|---|---|---|---|
-| The Farmhouse | 2 (your own home) | — | — | Day 1 |
+| The Farmhouse | 2 plus residence wings as needed | — | — | Day 1 |
 | House 1 | 2, or 4 extended | 8,000g | 4,000g | The first wedding |
 | House 2 | 2, or 4 extended | 20,000g | 10,000g | The second wedding, House 1 built |
 | House 3 | 2, or 4 extended | 40,000g | 20,000g | The third wedding, House 2 built |
 | House 4 | 2, or 4 extended | 70,000g | 35,000g | The fourth wedding, House 3 built |
 | House 5 | 2, or 4 extended | 110,000g | 55,000g | The fifth wedding, House 4 built |
 | House 6 | 2, or 4 extended | 160,000g | 80,000g | The sixth wedding, House 5 built |
-| **All** | **26 rooms** | **408,000g** | **612,000g extended** |  |
+| **Before wings** | **26 rooms** | **408,000g** | **612,000g extended** |  |
 <!-- /live -->
 
 - **House *n* opens to build with the *n*-th wedding,** the one before it standing (they're built in turn). A house **stands at
   once** when bought, named there: 1–20 characters under the farmer's letters rule, a grey "Rose Cottage" placeholder, no
-  two alike. **An extension** adds two rooms at once for half the house's price. The Farmhouse is never renamed or
-  extended.
+  two alike. **An extension** adds two rooms at once for half the house's price. The Farmhouse keeps its name and
+  gains five-room residence wings automatically whenever the household runs out of rooms. Morning perks and
+  shared-house bonds apply within a wing. Rooms already assigned to cottages keep their house.
 - **Never a gate:** a wedding never waits for a room.
 - **On the map:** the homestead's rows sit after the yard and before the town edge and the Town, which stay the map's
   last rows. A
@@ -7219,11 +7221,9 @@ The homestead's rows on the map:
   room, else the first house with room, **the Farmhouse first.** An **own-house wisher** takes an empty house first, and
   everyone else's default passes over a house she lives in while another has room. The Married screen names her room and
   offers the other houses with a free room.
-- **With no room free** she **lives in town**, and her profile and Hearts row say **"Needs a room"**. She keeps her town
-  schedule, and her farm days if she's a farmhand. A wedding never waits for a room. Each night, once a room is free (a
-  house built or extended, or a room moved out of), every spouse who waits takes one, **in wedding order,** by the same
-  default, and moves in that morning ("⌂ Stand-in 2 moved into Rose Cottage", and her moving-in scene). You can also move
-  her into a free room by hand at once.
+- **A spouse waiting for a room on an older save** keeps her town schedule and farm shifts. The next morning,
+  waiting spouses take rooms in wedding order. The Farmhouse adds a wing if necessary. The morning reports each
+  move, and you can also move her into a free room from the Homestead sheet.
 - **Moves are at once and free,** any time: on the homestead's sheet tap a face, then a free room in another house (a
   move) or another house's face (a swap).
 - **A spouse in her room lives on the farm.** She keeps her weekly town and farm shifts. She returns to the
@@ -7258,8 +7258,8 @@ The homestead's rows on the map:
 | A house line | One resident’s line from the pack’s `houseLines`, else her temperament’s template |
 | Her birthday alone | Her room: only her +30, breakfast and item |
 | Not slept in for 8 nights | “Rose Cottage misses you”, with Tonight › and Another night; never a penalty |
-| Shared houses | Every night, +10 bond to each pair of residents (step 6) |
-| The Festival of Vows | The finale’s day, each later year: every spouse +50, and a festival night |
+| Shared houses or wings | Every night, +10 bond to each pair sharing a house or Farmhouse wing (step 6) |
+| The Festival of Vows | The Greater Festival’s scheduled day each year after it has been held. Every spouse +50 and a festival night |
 <!-- /live -->
 
 - **The house line** is one resident's, drawn by the day: her own house lines from the pack, else her temperament's
@@ -7281,18 +7281,19 @@ The homestead's rows on the map:
 
 #### Household milestones
 
-The married count opens the household's milestones, each news once in the morning as the count passes it ("Married 5 ·
-Household scene 1, the furniture set, +5% items"). The crew's +5%s and the second evening read the count live. The Hearts
-header always says **"Married n/N"**.
+The married count opens the household's milestones. The morning reports the first wedding and every five spouses.
+The crew's two +5% item bonuses and the extra evening use the live married count. The People header shows the count.
 
 <!-- live:household-milestones -->
 | Married | Opens |
 |---|---|
-| 1 | The homestead (House 1 to build); the night’s companion and her house; the household’s meals; anniversaries |
-| 5 | Household scene 1; the furniture set (five pieces); +5% items crew-wide |
-| 10 | Household scene 2; two evenings every fourth day; two invitations a morning |
-| 15 | Household scene 3; +5% more items crew-wide |
-| 20 | The finale, the Great Harvest; then the Festival of Vows each year |
+| 1 | The homestead, night visits, the night’s companion, household meals and anniversaries |
+| 5 | Welcome to the Homestead, the five-piece furniture set and +5% items crew-wide |
+| 10 | Supper for Ten, two evenings every fourth day and two invitations a morning |
+| 15 | At the Hearth and +5% more items crew-wide |
+| 20 | The Great Harvest and its dance |
+| 25, 30, 35, 40, 45 | Market Evening, Lanterns at the Dock, A Garden Walk, A Homecoming and Setting the Tables |
+| 50 | The Fiftieth Wedding closing celebration and Greater Festival preparations |
 <!-- /live -->
 
 **The furniture set** comes at 5 married: five pieces, placed one a house from the homestead's sheet, as words until
@@ -7306,21 +7307,46 @@ decorations draw them:
 5. Braided Hearth Rug
 <!-- /live -->
 
-#### Household scenes, the finale and the Festival of Vows
+#### Celebrations and the Greater Festival
 
-- **Household scenes** (at 5, 10 and 15 married) and **the finale** (20) are **Ready offers,** never auto-played. From the
-  morning after the wedding that reaches them, the morning's Hearts lines ("⌂ Household scene 1 · Ready", with **Play**)
-  and the Hearts header show them, and they play over any page: the opening, each spouse's beat in **wedding order**,
-  then the close, the pack's where written and the game's short card where not (a line, her one line, a line). Every
-  spouse wears the scene's own `outfit`, else the dinner dress (the finale: the kimono). A choice in them is wording
-  only. They **pay nothing,** are read once, and the Diary's Memories shelf replays them. Every scene
-  is offered, written or not.
-- **The finale, the Great Harvest,** is Ready the morning after the wedding that makes **20 married,** once: its opening
-  at the festival ground, its dance (a play whose grade pays nothing; without the pack's, "Dance with everyone under the
-  lanterns."), each spouse's beat, its close, and then **the game's last stage-up card,** "The Great Harvest", with every spouse's face. **The game goes on.**
-- **The Festival of Vows** falls each later year on the finale's day: every spouse **+50** that morning (a Hearts line,
-  "♥ The Festival of Vows · 20 spouses · ♥ +1000 · festival night tonight") and a **festival night** that evening, in its
-  own slot.
+- Every fifth wedding through 50 gives the newest five spouses a scene and a shared Library memory. Earlier
+  celebrations are Ready the following morning and stay Ready until played. The Homestead lists each date,
+  and the Diary replays completed celebrations. Wedding order freezes the cast even when you play after more
+  weddings. On older saves, same-day weddings without a recorded order use the roster join date and stable ID.
+- **The Fiftieth Wedding is the soft ending.** Play it from the wedding card on the day of the 50th marriage,
+  including Winter 12. It recalls discoveries, farm milestones and the crew. You can keep playing on the same
+  save. New release cast in `world.json`'s `expansionCast` becomes available after the closing scene.
+- **The Greater Festival is 48 farm days after the 50th marriage.** The Calendar keeps its scheduled
+  date if you hold the ceremony later. All 50 have a place in the festival, represented in ten groups.
+  Select a tradition from a completed celebration or contribute one exact-grade item per 12-day preparation
+  window. A pledge credits the farmhand or expedition party that delivers the selected item. The festival stays
+  available with any number of contributions. Contributors earn a keepsake entry in their Library.
+- **The Festival of Vows** then returns on the Greater Festival's scheduled date in future years. Every spouse
+  earns +50 on her spouse bar and the evening gains a festival-night slot. Older saves retain the original
+  Great Harvest memory and their old annual date until they hold the Greater Festival.
+
+#### Greater Love and True Love
+
+Open **Night visits** from Tonight or the Homestead. The farm has five free visits per night. Each completed
+visit plays a sitting conversation, a quiet bedside scene and a farewell, then adds one Greater Love point.
+On the fifth visit, choose **Stay the night** for one more point the next morning. The spouse has to remain
+home and be the overnight companion. Expedition absences and birthday-alone wishes affect eligibility.
+Regular evenings keep their own costs and slots.
+
+| Wardrobe | Greater Love points for each look |
+|---|---|
+| Pajamas | 0, 6, 14, 24, 36, 48, 60, 75, 90, 105 |
+| Anniversary outfits | 0, 24, 48, 72, 96 |
+
+Each wardrobe rotates in order through its unlocked looks. Anniversary night opens after a full farm year.
+It can be played later for the most recent anniversary, once for that anniversary. Missing art or dialogue uses
+the default. Married Life in the Uma Library shows the separate collection, earned memories and True Love date.
+Replays preserve the participants and look numbers and cost no slots or points.
+
+**True Love** is 120 points. A curated duo opens when both spouses reach it. Use the Duo editor to add or remove
+mutual pairs, up to three partners per Uma. An eligible duo can share a night visit or a regular evening.
+A shared visit uses one slot, and a shared evening keeps its original play and payment. Both books link to
+the shared memory. Removing a pair retires future offers and keeps the memory.
 
 #### Bonds and ties
 

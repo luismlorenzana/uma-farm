@@ -5,7 +5,6 @@
 // Hearts tab's Work view. Every page but Account loads on demand; anything else goes to the farm.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router'
-import { AccountView } from '../home/AccountView'
 import { Shell } from '../shell/Shell'
 import { Root } from './Root'
 
@@ -17,6 +16,7 @@ const DiaryPage = lazy(() => import('../loop/DiaryPage'))
 const WarehousePage = lazy(() => import('../loop/WarehousePage'))
 const TownPage = lazy(() => import('../town/TownPage'))
 const BookPage = lazy(() => import('../book/BookPage'))
+const AccountView = lazy(() => import('../home/AccountView').then(module => ({ default: module.AccountView })))
 
 const loading = (page: ReactNode) => <Suspense fallback={<p className="p-4 text-ink-soft">Loading…</p>}>{page}</Suspense>
 
@@ -38,7 +38,7 @@ export const ROUTES: RouteObject[] = [
   { path: 'warehouse', element: loading(<WarehousePage />) },
   { path: 'town', element: loading(<TownPage />) },
   { path: 'book', element: loading(<BookPage />) },
-  { path: 'account', element: <AccountView /> },
+  { path: 'account', element: loading(<AccountView />) },
   { path: '*', element: <Navigate to="/" replace /> },
 ]
 

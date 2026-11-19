@@ -8,10 +8,11 @@
 // ring at her line, her anniversary, "Married n/N · next household scene at 5"): the route's track re-coloured, "Opens
 // now" and **Continue**. The night levels (S2, S4) show the level-up card from the morning. Loaded on demand with the
 // player.
-import { dishName, freeRooms, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type SaveV4, type StageUp, type StoryPack } from '@farm/domain'
+import { celebrationReached, dishName, freeRooms, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type SaveV4, type StageUp, type StoryPack } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button, UiMark, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { moveSpouseTo } from './homestead-actions'
 import { RouteTrack } from './HeartMarks'
 import { marriedWords, perkLineWords, ringGivenWords, STAGE_WORDS, stageOpens, sumWords, unlockWords, weddingWords } from './event-view'
@@ -117,8 +118,15 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
         </section>
         {stage === 'romance' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} banked toward Romance 1</p>}
         {stage === 'married' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} toward Spouse 1</p>}
-        {stage === 'married' && married && <p className="text-center font-display text-[16px] font-bold" data-married-line={married.married}>{marriedWords(married.married, married.met)}</p>}
+        {stage === 'married' && married && <p className="text-center font-display text-[16px] font-bold" data-married-line={married.married}>
+          {save?.longGame ? `Married ${married.married}/${married.met}${married.married < 50 ? ` · Celebration at ${Math.floor(married.married / 5 + 1) * 5}` : ''}`
+            : marriedWords(married.married, married.met)}
+        </p>}
         {stage === 'married' && save && <RoomStep save={save} id={id} />}
+        {stage === 'married' && save && celebrationReached(save, 'cohort:50') && save.longGame?.weddings[49] === id && !save.longGame.celebrations['cohort:50']
+          && <Link to="/?household=cohort:50" replace className="flex min-h-11 items-center justify-center rounded-md border border-hairline font-semibold text-accent">
+            Celebrate the fiftieth wedding ›
+          </Link>}
         <Button className="w-full" onClick={onContinue} data-action="continue">Continue</Button>
       </div>
     </div>
