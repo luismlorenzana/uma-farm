@@ -9,6 +9,7 @@ import type { ArtSource } from '@luismlorenzana/uma-kit/content'
 import { useEffect, useSyncExternalStore } from 'react'
 import { CONTENT } from '../content/client'
 import { masterReady } from '../master/master'
+import { castArtIdentity, castArtKey } from './art-identity'
 
 /** Where portraits come from: her manifest by character id (null when she has none), and how a picture's path becomes
  * a URL. */
@@ -20,11 +21,13 @@ export interface PortraitSource {
 /** Master data's family, through the content client: nothing is fetched for an Uma the art index doesn't list. */
 const RELEASE: PortraitSource = {
   async portraitsOf(characterId) {
-    if (!/^[1-9]\d*$/.test(characterId)) return null
+    const key = castArtKey(characterId)
+    if (!key) return null
     const view = await masterReady()
-    if (!view.art?.dialoguePortraits?.[characterId]) return null
+    const identity = castArtIdentity(characterId, view.outfits)
+    if (!identity || !view.art?.dialoguePortraits?.[key]) return null
     const client = await CONTENT.release()
-    return client.dialoguePortraits(view.manifest, view.art, Number(characterId))
+    return client.dialoguePortraits(view.manifest, view.art, identity.characterId, identity.outfitId)
   },
   art: CONTENT,
 }

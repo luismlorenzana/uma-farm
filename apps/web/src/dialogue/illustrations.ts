@@ -9,6 +9,7 @@ import type { ArtSource } from '@luismlorenzana/uma-kit/content'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CONTENT } from '../content/client'
 import { masterReady, useMaster } from '../master/master'
+import { castArtIdentity, castArtKey } from './art-identity'
 
 /** Where illustrations come from: her manifest by character id (null when she has none), whether master data lists
  * hers at all (known without a fetch: undefined while it can't say), and how a picture's path becomes a URL. */
@@ -18,18 +19,22 @@ export interface IllustrationSource {
   art: ArtSource
 }
 
-const CHARACTER = /^[1-9]\d*$/
 
 /** Master data's family, through the content client: nothing is fetched for an Uma the art index doesn't list. */
 const RELEASE: IllustrationSource = {
   async illustrationsOf(characterId) {
-    if (!CHARACTER.test(characterId)) return null
+    const key = castArtKey(characterId)
+    if (!key) return null
     const view = await masterReady()
-    if (!view.art?.illustrations?.[characterId]) return null
+    const identity = castArtIdentity(characterId, view.outfits)
+    if (!identity || !view.art?.illustrations?.[key]) return null
     const client = await CONTENT.release()
-    return client.illustrations(view.manifest, view.art, Number(characterId))
+    return client.illustrations(view.manifest, view.art, identity.characterId, identity.outfitId)
   },
-  listed: (characterId, art) => (art === undefined ? undefined : CHARACTER.test(characterId) && Boolean(art?.illustrations?.[characterId])),
+  listed: (characterId, art) => {
+    const key = castArtKey(characterId)
+    return art === undefined ? undefined : Boolean(key && art?.illustrations?.[key])
+  },
   art: CONTENT,
 }
 
