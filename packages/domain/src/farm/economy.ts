@@ -2,8 +2,8 @@
 // office lends toward a build so it can stand ahead of the gold.
 //
 //   the night, step 1   the bin pays
-//   the night, step 2   the farmhands work ──► the farm eats (`farm/food.ts`) ──► the bill: each loan takes its share of
-//                       the night's income ──► the takeout, then the upkeep, with anything owed
+//   the night, step 2   the farmhands work ──► the farm eats ──► cover takeout, upkeep and arrears,
+//                       then repay loans from that night's income with the cash left
 //   upkeep a night      15g each place built and each house · 10g each spouse living on the farm (in her room). The
 //                       start's own places are free. A farmhand's cost is her meals on her farm days (`farm/food.ts`).
 //   takeout             15g a meal the pantry was short, from the first night: a new farm's farmer eats two (30g)
@@ -11,7 +11,7 @@
 //                       short night warns in the morning, and from the second the farmhands work at half pace (`halfPace`)
 //                       until it's paid. Nobody leaves, nobody goes hungry, and nothing is lost: gold never goes below 0.
 //   loans               at the mayor's office, in town: borrow what a place or a house is short of gold (rounded up to 100g), up to the Farm Rank's limit; one loan at a time, two from Farm
-//                       Rank 4; a 10% fee; each night's income repays up to a tenth of it, before upkeep; repay the
+//                       Rank 4; a 10% fee; each night's income repays up to a tenth of it once bills are covered; repay the
 //                       rest at the office any time.
 //
 // The book keeps the bin's pay on each of the last seven nights, so the Book can set an average day's income beside the
@@ -241,15 +241,15 @@ export interface FoodBill {
 
 /**
  * Night step 2, after the farm eats: the farm's bill. The night's `income` (the bin's pay) joins the book's last seven
- * nights; each loan, in the order taken, takes its share from what's left of that income (none on a night with no
- * sales), and one that's paid off goes; then the takeout (15g a meal the pantry was short), then the upkeep with
- * anything owed from before. What gold there is pays, takeout first; the rest is owed, and the short nights in a row
- * count on (0 once it's all paid). Gold never goes below 0.
+ * nights. Takeout, upkeep and arrears reserve their cash first. Each loan draws in order from the night's remaining
+ * income and spare cash. When a bill is short, the farm pays takeout first and counts consecutive short nights.
  */
 export function settleAccounts<S extends FarmSave>(save: S, income: number, food: FoodBill | null = null): { save: S; lines: MoneyLine[] } {
   const lines: MoneyLine[] = []
   let gold = save.gold
-  let share = income
+  const takeout = (food?.takeout ?? 0) * TAKEOUT_PRICE
+  const due = upkeepOf(save).gold + save.farm.owed
+  let share = Math.min(income, Math.max(0, gold - takeout - due))
   const loans: Loan[] = []
   for (const loan of save.farm.loans) {
     const paid = Math.min(loan.nightly, loan.owed, share, gold)
@@ -260,11 +260,9 @@ export function settleAccounts<S extends FarmSave>(save: S, income: number, food
   }
   if (food?.staff) lines.push({ kind: 'staff', mouths: food.staff.mouths, days: food.staff.days })
   if (food && (food.pantry > 0 || food.spoiled > 0)) lines.push({ kind: 'pantry', meals: food.pantry, spoiled: food.spoiled, fed: food.fed })
-  const takeout = (food?.takeout ?? 0) * TAKEOUT_PRICE
   const bought = Math.min(gold, takeout)
   gold -= bought
   if (takeout > 0) lines.push({ kind: 'takeout', meals: food!.takeout, paid: bought, due: takeout })
-  const due = upkeepOf(save).gold + save.farm.owed
   const paid = Math.min(gold, due)
   gold -= paid
   const owed = due - paid + takeout - bought

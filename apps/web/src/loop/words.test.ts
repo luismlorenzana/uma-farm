@@ -72,7 +72,7 @@ describe('the morning\'s food, upkeep and loans', () => {
     }
     expect(summaryParts(summary)).toEqual([{ section: 'money', title: 'Food, upkeep and loans', lines: [
       { key: 'loan:mill', text: 'Loan for the Mill · 55g repaid · 440g left', to: '/book' },
-      { key: 'loan:dorm:2', text: 'Loan for Dorm level 2 · no sales, nothing repaid · 770g left', to: '/book' },
+      { key: 'loan:dorm:2', text: 'Loan for Dorm level 2 · payment skipped · 770g left', to: '/book' },
       { key: 'loan:house:1', text: 'Loan for House 1 · cleared', to: '/book', tag: 'Cleared' },
       { key: 'upkeep', text: 'Upkeep · 5g of 45g', to: '/book' },
       { key: 'short', text: 'Short of upkeep · 40g owed', to: '/book', tag: 'Warning', warn: true },

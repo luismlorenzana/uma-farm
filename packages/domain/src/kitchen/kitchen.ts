@@ -484,27 +484,23 @@ export function staffTable(save: Pick<FarmSave, 'love' | 'roster' | 'calendar'> 
   const mouths = mouthsTonight(save, handsAtTable(save, pack))
   return { mouths, dishes: Math.ceil(mouths / MOUTHS_A_DISH) }
 }
-/** The staff meal's dishes by the plain rule: the most stars first, then the most held; null when the Warehouse holds too
- * few. */
+/** The staff meal's dishes, best stars first, up to a full table. */
 export function staffPicks(save: Pick<FarmSave, 'items' | 'love' | 'roster' | 'calendar'> & Partial<Pick<FarmSave, 'expeditions'>>, pack: SchedulePack | null = null): string[] | null {
   const { dishes } = staffTable(save, pack)
   const units = dishesHeld(save).flatMap((r) => Array.from({ length: Math.min(r.count, dishes) }, () => r.key))
-  return units.length >= dishes ? units.slice(0, dishes) : null
+  return units.length ? units.slice(0, dishes) : null
 }
 /** The well-fed days a staff meal gives, by the lowest stars served: the reception's table. */
 export const staffDays = (keys: readonly string[]): number => receptionDays(Math.min(...keys.map((k) => parseStockKey(k)?.stars ?? 1)))
 
-/** Why the staff meal can't be served now, or null: the Kitchen built, once a day, dishes enough (the picks, held). */
+/** Why the staff meal can't be served now, or null: the Kitchen built, once a day, one or more dishes held. */
 export function staffBlock(save: FarmSave, picks: readonly string[] | null = null, pack: SchedulePack | null = null): string | null {
   if (!kitchenBuilt(save)) return 'Build the Kitchen first.'
   if (save.today.staff) return 'Served today.'
   const { dishes } = staffTable(save, pack)
   const keys = picks ?? staffPicks(save, pack)
-  if (!keys) {
-    const held = dishesHeld(save).reduce((n, r) => n + r.count, 0)
-    return `Short ${dishes - held} dish${dishes - held === 1 ? '' : 'es'}.`
-  }
-  if (keys.length !== dishes) return `The table takes ${dishes} dish${dishes === 1 ? '' : 'es'}.`
+  if (!keys?.length) return 'Choose a dish.'
+  if (keys.length > dishes) return `The table takes up to ${dishes} dish${dishes === 1 ? '' : 'es'}.`
   for (const key of new Set(keys)) {
     const at = parseStockKey(key)
     if (!at || !isDishId(at.id)) return 'Only dishes go on the table.'
@@ -513,8 +509,9 @@ export function staffBlock(save: FarmSave, picks: readonly string[] | null = nul
   return null
 }
 
-/** **Serve the staff meal**, at the Kitchen, once a day, free: one dish for every three mouths tonight (the plain rule's
- * when none are chosen) out of the Warehouse, and `today.staff` holds its mouths and well-fed days; `farm.counts.meals`
+/** **Serve the staff meal**, at the Kitchen, once a day, free: each selected dish feeds up to three mouths.
+ * By default the Warehouse supplies as many dishes as it can, up to the number needed for a full table.
+ * `today.staff` holds the mouths and well-fed days; `farm.counts.meals` goes up by
  * one more. Tonight those mouths eat it in place of their two meals (`eatTonight`). Refused with its block's words: not
  * built (`locked`), served today (`busy`), dishes short (`no-items`), the wrong count (`bad-count`). Never stamps. */
 export function serveStaffMeal<S extends FarmSave>(save: S, picks: readonly string[] | null = null, pack: SchedulePack | null = null): S {
@@ -526,7 +523,7 @@ export function serveStaffMeal<S extends FarmSave>(save: S, picks: readonly stri
     const at = parseStockKey(key)!
     items = takeGoods(items, at.id, at.stars, 1)
   }
-  const staff: StaffMeal = { mouths: staffTable(save, pack).mouths, days: staffDays(keys) }
+  const staff: StaffMeal = { mouths: Math.min(staffTable(save, pack).mouths, keys.length * MOUTHS_A_DISH), days: staffDays(keys) }
   const counts = { ...save.farm.counts, [STAFF_MEALS]: (save.farm.counts[STAFF_MEALS] ?? 0) + 1 }
   return { ...save, items, today: { ...save.today, staff }, farm: { ...save.farm, counts } }
 }

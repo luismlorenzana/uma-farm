@@ -166,7 +166,6 @@ How each workshop is built:
 |---|---|
 | 3.2 **Animation** | The farm-work animations from the sprite pipeline, and the items' flights |
 | 3.3 **First times** | Each new place explains itself the first time you open it |
-| 3.5 **Balance** | Simulations of a long run (Farm Rank 10 and a year after) that check the pacing; then your play notes |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
 | 3.7 **Painted maps** | A painted town map and farm map in landscape, with clickable places as data over the painting, seasons and time of day as tints ([the plan](design/game-design.md#the-maps-2026-11-15)); who paints is the owner's call |
 

@@ -13,6 +13,7 @@ import { SaveRuleError } from '../save/rules'
 import { REGION_IDS, type Expedition, type ExpeditionOutcome, type ExpeditionReturn, type FarmSave, type RegionId } from '../save/v4'
 import { addGoods, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
 import type { StoryPack } from '../story/pack'
+import { worksOn, type SchedulePack } from '../town/town'
 import { bookedForExpedition, leavingOn } from './presence'
 import { availableDishes, supplyOf } from './stock'
 
@@ -44,6 +45,22 @@ export const MAX_EXPEDITION_SUPPLIES = 8
 export const EXPEDITION_LOG_SIZE = 20
 export const SUPPLY_POWER = 2
 export const EXPEDITION_GOODS_PER_DAY = 3
+
+/** Project from tomorrow to the day before return. Scheduled absences already on the board count. */
+export function expeditionCoverage(save: FarmSave, region: RegionId, party: readonly string[], pack: SchedulePack | null):
+  { lost: number; fewest: number } {
+  const members = new Set(party)
+  const workers = Object.keys(save.roster)
+  let lost = 0
+  let fewest = workers.length
+  for (let offset = 1; offset < EXPEDITION_REGIONS[region].days; offset++) {
+    const scheduled = workers.filter(id => worksOn(save, pack, id, save.calendar.day + offset))
+    const absent = scheduled.filter(id => members.has(id)).length
+    lost += absent
+    fewest = Math.min(fewest, scheduled.length - absent)
+  }
+  return { lost, fewest }
+}
 export const EXPEDITION_POINTS_PER_DAY = 10
 export const EXPEDITION_BONUS = { great: 20, success: 10, retreat: 0 } as const
 export const EXPEDITION_LOOT = { great: 1.5, success: 1, retreat: 0.5 } as const

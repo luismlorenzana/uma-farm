@@ -17,9 +17,9 @@
 //   stars        a batch's meals have its two goods' stars, averaged and rounded down. An Uma who eats a ★2+ meal is
 //                well fed tomorrow (the household meal's well fed: it never stacks and never shortens one running)
 //   the goods    the food families, raw or refined: grains, vegetables, herbs and spices, nuts and seeds, sweets,
-//                fruits, mushrooms, fish, eggs and milk. The plain rule takes the two cheapest goods of ★2 or more, so
-//                the meals feed well; with fewer than two held, the two cheapest. Cheapest is the price at its stars,
-//                out of demand. The farmer may choose any two
+//                fruits, mushrooms, fish, eggs and milk. The plain rule takes the cheapest pair outside stock floors
+//                that averages ★2 or more, or the cheapest available pair if none qualifies. Price uses the good's
+//                stars outside demand. The farmer may choose any two
 //
 //   the stove    **At the stove · 1**, beside the plain batch: the same batch played at the stove, its tier lifting its
 //                meals' count and stars (`kitchen/kitchen.ts`); never worse than the plain batch
@@ -29,6 +29,7 @@
 import { awayOn, leavingOn } from '../expeditions/presence'
 import type { Expedition } from '../save/v4'
 import { spend } from './actions'
+import { routineStockFloors } from './production'
 import { goodOf, type GoodsFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
@@ -198,11 +199,9 @@ export function foodHeld(save: Pick<FarmSave, 'items'>): FoodHeld[] {
     .sort((a, b) => a.price - b.price || a.id.localeCompare(b.id) || a.stars - b.stars)
 }
 
-/** The plain rule's two goods for a batch, as stock keys (one key twice when two of it are held): the two cheapest goods
- * of ★2 or more, so the meals feed well; with fewer than two held, the two cheapest. Cheapest is the price at its stars
- * out of demand, then the id. Null with fewer than two goods of food. */
+/** The cheapest pair that averages ★2, or the cheapest pair when none can. Routine cooking keeps stock floors. */
 export function plainBatch(save: Pick<FarmSave, 'items'> & Partial<Pick<FarmSave, 'farm'>>): string[] | null {
-  const available = new Map(Object.entries(save.farm?.reserves ?? {}).map(([id, floor]) => [id, Math.max(0, goodCount(save.items, id) - floor)]))
+  const available = new Map(Object.entries(routineStockFloors(save.farm)).map(([id, floor]) => [id, Math.max(0, goodCount(save.items, id) - floor)]))
   const units = foodHeld(save).flatMap((r) => {
     const remaining = available.get(r.id)
     const count = Math.min(r.count, remaining ?? r.count)
@@ -210,8 +209,13 @@ export function plainBatch(save: Pick<FarmSave, 'items'> & Partial<Pick<FarmSave
     return Array.from({ length: Math.min(count, BATCH_GOODS) }, () => r)
   })
   if (units.length < BATCH_GOODS) return null
-  const good = units.filter((u) => u.stars >= WELL_FED_STARS)
-  return (good.length >= BATCH_GOODS ? good : units).slice(0, BATCH_GOODS).map((u) => u.key)
+  const cheap = units.slice(0, BATCH_GOODS)
+  const good = units.filter(row => row.stars >= WELL_FED_STARS).slice(0, BATCH_GOODS)
+  const one = units.find(row => row.stars === 1)
+  const three = units.find(row => row.stars >= WELL_FED_STARS * 2 - 1)
+  const pair = one && three && (good.length < BATCH_GOODS || one.price + three.price < good[0]!.price + good[1]!.price) ? [one, three]
+    : good.length === BATCH_GOODS ? good : cheap
+  return pair.map(row => row.key)
 }
 
 /** A batch's meals' stars: its goods' stars, averaged and rounded down, plus a lift (the stove's tier: +0, +0, +1, +2),

@@ -409,7 +409,7 @@ describe('the staff meal', () => {
     expect(morning.roster[A]!.wellFed).toBe(8)
   })
 
-  it('feeds the mouths it was served for; any past them eat from the pantry. Refused short of dishes, once a day', () => {
+  it('serves partial tables and feeds the remaining mouths from the pantry or takeout', () => {
     const { save } = twelve({ 'dish-fish-1': row(4, 2) })
     const served = serveStaffMeal(save)
     // A thirteenth comes to the table after it was served: she eats from the pantry (takeout here).
@@ -417,7 +417,10 @@ describe('the staff meal', () => {
     const morning = runNight(more, {})
     expect(morning.summary!.money).toContainEqual({ kind: 'staff', mouths: 12, days: 1 })
     expect(morning.summary!.money).toContainEqual({ kind: 'takeout', meals: 2, paid: 30, due: 30 })
-    expect(staffBlock(twelve({ 'dish-fish-1': row(3) }).save)).toBe('Short 1 dish.')
+    const partial = serveStaffMeal(twelve({ 'dish-fish-1': row(3) }).save)
+    expect(partial.today.staff).toEqual({ mouths: 9, days: 1 })
+    expect(mealsNeeded(partial, null)).toBe(6)
+    expect(runNight(partial, {}).summary!.money).toContainEqual({ kind: 'takeout', meals: 6, due: 90, paid: 90 })
     expect(staffBlock(farm())).toBe('Build the Kitchen first.')
   })
 })
