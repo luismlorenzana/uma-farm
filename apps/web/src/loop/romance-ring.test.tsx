@@ -349,7 +349,7 @@ describe('before the bench', () => {
     const fresh = newSave('u1', AT)
     expect(lockOf(fresh, farmPlace('forge')!)).toBe('your first Romance 8')
     expect(lockOf({ ...fresh, buildings: { ...fresh.buildings, forge: 0 } }, farmPlace('forge')!)).toBeNull()
-    expect(warehouseTabs(fresh).map((t) => t.shelf)).toEqual(['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds'])
+    expect(warehouseTabs(fresh).map((t) => t.shelf)).not.toContain('rings')
     useGame.setState({ uid: 'u1', status: 'ready', save: fresh })
     await render(<div />, '/?sheet=bench')
     expect($('[data-bench]')).toBeNull()

@@ -13,19 +13,21 @@ function stocked(): SaveV4 {
   const save = newSave('u1', AT)
   return {
     ...save, calendar: { day: SUMMER_3 },
-    items: { ...save.items, salmon: [1, 2, 0, 0, 1], carrot: [3, 0, 0, 0, 0], 'pine-log': [4, 0, 0, 0, 0], basil: [1, 0, 0, 0, 0], 'dried-basil': [2, 0, 0, 0, 0], 'iron-ore': [5, 0, 0, 0, 0] },
+    items: { ...save.items, salmon: [1, 2, 0, 0, 1], carrot: [3, 0, 0, 0, 0], 'pine-log': [4, 0, 0, 0, 0], basil: [1, 0, 0, 0, 0], 'dried-basil': [2, 0, 0, 0, 0],
+      'iron-ore': [5, 0, 0, 0, 0], 'milk-grade-3': [0, 1, 0, 0, 0], 'cultured-yogurt-grade-3': [0, 1, 0, 0, 0] },
   }
 }
 
 describe('the Warehouse by stars', () => {
   it('puts the crops and flours on Crops, the rest by family, mining together, and seeds last', () => {
     const tabs = warehouseTabs(stocked())
-    expect(tabs.map((t) => t.shelf)).toEqual(['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds'])
+    expect(tabs.map((t) => t.shelf)).toEqual(['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'ranch', 'fish', 'mining', 'seeds'])
     const on = (shelf: string) => tabs.find((t) => t.shelf === shelf)!.rows.map((r) => r.id)
     expect([on('crops'), on('herbs-spices'), on('woods'), on('fish'), on('mining'), on('seeds')]).toEqual([
       ['carrot', 'basil'], ['dried-basil'], ['pine-log'], ['salmon'], ['iron-ore'], ['seed-carrot'],
     ])
     expect(tabs.find((t) => t.shelf === 'fish')!.count).toBe(4)
+    expect(on('ranch')).toEqual(['milk-grade-3', 'cultured-yogurt-grade-3'])
     expect(shelfOf({ family: 'grains', crop: false })).toBe('crops')
   })
 
@@ -37,7 +39,7 @@ describe('the Warehouse by stars', () => {
     ])
     expect(salmon).toMatchObject({ name: 'Salmon', total: 4, demand: true, facts: 'Fish · G5 · raw', pair: 'Refines into Salmon Fillet', sells: true, worth: 725 })
     expect(goodRow('dried-basil', [1, 0, 0, 0, 0], SUMMER_3)).toMatchObject({ facts: 'Herbs and spices · G1 · refined', pair: 'Refined from Basil', demand: false })
-    expect(goodRow('carrot', [1, 0, 0, 0, 0], SUMMER_3).pair).toBeNull()
+    expect(goodRow('carrot', [1, 0, 0, 0, 0], SUMMER_3).pair).toBe('Refines into Carrot Pickles')
   })
 
   it('shows seeds without a price, and they don\'t sell', () => {
