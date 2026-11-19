@@ -11,7 +11,9 @@ import {
   rhythmScore, walkFavourite, WALK_FORK_MS, walkPlacesOpen, walkPlan, walkScore, farmPlace, type ChoosePlan, type FarmPlaceId, type Grade, type PickPlan, type PickTap,
   type PlayAs, type PlayLength, type PlayScore, type RhythmMark, type SaveV4, type Seed, type StoryPack, type Turn, type WalkPlan,
 } from '@farm/domain'
-import { Button, UiMark, useKitArt, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { Button, UiMark, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { useBuildingAtlas } from './building-atlas'
+import { CastRing } from './CastRing'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ItemIcon } from '../items/ItemIcon'
 import { gradeLegend, gradeWords, PLAY_HOW, playTitle } from './event-view'
@@ -44,7 +46,7 @@ const now = (): number => (typeof performance !== 'undefined' ? performance.now(
 
 /** A uma-art building frame, pixel-crisp at a whole scale: the place card's and the walk's. */
 export function BuildingArt({ frame, scale = 2, className = '' }: { frame: string; scale?: number; className?: string }) {
-  const atlas = useKitArt().buildings
+  const atlas = useBuildingAtlas()
   const at = atlas?.index.frames[frame]
   if (!atlas || !at) return <span aria-hidden className={`inline-block rounded-md bg-black/10 ${className}`} style={{ width: 48 * scale, height: 48 * scale }} data-frame={frame} />
   return (
@@ -180,18 +182,15 @@ function CastPlay({ spec, onEnd }: { spec: Extract<PlaySpec, { kind: 'cast' }>; 
     if (!tapped && t > meet + MISS_AFTER) record(null)
   }, [t]) // eslint-disable-line react-hooks/exhaustive-deps
   // The ring closes from 3× the mark to the mark at the meeting, then on inside it.
-  const r = Math.max(4, 28 * (1 + (2 * (meet - Math.min(t, meet + MISS_AFTER))) / meet))
   return (
     <div className="space-y-3" data-cast={cast} data-meet={meet}>
       <p className="text-center text-[13px] text-ink-soft">Cast {cast + 1} of {spec.plan.meets.length}</p>
-      <div className="relative mx-auto grid size-48 place-items-center" aria-hidden>
-        <span className="absolute size-14 rounded-full border-4 border-[#3f7d3a]" />
-        <span className="absolute rounded-full border-4 border-[#c2385e]" style={{ width: r * 2, height: r * 2, opacity: tapped ? 0.3 : 1 }} data-ring={Math.round(r)} />
-      </div>
+      <CastRing elapsed={t} meet={meet} tapped={tapped} />
       <TapButton label="Cast" onTap={() => record(now() - start.current)} />
     </div>
   )
 }
+
 
 // --- Rhythm ---------------------------------------------------------------------------------------------------------------
 

@@ -182,14 +182,14 @@ describe('the entry, the play and the judging', () => {
 })
 
 describe('the morning and the Farm Rank', () => {
-  it('opens the Kitchen from "Cooking Contest tomorrow" and "Cooking Contest today · +3 for events"; other festivals the calendar', () => {
+  it('opens the Kitchen for the Cooking Contest and the Festival ground for the Flower Show', () => {
     const summary: MorningSummary = {
       day: CONTEST_DAY, bin: [], ranks: [], hearts: [], nudges: [], work: [],
       news: [{ kind: 'festival', festival: 'cooking-contest', when: 'today' }, { kind: 'festival', festival: 'flower-show', when: 'tomorrow' }],
     }
     expect(summaryParts(summary)[0]!.lines).toEqual([
       { key: 'festival:today', text: 'Cooking Contest today · +3 for events', to: '/?sheet=kitchen' },
-      { key: 'festival:tomorrow', text: 'Flower Show tomorrow', to: '/?sheet=calendar' },
+      { key: 'festival:tomorrow', text: 'Flower Show tomorrow', to: '/?sheet=festival&contest=flower-show' },
     ])
     const eve = summaryParts({ ...summary, news: [{ kind: 'festival', festival: 'cooking-contest', when: 'tomorrow' }] })[0]!.lines
     expect(eve).toEqual([{ key: 'festival:tomorrow', text: 'Cooking Contest tomorrow', to: '/?sheet=kitchen' }])

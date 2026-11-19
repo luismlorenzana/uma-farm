@@ -22,6 +22,8 @@ import {
   type StationLoad, type StationTarget, type SurplusPlan, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
+import { parseFestival } from './parse-festivals'
+import { CONTESTS } from '../festivals/state'
 
 /** Work places with four notification slots each. Restaurant service has no scheduled output. */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter', 'coop', 'barn', 'kitchen'] as const
@@ -243,14 +245,15 @@ export function parseTools(value: unknown, path: string): Record<ToolId, ToolTie
   return Object.fromEntries(TOOL_IDS.map((t) => [t, int(o[t], `${path}.${t}`, 1, 5) as ToolTier])) as Record<ToolId, ToolTier>
 }
 
-export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>): SaveV5['workshops'] {
-  const o = object(value, path, ['played', 'current', 'recipes', 'best', 'restaurant'])
+export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>, today: number): SaveV5['workshops'] {
+  const o = object(value, path, ['played', 'current', 'recipes', 'best', 'restaurant', 'festival'])
   const p = object(o.played, `${path}.played`, WORKSHOP_IDS)
   const played = Object.fromEntries(WORKSHOP_IDS.map((w) => [w, count(p[w], `${path}.played.${w}`)])) as Record<WorkshopId, number>
   const current = o.current === null ? null : parsePlay(o.current, `${path}.current`, roster)
   const recipes = unique(list(o.recipes, `${path}.recipes`, 0, 80).map((v, i) => (typeof v === 'string' && isLegacyDishId(v) ? v : fail(`${path}.recipes.${i}`, 'unknown dish'))), `${path}.recipes`)
   return { played, current, recipes, best: counts(o.best, `${path}.best`, (k) => KEY.test(k), 'expected an id', amount),
-    ...(o.restaurant === undefined ? {} : { restaurant: parseRestaurant(o.restaurant, `${path}.restaurant`) }) }
+    ...(o.restaurant === undefined ? {} : { restaurant: parseRestaurant(o.restaurant, `${path}.restaurant`) }),
+    ...(o.festival === undefined ? {} : { festival: parseFestival(o.festival, `${path}.festival`, today, roster) }) }
 }
 
 /** A stove's stock key: a good or a dish the Warehouse holds, at its stars. */
@@ -661,9 +664,13 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
 export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
   const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, MAX_FIELD_TILES)
   const loads = new Map<string, number>()
-  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 6 + MAX_FIELD_TILES + RARE_CROPS.length).map((v, i): WorkLine => {
+  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 7 + MAX_FIELD_TILES + RARE_CROPS.length).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition', 'discovery', 'seed-prize', 'restaurant', 'learned-recipes'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered', 'expedition', 'discovery', 'seed-prize', 'restaurant', 'learned-recipes', 'festival-result'] as const)
+    if (kind === 'festival-result') {
+      const row = object(v, at, ['kind', 'id', 'place', 'gold'])
+      return { kind, id: oneOf(row.id, at, CONTESTS), place: row.place === null ? null : int(row.place, at, 1, 3) as 1 | 2 | 3, gold: amount(row.gold, at) }
+    }
     if (kind === 'expedition') return { kind, ...parseExpeditionReturn(v, at, roster, true) }
     if (kind === 'restaurant') return { kind, result: parseRestaurantResult(object(v, at, ['kind', 'result']).result, `${at}.result`) }
     if (kind === 'learned-recipes') return { kind, count: int(object(v, at, ['kind', 'count']).count, `${at}.count`, 1, LAST_STAGE * RECIPES_PER_STAGE) }
@@ -679,7 +686,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
       return { kind, home: oneOf(r.home, `${at}.home`, RANCH_HOMES), fed: animals(r.fed, `${at}.fed`), hungry: animals(r.hungry, `${at}.hungry`), ready: animals(r.ready, `${at}.ready`) }
     }
     if (kind === 'farmhand') {
-      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen', 'restaurant'])
+      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen', 'restaurant', 'festival'])
       const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
       return {
         kind, id: member(f.id, `${at}.id`, roster), actions, spent: int(f.spent, `${at}.spent`, 0, actions), half: bool(f.half, `${at}.half`), fed: bool(f.fed, `${at}.fed`),
@@ -688,6 +695,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
         // Her action at the Kitchen's play as its assistant (F92); older lines have none.
         ...(f.kitchen !== undefined ? { kitchen: int(f.kitchen, `${at}.kitchen`, 1, actions) } : {}),
         ...(f.restaurant !== undefined ? { restaurant: int(f.restaurant, `${at}.restaurant`, 1, 1) } : {}),
+        ...(f.festival !== undefined ? { festival: int(f.festival, `${at}.festival`, 1, 1) } : {}),
       }
     }
     if (kind === 'load') {
@@ -710,7 +718,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
   }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? loadKey(w.station) : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
     : w.kind === 'expedition' ? `expedition:${w.party[0]}:${w.left}` : w.kind === 'discovery' ? `discovery:${w.id}`
-      : w.kind === 'restaurant' || w.kind === 'learned-recipes' ? w.kind : `${w.kind}:${w.crop}`))
+      : w.kind === 'restaurant' || w.kind === 'learned-recipes' || w.kind === 'festival-result' ? w.kind : `${w.kind}:${w.crop}`))
   // A station's loads: one a level, so up to its top level's (each its own line, in the order started).
   function loadKey(station: string): string {
     const n = (loads.get(station) ?? 0) + 1

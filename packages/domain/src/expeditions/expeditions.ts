@@ -1,3 +1,4 @@
+import { festivalBooked } from '../festivals/state'
 import { actionsLeft, spend } from '../farm/actions'
 import { addBond, BOND_POINTS } from '../farm/bonds'
 import { draw } from '../farm/draw'
@@ -69,6 +70,7 @@ export function expeditionMemberBlock(save: FarmSave, id: string): string | null
   if (bookedForExpedition(save, id)) return 'Already in a party.'
   if (save.today.assistant === id || save.today.cook === id || save.workshops.current?.assistant === id) return 'Cooking today.'
   if (save.today.server === id) return 'Serving today.'
+  if (festivalBooked(save, id)) return 'Booked for the festival.'
   return null
 }
 

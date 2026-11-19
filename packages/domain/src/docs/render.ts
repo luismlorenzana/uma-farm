@@ -777,7 +777,7 @@ function lovePoints(): string {
     ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One action; one a day each, where you meet her; ×3 on her birthday', '`giftV4`'],
     ['Praise (a ★3+ day’s work, a rank-up, a Fine play)', `+${LOVE_POINTS.praise}`, 'Once a day, when earned', '`praiseV4`'],
     ['Her line (she worked it today)', `+${LOVE_POINTS.line}`, 'Paid at night, step 6', '`payLines`'],
-    ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether`: the Cooking Contest’s cook (the other festivals’ when they’re built)'],
+    ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether`: the Cooking Contest’s cook, Derby casters who took their turn, the Animal Show handler and Harvest Cup presenters'],
     ['Her arrival scene', `+${ARRIVAL_POINTS}, and its choice (+${CHOICE_OTHER} or +${CHOICE_BEST})`, 'Once', '`finishArrival`'],
     ['A heart event', '+50, its choices and its play’s grade', 'One action (a special day’s event actions first); one of hers a day', '`playEvent`'],
     [`The evening (a hangout from F${HANGOUT_FROM}, a date from R${DATE_FROM}; 2 actions)`, `Fine +${EVENING_GRADE_POINTS.fine}, Great +${EVENING_GRADE_POINTS.great}, Perfect +${EVENING_GRADE_POINTS.perfect}; ×${EVENING_FACTOR} in her favourite kind, on her birthday and on her anniversary, each once`, `One evening a day across all the Umas; two on some days from ${TWO_EVENINGS_MARRIED} married`, '`spendEvening`'],

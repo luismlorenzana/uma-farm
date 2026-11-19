@@ -67,7 +67,7 @@ describe('the morning’s world', () => {
     const shown = summaryParts({ ...summary, hearts: [], news }, undefined, [], null, undefined, undefined, undefined, worldWords(PACK))[0]!.lines
     expect(shown.map((l) => [l.key, l.text, l.to])).toEqual([
       ['new-year:today', 'New Year’s today · +3 for events', '/?sheet=calendar'],
-      ['festival:today', 'Bloom Fair today · +3 for events', '/?sheet=calendar'],
+      ['festival:today', 'Bloom Fair today · +3 for events', '/?sheet=festival&contest=flower-show'],
       ['days:today', 'Kite day +1 more today', '/?sheet=calendar'],
       ['new-year:tomorrow', 'New Year’s tomorrow', '/?sheet=calendar'],
       ['days:tomorrow', 'Market day tomorrow', '/?sheet=calendar'],

@@ -173,7 +173,7 @@ describe('the town', () => {
   it('stands among the town\'s places, open from day 1, and opens its screen', () => {
     const town = loopMenuGroups(farm()).find((g) => g.key === 'town')!
     expect(town.places.map((p) => [p.key, p.to, p.locked])).toEqual([
-      ['shop', '/?sheet=shop', false], ['festival', '/?peek=festival', true], ['expeditions', '/?peek=expeditions', true], ['town', '/town', false],
+      ['shop', '/?sheet=shop', false], ['festival', '/?sheet=festival', false], ['expeditions', '/?peek=expeditions', true], ['town', '/town', false],
     ])
   })
 

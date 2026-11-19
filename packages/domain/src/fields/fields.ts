@@ -15,6 +15,7 @@
 // The field is plots of 8 × 5 (`fields/plots.ts`). A rule names a tile by its field index, every plot's tiles in order
 // (`fieldTiles`): plot 1's tiles are 0–39 as they always were, plot 2's 40–79, so a draw keyed by the index (`harvest:<i>`)
 // replays the same on plot 1.
+import { clearFlowerMark, flowerGrew, flowerHarvested, flowerPlanted, flowerWatered } from '../festivals/evidence'
 import { spend } from '../farm/actions'
 import { dateOf, DAYS_PER_SEASON, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -177,14 +178,14 @@ function sowable(save: FarmSave, index: number, seed: string): void {
   inSeason(save, what.crop)
 }
 /** The planting itself, spending nothing. */
-export function sowTile<S extends FarmSave>(save: S, index: number, seed: string): S {
+export function sowTile<S extends FarmSave>(save: S, index: number, seed: string, by: string | null = null): S {
   sowable(save, index, seed)
   const what = seedOf(seed)!
   const items = takeGoods(save.items, seed, 1, 1)
-  return {
+  return flowerPlanted({
     ...save, items, fields: withTile(save, index, { ...bareTile('tilled'), crop: what.crop, own: what.own, ...(what.grade ? { grade: what.grade } : {}) }),
     crops: { ...save.crops, [what.crop]: save.crops[what.crop] ?? 0 }, farm: { ...save.farm, counts: bump(save.farm.counts, TILES_PLANTED) },
-  }
+  }, index, what.crop, by)
 }
 
 /** Waters a growing tile: one action; it grows a stage tonight. Refused with nothing growing, once it's ripe and once
@@ -200,10 +201,10 @@ function wettable(tile: Tile): void {
   if (tile.watered) throw new SaveRuleError('bad-slot', 'Watered today.')
 }
 /** The watering itself, spending nothing. */
-export function wetTile<S extends FarmSave>(save: S, index: number): S {
+export function wetTile<S extends FarmSave>(save: S, index: number, by: string | null = null): S {
   const tile = tileAt(save, index)
   wettable(tile)
-  return { ...save, fields: withTile(save, index, { ...tile, watered: true }) }
+  return flowerWatered({ ...save, fields: withTile(save, index, { ...tile, watered: true }) }, index, by)
 }
 
 /** What a harvest brought: crops by star and an own seed back. */
@@ -240,7 +241,7 @@ function reapable(tile: Tile): void {
 }
 /** The harvest itself, spending nothing, by the farmer (`null`) or a farmhand. A farmhand's yield above ×1 draws its
  * fraction (`draw(uid, day, 'harvest-more:<i>', 0)`). */
-export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Reaper | null, upgrade?: number): { save: S; receipt: HarvestReceipt } {
+export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Reaper | null, upgrade?: number, by: string | null = null): { save: S; receipt: HarvestReceipt } {
   const tile = tileAt(save, index)
   reapable(tile)
   const crop = CROPS[tile.crop!]
@@ -269,10 +270,10 @@ export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Rea
     : regrows ? { ...tile, growth: 0, ready: false, watered: false, regrowing: true } : bareTile('tilled')
   const found = lots.reduce((state, lot) => discoverOutput(state, lot.id), save)
   return {
-    save: {
+    save: flowerHarvested({
       ...found, items, fields: withTile(save, index, next), crops: { ...save.crops, [crop.id]: points + cropPointsOf(tile.own) },
       farm: { ...found.farm, counts: bump(save.farm.counts, TILES_HARVESTED) },
-    },
+    }, index, crop.id, lots, by),
     receipt,
   }
 }
@@ -349,6 +350,8 @@ export interface Withered {
 export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<number> = new Set()): { save: S; grew: number; ripened: number } {
   let grew = 0
   let ripened = 0
+  let markedGrew = false
+  const marked = save.workshops.festival?.mark?.tile
   const fields = mapTiles(save, (tile, i): Tile => {
     if (tile.crop === null || tile.ready || established(tile) || !(tile.watered || chores.has(i))) return tile.watered ? { ...tile, watered: false } : tile
     const growth = tile.growth + 1
@@ -356,10 +359,11 @@ export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<numbe
     const woody = CROPS[tile.crop].woody
     const ready = mature && (!woody || growsIn(tile.crop, seasonOf(save)))
     grew++
+    if (i === marked && tile.watered) markedGrew = true
     if (ready) ripened++
     return { ...tile, growth, ready, watered: false, ...(woody && ready ? { fruitSeason: orchardSeason(save.calendar.day) } : {}) }
   })
-  return { save: { ...save, fields }, grew, ripened }
+  return { save: flowerGrew({ ...save, fields }, markedGrew), grew, ripened }
 }
 
 /**
@@ -373,15 +377,19 @@ export function witherTiles<S extends FarmSave>(save: S): { save: S; withered: W
   const next = dateOf(day + 1).season
   const withered: Withered[] = []
   let changed = false
-  const fields = mapTiles(save, (tile): Tile => {
+  let markedLost = false
+  const marked = save.workshops.festival?.mark?.tile
+  const fields = mapTiles(save, (tile, i): Tile => {
     if (tile.crop === null || tile.ready || CROPS[tile.crop].woody || growsIn(tile.crop, next)) return tile
     changed = true
+    if (i === marked) markedLost = true
     const line = withered.find((w) => w.crop === tile.crop)
     if (line) line.tiles++
     else withered.push({ crop: tile.crop, tiles: 1 })
     return bareTile('tilled')
   })
-  return { save: changed ? { ...save, fields } : save, withered }
+  const result = changed ? { ...save, fields } : save
+  return { save: markedLost ? clearFlowerMark(result, marked!) : result, withered }
 }
 
 /** Whether a field index is a tile on this save's field: on a plot it has cleared. */
@@ -403,5 +411,5 @@ export function setOrchardFruit<S extends FarmSave>(save: S): S {
 export function removeOrchard<S extends FarmSave>(save: S, index: number): S {
   const tile = tileAt(save, index)
   if (!tile.crop || !CROPS[tile.crop].woody) throw new SaveRuleError('bad-slot', 'There is no orchard plant here.')
-  return { ...spend(save, 'remove-orchard'), fields: withTile(save, index, bareTile('tilled')) }
+  return clearFlowerMark({ ...spend(save, 'remove-orchard'), fields: withTile(save, index, bareTile('tilled')) }, index)
 }

@@ -111,9 +111,8 @@ one through the farm's exact ingredient discoveries. Sell cooked dishes, cook wi
 
 ## Open packets
 
-| Packet | Work | Status |
-|---|---|---|
-| [F100](tasks/F100-festival-contests.md) | Flower Show, Fishing Derby, Animal Show and Harvest Cup use the farm's entries and the Umas' work | Authored |
+The four [Festival ground contests](../game-mechanics.md#festival-contests) are complete (F100). The rules include
+the first-year solo playthrough and results from crews of 10, 20 and 50.
 
 The Forge is [deferred pending a redesign](../roadmap.md#deferred). The Uma Book and broader long-game
 progression await the owner's requirements.

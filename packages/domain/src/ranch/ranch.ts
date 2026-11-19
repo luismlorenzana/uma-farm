@@ -12,6 +12,7 @@
 // hungry night takes 10. A good's quality is its animal's hearts ÷ 2.5 (`heartsQuality`), so ten hearts is always ★5.
 // Every star is a seeded draw numbered by the farm's count of the ranch's goods, so every device draws alike. Pure; never
 // stamps. Loaded with the ranch's screens and the night.
+import { noteAnimalCare } from '../festivals/evidence'
 import { inTown, spend } from '../farm/actions'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
@@ -174,8 +175,9 @@ export function careFor<S extends FarmSave>(save: S, id: string): S {
   return careAt(spend(save, 'animal'), id, 0)
 }
 /** A care itself, spending nothing: +8 fondness and `extra` (a farmhand's aptitude), held to the top. */
-export function careAt<S extends FarmSave>(save: S, id: string, extra: number): S {
-  return withAnimal(save, id, (a) => ({ ...a, cared: true, fondness: Math.min(MAX_FONDNESS, a.fondness + CARE_FONDNESS + extra) }))
+export function careAt<S extends FarmSave>(save: S, id: string, extra: number, by: string | null = null): S {
+  if (animalAt(save, id).cared) return save
+  return noteAnimalCare(withAnimal(save, id, (a) => ({ ...a, cared: true, fondness: Math.min(MAX_FONDNESS, a.fondness + CARE_FONDNESS + extra) })), id, by)
 }
 
 /** What a collection brought: its goods as stock keys (`<id>@<stars>`). */

@@ -1,4 +1,5 @@
 import { availableDishes } from '../expeditions/stock'
+import { activeContest, festivalBooked } from '../festivals/state'
 import { bookedForExpedition } from '../expeditions/presence'
 import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { draw, mulberry32 } from '../farm/draw'
@@ -44,7 +45,7 @@ export function serverLock(save: FarmSave, id: string, story: PerkPack | null = 
   if (!day) return 'Only a farmhand can serve.'
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (!worksOn(save, story, id)) return 'She’s in town today.'
-  if (day.kitchen || save.today.server === id) return 'She’s booked today.'
+  if (day.kitchen || save.today.server === id || festivalBooked(save, id)) return 'She’s booked today.'
   return day.actions < 1 ? 'She has no action left tonight.' : null
 }
 
@@ -56,7 +57,7 @@ function previouslyLearned(save: FarmSave, id: string, stage: number): boolean {
 export function shiftBlock(save: FarmSave, stage: number, tray: readonly StockPortions[], server: string | null = null, story: PerkPack | null = null): string | null {
   if (!placeBuilt(save, 'restaurant')) return 'Build the Restaurant first.'
   if (!placeBuilt(save, 'kitchen')) return 'Build the Kitchen first.'
-  if (save.workshops.current || save.workshops.restaurant?.shift) return 'A play is under way.'
+  if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) return 'A play is under way.'
   if (save.workshops.played.restaurant === save.calendar.day) return 'One shift per day.'
   if (actionsLeft(save) < actionCost('restaurant')) return 'No actions left today.'
   const rule = restaurantStage(stage)

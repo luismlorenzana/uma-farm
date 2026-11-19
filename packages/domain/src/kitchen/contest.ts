@@ -27,6 +27,7 @@ import { farmRankOf } from '../farm/farm'
 import { handDay } from '../farm/farmhands'
 import { FESTIVAL_PLACE_POINTS } from '../farm/milestones'
 import { bookedForExpedition } from '../expeditions/presence'
+import { activeContest, festivalBooked } from '../festivals/state'
 import { countChallenge } from '../farm/rank-rules'
 import { dishName } from '../goods/names'
 import { itemNameOf } from '../items/lines'
@@ -139,6 +140,7 @@ export function cookLock(save: FarmSave, id: string): string | null {
   if (!day) return 'Only a farmhand cooks for you.'
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (save.today.server === id) return 'She’s serving today.'
+  if (festivalBooked(save, id)) return 'She’s booked for the festival.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
 }
 
@@ -182,7 +184,7 @@ export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEn
   if (!contestOn(save.calendar.day, days.festivals)) return 'No contest today.'
   if (!kitchenBuilt(save)) return 'Build the Kitchen to enter.'
   if (contestEntered(save)) return 'One entry a Contest.'
-  if (save.workshops.current || save.workshops.restaurant?.shift) return 'A play is under way.'
+  if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) return 'A play is under way.'
   if (!canSpendForEvent(save, CONTEST_ACTIONS, days)) return `Entering takes ${CONTEST_ACTIONS} actions.`
   if (!entry) return 'Choose a recipe.'
   const recipe = recipeOf(entry.dish)

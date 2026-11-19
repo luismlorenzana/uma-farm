@@ -41,6 +41,8 @@ import { finishLoads, type LoadDone } from '../gathering/stations'
 import { isStation } from '../gathering/ids'
 import { payBin } from '../save/bin'
 import { settleRestaurant } from '../restaurant/restaurant'
+import { closeFlowerWindow, festivalResult, settleFestival } from '../festivals/contests'
+import { CONTESTS } from '../festivals/state'
 import { knownRestaurantRecipes } from '../restaurant/recipes'
 import { marketNight } from '../goods/market'
 import type { LoopPlaceId } from '../save/parse-v4'
@@ -390,7 +392,8 @@ export const serveTheReception: NightStep = (night) => {
  * into the Warehouse, its assistant's practice and challenges; the Cooking Contest's dish judged on its play's score of 0
  * (`kitchen/contest.ts`), its prize paid and its result kept. */
 export const settleThePlay: NightStep = (night) => {
-  const save = settleRestaurant(night.save)
+  const settled = settleFestival(settleRestaurant(night.save))
+  const save = closeFlowerWindow(settled, { festivals: festivalsOf(night.context.story), birthdays: NO_BIRTHDAYS })
   if (!save.workshops.current) return save === night.save ? night : { ...night, save }
   return { ...night, save: settleUnfinished(save, { talentOf: talentsOf(night), story: night.context.story ?? null }) }
 }
@@ -575,7 +578,11 @@ export const buildSummary: NightStep = (night) => {
   const learned = knownRestaurantRecipes(save).length - knownRestaurantRecipes(night.before).length
     - (before?.shift ? shift?.learned ?? 0 : 0)
   if (learned > 0) restaurant.push({ kind: 'learned-recipes', count: learned })
-  const work = [...restaurant, ...discoveries, ...prizes, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
+  const festivals = CONTESTS.flatMap((id): WorkLine[] => {
+    const card = festivalResult(save, id)
+    return card?.day === night.before.calendar.day ? [{ kind: 'festival-result', id, place: card.place, gold: card.gold }] : []
+  })
+  const work = [...festivals, ...restaurant, ...discoveries, ...prizes, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
   const ranks = [...notes.ranks, ...aptitudeUps(night.before, save, talentsOf(night))]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),

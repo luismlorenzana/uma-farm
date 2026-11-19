@@ -16,6 +16,7 @@ import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isShippableId, type Cr
 import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
 import { FISH_MODES } from '../goods/production-catalogue'
 import { isStockId, parseStockKey } from './warehouse'
+import { checkFestivalSave } from './parse-festivals'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
@@ -559,7 +560,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     })(),
     buildings,
     tools: parseTools(o.tools, `${path}.tools`),
-    workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids),
+    workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids, today),
     expeditions: parseExpeditions(o.expeditions, `${path}.expeditions`, ids),
     ...(o.expeditionLog === undefined ? {} : { expeditionLog: list(o.expeditionLog, `${path}.expeditionLog`, 0, 20)
       .map((row, i) => parseExpeditionReturn(row, `${path}.expeditionLog.${i}`, ids)) }),
@@ -574,6 +575,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     summary: o.summary === null ? null : parseSummary(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
     town: parseTown(o.town, `${path}.town`, today),
   }
+  checkFestivalSave(save, path)
   const service = save.workshops.restaurant
   const played = save.workshops.played.restaurant
   if (service?.shift && (service.shift.day !== today || played !== today || save.workshops.current || (service.last?.day ?? 0) >= today)) {
