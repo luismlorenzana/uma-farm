@@ -2,7 +2,7 @@
 // plays the role; her role's disc with no master data) tasting the three plates and speaking by your place, one line a
 // tap, Skip to the board; then the board: your place, each farm's score, the prize, and the dish into the Warehouse, with
 // **Done**. The play's result is already saved: the scene only says it. Loaded on demand from the stove.
-import { contestBeats, dishName, type PlayResult, type Step } from '@farm/domain'
+import { contestBeats, dishName, onDuty, type PlayResult, type Step } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { SceneLookProvider } from '../dialogue/Bust'
@@ -19,13 +19,19 @@ export default function ContestJudging({ result, name, onDone }: { result: PlayR
   const master = useMaster()
   const story = useStory()
   const board = result.contest!
-  const steps = useMemo((): Step[] => contestBeats(board.place).map((b) => (b.speaker.kind === 'cast' ? { say: b.speaker.id, line: b.line } : { narrate: b.line })), [board.place])
+  const day = save?.calendar.day ?? 1
+  const weekly = Boolean(story?.town?.professions?.length)
+  const judge = story && save ? onDuty(story, save, day, 'rosa-bell') : null
+  const canJudge = !weekly || (judge !== null && judge !== save?.today.cook)
+  const steps = useMemo((): Step[] => canJudge
+    ? contestBeats(board.place).map(b => b.speaker.kind === 'cast' ? { say: judge ?? b.speaker.id, line: b.line } : { narrate: b.line })
+    : [], [board.place, canJudge, judge])
   const [at, setAt] = useState(0)
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
   const step = steps[at]
   const dish = result.dishes[0]
   return (
-    <SceneLookProvider value={{ day: save?.calendar.day ?? 1 }}>
+    <SceneLookProvider value={{ day }}>
       <Frame title={`${name} · The judging`} label={`${name}: the judging`} scene="scene:contest" onSkip={() => (at < steps.length ? setAt(steps.length) : onDone())} skipping={false}>
         {step ? (
           <StepView key={at} steps={steps} at={at} nameOf={nameOf} farmer={save?.farmer.name ?? ''} onNext={() => setAt(at + 1)} />

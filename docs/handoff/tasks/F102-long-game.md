@@ -14,6 +14,9 @@ the scope. The proposed settings below give the first playtest something concret
 
 ## Town professions and the seven-day week
 
+Implemented in the first slice. See [live rules and roster trials](../../game-mechanics.md#town-professions-and-the-week).
+The bundled 25 pairs follow launch order. The owner can override them with a complete validated story plan.
+
 Keep the four 12-day seasons and 48-day years. Add a continuous seven-day cycle to the absolute farm day. Day 1
 is Monday. The work cycle crosses seasons and years without resetting. Existing occasions use their seasonal
 dates, so a wedding anniversary may fall on different weekdays in successive years.
@@ -52,7 +55,7 @@ partner works the counter and the other has her farm shift. The bakery below tak
   rival cards, the smith scene and town story with the role's available cast member. Use brief fallback copy
   when a role has no speaker. The launch data must validate staffed roles, unique job ownership for each Uma
   and both shifts and one day off per profession. Ship the new scheduling rules with a validated launch-roster
-  overlay. Old authored stories can still load alongside it. Keep the last valid overlay if a release has broken staffing.
+  overlay. Old authored stories can still load alongside it. A release with broken staffing uses the bundled schedule.
 - **Mayor choice.** The first pass keeps one NPC mayor. If the farmer becomes mayor at the beginning, use
   the same construction, loan and permit services as a town ledger, with the opening, notices and town
   projects adjusted to match. Both paths keep the farm's essential services reachable.
@@ -221,10 +224,9 @@ to work. Test new rewards at smaller rosters before pricing them for the largest
 
 ## Build order and acceptance
 
-1. **Week and town pilot.** Play two professions with different days off through all four seasons and a year
-   boundary. Verify each pair's non-overlapping shifts before and after marriage, self-service on an uncovered
-   counter, contested bookings, maintained residence and nighttime availability. Re-run four-season production
-   for 10, 20 and 50 Umas and measure daily water and feed, service coverage, meals and stock.
+1. **Week and town pilot complete.** The roster trials covered four seasons and the year boundary at 10, 20
+   and 50 Umas, with both roles in a profession married. They checked counter coverage, chores, meals and
+   evening availability, with separate checks for absent staff and self-service.
 2. **Housing, celebrations and ending.** Verify room availability from the first through fiftieth wedding.
    Test same-day wedding order, ten five-spouse cohorts, pending events, the Greater Festival at +48 days and
    a make-up, then Year 50 into Year 51 on a small and a large farm. Load a test expansion.

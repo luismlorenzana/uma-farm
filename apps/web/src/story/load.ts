@@ -8,7 +8,7 @@
 // (`scripts/check-size.mjs`'s `DEV_ONLY_MODULES`). Loaded on demand, with the pack, so none of it reaches the initial JS.
 import {
   birthdaysOf, castEntry, festivalsOf, isCastId, isSister, LAUNCH_CAST, launchCast, masterCastFrom, outfitOf, sisterNameOf, speakerId, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit,
-  type SpecialDays, type StoryPack,
+  withLaunchProfessions, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { CONTENT } from '../content/client'
@@ -35,7 +35,7 @@ export async function loadStoryPack(launch: readonly string[] = LAUNCH_CAST): Pr
   const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null, arrived }), masterReady()])
   birthdays = view.birthdays
   // The launch cast (F96): the game's Umas are the Ranker's Tier 1–5, whatever else the story holds.
-  return launchCast(storyOf(pack, masterCast(view)), launch)
+  return withLaunchProfessions(launchCast(storyOf(pack, masterCast(view)), launch))
 }
 
 /** The special days: the year's festivals (the story's) and the cast's birthdays (her cast entry's, else master data's). */

@@ -32,6 +32,7 @@ import { TALK_STAGES, type TalkStage } from '../story/default-story'
 import type { Expression } from '../story/look'
 import type { StoryPack } from '../story/pack'
 import { mealLinesOf, morningGreetingsOf, talkStageOf } from '../story/placeholders'
+import { worksOn, type SchedulePack } from '../town/town'
 import { isBirthday, type Birthdays } from './days'
 import { defaultHouse } from './homestead'
 import { addLove } from './love'
@@ -123,9 +124,11 @@ export const mealsCooked = (save: Pick<SaveV4, 'today'>): readonly Meal[] => sav
 
 /** Who eats the household's meals: everyone who lives on the farm (the spouses in their rooms) and every farmhand, by
  * id. */
-export function mealEaters(save: Pick<SaveV4, 'roster' | 'love'> & Partial<Pick<SaveV4, 'calendar' | 'expeditions'>>): string[] {
+export function mealEaters(save: Pick<SaveV4, 'roster' | 'love'> & Partial<Pick<SaveV4, 'calendar' | 'expeditions'>>, pack?: SchedulePack | null): string[] {
+  const calendar = save.calendar
   return Object.keys(save.roster).filter((id) => (!save.calendar || !awayOn(save, id, save.calendar.day))
-    && (save.love[id]?.house !== undefined || isFarmhand(save, id)))
+    && (save.love[id]?.house !== undefined || (calendar && pack?.town?.professions?.length
+      ? worksOn({ ...save, calendar }, pack, id) : isFarmhand(save, id))))
     .sort((a, b) => Number(a) - Number(b))
 }
 
@@ -142,13 +145,13 @@ export function mealBlock(save: Pick<SaveV4, 'love' | 'today' | 'calendar'>, mea
  * two goods of food by the plain rule when the Warehouse holds two (`batch`, the meals added, else 0); the meal marked
  * for today. Who ate and the points paid in all. Refused before the first wedding (`locked`), once that meal is made
  * (`busy`), and with no action left (`no-actions`). Never stamps. */
-export function cookMeal(save: SaveV4, meal: Meal): { save: SaveV4; fed: string[]; paid: number; batch: number } {
+export function cookMeal(save: SaveV4, meal: Meal, pack?: SchedulePack | null): { save: SaveV4; fed: string[]; paid: number; batch: number } {
   const block = mealBlock(save, meal)
   if (block !== null && block !== 'No actions left today.') throw new SaveRuleError(marriedCount(save) === 0 ? 'locked' : 'busy', block)
   let next = spend(save, 'cook')
   const goods = plainBatch(next)
   if (goods) next = addBatch(next, goods, BATCH_MEALS)
-  const fed = mealEaters(next)
+  const fed = mealEaters(next, pack)
   next = { ...next, roster: { ...next.roster, ...Object.fromEntries(fed.map((id) => [id, { ...next.roster[id]!, wellFed: Math.max(next.roster[id]!.wellFed, MEAL_DAYS) }])) } }
   let paid = 0
   for (const id of fed) {

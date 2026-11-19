@@ -674,12 +674,13 @@ function townSpots(): string {
 function townSchedule(): string {
   const days = [0, 1, 2].map((place) => defaultDays(place).join(', '))
   return table(['', 'The rule'], [
-    ['Her story', 'Her routine’s first stop that holds that day (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there. On a day none holds, she’s at home, off the map'],
-    ['The default schedule', `An Uma the story hasn’t scheduled (no \`routine\`, \`job\` or \`home\` on the map): at her favourite spot on every ${DEFAULT_EVERY === 3 ? 'third' : `${DEFAULT_EVERY}th`} day of each season, by her place in the cast (the 1st, 4th, 7th… on ${days[0]}; the 2nd, 5th, 8th… on ${days[1]}; the 3rd, 6th, 9th… on ${days[2]}); at home, off the map, the other days`],
+    ['Weekly profession', 'Three town shifts, three farm shifts after hiring and the profession’s day off. The partners alternate town and farm shifts across the six working days'],
+    ['Personal time', 'A free-day outing, else her routine or home. A hired Uma keeps assigned farm days for farm work'],
+    ['Legacy schedules', `An Uma without a weekly profession uses the story’s routine, job and home. The game’s fallback is her favourite spot on ${days[0]}, ${days[1]} or ${days[2]} each season, according to cast order`],
     ['Her favourite spot', `Her cast entry’s \`spot\`; else the ${SPOT_IDS.length} in turn by her place in the cast, ${DEFAULT_EVERY} Umas each (the 1st to 3rd at \`${SPOT_IDS[0]}\`, the 4th to 6th at \`${SPOT_IDS[1]}\`…, the 19th starting again)`],
     ['A spot', 'Holds everyone the schedules put there, with no cap; nobody is placed at random'],
-    ['On the farm', 'A spouse in her room lives at the farm, never in town. A farmhand is at the farm on her farm days, the days the rows above don’t put her out in town (a day at her `home` or at home off the map is one); a season with none, the default schedule’s other days (8 of 12). On her town days she’s in town by her schedule'],
-    ['The town’s people', 'Each at her post: her role’s shop or office, else the spot she keeps'],
+    ['On the farm', 'A spouse with a room lives on the farm and commutes on her assigned town days. Farmhand tasks run on her farm shifts. A spouse with a room joins the household at night after town shifts and days off'],
+    ['The town’s people', 'The mayor keeps her post. The romance cast fill the town professions on their shifts. Shop menus work on days off'],
     ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],
   ])
 }

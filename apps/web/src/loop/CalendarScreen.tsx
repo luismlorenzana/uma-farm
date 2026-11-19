@@ -11,7 +11,7 @@
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
-  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays,
+  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -143,7 +143,9 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
   const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0 && town.length === 0
   return (
     <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-y-auto overscroll-contain rounded-md border border-hairline bg-panel p-3" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
-      <h3 className="font-display text-[17px] font-bold" data-day-heading>{dayHeading(day, today)}</h3>
+      <h3 className="font-display text-[17px] font-bold" data-day-heading>{dayHeading(day, today)}
+        {Boolean(pack.town?.professions?.length) && <span className="ml-2 text-[13px] text-ink-soft">{weekdayShort(weekdayOf(day.day))}</span>}
+      </h3>
       {events && <p className="flex items-center gap-1 pt-0.5 text-[13px] font-semibold text-[#c2385e]" data-day-events><HeartIcon size={14} />{events}</p>}
       <ul className="space-y-1.5 pt-2 text-[14px]">
         {day.newYear && <li className="flex items-center gap-2" data-entry="new-year"><SparkIcon size={16} /> New Year’s</li>}

@@ -107,7 +107,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       <div className="sticky top-0 z-10 -mx-4 bg-panel px-4 pb-3" data-profile-sides>
         <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       </div>
-      {(!atHome(save, id) || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
+      {(!atHome(save, id) || pack.town?.professions?.length || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
       {side === 'work'
         ? row && <WorkSide row={row} />
         : <HeartsSide save={save} pack={pack} id={id} card={card} nameOf={nameOf} />}

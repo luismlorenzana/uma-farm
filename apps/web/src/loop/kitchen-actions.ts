@@ -41,13 +41,16 @@ async function begin(rule: (save: SaveV4) => SaveV4): Promise<void> {
 /** **At the stove · 1**: a batch played at the farmhouse stove, its two goods taken now; the stove's screen plays it. */
 export const startBatchAtStove = (picks: readonly string[]): Promise<void> => begin((s) => startStoveBatch(s, picks))
 /** **Play · 1** at the Kitchen: its menu's inputs taken now and its assistant's action tonight; the stove's screen plays it. */
-export const startKitchen = (menu: readonly MenuLine[], assistant: string | null): Promise<void> => begin((s) => startKitchenPlay(s, menu, assistant))
+export async function startKitchen(menu: readonly MenuLine[], assistant: string | null): Promise<void> {
+  const pack = assistant === null ? null : await storyReady()
+  await begin((s) => startKitchenPlay(s, menu, assistant, pack))
+}
 /** **Enter the Cooking Contest · 3**: its two of the main and one side taken now, its cook's action tonight, three
  * actions (the festival day's event actions first: the story's year, once the pack is in); the stove's screen plays it. */
 export async function enterTheContest(entry: ContestEntry): Promise<void> {
-  await storyReady()
+  const pack = await storyReady()
   const days = specialDays() ?? GAME_DAYS
-  await begin((s) => enterContest(s, entry, days))
+  await begin((s) => enterContest(s, entry, days, pack))
 }
 /** The play's end: its taps replayed against its seed by the rules, or null when you stopped it (Rough). What it made,
  * and a Contest's judging. */

@@ -194,7 +194,7 @@ function LotLine({ lot, busy, onBuild }: { lot: { n: number; cost: number; open:
 
 /** The household's meals: breakfast and dinner, an action each, once each a day; who eats, and what a meal does. */
 function Meals({ save, busy, onCook }: { save: SaveV4; busy: boolean; onCook: (meal: Meal) => void }) {
-  const eaters = mealEaters(save).length
+  const eaters = mealEaters(save, useStory()).length
   return (
     <section className="space-y-1" aria-label="Meals" data-meals>
       <h3 className="text-micro">Meals</h3>

@@ -172,7 +172,7 @@ function BookProfile({ save, pack, days, id, nameOf, archived }: Omit<Base, 'mas
   return <>
     <h2>Profile</h2>
     <p>{profileLine(save, pack, id, days.birthdays).join(' · ')}</p>
-    {(!atHome(save, id) || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
+    {(!atHome(save, id) || pack.town?.professions?.length || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
     <div className="lib-head"><h3>Discoveries</h3>{archive.length > 0 && <Link className={button} replace
       to={libraryHref(id) + (archived ? '' : '&facts=archive')}>{archived ? 'Current' : 'Archive'}</Link>}</div>
     <ul className="lib-lines">{(archived ? archive : facts).map(fact =>

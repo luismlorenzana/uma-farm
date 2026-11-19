@@ -3,7 +3,7 @@
 // line a tap on the dialogue engine (her bust in the day's season), Skip to its card; the card says what the bench does,
 // with **See the bench** (`?sheet=bench`) and **Later**. Read once (`scene:bench` in `diary.read`). Her name and bust
 // are master data's; the role's disc with no master data. Loaded on demand from the scene player.
-import { BENCH_SCENE, BENCH_SCENE_LINES, type SaveV4, type Step } from '@farm/domain'
+import { BENCH_SCENE, BENCH_SCENE_LINES, onDuty, type SaveV4, type Step } from '@farm/domain'
 import { Button, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -18,10 +18,14 @@ export default function BenchScene({ save }: { save: SaveV4 }) {
   const navigate = useNavigate()
   const [at, setAt] = useState(0)
   const [leaving, setLeaving] = useState(false)
-  // The scene's beats as steps: the smith's lines and the narration.
-  const steps = useMemo((): Step[] => BENCH_SCENE_LINES.beats.map((b) => (b.speaker.kind === 'cast' ? { say: b.speaker.id, line: b.line } : { narrate: b.line })), [])
   const master = useMaster()
   const story = useStory()
+  const weekly = Boolean(story?.town?.professions?.length)
+  const smith = story ? onDuty(story, save, save.calendar.day, 'ida-stone') : null
+  const steps = useMemo((): Step[] => weekly && smith === null
+    ? [{ narrate: 'A note from the smithy waits by the Forge. The ring bench is ready to use.' }]
+    : BENCH_SCENE_LINES.beats.map(b => b.speaker.kind === 'cast' ? { say: smith ?? b.speaker.id, line: b.line } : { narrate: b.line }),
+  [weekly, smith])
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
   const finish = (to: string | null) => {
     if (leaving) return

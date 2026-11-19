@@ -629,14 +629,16 @@ const towns = new WeakMap<object, TownPlayed>()
 export function townOf(pack: TownPack): TownPlayed {
   const known = towns.get(pack)
   if (known) return known
-  const own = pack.town?.people ?? []
+  const cast = new Set(pack.cast.umas.map(uma => uma.characterId))
+  const weekly = Boolean(pack.town?.professions?.length)
+  const own = (pack.town?.people ?? []).filter(person => !weekly || (person.game === 'hollis-pryor' && !cast.has(person.characterId)))
   const people: TownPersonPlayed[] = own.map((p) => {
     const role = p.game !== undefined && isCastId(String(p.game)) ? p.game as CastId : null
     return { characterId: p.characterId, role, does: p.does ?? (role ? CAST[role].is : 'Lives in town'), written: true }
   })
-  const taken = new Set([...people.map((p) => p.characterId), ...pack.cast.umas.map((u) => u.characterId)])
+  const taken = new Set([...people.map((p) => p.characterId), ...cast])
   const free = [...(pack.master?.outfits.keys() ?? [])].filter((id) => !taken.has(id)).reverse()
-  for (const role of CAST_IDS) {
+  for (const role of weekly ? ['hollis-pryor'] as const : CAST_IDS) {
     if (people.some((p) => p.role === role)) continue
     const id = free.shift()
     if (id !== undefined) people.push({ characterId: id, role, does: CAST[role].is, written: false })
@@ -655,7 +657,8 @@ export function townOf(pack: TownPack): TownPlayed {
 }
 
 /** Whether she's one of the town's people the pack names: a tie with her builds no bond. */
-export const isTownPerson = (pack: Partial<Pick<StoryPack, 'town'>>, id: string): boolean => (pack.town?.people ?? []).some((p) => p.characterId === id)
+export const isTownPerson = (pack: Partial<Pick<StoryPack, 'town'>>, id: string): boolean =>
+  (pack.town?.people ?? []).some(p => p.characterId === id && (!pack.town?.professions?.length || p.game === 'hollis-pryor'))
 
 /** Who a scene's `say` is: one of the town's roles goes to the Uma who plays it (else stays the role), anyone else is
  * herself. */
