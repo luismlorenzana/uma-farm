@@ -40,6 +40,12 @@ const night = (save: SaveV4, context: NightContext = CONTEXT): SaveV4 => runNigh
 const ROW1 = Array.from({ length: FIELD_COLUMNS }, (_, i) => i)
 
 describe('her day', () => {
+  it('lets an early cook use spare actions after another worker harvests her ingredients', () => {
+    const save = tasks(tasks(ripe(farm(), [0, 1]), A, [{ kind: 'cook' }]), B, [{ kind: 'harvest', tiles: [0, 1] }])
+    const after = handsTonight(save, save, talentsD, null)
+    expect(after.lines[0]).toMatchObject({ id: A, spent: 1, done: { cook: 7 } })
+    expect(after.save.farm.pantry[0]?.meals).toBe(7)
+  })
   it('gives a farmhand 3 actions, +1 settled in a season on, +2 once she\'s your spouse, +1 well fed this morning', () => {
     expect(handDay(farm(), A)).toEqual({ base: HAND_ACTIONS, settled: 0, spouse: 0, fed: 0, half: false, actions: 3, kitchen: 0 })
     expect(handDay(farm(1 + SETTLED_AFTER), A)!.actions).toBe(4)

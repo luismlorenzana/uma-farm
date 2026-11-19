@@ -22,34 +22,45 @@ import { actionsLeft, goToTown, spendActions } from './actions'
 import { buildLock, heldFor, payBuild, pickFor } from './builds'
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS } from './calendar'
 import { upkeepOf } from './economy'
+import { routineStockFloors, setStockReserve } from './production'
 import { farmRankOf } from './farm'
 import { playProductionFarm, PRODUCTION_CREWS } from './production-scale.fixture'
 import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
-import { expeditionMemberBlock, expeditionMemberPower, expeditionPower, expeditionSlots, EXPEDITION_FAMILIES, EXPEDITION_REGIONS, MAX_EXPEDITION_SUPPLIES, sendExpedition } from '../expeditions/expeditions'
+import { expeditionCoverage, expeditionMemberBlock, expeditionMemberPower, expeditionPower, expeditionSlots, EXPEDITION_FAMILIES, EXPEDITION_REGIONS, MAX_EXPEDITION_SUPPLIES, sendExpedition } from '../expeditions/expeditions'
 import { dishesHeld } from '../kitchen/kitchen'
 import { REGION_IDS } from '../save/v4'
 import { castPack } from '../story/authored.fixture'
-import { addBatch, cookBatchAt, foodHeld, MEALS_A_DAY, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
+import { addBatch, cookBatch, cookBatchAt, foodHeld, MEALS_A_DAY, mealsNeeded, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
 import { kitchenBase, kitchenLevelLock, nextKitchenLevel, staffTable, upgradeKitchen } from '../kitchen/kitchen'
 import { buyRecipe, recipeLock, recipeOf } from '../kitchen/recipes'
 import { botKitchen, botKitchenKeeps, botRecipe } from '../kitchen/stove-bots'
 import { farmPlace, placeBuilt, type BuildPlace, type FarmPlaceId } from './places'
 import { talentsD, type TalentOf } from './talents'
-import { growsIn, CROPS } from '../fields/crops'
-import { harvestTile, plantTile, stagesOf, waterTile } from '../fields/fields'
+import { growsIn, plantableIn, CROPS } from '../fields/crops'
+import { needsWater } from '../fields/plantables'
+import { plantingPlan, setFieldPlan } from '../fields/production'
+import { harvestTile, plantTile, stagesOf, tillTile, waterTile } from '../fields/fields'
 import { clearPlot, FIELD_PLOTS, plotLock } from '../fields/plots'
 import { digBuilt, stairsLock, takeStairs } from '../gathering/digs'
-import { chop, fish, FULL_HAULS, reachList } from '../gathering/hauls'
+import { chop, fish, forage, FULL_HAULS, reachList } from '../gathering/hauls'
 import { STATIONS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
-import { levelLock, LOAD_SIZE, loadsADay, nextStationLevel, setStationPlan, stationLevel, stationOptions, upgradeStation } from '../gathering/stations'
-import { goodOf, LEGACY_CROP_IDS, seedId, type CropId } from '../goods/ids'
-import { runNight } from '../night/end-day'
-import { animalLock, animalsIn, ANIMALS, buyAnimal, buyFodder, FODDER_PRICE, homeBuilt, siloRoom } from '../ranch/ranch'
+import { levelLock, LOAD_SIZE, loadsADay, nextStationLevel, setStationPlan, startLoad, stationLevel, stationOptions, upgradeStation } from '../gathering/stations'
+import { cropBaseGrade, goodOf, LEGACY_CROP_IDS, seedId, type CropId } from '../goods/ids'
+import { setFishingMode } from '../gathering/fishing-grades'
+import { NIGHT_STEPS, runNight } from '../night/end-day'
+import { animalLock, animalsIn, ANIMALS, buyAnimal, buyFodder, collect, feedAnimal, FODDER_PRICE, homeBuilt, readyIn, siloRoom } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
 import { parseSaveV5 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
+import { goodCount } from '../save/warehouse'
+import { WEEKDAYS } from '../town/professions'
+import type { SchedulePack } from '../town/town'
+import type { StoryPack } from '../story/pack'
+import { RESTAURANT_RECIPES } from '../restaurant/recipes'
+import { isRestaurantDish } from '../restaurant/rules'
+import { discovered } from '../goods/discovery'
 import {
-  ANIMAL_KINDS, FIELD_COLUMNS, FIELD_TILES, fieldIndex, HOME_ROOM, isOvergrown, MAX_TASKS, newLove, newRosterUma, newSave, RANCH_HOMES, type AptitudeId, type FarmTask,
+  ANIMAL_KINDS, FIELD_COLUMNS, FIELD_TILES, fieldIndex, HOME_ROOM, isOvergrown, MAX_TASKS, newLove, newRosterUma, newSave, RANCH_HOMES, START_CLEAR, type AptitudeId, type FarmTask,
   type RanchHome, type SaveV4,
 } from '../save/v4'
 
@@ -174,7 +185,7 @@ const spare = (save: SaveV4): number => save.gold - reserve(save)
 
 /** The places he builds, the plots he clears and the stations' levels he buys: in the plan's order, then the next plot
  * (a plot for every five Umas), then each station's next level, each with spare gold. */
-function grow(start: SaveV4, room: boolean, expeditions: boolean): SaveV4 {
+function grow(start: SaveV4, room: boolean, expeditions: boolean, pack: SchedulePack = PACK): SaveV4 {
   let save = start
   for (const id of planFor(expeditions)) {
     const place = farmPlace(id) as BuildPlace
@@ -189,18 +200,18 @@ function grow(start: SaveV4, room: boolean, expeditions: boolean): SaveV4 {
   }
   // The Kitchen's next level, while the staff meal takes more dishes than a play's base.
   const kitchen = nextKitchenLevel(save)
-  if (kitchen && kitchenLevelLock(save) === null && spare(save) >= kitchen.cost && staffTable(save, PACK).dishes > kitchenBase(save)) save = upgradeKitchen(save)
+  if (kitchen && kitchenLevelLock(save) === null && spare(save) >= kitchen.cost && staffTable(save, pack).dishes > kitchenBase(save)) save = upgradeKitchen(save)
   return save
 }
 
 /** The animals: each building kept full with the best the rancher sells it, and fodder in the silo; into town for them. */
-function stock(start: SaveV4): SaveV4 {
+function stock(start: SaveV4, staples = false, capacity = HOME_ROOM): SaveV4 {
   let save = start
   const town = (s: SaveV4): SaveV4 => (s.today.town || actionsLeft(s) === 0 ? s : goToTown(s))
   for (const home of RANCH_HOMES) {
     if (!homeBuilt(save, home)) continue
-    const best = [...ANIMAL_KINDS].filter((k) => ANIMALS[k].home === home && animalLock(save, k) === null).sort((a, b) => ANIMALS[b].price - ANIMALS[a].price)[0]
-    while (best && animalsIn(save, home).length < HOME_ROOM && animalLock(save, best) === null && spare(save) >= ANIMALS[best].price) {
+    const best = staples ? (home === 'coop' ? 'chicken' : 'cow') : [...ANIMAL_KINDS].filter((k) => ANIMALS[k].home === home && animalLock(save, k) === null).sort((a, b) => ANIMALS[b].price - ANIMALS[a].price)[0]
+    while (best && animalsIn(save, home).length < capacity && animalLock(save, best) === null && spare(save) >= ANIMALS[best].price) {
       save = town(save)
       if (!save.today.town) break
       save = buyAnimal(save, best).save
@@ -233,12 +244,12 @@ function cropsToday(save: SaveV4): CropId[] {
 const plotCrop = (crops: readonly CropId[], plot: number): CropId | null => crops[plot % Math.max(1, crops.length)] ?? null
 
 /** Each plot's seeds, into town for them: as many as its empty tilled tiles and today's harvests will take. */
-function seeds(start: SaveV4): SaveV4 {
+function seeds(start: SaveV4, choose = plotCrop): SaveV4 {
   let save = start
   const crops = cropsToday(save)
   const want = new Map<CropId, number>()
   save.fields.plots.forEach((plot, p) => {
-    const crop = plotCrop(crops, p)
+    const crop = choose(crops, p)
     if (!crop) return
     const free = plot.tiles.filter((t) => (t.ground === 'tilled' && t.crop === null) || (t.ready && !t.regrowing && CROPS[t.crop!].regrows === null)).length
     const clear = plot.tiles.filter((t) => t.ground === 'clear').length
@@ -248,7 +259,7 @@ function seeds(start: SaveV4): SaveV4 {
     const line = shopLines(save).find((l) => l.id === seedId(crop))
     const held = save.items[seedId(crop)]?.[0] ?? 0
     let need = n - held
-    while (line && need > 0 && spare(save) >= line.price * Math.min(99, need)) {
+    while (line && lineOpen(save, line) && need > 0 && spare(save) >= line.price * Math.min(99, need)) {
       if (!save.today.town) { if (actionsLeft(save) === 0) break; save = goToTown(save) }
       const k = Math.min(99, need)
       save = buy(save, line, k)
@@ -277,16 +288,18 @@ const UMAS_A_PLOT = 5
 const TILL_A_DAY = FIELD_COLUMNS
 
 /** A plot's tending today: its ripe tiles, those to plant (with seeds), those growing and still dry to water. */
-function tendJob(save: SaveV4, p: number, crop: CropId | null): Job {
-  const tiles = save.fields.plots[p]!.tiles
+function tendJob(save: SaveV4, p: number, crop: CropId | null, coverage = false): Job {
+  const scope = coverage ? ALL_TILES.slice(0, FIELD_COLUMNS * 2) : ALL_TILES
+  const tiles = scope.map(i => save.fields.plots[p]!.tiles[i]!)
   const seedsHeld = crop ? (save.items[seedId(crop)]?.[0] ?? 0) : 0
   let ripe = tiles.filter((t) => t.ready).length
   let empty = tiles.filter((t) => t.ground === 'tilled' && t.crop === null).length
   let dry = tiles.filter((t) => t.crop !== null && !t.ready && !t.watered).length
   let planted = 0
   const plot = p === 0 ? {} : { plot: p }
+  const water: FarmTask = { kind: 'water', tiles: scope, ...plot }
   const tasks: FarmTask[] = [
-    { kind: 'harvest', tiles: ALL_TILES, ...plot }, { kind: 'plant', tiles: ALL_TILES, ...(crop ? { crop } : {}), ...plot }, { kind: 'water', tiles: ALL_TILES, ...plot },
+    ...(coverage ? [water] : []), { kind: 'harvest', tiles: scope, ...plot }, { kind: 'plant', tiles: scope, ...(crop ? { crop } : {}), ...plot }, water,
   ]
   const actsFor = (id: string | null) => {
     const lv = (a: AptitudeId) => (id ? levelOf(save, id, a) : 2)
@@ -302,6 +315,13 @@ function tendJob(save: SaveV4, p: number, crop: CropId | null): Job {
     left: () => { const a = actsFor(null); return a.harvest + a.plant + a.water },
     fill: (id, actions) => {
       let a = actions
+      if (coverage) {
+        const level = levelOf(save, id, 'water')
+        const width = level >= TRICK_AT.waterRow ? FIELD_COLUMNS : tilesAnAction('water', level)
+        const waterFirst = Math.min(a, Math.ceil(dry / width))
+        dry = Math.max(0, dry - waterFirst * width)
+        a -= waterFirst
+      }
       const need = actsFor(id)
       const h = Math.min(a, need.harvest)
       a -= h
@@ -324,9 +344,10 @@ function tendJob(save: SaveV4, p: number, crop: CropId | null): Job {
 }
 
 /** A plot's new ground today: a row's worth, the next tiles to clear or till, what tomorrow's seeds will take. */
-function groundJob(save: SaveV4, p: number): Job {
+function groundJob(save: SaveV4, p: number, coverage = false): Job {
   const tiles = save.fields.plots[p]!.tiles
-  const ground = ALL_TILES.filter((i) => isOvergrown(tiles[i]!.ground) || tiles[i]!.ground === 'clear').slice(0, TILL_A_DAY)
+  const scope = coverage ? ALL_TILES.slice(0, FIELD_COLUMNS * 2) : ALL_TILES
+  const ground = scope.filter((i) => isOvergrown(tiles[i]!.ground) || tiles[i]!.ground === 'clear').slice(0, TILL_A_DAY)
   let wild = ground.filter((i) => isOvergrown(tiles[i]!.ground)).length
   let cleared = ground.length - wild
   const acts = (id: string | null) => cleared + wild * ((id ? levelOf(save, id, 'till') : 2) >= TRICK_AT.tillInOne ? 1 : 2)
@@ -397,9 +418,8 @@ function loadJob(save: SaveV4, station: typeof STATIONS[number]): Job {
 
 /** The kitchen's batches tonight: the meals everyone eats, less the pantry's, a batch an action by her Cooking, while the
  * Warehouse holds food. */
-function cookJob(save: SaveV4): Job {
-  const mouths = working(save).length + 1 - (save.today.staff?.mouths ?? 0)
-  let meals = Math.max(0, MEALS_A_DAY * mouths - pantryMeals(save))
+function cookJob(save: SaveV4, pack: SchedulePack): Job {
+  let meals = Math.max(0, mealsNeeded(save, pack) - pantryMeals(save))
   let batches = Math.floor(foodHeld(save).reduce((n, r) => n + r.count, 0) / 2)
   const acts = (id: string | null) => Math.min(batches, Math.ceil(meals / cookBatchAt(id ? levelOf(save, id, 'cook') : 2)))
   return {
@@ -423,22 +443,25 @@ const isOpen = (job: Job): boolean => job.kind === 'gather' || job.kind === 'min
 /** Today's jobs, in the plain rule's order: the plots' tending, the animals, the loads, the kitchen, the full hauls at
  * every area and spot in reach (deepest first: they pay the most) and the digs' four faces each, then the plots' new
  * ground (a row a plot a day). */
-function jobsToday(save: SaveV4): Job[] {
+function jobsToday(save: SaveV4, pack: SchedulePack = PACK, coverage = false): Job[] {
   const crops = cropsToday(save)
   // While the next build the Farm Rank offers waits for logs, the nearest area's four full hauls are chops.
   const chopAt = logsWanted(save) ? 'woods' : null
   const areas = reachList(save, 'forest').filter((r) => r.lock === null).reverse()
     .map((r) => haulJob('gather', r.id === chopAt ? { kind: 'chop', area: r.id as ForestAreaId } : { kind: 'forage', area: r.id as ForestAreaId }, save.today.hauls?.[r.id] ?? 0))
   const spots = reachList(save, 'fishery').filter((r) => r.lock === null).reverse().map((r) => haulJob('gather', { kind: 'fish', spot: r.id as FishingSpotId }))
+  const fields = save.fields.plots.map((_, p) => tendJob(save, p,
+    (coverage ? plantingPlan(save, p * FIELD_TILES)?.crop : undefined) ?? plotCrop(crops, p), coverage))
+  const animals = RANCH_HOMES.filter((h) => homeBuilt(save, h) && animalsIn(save, h).length > 0)
+  const dayNeeds = animals.map(home => careJob(save, home))
   return [
-    ...save.fields.plots.map((_, p) => tendJob(save, p, plotCrop(crops, p))),
-    ...RANCH_HOMES.filter((h) => homeBuilt(save, h) && animalsIn(save, h).length > 0).map((h) => careJob(save, h)),
+    ...(coverage ? [cookJob(save, pack), ...dayNeeds, ...fields] : [...fields, ...dayNeeds]),
     // The Sawmill's logs wait while a build does.
     ...STATIONS.filter((s) => stationLevel(save, s) > 0 && !(s === 'sawmill' && chopAt)).map((s) => loadJob(save, s)),
-    cookJob(save),
+    ...(coverage ? [] : [cookJob(save, pack)]),
     ...areas.flatMap((a, i) => [a, spots[i]].filter((j): j is Job => j !== undefined)), ...spots.slice(areas.length),
     ...(['mine', 'quarry'] as const).filter((d) => digBuilt(save, d)).map((dig) => haulJob('mining', { kind: 'mine', dig })),
-    ...save.fields.plots.map((_, p) => groundJob(save, p)).filter((j) => j.tasks.length > 0),
+    ...save.fields.plots.map((_, p) => groundJob(save, p, coverage)).filter((j) => j.tasks.length > 0),
   ]
 }
 
@@ -461,12 +484,12 @@ function logsWanted(save: SaveV4): boolean {
 /** The plain rule: each farmhand in her order takes the first jobs with work left, as much as her actions fill, up to
  * six tasks, and one place to gather or dig (her gathering and digging share her actions by turns); past every job, she
  * gathers where it's thin. Returns the boards set, the real work on offer and what no one took. */
-function assign(start: SaveV4): { save: SaveV4; offered: number; unfilled: number } {
+function assign(start: SaveV4, pack: SchedulePack = PACK, coverage = false): { save: SaveV4; offered: number; unfilled: number } {
   let save = start
-  const jobs = jobsToday(save)
+  const jobs = jobsToday(save, pack, coverage)
   const open = jobs.filter(isOpen)
   let filled = 0
-  for (const [n, id] of working(save).entries()) {
+  for (const [n, id] of handsWorking(save, pack).entries()) {
     let actions = handDay(save, id)!.actions
     const tasks: FarmTask[] = []
     let gathers = false
@@ -485,7 +508,7 @@ function assign(start: SaveV4): { save: SaveV4; offered: number; unfilled: numbe
       if (isOpen(job)) gathers = true
     }
     // Nothing real left: she gathers where it's thin, by turns.
-    if (actions > 0 && !gathers && tasks.length < MAX_TASKS && open.length > 0) tasks.push(open[n % open.length]!.tasks[0]!)
+    if ((actions > 0 || coverage) && !gathers && tasks.length < MAX_TASKS && open.length > 0) tasks.push(open[n % open.length]!.tasks[0]!)
     save = setTasks(save, id, tasks)
   }
   const unfilled = sum(jobs.map((j) => j.left()))
@@ -495,7 +518,7 @@ function assign(start: SaveV4): { save: SaveV4; offered: number; unfilled: numbe
 // --- Shipping -------------------------------------------------------------------------------------------------------
 
 /** What he keeps back from the crate: the next builds' goods, each station's loads tonight, and the kitchen's batches. */
-function keeps(save: SaveV4, expeditions: boolean): Map<string, number> {
+function keeps(save: SaveV4, expeditions: boolean, pack: SchedulePack): Map<string, number> {
   const keep = new Map<string, number>()
   const add = (key: string, n: number) => keep.set(key, (keep.get(key) ?? 0) + n)
   const next = planFor(expeditions).filter((id) => !placeBuilt(save, id) && !save.farm.builds.includes(id)).slice(0, 2)
@@ -520,8 +543,7 @@ function keeps(save: SaveV4, expeditions: boolean): Map<string, number> {
   // Tomorrow's play at the Kitchen.
   for (const [key, n] of botKitchenKeeps(save)) add(key, n)
   let kitchen = save
-  const mouths = working(save).length + 1 - (save.today.staff?.mouths ?? 0)
-  for (let n = Math.ceil(Math.max(0, MEALS_A_DAY * mouths - pantryMeals(save)) / 6); n > 0; n--) {
+  for (let n = Math.ceil(Math.max(0, mealsNeeded(save, pack) - pantryMeals(save)) / 6); n > 0; n--) {
     const two = plainBatch(kitchen)
     if (!two) break
     for (const key of two) add(key, 1)
@@ -531,8 +553,17 @@ function keeps(save: SaveV4, expeditions: boolean): Map<string, number> {
 }
 
 /** A crate of everything with a price, less what he keeps. */
-function ship(save: SaveV4, expeditions: boolean): SaveV4 {
-  const keep = keeps(save, expeditions)
+function ship(save: SaveV4, expeditions: boolean, pack: SchedulePack = PACK, keepOrders = false): SaveV4 {
+  const keep = keeps(save, expeditions, pack)
+  if (keepOrders) for (const [id, floor] of Object.entries(routineStockFloors(save.farm))) {
+    let left = floor
+    for (const [i, held] of (save.items[id] ?? []).entries()) {
+      const key = `${id}@${i + 1}`
+      const count = Math.min(held, left)
+      keep.set(key, Math.max(count, keep.get(key) ?? 0))
+      left -= count
+    }
+  }
   const lines: CrateLine[] = Object.entries(save.items).flatMap(([id, row]) => (goodOf(id)
     ? row.flatMap((count, s) => {
       const n = count - Math.min(count, keep.get(`${id}@${s + 1}`) ?? 0)
@@ -794,6 +825,175 @@ describe('expeditions at farm scale', () => {
     expect(last.filter((day) => day.short)).toEqual([])
     for (const morning of run.mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
   }, 90_000)
+})
+
+// The F102 town schedule, applied to invented characters. Each pair takes the other half of its week's shifts.
+const BALANCE_PACK: StoryPack = {
+  ...PACK,
+  town: { professions: Array.from({ length: 25 }, (_, n) => ({
+    id: `trade-${n + 1}`, name: `Trade ${n + 1}`, at: 'cafe', off: WEEKDAYS[n % WEEKDAYS.length]!,
+    partners: [handId(n * 2), handId(n * 2 + 1)],
+  })) },
+}
+const BALANCE_INGREDIENTS = ['carrot', 'wheat', 'egg', 'milk', 'carp', 'basil', 'wheat-flour', 'carp-grade-2', 'carrot-grade-2'] as const
+const RAW_RECIPE_PROOFS = [...new Set(RESTAURANT_RECIPES.flatMap(recipe => recipe.proofs).filter(id => !isRestaurantDish(id)))]
+const BALANCE_END = 50 * DAYS_PER_YEAR
+const STAPLE_ROTATION = { spring: 'carrot', summer: 'tomato', autumn: 'wheat', winter: 'oats' } as const
+
+function balanceStockPlan(save: SaveV4, grew: boolean): SaveV4 {
+  const season = dateOf(save.calendar.day).season
+  if (dateOf(save.calendar.day).day === 1) {
+    const crop = STAPLE_ROTATION[season]
+    if (plantableIn(crop, season)) {
+      save = setFieldPlan(save, 0, 0, season, { crop, grade: cropBaseGrade(crop), harvestNext: false })
+      save = setFieldPlan(save, 0, 1, season, { crop, grade: cropBaseGrade(crop), harvestNext: grew && crop === 'carrot' })
+    }
+    save = setFishingMode(save, 'pond', 'improved')
+  }
+  if (save.calendar.day === 1) {
+    for (const id of BALANCE_INGREDIENTS) if (id !== 'wheat-flour') save = setStockReserve(save, id, 6)
+  }
+  if (stationLevel(save, 'mill') && !save.farm.stationPlans?.mill) save = setStationPlan(save, 'mill', [{ output: 'wheat-flour', target: 8 }])
+  return save
+}
+
+function balanceParty(save: SaveV4, count: number): SaveV4 {
+  if (!placeBuilt(save, 'expeditions') || save.expeditions.length || save.calendar.day % 7 !== 0 || actionsLeft(save) < (save.today.town ? 2 : 3)) return save
+  const rank = farmRankOf(save.farm.points)
+  const candidates = handsInOrder(save).filter(id => expeditionMemberBlock(save, id) === null)
+  for (const region of [...REGION_IDS].reverse()) {
+    if (EXPEDITION_REGIONS[region].rank > rank) continue
+    const party = candidates.map(id => ({ id, shifts: expeditionCoverage(save, region, [id], BALANCE_PACK).lost, power: expeditionMemberPower(save, id, tripTalents) }))
+      .sort((a, b) => a.shifts - b.shifts || b.power - a.power).slice(0, 4).map(row => row.id)
+    if (party.length && expeditionCoverage(save, region, party, BALANCE_PACK).fewest >= Math.floor(count * 0.3)
+      && expeditionPower(save, party, [], tripTalents) >= EXPEDITION_REGIONS[region].need) return sendExpedition(goToTown(save), region, party, [])
+  }
+  return save
+}
+
+/** Repeatable manual coverage for a fresh farm or a small crew. One action stays free for shipping. */
+function balanceManual(save: SaveV4, crew: number): SaveV4 {
+  const handsFree = () => actionsLeft(save) > 1
+  if (crew < 3) {
+    for (const home of RANCH_HOMES) {
+      for (const animal of animalsIn(save, home)) if (handsFree() && !animal.fed && save.ranch.silo > 0) save = feedAnimal(save, animal.id)
+      if (handsFree() && readyIn(save, home)) save = collect(save, home).save
+    }
+    if (save.calendar.day <= DAYS_PER_SEASON) {
+      const tile = START_CLEAR.slice(0, 3).find(i => save.fields.plots[0]!.tiles[i]!.ground === 'clear')
+      if (tile !== undefined && handsFree()) save = tillTile(save, tile)
+      if (dateOf(save.calendar.day).day <= 9) for (const i of START_CLEAR.slice(0, 3)) {
+        const t = save.fields.plots[0]!.tiles[i]!
+        if (actionsLeft(save) > 2 && t.ground === 'tilled' && !t.crop && goodCount(save.items, seedId('carrot'))) save = plantTile(save, i, seedId('carrot'))
+      }
+    }
+    if (handsFree() && pantryMeals(save) < mealsNeeded(save, BALANCE_PACK) && plainBatch(save)) save = cookBatch(save)
+    if (handsFree() && stationLevel(save, 'mill') > 0 && goodCount(save.items, 'wheat-flour') < 8) {
+      const flour = stationOptions(save, 'mill').find(option => option.output === 'wheat-flour' && option.available >= option.units)
+      if (flour && (save.loads.mill?.length ?? 0) < loadsADay(save, 'mill')) save = startLoad(save, 'mill', flour.item, Math.floor(Math.min(LOAD_SIZE, flour.available) / flour.units))
+    }
+  }
+  if (crew < 3) save = tendByHand(save)
+  // Equal attention to the Woods and Fishery. Lower areas cover common ingredients once deeper ones open.
+  while (handsFree() && (crew < 3 || actionsLeft(save) > 5)) {
+    const turn = save.today.actions
+    if (turn % 2 === 0) {
+      const area = reachList(save, 'forest').filter(r => r.lock === null).at(-1)?.id as ForestAreaId ?? 'woods'
+      save = forage(save, goodCount(save.items, 'basil') < 6 && turn % 4 === 0 ? 'woods' : area).save
+    } else {
+      const spot = reachList(save, 'fishery').filter(r => r.lock === null).at(-1)?.id as FishingSpotId ?? 'pond'
+      save = fish(save, turn % 4 === 1 ? 'pond' : spot).save
+    }
+  }
+  return save
+}
+
+async function playBalance(target: 0 | Stage) {
+  // Same save seed and a twelve-day solo opening. Recruit in pairs to exercise the real shifts.
+  let save: SaveV4 = { ...newSave('balance-spring', AT), farmer: { name: 'Robin' } }
+  let rank10 = 0
+  let fullCrew = 0
+  let short = 0
+  const late = { shifts: 0, actions: 0, unused: 0, farmer: 0, meals: 0, takeout: 0, spoiled: 0, upkeep: 0, income: 0, short: 0, held: 0, dry: 0, planted: 0, unfed: 0 }
+  const ingredientDays = Object.fromEntries(BALANCE_INGREDIENTS.map(id => [id, 0]))
+  for (let day = 1; day <= BALANCE_END; day++) {
+    const count = Math.min(target, Math.max(0, 2 * Math.floor((day - 7) / 6)))
+    save = hire(save, count)
+    if (count === target && !fullCrew) fullCrew = day
+    save = grow(save, count > 0 && save.fields.plots.length < Math.ceil(count / 8), true, BALANCE_PACK)
+    for (const dig of ['mine', 'quarry'] as const) while (stairsLock(save, dig) === null) save = takeStairs(save, dig)
+    save = stock(save, true, count === 0 ? 1 : count <= 10 ? 2 : 4)
+    save = balanceStockPlan(save, count > 0)
+    save = seeds(save, (options, plot) => plot === 0 ? plantingPlan(save, 0)?.crop ?? plotCrop(options, plot) : plotCrop(options, plot))
+    if (target) save = balanceParty(save, count)
+    if (save.calendar.day % 4 === 0) save = chopForBuilds(fishForBuilds(save))
+    const kitchen = botKitchen(save, 'casual', BALANCE_PACK)
+    save = balanceManual(kitchen.save, handsWorking(save, BALANCE_PACK).length)
+    const recipe = botRecipe(save, spare(save))
+    if (recipe && save.today.town && recipeLock(save, recipe) === null) save = buyRecipe(save, recipe)
+    save = assign(save, BALANCE_PACK, true).save
+    save = ship(save, true, BALANCE_PACK, true)
+    const morning = runNight(save, { story: BALANCE_PACK, talentOf: tripTalents }, rank10
+      ? NIGHT_STEPS.map(step => step.name === 'growCrops' ? { run: (night: Parameters<typeof step.run>[0]) => {
+        for (const { tiles } of night.save.fields.plots) for (const tile of tiles) {
+          if (needsWater({ ...tile, watered: false })) late.planted++
+          if (needsWater(tile)) late.dry++
+        }
+        return step.run(night)
+      } } : step) : NIGHT_STEPS)
+    if (morning.farm.short) short++
+    if (rank10) {
+      late.farmer += save.today.actions
+      for (const work of morning.summary?.work ?? []) {
+        if (work.kind === 'farmhand') {
+          late.shifts++
+          late.actions += work.actions
+          late.unused += work.actions - work.spent
+        }
+        if (work.kind === 'ranch') late.unfed += work.hungry
+      }
+      late.income += sum(morning.summary!.bin.map(sale => sale.gold))
+      for (const line of morning.summary?.money ?? []) {
+        if (line.kind === 'staff') late.meals += MEALS_A_DAY * line.mouths
+        if (line.kind === 'pantry') { late.meals += line.meals; late.spoiled += line.spoiled }
+        if (line.kind === 'takeout') { late.meals += line.meals; late.takeout += line.meals }
+        if (line.kind === 'upkeep') late.upkeep += line.due
+        if (line.kind === 'short') late.short++
+      }
+      for (const id of BALANCE_INGREDIENTS) if (goodCount(morning.items, id) >= 2) {
+        ingredientDays[id]!++
+        late.held++
+      }
+    }
+    save = morning
+    if (!rank10 && farmRankOf(save.farm.points) === 10) rank10 = save.calendar.day
+    if (day % DAYS_PER_SEASON === 0) await setImmediate()
+    if (rank10 && save.calendar.day === rank10 + DAYS_PER_YEAR) break
+  }
+  return { save, rank10, fullCrew, short, late, ingredientDays,
+    discoveries: RAW_RECIPE_PROOFS.filter(id => discovered(save, id)).length,
+    recipeProofs: RESTAURANT_RECIPES.filter(recipe => recipe.proofs.every(id => discovered(save, id))).length }
+}
+
+describe('Phase 3.5 balance from a fresh farm', () => {
+  it.each([0, ...STAGES] as const)('plays to Rank 10 and 48 more days with %i Umas', async target => {
+    const { save, ...report } = await playBalance(target)
+    if (process.env.FARM_BALANCE_REPORT === '1') console.log(JSON.stringify({ target, ...report, end: save.calendar.day, rank: farmRankOf(save.farm.points), rankPoints: save.farm.points, gold: save.gold, buildings: save.buildings }))
+    expect(report.rank10).toBeGreaterThan(0)
+    expect(report.fullCrew).toBeLessThanOrEqual(report.rank10)
+    expect(save.calendar.day).toBe(report.rank10 + DAYS_PER_YEAR)
+    expect(Object.keys(save.roster)).toHaveLength(target)
+    expect(report.short).toBe(0)
+    expect(report.late.unfed).toBe(0)
+    expect(report.late.dry).toBeLessThanOrEqual(report.late.planted * 0.08)
+    if (target !== 0) {
+      expect(report.late.takeout).toBeLessThan(report.late.meals * 0.05)
+      expect(report.late.actions - report.late.unused).toBeGreaterThan(report.late.farmer * 2)
+      const coverage = { 10: 0.7, 20: 0.78, 50: 0.93 }[target]
+      expect(report.late.held).toBeGreaterThanOrEqual(DAYS_PER_YEAR * BALANCE_INGREDIENTS.length * coverage)
+    }
+    expect(parseSaveV5(json(save))).toEqual(save)
+  }, 180_000)
 })
 
 describe('F99 fixed production plans over four years', () => {

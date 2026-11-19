@@ -1,6 +1,6 @@
 import {
   buildCostWords, buildLock, buildLockWords, dishesHeld, expeditionBlock, expeditionMemberBlock, expeditionMemberPower,
-  expeditionPower, expeditionSlots, EXPEDITION_REGIONS, EXPEDITION_WORDS, FAMILY_NAMES, BUILD_PLACES, farmRankOf, handsInOrder,
+  expeditionCoverage, expeditionPower, expeditionSlots, EXPEDITION_REGIONS, EXPEDITION_WORDS, FAMILY_NAMES, BUILD_PLACES, farmRankOf, handsInOrder,
   itemNameOf, MAX_EXPEDITION_PARTY, MAX_EXPEDITION_SUPPLIES, MEALS_A_DAY, placeBuilt, REGION_IDS, type FarmSave, type RegionId,
   type TalentOf,
 } from '@farm/domain'
@@ -8,6 +8,7 @@ import { Button, HelpButton, Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { buildPlace, sendParty } from '../loop/actions'
 import { plural, shortDate } from '../loop/words'
+import { useStory } from '../story/story'
 
 type Tab = 'regions' | 'party' | 'log'
 
@@ -21,6 +22,7 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
   const [pick, setPick] = useState('')
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const pack = useStory()
   const rank = farmRankOf(save.farm.points)
   if (rank < 7 && !placeBuilt(save, 'expeditions')) return null
   const built = placeBuilt(save, 'expeditions')
@@ -53,6 +55,7 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
   const remaining = (key: string) => (dishRows.find((dish) => dish.key === key)?.count ?? 0)
     - supplies.filter((item) => item === key).length
   const mealCount = party.length * where.days * MEALS_A_DAY
+  const coverage = expeditionCoverage(save, region, party, pack)
   return (
     <Sheet open onClose={onClose} size="wide" title="Expedition post"
       footer={tab === 'party' ? (
@@ -92,6 +95,9 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
       )}
       {tab === 'party' && (
         <div className="grid gap-3 sm:grid-cols-2">
+          {party.length > 0 && <p className="text-[13px] sm:col-span-2" data-expedition-coverage>
+            {plural(coverage.lost, 'farm shift')} missed · {coverage.fewest} farmhands on the quietest day
+          </p>}
           <section aria-label="Farmhands">
             <h3 className="text-micro">{where.name} · {party.length}/{MAX_EXPEDITION_PARTY} farmhands</h3>
             {handsInOrder(save).length === 0 && <p className="text-[13px] text-ink-soft">No farmhands yet.</p>}

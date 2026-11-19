@@ -15,7 +15,7 @@ import { castPack } from '../story/authored.fixture'
 import { storyPackFrom } from '../story/pack'
 import { withOccasions } from '../story/occasions.fixture'
 import { onFarmToday, townDay, whereYouMeet, worksOn } from '../town/town'
-import { expeditionBlock, expeditionPower, expeditionResult, EXPEDITION_REGIONS, returnExpeditions, sendExpedition } from './expeditions'
+import { expeditionBlock, expeditionCoverage, expeditionPower, expeditionResult, EXPEDITION_REGIONS, returnExpeditions, sendExpedition } from './expeditions'
 import { expeditionReturnLine } from './return-lines'
 import { awayOn } from './presence'
 import { availableDishes } from './stock'
@@ -40,6 +40,16 @@ function farm(rank = 10, day = 1): FarmSave {
 }
 
 describe('the expedition post', () => {
+  it('projects the lightest farm day using the actual shifts and other booked parties', () => {
+    const pack = { ...PACK, town: { professions: [{ id: 'baker', name: 'Baker', at: 'cafe', off: 'wednesday' as const, partners: [A, B] as const }] } }
+    const start = farm(7, 4)
+    const booked = sendExpedition(start, 'echo-cave', [PARTY[2]!], [])
+    const scheduled = handsWorking(booked, pack, 5)
+    expect(scheduled).toContain(A)
+    expect(scheduled).not.toContain(B)
+    expect(expeditionCoverage(booked, 'echo-cave', [A, B], pack)).toEqual({ lost: 1, fewest: scheduled.length - 1 })
+    expect(handsWorking(booked, pack, 6)).toEqual(handsWorking(start, pack, 6))
+  })
   it('books once, reserves dishes, charges that night, and leaves after the shift', () => {
     const fresh = farm(7, 2)
     const save = sendExpedition({

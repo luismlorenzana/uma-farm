@@ -294,7 +294,8 @@ function StaffMeal({ save, busy, onServe }: { save: SaveV4; busy: boolean; onSer
   const held = dishesHeld(save)
   const [chosen, setChosen] = useState<string[] | null>(null)
   const picks = chosen ?? staffPicks(save, pack) ?? []
-  const why = staffBlock(save, picks.length === table.dishes ? picks : null, pack)
+  const why = staffBlock(save, chosen, pack)
+  const covered = Math.min(table.mouths, picks.length * MOUTHS_A_DISH)
   const served = save.today.staff
   return (
     <section className="space-y-1.5" aria-label="The staff meal" data-staff>
@@ -324,11 +325,11 @@ function StaffMeal({ save, busy, onServe }: { save: SaveV4; busy: boolean; onSer
               })}
             </ul>
           )}
-          <Button className="w-full" disabled={busy || why !== null} onClick={() => onServe(chosen && picks.length === table.dishes ? picks : null)} data-action="serve-staff" data-why={why ?? undefined}>
+          <Button className="w-full" disabled={busy || why !== null} onClick={() => onServe(chosen)} data-action="serve-staff" data-why={why ?? undefined}>
             Serve the staff meal
           </Button>
           <p className="text-[12px] text-ink-faint" data-staff-why>
-            {why ?? `Free. ${plural(table.mouths, 'mouth')} eat it in place of their meals; well fed ${fedWords(staffDays(picks))}.`}
+            {why ?? `Feeds ${covered} of ${table.mouths} · well fed ${fedWords(staffDays(picks))}`}
           </p>
         </>
       )}

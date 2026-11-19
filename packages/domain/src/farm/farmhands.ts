@@ -546,6 +546,7 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
 export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 'today' | 'farm'>, talentOf: TalentOf, story: PerkPack | null): HandsTonight {
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
+  const finish: (() => void)[] = []
   for (const id of handsWorking(save, story)) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
@@ -581,22 +582,31 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     }
     let open = tasks.filter((t) => OPEN_TASKS.includes(t.kind))
     while (left > 0 && open.length > 0) open = open.filter((task) => left > 0 && work(task))
-    // A day caring for animals: once a night toward her Ranch challenge.
-    if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
-    out.lines.push({
-      kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
-      ...(hand.kitchen > 0 ? { kitchen: hand.kitchen } : {}),
-      ...(hand.restaurant ? { restaurant: hand.restaurant } : {}),
-      ...(festival ? { festival } : {}),
+    finish.push(() => {
+      // An idle cook or station hand can use exact inputs brought in later in the same shift.
+      for (const task of tasks) {
+        if (left === 0) break
+        if (task.kind === 'cook' || (task.kind === 'load' && next.farm.stationPlans?.[task.station])) {
+          while (left > 0 && work(task)) { /* use only the actions left from her scheduled work */ }
+        }
+      }
+      if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
+      out.lines.push({
+        kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
+        ...(hand.kitchen > 0 ? { kitchen: hand.kitchen } : {}),
+        ...(hand.restaurant ? { restaurant: hand.restaurant } : {}),
+        ...(festival ? { festival } : {}),
+      })
+      // Her place today: where she spent the most actions, the first she worked on a tie.
+      const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)
+      if (top) {
+        if (top[0] === 'fields') out.tended.push({ outfitId: id })
+        else out.worked.push({ outfitId: id, place: top[0] as LoopPlaceId })
+      }
+      for (const [place, keys] of madeAt) out.made.push({ outfitId: id, place, items: keys })
     })
-    // Her place today: where she spent the most actions, the first she worked on a tie.
-    const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)
-    if (top) {
-      if (top[0] === 'fields') out.tended.push({ outfitId: id })
-      else out.worked.push({ outfitId: id, place: top[0] as LoopPlaceId })
-    }
-    for (const [place, keys] of madeAt) out.made.push({ outfitId: id, place, items: keys })
   }
+  for (const settle of finish) settle()
   return { ...out, save: next, gathered: [...new Set(out.gathered)] }
 }
 

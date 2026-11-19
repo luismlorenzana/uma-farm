@@ -541,12 +541,12 @@ function foodBlock(): string {
     ['Short of it', 'Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s'],
     ['Cook a batch', `The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, ${BATCH_MEALS} meals from ${BATCH_GOODS} goods of food you choose`],
     ['At the stove', `The same batch played at the stove (${STOVE_SECONDS.batch} s): ${PLAY_TIERS.map((t) => tierCount(BATCH_MEALS, t)).join(', ')} meals by its tier, its stars ${PLAY_TIERS.map((t) => `+${t.lift}`).join(', ')}; never worse than the plain batch`],
-    ['The staff meal', `Served at the Kitchen, free, once a day: one dish for every ${MOUTHS_A_DISH} mouths tonight; those mouths eat it in place of their ${MEALS_A_DAY} meals, the farmer first, then the Umas in the table’s order`],
+    ['The staff meal', `Served at the Kitchen, free, once a day. Each selected dish feeds up to ${MOUTHS_A_DISH} mouths in place of their ${MEALS_A_DAY} meals. The rest use the pantry or takeout`],
     ['A household meal', `Breakfast or dinner once married: the farmer cooking for the household, so it cooks a batch too (${BATCH_MEALS} meals from ${BATCH_GOODS} goods by the plain rule, when the Warehouse holds them)`],
     ['Cook (a farmhand’s task)', `A batch an action from ${BATCH_GOODS} goods by the plain rule, its meals by her Cooking (below), until the pantry holds tonight’s meals for everyone`],
     ['A meal’s stars', `Its ${BATCH_GOODS} goods’ stars, averaged and rounded down`],
     ['Well fed', `An Uma who eats a ★${WELL_FED_STARS}+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality and rank points; never stacked, never shortening a meal running longer. A staff meal feeds by its lowest stars: ★1–2 through tomorrow, ★3–4 two days, ★5 three`],
-    ['The plain rule', `The two cheapest goods of ★${WELL_FED_STARS} or more (their meals feed well); with fewer than two held, the two cheapest. Cheapest is the price at its stars, out of demand`],
+    ['The plain rule', `The cheapest pair that averages ★${WELL_FED_STARS}. If the Warehouse cannot make that pair, use the two cheapest. Explicit reserves and station stock targets are kept`],
     ['Food', FOOD_FAMILIES.map((f) => FAMILY_NAMES[f]).join(', ') + ', raw or refined'],
   ])
 }
@@ -628,7 +628,7 @@ function loansBlock(): string {
     ['What it lends', `What the build is short of gold, rounded up to ${g(LOAN_STEP)}, never past its cost; you bring the goods`],
     ['Toward', 'A place offered at your Farm Rank (its game built), or the next house once its wedding has come'],
     ['The fee', `${Math.round(LOAN_FEE * 100)}% of the loan, rounded up to 10g, owed with it`],
-    ['Each night', `A ${LOAN_NIGHTS === 10 ? 'tenth' : `1/${LOAN_NIGHTS}`} of what’s owed when it’s taken (rounded up to 5g), from the night’s income only, before the upkeep`],
+    ['Each night', `A ${LOAN_NIGHTS === 10 ? 'tenth' : `1/${LOAN_NIGHTS}`} of what’s owed when it’s taken (rounded up to 5g). Capped by the night’s income and by the cash available after bills and arrears`],
     ['Repay', 'At the office, in full, any time you’re in town; the fee isn’t returned'],
   ])}`
 }

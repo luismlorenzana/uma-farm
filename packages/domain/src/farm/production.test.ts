@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { handsTonight, setTasks } from './farmhands'
-import { availableStock, setStockReserve, setSurplusPlan } from './production'
+import { availableStock, setStockReserve, setSurplusPlan, surplusCrate } from './production'
+import { plainBatch } from './food'
 import { TALENT_D } from './talents'
 import { fish, fishAt, farmerGatherer } from '../gathering/hauls'
 import { setFishingMode } from '../gathering/fishing-grades'
@@ -33,6 +34,18 @@ function farm(): FarmSave {
 }
 
 describe('F99 ranch, reserves and stations', () => {
+  it('fills an ordered output from a later worker and protects it from routine meals and shipping', () => {
+    const base = farm()
+    let save = setStationPlan({ ...base, ranch: { silo: 5, animals: [produce('cow', 60)] } },
+      'mill', [{ output: 'cultured-yogurt', target: 1 }])
+    save = setTasks(setTasks(save, A, [{ kind: 'load', station: 'mill' }]), B, [{ kind: 'care', home: 'barn' }])
+    const morning = night(save)
+    expect(goodCount(morning.items, 'cultured-yogurt')).toBe(1)
+    expect(morning.summary?.work.find(line => line.kind === 'farmhand' && line.id === A)).toMatchObject({ spent: 1, done: { load: 1 } })
+    const surplus = setSurplusPlan({ ...morning, items: { ...morning.items, carrot: [1, 0, 0, 0, 0] } }, { goods: ['cultured-yogurt'], limit: 10 })
+    expect(plainBatch(surplus)).toBeNull()
+    expect(surplusCrate(surplus)).toEqual([])
+  })
   it.each(ANIMAL_KINDS)('carries %s fondness and collector skill into grades independently of stars', (kind) => {
     const base = ANIMALS[kind].good
     const animal = produce(kind, 200)

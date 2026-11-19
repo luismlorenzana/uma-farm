@@ -10,6 +10,15 @@ const SHIP_DAY = 'surplus-crate-day'
 export const availableStock = (save: Pick<FarmSave, 'items'> & Partial<Pick<FarmSave, 'farm'>>, id: string): number =>
   Math.max(0, goodCount(save.items, id) - (save.farm?.reserves?.[id] ?? 0))
 
+/** A finished station order is stock the player asked to keep on hand. Routine meals and sales use its excess. */
+export function routineStockFloors(farm: Pick<FarmSave['farm'], 'reserves' | 'stationPlans'> | undefined): Record<string, number> {
+  const floors = { ...farm?.reserves }
+  for (const plan of Object.values(farm?.stationPlans ?? {})) for (const { output, target } of plan) {
+    floors[output] = Math.max(floors[output] ?? 0, target)
+  }
+  return floors
+}
+
 export function usesReserve(save: Pick<FarmSave, 'items' | 'farm'>, picks: readonly string[]): boolean {
   const totals = new Map<string, number>()
   for (const key of picks) {
@@ -49,9 +58,10 @@ export function surplusCrate(save: FarmSave): CrateLine[] {
   if (!plan || save.farm.counts[SHIP_DAY] === save.calendar.day) return []
   let room = plan.limit
   const lines: CrateLine[] = []
+  const floors = routineStockFloors(save.farm)
   for (const id of plan.goods) {
     if (room === 0) break
-    let left = Math.min(room, availableStock(save, id))
+    let left = Math.min(room, Math.max(0, goodCount(save.items, id) - (floors[id] ?? 0)))
     for (const [i, held] of (save.items[id] ?? []).entries()) {
       if (left === 0) break
       const count = Math.min(held, left)

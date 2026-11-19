@@ -123,6 +123,9 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 
 The Forge is [deferred pending a redesign](../roadmap.md#deferred).
 
+The [Phase 3.5 balance trials](../game-mechanics.md#progression-balance-through-farm-rank-10) ran from a solo start
+through Farm Rank 10 and one more year. They record staffing, food, bills and exact-grade stock at each roster size.
+
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
 ## Standing work

@@ -126,7 +126,7 @@ describe('the farmer\'s batch', () => {
     expect(day4.farm.pantry).toEqual([])
   })
 
-  it('takes the plain rule\'s goods: the two cheapest of ★2 or more, so the meals feed well, else the two cheapest; only food', () => {
+  it('takes the cheapest pair that feeds well, or the cheapest pair when none can', () => {
     expect(FOOD_FAMILIES).toEqual(['grains', 'vegetables', 'herbs-spices', 'nuts-seeds', 'sweets', 'fruits', 'mushrooms', 'fish', 'eggs-milk'])
     expect(GOOD_FAMILIES.filter((f) => !FOOD_FAMILIES.includes(f))).toEqual(['woods', 'ores', 'stones', 'crystals', 'fibers', 'hides-scales', 'bones-horns', 'essences'])
     expect([isFoodId('carrot'), isFoodId('wheat-flour'), isFoodId('egg'), isFoodId('salmon-fillet'), isFoodId('pine-log'), isFoodId('seed-carrot'), isFoodId('ring-g1')])
@@ -135,10 +135,10 @@ describe('the farmer\'s batch', () => {
     const mixed = farm(500, { carp: [1, 0, 0, 0, 0], wheat: [3, 0, 0, 0, 0], salmon: [0, 1, 0, 0, 0], 'iron-ore': [9, 0, 0, 0, 0] })
     expect(foodHeld(mixed).map((f) => f.key)).toEqual(['carp@1', 'wheat@1', 'salmon@2'])
     expect(plainBatch(mixed)).toEqual(['carp@1', 'wheat@1'])
-    // Two of ★2 or more held, of one good or two: the two cheapest of them, their meals ★2.
+    // A ★1 carp and a ★3 carrot make a cheaper well-fed batch than the carrot and ★2 salmon.
     const good = { ...mixed, items: { ...mixed.items, carrot: [0, 0, 1, 0, 0] as [number, number, number, number, number] } }
     expect(foodHeld(good).map((f) => f.key)).toEqual(['carp@1', 'wheat@1', 'carrot@3', 'salmon@2'])
-    expect(plainBatch(good)).toEqual(['carrot@3', 'salmon@2'])
+    expect(plainBatch(good)).toEqual(['carp@1', 'carrot@3'])
     expect(cookBatch(good).farm.pantry).toEqual([{ day: 1, stars: 2, meals: 6 }])
     expect(plainBatch(farm(500, { carp: [0, 2, 0, 0, 0], wheat: [0, 0, 0, 2, 0] }))).toEqual(['carp@2', 'carp@2'])
     // A meal's stars: its goods' average, rounded down; the Kitchen's lift, later, on top.

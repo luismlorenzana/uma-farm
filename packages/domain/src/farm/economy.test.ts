@@ -146,7 +146,7 @@ describe('loans at the mayor\'s office', () => {
     expect(parseSaveV5(json(lent))).toEqual(lent)
   })
 
-  it('builds the Mill early, and the nights\' income clears it before upkeep: none on a night with no sales', () => {
+  it('builds the Mill early and clears the loan from later nights’ income', () => {
     let save = endDay(borrowFor(goToTown(farm(0, { ...logs(20), carp: [60, 0, 0, 0, 0] })), 'mill'), {}, LATER)
     expect(placeBuilt(save, 'mill')).toBe(true)
     expect(save.farm.loans[0]).toMatchObject({ lent: 1000, fee: 100, owed: 1100, nightly: 110 })
@@ -156,7 +156,7 @@ describe('loans at the mayor\'s office', () => {
     expect(save.summary!.money).toEqual([
       { kind: 'loan', for: 'mill', paid: 0, left: 1100 }, ate(save), { kind: 'upkeep', paid: 0, due: 45 }, { kind: 'short', owed: 45, nights: 2 },
     ])
-    // Shipping pays the share first, then the upkeep owed.
+    // Shipping covers the upkeep owed and pays down the loan.
     let nights = 0
     while (save.farm.loans.length > 0 && nights < 40) {
       save = night(ship(save, 'carp', 1, 4))
@@ -168,13 +168,23 @@ describe('loans at the mayor\'s office', () => {
     expect(nights).toBeGreaterThanOrEqual(10)
   })
 
-  it('takes a loan\'s share before upkeep, and only from the night\'s income', () => {
+  it('takes a loan’s share from the night’s income when the bill is covered', () => {
     const lent = { ...farm(500, {}, 0, ['101']), buildings: { dorm: 1, mill: 1 }, farm: { ...newSave('u1', AT).farm, loans: [{ for: 'mill', day: 1, lent: 400, fee: 40, owed: 440, nightly: 45 }] } }
     // 30g of income: 30g repaid, then 25g upkeep from the 500g held.
     const { save, lines } = settleAccounts({ ...lent, gold: 530 }, 30)
     expect(lines).toEqual([{ kind: 'loan', for: 'mill', paid: 30, left: 410 }, { kind: 'upkeep', paid: 25, due: 25 }])
     expect(save.gold).toBe(475)
     expect(save.farm.loans[0]!.owed).toBe(410)
+  })
+
+  it('keeps enough cash for takeout, upkeep and arrears before paying a loan', () => {
+    const base = farm(70)
+    const lent = { ...base, buildings: { dorm: 1, mill: 1 }, farm: { ...base.farm, owed: 20, short: 2,
+      loans: [{ for: 'mill', day: 1, lent: 400, fee: 40, owed: 440, nightly: 45 }] } }
+    const { save, lines } = settleAccounts(lent, 40, { takeout: 2, pantry: 0, spoiled: 0, fed: 0 })
+    expect(lines[0]).toEqual({ kind: 'loan', for: 'mill', paid: 5, left: 435 })
+    expect(save.gold).toBe(0)
+    expect(save.farm).toMatchObject({ owed: 0, short: 0 })
   })
 
   it('holds one loan at a time, two from Farm Rank 4, and lends up to the Farm Rank\'s limit', () => {
