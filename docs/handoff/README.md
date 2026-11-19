@@ -111,9 +111,12 @@ one through the farm's exact ingredient discoveries. Sell cooked dishes, cook wi
 
 ## Open packets
 
-There are no open implementation packets. The Forge is [deferred pending a redesign](../roadmap.md#deferred).
-The active roadmap covers [festivals and the long game](../roadmap.md#phase-2-the-whole-farm),
-[feel and polish](../roadmap.md#phase-3-feel-and-polish) and [reliability](../roadmap.md#phase-4-steady).
+| Packet | Work | Status |
+|---|---|---|
+| [F100](tasks/F100-festival-contests.md) | Flower Show, Fishing Derby, Animal Show and Harvest Cup use the farm's entries and the Umas' work | Authored |
+
+The Forge is [deferred pending a redesign](../roadmap.md#deferred). The Uma Book and broader long-game
+progression await the owner's requirements.
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
