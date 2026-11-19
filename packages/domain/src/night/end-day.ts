@@ -40,6 +40,8 @@ import type { MadeTonight } from '../gathering/kinds'
 import { finishLoads, type LoadDone } from '../gathering/stations'
 import { isStation } from '../gathering/ids'
 import { payBin } from '../save/bin'
+import { settleRestaurant } from '../restaurant/restaurant'
+import { knownRestaurantRecipes } from '../restaurant/recipes'
 import { marketNight } from '../goods/market'
 import type { LoopPlaceId } from '../save/parse-v4'
 import { touched } from '../save/save'
@@ -203,7 +205,9 @@ export const theFarmEats: NightStep = (night) => {
  * there is pays, takeout first; the rest is owed, and the short nights in a row count on until it's paid
  * (`farm/economy.ts`). */
 export const settleTheAccounts: NightStep = (night) => {
-  const income = night.notes.sold.reduce((n, sale) => n + sale.gold, 0)
+  const shift = night.save.workshops.restaurant?.last
+  const served = shift?.day === night.before.calendar.day ? shift.sales + shift.tips : 0
+  const income = night.notes.sold.reduce((n, sale) => n + sale.gold, served)
   const { save, lines } = settleAccounts(night.save, income, night.notes.food)
   return { ...night, save, notes: { ...night.notes, money: lines } }
 }
@@ -289,7 +293,9 @@ export const tickRanks: NightStep = (night) => {
   const talentOf = talentsOf(night)
   const { story } = night.context
   const favourites = new Map(Object.keys(night.save.roster).map((id) => [id, story ? favouriteOf(story, id) : null]))
+  // The server's workshop gets her rank credit tonight, even if she spent more time on another job.
   const worked: WorkedDay[] = [
+    ...night.notes.hands.flatMap((hand): WorkedDay[] => hand.restaurant ? [{ outfitId: hand.id, activity: 'serving' }] : []),
     ...night.notes.worked.map((w) => ({ outfitId: w.outfitId, activity: PLACE_ACTIVITY[w.place] })),
     ...night.notes.tended.map((t): WorkedDay => ({ outfitId: t.outfitId, activity: 'farming' })),
   ]
@@ -384,8 +390,9 @@ export const serveTheReception: NightStep = (night) => {
  * into the Warehouse, its assistant's practice and challenges; the Cooking Contest's dish judged on its play's score of 0
  * (`kitchen/contest.ts`), its prize paid and its result kept. */
 export const settleThePlay: NightStep = (night) => {
-  if (!night.save.workshops.current) return night
-  return { ...night, save: settleUnfinished(night.save, { talentOf: talentsOf(night), story: night.context.story ?? null }) }
+  const save = settleRestaurant(night.save)
+  if (!save.workshops.current) return save === night.save ? night : { ...night, save }
+  return { ...night, save: settleUnfinished(save, { talentOf: talentsOf(night), story: night.context.story ?? null }) }
 }
 
 /** Before step 1: once anyone is married, tonight's house and companion are noted, your pick of her from Tonight (her
@@ -562,7 +569,13 @@ export const buildSummary: NightStep = (night) => {
   const discoveries = Object.entries(save.farm.discoveries ?? {})
     .flatMap(([id, day]): WorkLine[] => day === night.before.calendar.day ? [{ kind: 'discovery', id }] : [])
   const prizes = notes.seedPrizes.map((crop): WorkLine => ({ kind: 'seed-prize', crop }))
-  const work = [...discoveries, ...prizes, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
+  const shift = save.workshops.restaurant?.last
+  const restaurant: WorkLine[] = shift?.day === night.before.calendar.day ? [{ kind: 'restaurant', result: shift }] : []
+  const before = night.before.workshops.restaurant
+  const learned = knownRestaurantRecipes(save).length - knownRestaurantRecipes(night.before).length
+    - (before?.shift ? shift?.learned ?? 0 : 0)
+  if (learned > 0) restaurant.push({ kind: 'learned-recipes', count: learned })
+  const work = [...restaurant, ...discoveries, ...prizes, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
   const ranks = [...notes.ranks, ...aptitudeUps(night.before, save, talentsOf(night))]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),
@@ -586,12 +599,12 @@ export interface NightStepDef {
 
 /** The night's steps, in order. */
 export const NIGHT_STEPS: readonly NightStepDef[] = [
-  { step: 1, name: 'settleThePlay', run: settleThePlay, what: 'Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges; the Cooking Contest’s dish judged (its play’s score 0), its prize paid' },
+  { step: 1, name: 'settleThePlay', run: settleThePlay, what: 'An open Restaurant shift pays its completed tickets and returns the unused dishes. A stove play left unfinished settles as Rough, with its output, assistant’s practice and challenges, or Contest judging and prize' },
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step' },
   { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each on her farm day (one on a town day is in town, and doesn’t work), in the order you invited them, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most' },
   { step: 2, name: 'theFarmEats', run: theFarmEats, what: 'The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil' },
-  { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
+  { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bin’s pay and the Restaurant’s sales and tips join the last seven nights’ income. Loans take their shares first, then takeout (15g a meal) and upkeep with anything owed. The farm runs at half pace from a second consecutive short night until the bill is paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day' },
   { step: 3, name: 'ranchNightChores', run: ranchNightChores, what: 'Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only' },
@@ -600,7 +613,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 4, name: 'nightChores', run: nightChores, what: 'Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, a miner’s one find each from the Mine’s or the Quarry’s deepest floor, at a face’s, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only' },
   { step: 5, name: 'resetWorkshops', run: resetWorkshops, what: 'Each workshop may be played again tomorrow' },
   { step: 6, name: 'returnTheExpeditions', run: returnTheExpeditions, what: 'Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return' },
-  { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met' },
+  { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for each farmhand who worked, in Serving for the Restaurant’s server and in the activity of her main job for everyone else. Friendship 5 gives ×1.05, Friendship 10 gives ×1.10, and a mentor at her place adds ×1.10. Ranks rise when their points and challenge are met' },
   { step: 6, name: 'tickBonds', run: tickBonds, what: 'Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend' },
   { step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each farmhand who worked today at one of her line’s places, once a night' },
   { step: 6, name: 'shareTheHouses', run: shareTheHouses, what: 'Shared houses: +10 bond a night to each pair of spouses with rooms in the same house' },

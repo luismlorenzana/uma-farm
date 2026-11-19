@@ -15,6 +15,8 @@ import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rul
 import { round5 } from '../farm/round'
 import { PLANTABLE_ADDITIONS, RARE_CROPS, type NewCropId } from '../fields/plantables'
 import { ANIMAL_PRODUCTS, FOOD_CONVERSIONS } from './production-catalogue'
+import { restaurantDishName } from '../restaurant/recipe-rows'
+import { isRestaurantDish } from '../restaurant/rules'
 
 /** The families the 284 goods come from: uma-art's fifteen, then the ranch's eggs and milk (uma-art's `eggs-milk` line,
  * a family of the farm's). */
@@ -263,6 +265,7 @@ export const refinedOf = (id: string): string | null => REFINED_OF.get(id) ?? nu
 export const isGoodId = (id: string): boolean => GOOD_BY_ID.has(id)
 /** A good or a ring: what the bin ships and the Diary counts. */
 export const isGoodOrRingId = (id: string): boolean => GOOD_BY_ID.has(id) || RING_BY_ID.has(id)
+export const isShippableId = (id: string): boolean => isGoodOrRingId(id) || isRestaurantDish(id)
 
 /** Seeds are Warehouse items with farm ids: `seed-<crop>` from the shop and `seed-<crop>-own` from
  * harvests, held at ★1 only. They have no bin price. */
@@ -286,30 +289,4 @@ export const seedOf = (id: string) => SEEDS.get(id)
 
 /** A good or a seed (the rings and dishes apart: `isStockId`). */
 export const isWarehouseId = (id: string): boolean => GOOD_BY_ID.has(id) || SEEDS.has(id)
-
-/** Each dish kind's word, by its family. */
-export const DISH_WORDS = {
-  vegetables: 'Salad', grains: 'Bread', fruits: 'Tart', fish: 'Grill', 'herbs-spices': 'Curry', mushrooms: 'Soup', sweets: 'Cake', 'nuts-seeds': 'Cookies',
-} as const
-/** A dish in words (`dish-<family>-<grade>`): its family's raw good of its grade, then its kind ("Carrot Salad", "Button
- * Mushroom Soup"), as uma-art's atlas names them. Anything else by its id's words. */
-export function dishName(id: string): string {
-  const m = /^dish-([a-z-]+)-(10|[1-9])$/.exec(id)
-  const word = m ? (DISH_WORDS as Readonly<Record<string, string>>)[m[1]!] : undefined
-  if (!m || !word) return itemNameOf(id)
-  const raw = GOODS.find((g) => g.family === m[1] && !g.refined && g.grade === Number(m[2]))
-  return `${raw ? itemNameOf(raw.id) : itemNameOf(m[1]!)} ${word}`
-}
-
-/** A Warehouse item in the player's words: a good by its uma-art id ("Sunflower Seed"), a seed by its crop
- * ("Carrot seeds", "Carrot seeds (own)"), a ring by its name ("Iron Ring") and a dish by its kind ("Carp Grill"). */
-export function goodName(id: string): string {
-  const seed = SEEDS.get(id)
-  if (seed) return `${itemNameOf(seed.crop)}${seed.grade ? ` G${seed.grade}` : ''} seeds${seed.own ? ' (own)' : ''}`
-  const variant = GOOD_BY_ID.get(id)
-  if (variant?.base) return `${itemNameOf(variant.base)} G${variant.grade}`
-  const ring = RING_BY_ID.get(id)
-  if (ring) return ringName(ring.grade)
-  return id.startsWith('dish-') ? dishName(id) : itemNameOf(id)
-}
 

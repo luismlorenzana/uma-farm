@@ -22,6 +22,7 @@ import {
 import { EXPEDITION_POST } from './expedition-words'
 import { builtWords, farmRankWords, milestoneWords } from './goal-words'
 import { moneyLines } from './money-words'
+import { goldWords } from './goods-view'
 import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
 import { aptitudeWords, nightWords } from '../book/board-words'
@@ -298,6 +299,13 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
               text: `Back from ${EXPEDITION_REGIONS[line.region].name} · ${EXPEDITION_WORDS[line.result]} · ${plural(total, 'good')}`,
               quote: world.expedition?.(line) ?? expeditionReturnLine(null, line) }
           }
+          case 'restaurant': {
+            const r = line.result
+            return { key: 'restaurant', to: '/?sheet=restaurant',
+              text: `Restaurant · ${plural(r.covers, 'cover')} · ${goldWords(r.sales + r.tips)}${r.learned ? ` · ${plural(r.learned, 'recipe')} learned` : ''}`,
+              ...(r.opened ? { tag: `Stage ${r.stage} opened a page` } : r.cleared ? { tag: `Stage ${r.stage} cleared` } : {}) }
+          }
+          case 'learned-recipes': return { key: 'learned-recipes', to: '/?sheet=restaurant&recipes=1', text: `${plural(line.count, 'Restaurant recipe')} learned` }
           case 'load': {
             const [id, stars] = line.item.split('@')
             return { key: `load:${line.station}`, to: peek(line.station), text: `${farmPlace(line.station)?.name ?? line.station} · ${goodName(id!)} ★${stars} × ${line.count}` }

@@ -12,7 +12,7 @@
 import { dateOf, DAYS_PER_SEASON, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
-import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
+import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isShippableId, type CropId } from '../goods/ids'
 import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
 import { FISH_MODES } from '../goods/production-catalogue'
 import { isStockId, parseStockKey } from './warehouse'
@@ -241,7 +241,7 @@ function parseOccasions(value: unknown, path: string, roster: ReadonlySet<string
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -287,6 +287,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     ...(o.assistant === undefined ? {} : { assistant: member(o.assistant, `${path}.assistant`, roster) }),
     // The Cooking Contest's cook today: absent with none (the save grows it in place).
     ...(o.cook === undefined ? {} : { cook: member(o.cook, `${path}.cook`, roster) }),
+    ...(o.server === undefined ? {} : { server: member(o.server, `${path}.server`, roster) }),
   }
 }
 
@@ -547,7 +548,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     love,
     dorm: parseDorm(o.dorm, `${path}.dorm`, buildings.dorm),
     items: parseWarehouse(o.items, `${path}.items`, isStockId),
-    bin: parseWarehouse(o.bin, `${path}.bin`, isGoodOrRingId),
+    bin: parseWarehouse(o.bin, `${path}.bin`, isShippableId),
     fields: parseFields(o.fields, `${path}.fields`),
     loads: parseLoads(o.loads, `${path}.loads`),
     crops: counts(o.crops, `${path}.crops`, isCropId, 'unknown crop') as Partial<Record<CropId, number>>,
@@ -573,6 +574,15 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     summary: o.summary === null ? null : parseSummary(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
     town: parseTown(o.town, `${path}.town`, today),
   }
+  const service = save.workshops.restaurant
+  const played = save.workshops.played.restaurant
+  if (service?.shift && (service.shift.day !== today || played !== today || save.workshops.current || (service.last?.day ?? 0) >= today)) {
+    fail(`${path}.workshops.restaurant.shift`, 'expected a single shift for today')
+  }
+  if (service?.last && (service.last.day > today || (!service.shift && service.last.day !== played))) fail(`${path}.workshops.restaurant.last`, 'unexpected shift day')
+  if (save.today.server && (played !== today || !service || save.roster[save.today.server]?.farmhand === undefined
+    || save.today.server === save.today.assistant || save.today.server === save.today.cook
+    || save.expeditions.some((trip) => trip.party.includes(save.today.server!)))) fail(`${path}.today.server`, 'expected an available server today')
   // Booked dishes are still in stock until tonight. Refuse a save that would fail out of End the day.
   const reserved = new Map<string, number>()
   for (const party of save.expeditions.filter((e) => e.left === today)) {

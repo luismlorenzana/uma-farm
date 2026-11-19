@@ -140,8 +140,7 @@ describe('the shell on the landscape stage', () => {
     expect($('[data-kit="frame-column"] [data-farm-page] [data-test-page]')).not.toBeNull()
     expect($(`${rail} a[aria-current="page"]`)?.textContent).toBe('Town')
     // The kit's sheet on a landscape stage is a panel from the right edge.
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
-    expect($('[data-kit="sheet"]')?.getAttribute('data-placement')).toBe('side')
+    await vi.waitFor(() => expect($('[data-kit="sheet"]')?.getAttribute('data-placement')).toBe('side'))
   })
 })
 

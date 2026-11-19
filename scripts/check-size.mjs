@@ -29,6 +29,12 @@ export const MAIN_JS_BUDGET = 180_000
  * its sheet and actions; and the Cooking Contest's rules, its judge's lines, its card and entry, and its judging. Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
+  'src/shell/MenuSheet.tsx',
+  'src/loop/RestaurantSheet.tsx',
+  'src/loop/restaurant-actions.ts',
+  'domain/src/restaurant/restaurant.ts',
+  'domain/src/restaurant/recipe-rows.ts',
+  'domain/src/restaurant/recipes.ts',
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/HubScene.js',

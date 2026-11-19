@@ -1,6 +1,7 @@
 // The Warehouse's ids. The web's test checks each good is on uma-art's atlas.
 import { describe, expect, it } from 'vitest'
-import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, LEGACY_CROP_IDS, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
+import { CROP_IDS, GOODS, GOOD_IDS, goodOf, isCropId, LEGACY_CROP_IDS, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
+import { goodName } from './names'
 
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
 

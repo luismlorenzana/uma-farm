@@ -184,9 +184,9 @@ describe('building a place', () => {
   })
 
   it('shows a place whose game isn\'t built yet as "Not built yet", which can\'t be bought', async () => {
-    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 7000 } } })
-    await render(<FarmRoute />, '/?peek=restaurant')
-    const card = await find('[data-build="restaurant"]')
+    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 10_000 } } })
+    await render(<FarmRoute />, '/?peek=forge')
+    const card = await find('[data-build="forge"]')
     expect(card.dataset.lock).toBe('game')
     expect(card.querySelector('[data-build-lock]')).toBeNull()
     const button = card.querySelector('[data-action="build"]') as HTMLButtonElement

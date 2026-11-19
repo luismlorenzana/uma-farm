@@ -26,9 +26,9 @@ import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
 
 /** The field's screen: full screen, its own strip at the top, no rail. */
 const FIELD_PATH = '/field'
-import { MenuSheet } from './MenuSheet'
 import { SyncWarning } from './SyncWarning'
 
+const MenuSheet = lazy(() => import('./MenuSheet').then((module) => ({ default: module.MenuSheet })))
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
 const ScenePlayer = lazy(() => import('../loop/ScenePlayer'))
 const NameSheet = lazy(() => import('../loop/NameSheet'))
@@ -44,6 +44,7 @@ const OccasionPlayer = lazy(() => import('../loop/OccasionPlayer'))
 const LifePlayer = lazy(() => import('../loop/LifeScene'))
 const Gallery = lazy(() => import('../loop/Gallery'))
 const KitchenSheet = lazy(() => import('../loop/KitchenSheet'))
+const RestaurantSheet = lazy(() => import('../loop/RestaurantSheet'))
 const ContestSheet = lazy(() => import('../loop/Contest'))
 const StovePlayer = lazy(() => import('../loop/StovePlayer'))
 
@@ -85,7 +86,7 @@ export function Shell() {
       bottom={<FarmRail page={railPageOf(location.pathname)} />}
       overlays={
         <>
-          <MenuSheet open={sheet === 'menu'} onClose={() => leave(withParam(location, 'sheet', null))} />
+          {sheet === 'menu' && <Suspense fallback={null}><MenuSheet open onClose={() => leave(withParam(location, 'sheet', null))} /></Suspense>}
           {free && <OutOfActions />}
           {isLoopSheet(sheet) && !naming && !scene && <Suspense fallback={null}><LoopSheets key={sheet} sheet={sheet} /></Suspense>}
           {naming && <Suspense fallback={null}><NameSheet /></Suspense>}
@@ -102,6 +103,7 @@ export function Shell() {
           {life && free && !read && !playing && <Suspense fallback={null}><LifePlayer key={life} value={life} /></Suspense>}
           {gallery && free && !read && !playing && <Suspense fallback={null}><Gallery key={gallery} id={gallery} /></Suspense>}
           {sheet === 'kitchen' && free && <Suspense fallback={null}><KitchenSheet /></Suspense>}
+          {sheet === 'restaurant' && free && <Suspense fallback={null}><RestaurantSheet /></Suspense>}
           {sheet === 'contest' && free && <Suspense fallback={null}><ContestSheet /></Suspense>}
           {stove && free && <Suspense fallback={null}><StovePlayer key={stove} /></Suspense>}
         </>

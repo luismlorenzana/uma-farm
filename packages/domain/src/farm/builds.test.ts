@@ -57,14 +57,13 @@ describe('building a place', () => {
     expect(() => payBuild(farm(600, { 'pine-log': [20, 0, 0, 0, 0] }), 'mill')).toThrow('Need 400g more.')
     expect(() => payBuild(farm(1000), 'mill')).toThrow('Need 20 logs more.')
     expect(buildLockWords(buildLock(farm(), 'coop'))).toBe('Opens at Farm Rank 2')
-    expect(buildLockWords(buildLock(farm(), 'restaurant'))).toBe('Not built yet')
-    expect(() => payBuild(farm(99_999, {}, 30_000), 'restaurant')).toThrow('Not built yet.')
+    expect(buildLockWords(buildLock(farm(), 'restaurant'))).toBe('Opens at Farm Rank 7')
+    expect(() => payBuild(farm(99_999, {}, 30_000), 'forge')).toThrow('Not built yet.')
     const rich = farm(99_999, { 'pine-plank': [99, 0, 0, 0, 0], carp: [99, 0, 0, 0, 0], 'carp-fillet': [99, 0, 0, 0, 0] }, 30_000)
     expect(buildLock(rich, 'boat')).toEqual({ by: 'after', place: 'dock' })
     expect(buildLockWords(buildLock(rich, 'boat'))).toBe('After the Dock')
     expect(buildLock({ ...rich, buildings: { ...rich.buildings, dock: 1 } }, 'boat')).toBeNull()
-    // The pacing's simulation pays for places whose games aren't built yet, as when they will be.
-    expect(buildLock(rich, 'restaurant', { games: false })).toEqual({ by: 'short', gold: 0, goods: [{ goods: { family: 'vegetables', refined: false, count: 30 }, have: 0 }] })
+    expect(buildLock(rich, 'restaurant')).toEqual({ by: 'short', gold: 0, goods: [{ goods: { family: 'vegetables', refined: false, count: 30 }, have: 0 }] })
   })
 })
 

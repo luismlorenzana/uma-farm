@@ -37,7 +37,8 @@
 import { dateOf, FESTIVAL_IDS, FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
 import type { Activity } from '../farm/ranks'
 import { activityScore, talentScores, type TalentOutfit, type Temperament } from '../farm/talents'
-import { goodName, isGoodId } from '../goods/ids'
+import { isGoodId } from '../goods/ids'
+import { goodName } from '../goods/names'
 import type { Taste } from '../romance/chats'
 import { isDishId, pairKey, type Love } from '../save/v4'
 import {

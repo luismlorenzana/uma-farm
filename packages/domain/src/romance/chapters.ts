@@ -16,7 +16,7 @@
 //                   night notes the morning it does (`chaptersOpened`: "A new chapter with ‹name›")
 import { dateOf, festivalOn, FESTIVALS, SEASON_NAMES, type Festival } from '../farm/calendar'
 import { farmPlace } from '../farm/places'
-import { goodName } from '../goods/ids'
+import { goodName } from '../goods/names'
 import type { Love, SaveV4 } from '../save/v4'
 import { ARRIVAL, RUNGS, type HerChapter, type StoryTrigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'

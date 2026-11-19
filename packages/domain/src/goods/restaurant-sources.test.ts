@@ -1,25 +1,9 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { SEASONS, type Season } from '../farm/calendar'
+import { RESTAURANT_RECIPES as recipes } from '../restaurant/recipes'
+import { isRestaurantDish, restaurantId } from '../restaurant/rules'
 import { goodOf } from './ids'
 import { ingredientSources } from './sources'
-
-interface Ingredient { id: string; grade: number; count: number }
-interface Recipe { id: string; grade: number; ingredients: Ingredient[] }
-
-const packet = readFileSync(new URL('../../../../docs/handoff/tasks/F98-restaurant.md', import.meta.url), 'utf8')
-const recipes: Recipe[] = []
-let grade = 0
-for (const line of packet.split(/\r?\n/)) {
-  const stage = /^### ([1-8])\. /.exec(line)
-  if (stage) grade = Number(stage[1])
-  const row = /^\| (R\d{3}) \| [^|]+ \| ([^|]+) \|$/.exec(line)
-  if (!row) continue
-  const ingredients = [...row[2]!.matchAll(/(\d+) × `([a-zA-Z0-9-]+)` G(\d+)/g)]
-    .map(([, count, id, grade]) => ({ id: id!, count: Number(count), grade: Number(grade) }))
-  if (ingredients.length !== row[2]!.split(' + ').length) throw new Error(`Incomplete ingredients in ${row[1]}`)
-  recipes.push({ id: row[1]!, grade, ingredients })
-}
 
 /** An all-year station is limited by when its exact inputs can be produced. Goods can keep across seasons. */
 function sourceSeasons(id: string, visiting: ReadonlySet<string> = new Set()): Set<Season> {
@@ -33,15 +17,17 @@ function sourceSeasons(id: string, visiting: ReadonlySet<string> = new Set()): S
 
 describe('the 120 authored Restaurant recipes', () => {
   it('has earlier, exact dish dependencies and a normal, reachable source for each stock and ancestor', () => {
-    expect(recipes.map((r) => r.id)).toEqual(Array.from({ length: 120 }, (_, i) => `R${String(i + 1).padStart(3, '0')}`))
+    expect(recipes.map((r) => r.id)).toEqual(Array.from({ length: 120 }, (_, i) => restaurantId(i + 1)))
     const earlier = new Map<string, number>()
     const problems: string[] = []
     for (const [i, recipe] of recipes.entries()) {
       expect(recipe.grade).toBe(1 + Math.floor(i / 15))
+      expect(new Set(recipe.ingredients.map(({ id }) => id)).size).toBe(recipe.ingredients.length)
       for (const { id, count, grade } of recipe.ingredients) {
         expect(count).toBeGreaterThan(0)
-        const actual = /^R\d{3}$/.test(id) ? earlier.get(id) : goodOf(id)?.grade
+        const actual = isRestaurantDish(id) ? earlier.get(id) : goodOf(id)?.grade
         if (actual !== grade) problems.push(`${recipe.id}: ${id} G${grade} is ${actual === undefined ? 'unknown or not yet learned' : `G${actual}`}`)
+        else if (isRestaurantDish(id) && actual >= recipe.grade) problems.push(`${recipe.id}: ${id} must be from an earlier stage`)
         else if (!earlier.has(id) && !sourceSeasons(id).size) problems.push(`${recipe.id}: ${id} G${grade} has no production route`)
       }
       earlier.set(recipe.id, recipe.grade)

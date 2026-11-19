@@ -9,7 +9,7 @@ import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES } from '../gatherin
 import { FARMER_REACH } from '../gathering/hauls'
 import { RANK_FLOORS } from '../gathering/digs'
 import { ANIMALS } from '../ranch/ranch'
-import { ANIMAL_KINDS, type AnimalKind } from '../save/v4'
+import { ANIMAL_KINDS, isDishId, type AnimalKind } from '../save/v4'
 import { FISHERY, FOREST } from '../gathering/tables'
 import { cropGrades, isCropId, isGoodOrRingId } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
@@ -25,7 +25,7 @@ import {
 } from './milestones'
 
 /** The goods shipped at least once: the Diary's entries, a ring among them. */
-export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && isGoodOrRingId(id)).length
+export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && (isGoodOrRingId(id) || isDishId(id))).length
 
 /** The milestones paid so far (rows aren't milestones). */
 export const milestonesPaid = (save: Pick<FarmSave, 'diary'>): number => save.diary.milestones.filter((id) => milestoneOf(id) !== undefined).length

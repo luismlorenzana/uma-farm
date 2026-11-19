@@ -82,6 +82,7 @@ export interface FarmhandLine {
   items: number
   /** Her action at the Kitchen's play as its assistant, when she was (1). */
   kitchen?: number
+  restaurant?: number
 }
 
 /** §2 Work done: the Coop's or the Barn's night: its animals fed today (each made its good), those that went hungry (and
@@ -96,7 +97,10 @@ export interface RanchLine {
 
 /** §2's lines: the farmhands' days, the stations' loads, the ranch's nights, then the field's growth, then what withered
  * (in section order). */
-export type WorkLine = ({ kind: 'expedition' } & import('../save/v4').ExpeditionReturn) | { kind: 'discovery'; id: string } | { kind: 'seed-prize'; crop: CropId } | FarmhandLine | LoadLine | RanchLine | FieldGrew | CropsWithered
+export type WorkLine = ({ kind: 'expedition' } & import('../save/v4').ExpeditionReturn)
+  | { kind: 'restaurant'; result: import('../restaurant/rules').RestaurantResult }
+  | { kind: 'learned-recipes'; count: number }
+  | { kind: 'discovery'; id: string } | { kind: 'seed-prize'; crop: CropId } | FarmhandLine | LoadLine | RanchLine | FieldGrew | CropsWithered
 
 /** §3 Ranks: she reached a rank in an activity tonight. */
 export interface RankUp {

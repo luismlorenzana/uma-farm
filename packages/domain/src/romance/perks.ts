@@ -94,14 +94,14 @@ export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
   quarry: 'One stone or gem from the Quarry each night',
   ranch: '+5 fondness to her animals each night',
   cooking: 'One more dish on the Kitchen’s next play',
-  serving: 'One more cover on the Restaurant’s next shift',
+  serving: 'One grace order on today’s Restaurant shift',
   forging: '5% back on the Forge’s next tool',
 }
 
 /** A morning item by her line: what R2 and S2 leave in the Warehouse. */
 export const MORNING_GOOD: Readonly<Record<PerkLine, string>> = {
   farming: 'crop of the season', foraging: 'good from the forest', fishing: 'fish', mining: 'ore', quarry: 'stone or gem', ranch: 'egg, milk or fleece',
-  cooking: 'dish', serving: 'dish', forging: 'Fitting',
+  cooking: 'dish', serving: 'crop of the season', forging: 'Fitting',
 }
 
 /** A perk in words for her line: "+10% at the forest", "One item from the forest each night". */

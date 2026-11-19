@@ -18,7 +18,8 @@
 // costs one action, the special day's event actions first (`spendForEvent`): with none left of either kind it's refused
 // before it pays. Pure.
 import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
-import { goodName, isRingId, isWarehouseId, ringGrade } from '../goods/ids'
+import { isRingId, isWarehouseId, ringGrade } from '../goods/ids'
+import { goodName } from '../goods/names'
 import { SaveRuleError } from '../save/rules'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'

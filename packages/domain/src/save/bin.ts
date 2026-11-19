@@ -5,19 +5,20 @@
 // after its nine steps.
 import { spend } from '../farm/actions'
 import { baseGoodId, GOOD_IDS } from '../goods/ids'
+import { availableDishes } from '../expeditions/stock'
 import { easedGroup, easedPercent, easeOf, type Market } from '../goods/market'
 import { hasPrice, inDemand } from '../goods/prices'
 import type { BinSale } from '../night/summary'
 import { earnGold } from './gold'
 import { SaveRuleError } from './rules'
-import type { StarCounts, Warehouse } from './v4'
-import { addGoods, takeGoods } from './warehouse'
+import { isDishId, type StarCounts, type Warehouse } from './v4'
+import { addGoods, stockKey, takeGoods } from './warehouse'
 import type { FarmSave } from './v4'
 
 /** The counter the bin's gold adds to, for the Farm Rank and its milestones. */
 export const GOLD_SHIPPED = 'gold-shipped'
 
-type BinSave = Pick<FarmSave, 'items' | 'bin'>
+type BinSave = Pick<FarmSave, 'items' | 'bin'> & Partial<Pick<FarmSave, 'calendar' | 'expeditions'>>
 
 function priced(id: string): void {
   if (!hasPrice(id)) throw new SaveRuleError('no-price', 'That doesn’t sell')
@@ -28,6 +29,7 @@ function priced(id: string): void {
 export function ship<S extends BinSave>(save: S, id: string, stars: number, count: number): S {
   priced(id)
   if (!Number.isInteger(count) || count < 1) throw new SaveRuleError('bad-count', 'Ship at least one')
+  if (isDishId(id) && availableDishes(save, stockKey(id, stars)) < count) throw new SaveRuleError('no-items', 'Not enough available dishes.')
   return { ...save, items: takeGoods(save.items, id, stars, count), bin: addGoods(save.bin, id, stars, count) }
 }
 
@@ -78,7 +80,7 @@ export function binSales(bin: Warehouse, day: number, market: Market = {}): BinS
     else groups.set(key, [[id, row]])
   }
   return [...groups].flatMap(([key, rows]) => easedGroup(rows, day, easeOf(market, key)))
-    .sort((a, b) => (ORDER.get(a.id) ?? Infinity) - (ORDER.get(b.id) ?? Infinity) || a.stars - b.stars)
+    .sort((a, b) => (ORDER.get(a.id) ?? ORDER.size) - (ORDER.get(b.id) ?? ORDER.size) || a.id.localeCompare(b.id) || a.stars - b.stars)
     .map((line) => ({
       kind: 'sold', id: line.id, stars: line.stars, count: line.count, gold: line.gold, demand: inDemand(line.id, day),
       ...(line.steps > 0 ? { eased: easedPercent(line.steps) } : {}),

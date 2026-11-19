@@ -349,6 +349,7 @@ belong to, and until then cost nothing or aren't there yet:
 | A festival | Enter the Cooking Contest, at the Kitchen on its day: the day’s event actions first (the other festivals’ contests come later) | 3 | Now |
 | The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove | 1 | Now |
 | The Kitchen | Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day | 1 | Now |
+| The Restaurant | Serve a shift from a stocked menu of dishes, once a day | 1 | Now |
 | The Expedition post | Send a party for 2–5 days, with up to eight dishes | 1 | Now |
 | The household | Cook a meal for the household: breakfast or dinner (it cooks a batch too) | 1 | Now |
 | The household | Choose tonight’s companion, at the day’s end | Free | Now |
@@ -431,12 +432,12 @@ The steps as the game lists them:
 <!-- live:night -->
 | Step | Function | What happens |
 |---|---|---|
-| 1 | `settleThePlay` | Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges; the Cooking Contest’s dish judged (its play’s score 0), its prize paid |
+| 1 | `settleThePlay` | An open Restaurant shift pays its completed tickets and returns the unused dishes. A stove play left unfinished settles as Rough, with its output, assistant’s practice and challenges, or Contest judging and prize |
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
 | 2 | `farmhandsWork` | The farmhands: each on her farm day (one on a town day is in town, and doesn’t work), in the order you invited them, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
 | 2 | `theFarmEats` | The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil |
-| 2 | `settleTheAccounts` | The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
+| 2 | `settleTheAccounts` | The bin’s pay and the Restaurant’s sales and tips join the last seven nights’ income. Loans take their shares first, then takeout (15g a meal) and upkeep with anything owed. The farm runs at half pace from a second consecutive short night until the bill is paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
 | 3 | `ranchNightChores` | Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only |
@@ -445,7 +446,7 @@ The steps as the game lists them:
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, a miner’s one find each from the Mine’s or the Quarry’s deepest floor, at a face’s, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow |
 | 6 | `returnTheExpeditions` | Expedition parties due this morning return with loot, Expeditions rank points, challenge credit and bonds; the post logs the return |
-| 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
+| 6 | `tickRanks` | Rank points for each farmhand who worked, in Serving for the Restaurant’s server and in the activity of her main job for everyone else. Friendship 5 gives ×1.05, Friendship 10 gives ×1.10, and a mentor at her place adds ×1.10. Ranks rise when their points and challenge are met |
 | 6 | `tickBonds` | Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend |
 | 6 | `payLine` | Her line: +10 to each farmhand who worked today at one of her line’s places, once a night |
 | 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house |
@@ -563,7 +564,7 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Kitchen | `kitchen` | Farm Rank 3, then built |
 | Mine | `mine` | Farm Rank 4, then built |
 | Smelter | `mine-workbench` | Farm Rank 4, then built |
-| Restaurant | `party-hall` | Farm Rank 7, then built (not built yet) |
+| Restaurant | `party-hall` | Farm Rank 7, then built |
 | Quarry | `quarry` | Farm Rank 5, then built |
 | Cutter | `den-workbench` | Farm Rank 5, then built |
 | Forge | `forge` | Farm Rank 8, then built (not built yet) |
@@ -2728,9 +2729,9 @@ refined) **and one side** (any grade, raw or refined, any stars):
   price, to 50g** (Carrot Salad 600g); her Friendship 4 (her signature dish, [her signature
   dish](#her-signature-dish)); a request's recipe extra. A recipe is known for good (`workshops.recipes`; the first
   three are known while the Kitchen stands, never written). The shelf is the workshops' first gold sink.
-- **Dishes don't ship.** They feed the staff meal, make gifts (a dish is a gift like a good: her taste in it is her
-  bible's, so a loved dish plays), serve a wedding's reception, or pack it for an expedition; later, the Restaurant. A recipe is
-  also what you cook at [the Cooking Contest](#the-cooking-contest).
+- All dishes can be served at [the Restaurant](#the-restaurant), saved for meals, given as gifts, served at a
+  staff meal or wedding reception, and packed for an expedition. Restaurant dishes can also ship in the bin.
+  The original 80 recipes remain the choices at [the Cooking Contest](#the-cooking-contest).
 
 <!-- live:recipes -->
 | Dish | Id | Takes | At the shop |
@@ -3046,6 +3047,207 @@ the casual bot and serves the staff meal; he buys a recipe on the shop's shelf f
   feeds them; the farm ends its second year about a sixth poorer with it.
 - **The stove's bots:** over 8 seeds a batch's 30 s, the careful bot scores 100 and the casual 70; the Kitchen's 60 s,
   100 and 57.
+
+### The Restaurant
+
+The Restaurant opens at **Farm Rank 7**. Order it with **40,000g, 80 planks, 40 fillets and 30 vegetables**.
+It stands the next morning. Build the Kitchen to cook the dishes for its shifts.
+
+#### Shifts and recipe pages
+
+Open the Restaurant from the farm map. Choose a stage and stock up to **12 portions of up to three dishes**,
+choosing the exact star lots. The tray needs at least as many portions as there are tickets. One shift costs
+**one action** and the Restaurant serves once a day. Cleared stages stay open for repeat shifts.
+
+<!-- live:restaurant-stages -->
+| Stage | Recipe page | Dish types | Covers to clear | Time |
+|---|---|---|---|---|
+| 1 | Farm Counter | 1 | 4 of 6 | 45 s |
+| 2 | The Pantry | 2 | 5 of 7 | 45 s |
+| 3 | From the Water | 2 | 6 of 8 | 50 s |
+| 4 | Orchard Table | 2 | 7 of 9 | 50 s |
+| 5 | Barn and Mill | 3 | 7 of 10 | 55 s |
+| 6 | Woodland Supper | 3 | 8 of 10 | 55 s |
+| 7 | Coastal Table | 3 | 9 of 11 | 60 s |
+| 8 | House Menu | 3 | 10 of 12 | 60 s |
+<!-- /live -->
+
+Tap an open ticket and its matching plate. The seeded queue can order only what's in the tray. A correct plate
+uses one portion. A wrong plate costs 2.5 seconds, and an expired order earns nothing. From Stage 3, at least one
+correct plate must be a learned Restaurant dish from an earlier stage. The queue includes one of these in the
+first two tickets. The cover rate gives a stove grade at the same 50%, 75% and 90% thresholds.
+
+One eligible Uma can serve, spending one work action. She must be on the farm and free of an expedition, Kitchen
+play or Cooking Contest. Serving talent adds 0.35 seconds per step to a ticket's nine-second window, and Serving
+rank adds 0.25 seconds per rank. The solo tip is 5% of sales. A server adds a percentage point per talent step and
+rank. On her Serving line, F2 and R5 each add 0.75 seconds and 10 percentage points to the tip, capped at 25%.
+Each Serving chore from a present Uma gives a four-second grace period on one order while the shift is still open.
+Actual covers count for her challenges, and the night's rank credit goes to Serving. Story scenes still use tray Rhythm.
+
+The tray, time and successful tickets survive a reload. Return to the Restaurant to resume or end the shift.
+Ending the day settles any open shift, pays for completed tickets and returns all remaining portions. Sales and
+tips count toward the night's income and Farm Rank. The morning lists the shift and any recipes learned overnight.
+
+#### Learning and cooking
+
+Each first clear opens a page of **15 recipes**. Learn a recipe as soon as the farm has produced its exact inputs,
+including the raw goods behind processed inputs and the dishes and their ingredients behind recipe components.
+Purchased and gifted stock can be used once the farm has the matching discovery. Grade gates the recipe, and
+stars determine the quality of the dish. The Recipes tab shows ready recipes, shortages and sources by stage.
+
+The Kitchen cooks these alongside its original recipes, up to three per play. A menu with a Restaurant recipe
+can use any number of dishes up to the Kitchen level's base, including a single dish. Exact ingredients can span
+star lots. Input stars are weighted by quantity and rounded down before the stove's lift, up to ★5. The inputs
+leave the Warehouse at Start, including any component dishes.
+
+- **Sell.** Use the bin or a Restaurant ticket. A new dish's ★1 base starts at 115% of its immediate ingredients,
+  rounded to 5g, capped at 135% of the ingredients with component recipes expanded to their raw or processed
+  inputs. Winter demand and crate easing apply at the bin. Tickets pay the out-of-demand price plus the tip.
+- **Cook with it.** Use a dish where a later recipe names it. The discovery remains after the dish is spent.
+- **Save for meals.** Choose a dish in the Kitchen or Book. It becomes six portions at the same stars, free of
+  actions, with the pantry's three-night expiry and ★2+ well-fed benefit. Those six portions can save up to 90g
+  of takeout. The separate staff meal still takes one dish per three mouths.
+
+<!-- live:restaurant-recipes -->
+| Recipe | Id | Grade | Exact ingredients per dish | ★1 base |
+|---|---|---|---|---|
+| Mint Carrot Ribbons | `dish-restaurant-001` | G1 | 2 × Carrot G1 + 1 × Mint G2 | 190g |
+| Warm Basil Carrots | `dish-restaurant-002` | G1 | 2 × Carrot G1 + 1 × Basil G1 | 190g |
+| Crisp Potato Coins | `dish-restaurant-003` | G1 | 2 × Potato G2 + 1 × Rosemary G3 | 180g |
+| Warm Cabbage Ribbons | `dish-restaurant-004` | G1 | 2 × Cabbage G3 + 1 × Mint G2 | 650g |
+| Slow Onion Cups | `dish-restaurant-005` | G1 | 2 × Onion G4 + 1 × Thyme G4 | 300g |
+| Carrot and Egg Skillet | `dish-restaurant-006` | G1 | 1 × Carrot G1 + 1 × Egg G1 | 140g |
+| Potato Egg Cake | `dish-restaurant-007` | G1 | 1 × Potato G2 + 1 × Egg G1 | 130g |
+| Basil Carp Parcels | `dish-restaurant-008` | G1 | 1 × Carp G1 + 1 × Basil G1 | 100g |
+| Mint Trout Bites | `dish-restaurant-009` | G1 | 1 × Trout G2 + 1 × Mint G2 | 110g |
+| Button and Onion Broth | `dish-restaurant-010` | G1 | 1 × Button Mushroom G1 + 1 × Onion G4 | 150g |
+| Toasted Shiitake | `dish-restaurant-011` | G1 | 2 × Shiitake G2 + 1 × Basil G1 | 145g |
+| Carrot Milk Soup | `dish-restaurant-012` | G1 | 1 × Carrot G1 + 1 × Milk G2 | 160g |
+| Oat Breakfast Bowl | `dish-restaurant-013` | G1 | 1 × Oats G2 + 1 × Milk G2 | 140g |
+| Honey Custard Cup | `dish-restaurant-014` | G1 | 1 × Honeycomb G1 + 1 × Egg G1 + 1 × Milk G2 | 200g |
+| Herb Stock | `dish-restaurant-015` | G1 | 1 × Button Mushroom G1 + 1 × Carrot G1 + 1 × Basil G1 | 155g |
+| Pear and Oat Cups | `dish-restaurant-016` | G2 | 1 × Pear G2 + 1 × Rolled Oats G2 | 120g |
+| Honey Apple Spoon | `dish-restaurant-017` | G2 | 1 × Apple G1 + 1 × Honey G1 | 105g |
+| Rye Onion Crisp | `dish-restaurant-018` | G2 | 1 × Rye Flour G6 + 1 × Onion G4 | 220g |
+| Wheat and Herb Flatbread | `dish-restaurant-019` | G2 | 1 × Wheat Flour G1 + 1 × Dried Basil G1 | 150g |
+| Buckwheat Breakfast Cake | `dish-restaurant-020` | G2 | 1 × Buckwheat Flour G7 + 1 × Egg G1 + 1 × Milk G2 | 295g |
+| Apple Hand Pie | `dish-restaurant-021` | G2 | 1 × Apple G1 + 1 × Wheat Flour G1 + 1 × Egg G1 | 180g |
+| Pear Milk Pudding | `dish-restaurant-022` | G2 | 1 × Pear G2 + 1 × Milk G2 + 1 × Egg G1 | 215g |
+| Barley Mushroom Pilaf | `dish-restaurant-023` | G2 | 1 × Pearl Barley G3 + 1 × Shiitake G2 | 125g |
+| Cornmeal Griddle Cakes | `dish-restaurant-024` | G2 | 1 × Cornmeal G5 + 1 × Milk G2 | 335g |
+| Peanut Oat Crumble | `dish-restaurant-025` | G2 | 1 × Peanut Butter G1 + 1 × Rolled Oats G2 | 130g |
+| Sunflower Carrot Roast | `dish-restaurant-026` | G2 | 1 × Sunflower Oil G2 + 1 × Carrot G2 + 1 × Herb Stock G1 | 390g |
+| Herb Cream | `dish-restaurant-027` | G2 | 1 × Milk G2 + 1 × Dried Rosemary G3 | 175g |
+| Tomato Pan Sauce | `dish-restaurant-028` | G2 | 2 × Tomato G5 + 1 × Dried Basil G1 | 240g |
+| Ginger Beet Glaze | `dish-restaurant-029` | G2 | 1 × Beet Sugar G3 + 1 × Ground Ginger G5 | 550g |
+| Plain Pastry Shell | `dish-restaurant-030` | G2 | 1 × Wheat Flour G1 + 1 × Egg G1 | 140g |
+| Carp and Herb Rice | `dish-restaurant-031` | G3 | 1 × Carp G1 + 1 × Polished Rice G4 + 1 × Herb Stock G1 | 310g |
+| Pepper Trout Toast | `dish-restaurant-032` | G3 | 1 × Trout Fillet G2 + 1 × Bell Pepper G6 + 1 × Wheat and Herb Flatbread G2 | 330g |
+| Sardine Potato Plate | `dish-restaurant-033` | G3 | 1 × Sardine G3 + 1 × Potato G2 + 1 × Rosemary G3 | 190g |
+| Tomato Sardine Toast | `dish-restaurant-034` | G3 | 1 × Sardine Fillet G3 + 1 × Tomato Pan Sauce G2 + 1 × Wheat and Herb Flatbread G2 | 565g |
+| Mackerel with Thyme | `dish-restaurant-035` | G3 | 1 × Mackerel G4 + 1 × Thyme G4 | 165g |
+| Mackerel Cream Bake | `dish-restaurant-036` | G3 | 1 × Mackerel Fillet G4 + 1 × Herb Cream G2 + 1 × Potato G2 | 415g |
+| Salmon Rice Cakes | `dish-restaurant-037` | G3 | 1 × Salmon G5 + 1 × Polished Rice G4 + 1 × Egg G1 | 280g |
+| Ginger Eel Bowl | `dish-restaurant-038` | G3 | 1 × Eel G7 + 1 × Ground Ginger G5 + 1 × Polished Rice G4 | 640g |
+| Carp Cabbage Rolls | `dish-restaurant-039` | G3 | 1 × Carp G1 + 1 × Cabbage G3 + 1 × Herb Stock G1 | 525g |
+| Trout and Mint Potatoes | `dish-restaurant-040` | G3 | 1 × Trout G2 + 1 × Potato G2 + 1 × Mint G2 | 175g |
+| Shiitake Salmon Soup | `dish-restaurant-041` | G3 | 1 × Salmon G5 + 1 × Shiitake G2 + 1 × Herb Stock G1 | 350g |
+| Oat Crusted Sardines | `dish-restaurant-042` | G3 | 1 × Sardine G3 + 1 × Rolled Oats G2 + 1 × Egg G1 | 215g |
+| Smoked Trout Pastry | `dish-restaurant-043` | G3 | 1 × Trout Fillet G2 + 1 × Plain Pastry Shell G2 + 1 × Onion G4 | 360g |
+| Rosemary Fillet Supper | `dish-restaurant-044` | G3 | 1 × Carp Fillet G2 + 1 × Dried Rosemary G3 + 1 × Potato G2 | 230g |
+| Harbour Fish Stock | `dish-restaurant-045` | G3 | 1 × Carp Fillet G1 + 1 × Onion G4 + 1 × Thyme G4 | 255g |
+| Apple Basket Tart | `dish-restaurant-046` | G4 | 1 × Apple G1 + 1 × Plain Pastry Shell G2 | 200g |
+| Honey Pear Galette | `dish-restaurant-047` | G4 | 1 × Pear G2 + 1 × Honey G1 + 1 × Plain Pastry Shell G2 | 275g |
+| Peach Custard Tart | `dish-restaurant-048` | G4 | 1 × Peach G3 + 1 × Milk G2 + 1 × Plain Pastry Shell G2 | 315g |
+| Plum Oat Squares | `dish-restaurant-049` | G4 | 1 × Plum G4 + 1 × Rolled Oats G2 + 1 × Egg G1 | 220g |
+| Orange Peel Cakes | `dish-restaurant-050` | G4 | 1 × Orange G5 + 1 × Wheat Flour G1 + 1 × Cane Sugar G2 | 260g |
+| Apple Rye Pudding | `dish-restaurant-051` | G4 | 1 × Apple Preserve G2 + 1 × Rye Flour G6 + 1 × Milk G2 | 265g |
+| Peach Dressed Cabbage | `dish-restaurant-052` | G4 | 1 × Peach G3 + 1 × Cabbage G3 + 1 × Mint G2 | 415g |
+| Pear Onion Toast | `dish-restaurant-053` | G4 | 1 × Pear G2 + 1 × Onion G4 + 1 × Wheat and Herb Flatbread G2 | 340g |
+| Maple Plum Turnover | `dish-restaurant-054` | G4 | 1 × Plum Preserve G4 + 1 × Maple Syrup G4 + 1 × Plain Pastry Shell G2 | 405g |
+| Orange Herb Trout | `dish-restaurant-055` | G4 | 1 × Orange G5 + 1 × Trout G2 + 1 × Mint G2 | 220g |
+| Milk Poached Pears | `dish-restaurant-056` | G4 | 1 × Pear G2 + 1 × Herb Cream G2 | 255g |
+| Ginger Peach Compote | `dish-restaurant-057` | G4 | 1 × Peach G3 + 1 × Ground Ginger G5 + 1 × Cane Sugar G2 | 490g |
+| Plum and Onion Chutney | `dish-restaurant-058` | G4 | 1 × Plum G4 + 1 × Onion G4 + 1 × Beet Sugar G3 | 405g |
+| Orange Syrup | `dish-restaurant-059` | G4 | 1 × Orange G5 + 1 × Cane Sugar G2 | 190g |
+| Apple Oat Filling | `dish-restaurant-060` | G4 | 1 × Apple Preserve G1 + 1 × Rolled Oats G2 | 130g |
+| Duck Egg Rye Toast | `dish-restaurant-061` | G5 | 1 × Duck Egg G3 + 1 × Rye Flour G6 + 1 × Tomato Pan Sauce G2 | 495g |
+| Goat Milk Barley Bowl | `dish-restaurant-062` | G5 | 1 × Goat Milk G4 + 1 × Pearl Barley G3 | 230g |
+| Duck Egg Pepper Custard | `dish-restaurant-063` | G5 | 1 × Duck Egg G3 + 1 × Bell Pepper G6 + 1 × Milk G3 | 295g |
+| Goat Milk Onion Gratin | `dish-restaurant-064` | G5 | 1 × Goat Milk G4 + 1 × Onion G4 + 1 × Potato G2 | 330g |
+| Goat Milk Herb Tart | `dish-restaurant-065` | G5 | 1 × Goat Milk G4 + 1 × Dried Thyme G4 + 1 × Plain Pastry Shell G2 | 415g |
+| Duck Egg Mushroom Parcel | `dish-restaurant-066` | G5 | 1 × Duck Egg G3 + 1 × Oyster Mushroom G3 + 1 × Plain Pastry Shell G2 | 335g |
+| Eggplant and Corn Bake | `dish-restaurant-067` | G5 | 1 × Eggplant G7 + 1 × Cornmeal G5 + 1 × Tomato Pan Sauce G2 | 625g |
+| Asparagus in Herb Cream | `dish-restaurant-068` | G5 | 1 × Asparagus G8 + 1 × Herb Cream G2 | 755g |
+| Roasted Tomato Oats | `dish-restaurant-069` | G5 | 1 × Tomato G5 + 1 × Rolled Oats G2 + 1 × Herb Stock G1 | 330g |
+| Walnut Barley Loaf | `dish-restaurant-070` | G5 | 1 × Walnut Paste G4 + 1 × Pearl Barley G3 + 1 × Egg G1 | 265g |
+| Chestnut and Oat Cakes | `dish-restaurant-071` | G5 | 1 × Chestnut Paste G5 + 1 × Rolled Oats G2 + 1 × Cane Sugar G2 | 300g |
+| Sesame Cabbage Parcels | `dish-restaurant-072` | G5 | 1 × Sesame Paste G3 + 1 × Cabbage G3 + 1 × Polished Rice G4 | 470g |
+| Goat Milk Set Custard | `dish-restaurant-073` | G5 | 1 × Goat Milk G4 + 1 × Duck Egg G3 + 1 × Beet Sugar G3 | 470g |
+| Roasted Mushroom Filling | `dish-restaurant-074` | G5 | 1 × Oyster Mushroom G3 + 1 × Shiitake G2 + 1 × Onion G4 | 220g |
+| Sweet Grain Crust | `dish-restaurant-075` | G5 | 1 × Buckwheat Flour G7 + 1 × Cornmeal G5 + 1 × Honey G1 | 435g |
+| Enoki and Thyme Bowl | `dish-restaurant-076` | G6 | 1 × Enoki G4 + 1 × Thyme G4 + 1 × Herb Stock G1 | 320g |
+| Chanterelle and Rice Pilaf | `dish-restaurant-077` | G6 | 1 × Chanterelle G5 + 1 × Polished Rice G4 + 1 × Herb Stock G1 | 360g |
+| Porcini Cream Pot | `dish-restaurant-078` | G6 | 1 × Porcini G6 + 1 × Herb Cream G2 | 330g |
+| Morel and Onion Toast | `dish-restaurant-079` | G6 | 1 × Morel G7 + 1 × Onion G4 + 1 × Wheat and Herb Flatbread G2 | 450g |
+| Chanterelle and Goat Milk Bake | `dish-restaurant-080` | G6 | 1 × Chanterelle G5 + 1 × Goat Milk G4 + 1 × Potato G2 | 310g |
+| Woodland Pastry Braid | `dish-restaurant-081` | G6 | 1 × Roasted Mushroom Filling G5 + 1 × Plain Pastry Shell G2 + 1 × Duck Egg G3 | 530g |
+| Sesame Enoki Ribbons | `dish-restaurant-082` | G6 | 1 × Enoki G4 + 1 × Sesame Paste G3 + 1 × Cabbage G3 | 460g |
+| Dried Shiitake Barley Bowl | `dish-restaurant-083` | G6 | 1 × Dried Shiitake G2 + 1 × Pearl Barley G3 + 1 × Herb Stock G1 | 330g |
+| Oyster Mushroom Rye Toast | `dish-restaurant-084` | G6 | 1 × Oyster Mushroom G3 + 1 × Rye Flour G6 + 1 × Herb Cream G2 | 360g |
+| Asparagus Chanterelle Tart | `dish-restaurant-085` | G6 | 1 × Asparagus G8 + 1 × Chanterelle G5 + 1 × Plain Pastry Shell G2 | 810g |
+| Grape and Walnut Bowl | `dish-restaurant-086` | G6 | 1 × Grape G6 + 1 × Walnut Paste G4 + 1 × Rolled Oats G2 | 320g |
+| Mango Oat Custard | `dish-restaurant-087` | G6 | 1 × Mango G7 + 1 × Milk G2 + 1 × Egg G1 | 340g |
+| Cocoa Chestnut Slice | `dish-restaurant-088` | G6 | 1 × Chocolate G5 + 1 × Chestnut Paste G5 + 1 × Sweet Grain Crust G5 | 815g |
+| Cinnamon Apple Cream | `dish-restaurant-089` | G6 | 1 × Ground Cinnamon G7 + 1 × Apple Oat Filling G4 + 1 × Herb Cream G2 | 570g |
+| Woodland Gravy | `dish-restaurant-090` | G6 | 1 × Dried Porcini G6 + 1 × Onion G4 + 1 × Herb Stock G1 | 485g |
+| Sea Bream with Orange | `dish-restaurant-091` | G7 | 1 × Sea Bream G6 + 1 × Orange G5 + 1 × Thyme G4 | 345g |
+| Sea Bream and Cornmeal | `dish-restaurant-092` | G7 | 1 × Sea Bream Fillet G6 + 1 × Cornmeal G5 + 1 × Harbour Fish Stock G3 | 790g |
+| Tuna on Herb Flatbread | `dish-restaurant-093` | G7 | 1 × Tuna Fillet G8 + 1 × Wheat and Herb Flatbread G2 + 1 × Basil G1 | 635g |
+| Ginger Tuna Rice Plate | `dish-restaurant-094` | G7 | 1 × Tuna G8 + 1 × Polished Rice G4 + 1 × Ground Ginger G5 | 700g |
+| Bream and Tomato Parcel | `dish-restaurant-095` | G7 | 1 × Sea Bream G6 + 1 × Tomato Pan Sauce G2 + 1 × Plain Pastry Shell G2 | 605g |
+| Eel with Beet Glaze | `dish-restaurant-096` | G7 | 1 × Eel G7 + 1 × Ginger Beet Glaze G2 + 1 × Polished Rice G4 | 925g |
+| Salmon and Plum Supper | `dish-restaurant-097` | G7 | 1 × Salmon G5 + 1 × Plum and Onion Chutney G4 + 1 × Harbour Fish Stock G3 | 885g |
+| Mackerel Pepper Pilaf | `dish-restaurant-098` | G7 | 1 × Mackerel G4 + 1 × Bell Pepper G6 + 1 × Harbour Fish Stock G3 | 460g |
+| Trout and Chanterelle Pie | `dish-restaurant-099` | G7 | 1 × Trout Fillet G2 + 1 × Chanterelle G5 + 1 × Plain Pastry Shell G2 | 345g |
+| Tuna and Asparagus Skillet | `dish-restaurant-100` | G7 | 1 × Tuna G8 + 1 × Asparagus G8 + 1 × Herb Cream G2 | 1,025g |
+| Tuna and Grape Toast | `dish-restaurant-101` | G7 | 1 × Tuna Fillet G8 + 1 × Grape G6 + 1 × Wheat and Herb Flatbread G2 | 720g |
+| Seared Bream with Herb Cream | `dish-restaurant-102` | G7 | 1 × Sea Bream Fillet G6 + 1 × Herb Cream G2 + 1 × Mint G2 | 505g |
+| Sardine and Mushroom Tray | `dish-restaurant-103` | G7 | 1 × Sardine Fillet G3 + 1 × Roasted Mushroom Filling G5 + 1 × Potato G2 | 430g |
+| Ginger Harbour Stew | `dish-restaurant-104` | G7 | 1 × Mackerel Fillet G4 + 1 × Ground Ginger G5 + 1 × Harbour Fish Stock G3 | 790g |
+| Orange Coastal Glaze | `dish-restaurant-105` | G7 | 1 × Orange Syrup G4 + 1 × Harbour Fish Stock G3 + 1 × Dried Thyme G4 | 615g |
+| House Pumpkin and Barley | `dish-restaurant-106` | G8 | 1 × Emperor Pumpkin G10 + 1 × Pearl Barley G3 + 1 × Woodland Gravy G6 | 1,330g |
+| Pumpkin Woodland Pie | `dish-restaurant-107` | G8 | 1 × Emperor Pumpkin G10 + 1 × Roasted Mushroom Filling G5 + 1 × Plain Pastry Shell G2 | 1,105g |
+| Almond Peach Tart | `dish-restaurant-108` | G8 | 1 × Almond Paste G6 + 1 × Ginger Peach Compote G4 + 1 × Plain Pastry Shell G2 | 915g |
+| Vanilla Pear Custard | `dish-restaurant-109` | G8 | 1 × Vanilla Extract G6 + 1 × Pear G2 + 1 × Goat Milk Set Custard G5 | 800g |
+| Pomegranate Oat Crown | `dish-restaurant-110` | G8 | 1 × Pomegranate G8 + 1 × Sweet Grain Crust G5 + 1 × Goat Milk Set Custard G5 | 1,270g |
+| Cocoa Apple Crumble | `dish-restaurant-111` | G8 | 1 × Chocolate G5 + 1 × Apple Oat Filling G4 + 1 × Sweet Grain Crust G5 | 815g |
+| Maple Walnut and Rye | `dish-restaurant-112` | G8 | 1 × Maple Syrup G4 + 1 × Walnut Paste G4 + 1 × Rye Flour G6 | 340g |
+| Spiced Grape Pastry | `dish-restaurant-113` | G8 | 1 × Grape Jelly G6 + 1 × Ground Cinnamon G7 + 1 × Plain Pastry Shell G2 | 585g |
+| Mango and Goat Milk Tart | `dish-restaurant-114` | G8 | 1 × Mango G7 + 1 × Goat Milk G4 + 1 × Plain Pastry Shell G2 | 490g |
+| Tuna with Orange Glaze | `dish-restaurant-115` | G8 | 1 × Tuna Fillet G8 + 1 × Orange Coastal Glaze G7 + 1 × Asparagus G8 | 1,670g |
+| Porcini Fish Pie | `dish-restaurant-116` | G8 | 1 × Sea Bream Fillet G6 + 1 × Woodland Gravy G6 + 1 × Plain Pastry Shell G2 | 970g |
+| Saffron Harbour Rice | `dish-restaurant-117` | G8 | 1 × Saffron Threads G8 + 1 × Harbour Fish Stock G3 + 1 × Polished Rice G4 | 655g |
+| Ember Pepper Broth | `dish-restaurant-118` | G8 | 1 × Bell Pepper G6 + 1 × Peppercorn G6 + 1 × Woodland Gravy G6 | 740g |
+| Sunday Duck Egg Gratin | `dish-restaurant-119` | G8 | 1 × Duck Egg G3 + 1 × Roasted Mushroom Filling G5 + 1 × Herb Cream G2 | 570g |
+| Festival Fruit Board | `dish-restaurant-120` | G8 | 1 × Pomegranate G8 + 1 × Peach G3 + 1 × Orange Syrup G4 | 510g |
+<!-- /live -->
+
+#### Roster playthrough
+
+Three established farms ordered the Restaurant on Spring 1 of Year 2. The crews produced the ingredients through
+field plans, ranch care and collection, fishing, foraging and station loads across the seasons. The player
+scheduled the work, bought supplies, played the stove with an assistant and served tickets.
+
+| Umas | Nights to Stage 8 | Nights to all 120 learned | Days waiting for a shift menu | Nights with missing discoveries on open pages | Ticket sales and tips | Bin test sale | Pantry meals eaten | Missed tickets |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 36 | 53 | 28 | 46 | 19,016g | 235g | 6 | 2 |
+| 20 | 28 | 45 | 20 | 33 | 17,797g | 305g | 1,290 | 2 |
+| 50 | 24 | 45 | 16 | 38 | 17,249g | 305g | 1,692 | 2 |
+
+Each run shipped one component dish, converted one for meals and cooked components into later recipes. The two
+misses were deliberate. Pantry totals include routine Uma cooking on the 20- and 50-Uma farms. More hands helped
+stock the shifts, while winter crops and later processing still set the pace of the last discoveries.
 
 ## Part 2 — The Umas and the farm's progress
 
@@ -3654,6 +3856,7 @@ tie):
 | Coop | Ranch |
 | Barn | Ranch |
 | Kitchen | Cooking |
+| Restaurant | Serving |
 <!-- /live -->
 
 - **One day pays one activity.**
@@ -3675,7 +3878,7 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 | Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); a festival win (its contest isn’t built yet) |
 | Foraging | Gather 50 items | Gather 20 items in the Hills | Gather 20 items in the Old Forest | Gather 20 items on the Mountain | Gather 20 items in the Misty Vale | The night’s hauls (night step 4) |
 | Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; the Cooking Contest’s judging, its cook |
-| Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant (not built yet) |
+| Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant’s shift, its server |
 | Forging | Assist 5 Forge plays | Assist a Fine merge | Forge a tool upgrade | Assist a Masterwork | Forge a Mythril tool | The Forge’s workshop (not built yet) |
 | Expeditions | Return from 2 expeditions | A Success at level 10+ | A Success at level 20+ | A Great at level 20+ | A Success at the Sky Ruins | The Expedition post |
 <!-- /live -->
@@ -3815,7 +4018,7 @@ stations' levels, the shop's seed tiers), so the sheet and the morning can't dri
 | 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, New seeds at the shop |
 | 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s |
 | 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, New seeds at the shop |
-| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (25,000g · 60 planks · 40 fillets), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
+| 7 | 6,250 | The Restaurant to build (40,000g · 80 planks · 40 fillets · 30 vegetables), The Expedition post to build (25,000g · 60 planks · 40 fillets), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
 | 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 | Plot 8 to clear (50,000g) |
 | 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
@@ -3948,7 +4151,7 @@ A place whose game isn't built yet shows what it'll be: its Build card has its c
 | Cutter | 5 | 10,000g | 40 planks, 40 logs | Yes |
 | Dock | 6 | 20,000g | 80 planks | Yes |
 | Boat | 6 | 30,000g | 60 planks, 30 fillets | Yes, after the Dock |
-| Restaurant | 7 | 40,000g | 80 planks, 40 fillets, 30 vegetables | Not built yet |
+| Restaurant | 7 | 40,000g | 80 planks, 40 fillets, 30 vegetables | Yes |
 | Expedition post | 7 | 25,000g | 60 planks, 40 fillets | Yes |
 | Forge | 8 | 60,000g | 120 planks, 60 logs | Not built yet |
 <!-- /live -->
@@ -6055,7 +6258,7 @@ shows what the place-bound ones say for every line.
 | Mining (the Quarry) | the Quarry | +10% at the Quarry | One stone or gem from the Quarry each night | A ★2+ stone or gem | When the Quarry is built |
 | Ranch | the ranch | +10% at the ranch | +5 fondness to her animals each night | A ★2+ egg, milk or fleece | When the Coop or the Barn is built |
 | Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | When the Kitchen is built |
-| Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | When the Restaurant is built |
+| Serving | the Restaurant | +10% at the Restaurant | One grace order on today’s Restaurant shift | A ★2+ crop of the season | When the Restaurant is built |
 | Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | When the Forge is built |
 <!-- /live -->
 
@@ -6097,9 +6300,8 @@ Each perk, what it does, and where in the day it acts:
 
 Each place-bound template means one thing at each line's place. **Every line whose place stands acts:** farming,
 foraging and fishing from day 1, mining once the Mine (or a quarrier's Quarry) stands, the ranch once the Coop or the Barn
-does, cooking once the Kitchen stands (its +10% as the Kitchen's assistant, and its chores as dishes on every play). The
-Restaurant's and the Forge's lines wait for their games, and a workshop line's morning item is a crop of the season
-meanwhile (a cook's dish comes later). **Her
+does, cooking once the Kitchen stands, and Serving once the Restaurant stands. The Forge's line waits for its game.
+A workshop line's morning item is a crop of the season. **Her
 line** is her favourite (her bible's, else her calling's, else master data's), as for every line; her +10% acts where
 her work is that line's place (the board's task she's set, at night), and her chores and morning items while she's on
 the farm: a spouse in her room every day, a farmhand on her farm days.
@@ -6114,7 +6316,7 @@ the farm: a spouse in her room every day, a farmhand on her farm days.
 | Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4) | A ★2+ stone or gem of the Quarry’s deepest floor reached | Yes, once the Quarry stands |
 | Ranch | The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars | +5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3) | A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none) | Yes, once the Coop or the Barn stands |
 | Cooking | As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes | +1 dish on every Kitchen play while she’s on the farm: a spouse in her room, or a farmhand on her farm day (the chores don’t bank: a day without a play makes none) | A ★2+ dish (a crop of the season for now: the dishes come to the morning items later) | Yes, once the Kitchen stands: its +10% and its chores (the morning item later) |
-| Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Restaurant’s game is built |
+| Serving | +10 percentage points to the tip rate and +0.75 s per ticket as the Restaurant’s server, again at R5 | One 4 s grace order per chore on the day’s shift | A ★2+ crop of the season | Yes, once the Restaurant stands |
 | Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season meanwhile) | Not yet: once the Forge’s game is built |
 <!-- /live -->
 
@@ -6225,7 +6427,7 @@ line's best place now:
 | Mining (the Quarry) | Curry | The top grade of the Quarry’s deepest floor reached (floors 1–3: G2 … floor 27 on: G10); G1 before it stands | Basil Curry |
 | Ranch | Cake | The top grade of the goods the farm’s animals give (an Egg G1 … Cashmere Fleece G7); G1 with none | Honeycomb Cake |
 | Cooking | Tart | The top grade of the dishes the Kitchen has cooked (`farm.counts['cooked:<dish>']`); G1 before its first play | Apple Tart |
-| Serving | Cookies | G1 until the Restaurant’s game is built | Peanut Cookies |
+| Serving | Cookies | The last Restaurant stage cleared, G1 before the first clear | Peanut Cookies |
 | Forging | Bread | G1 until the Forge’s game is built | Wheat Bread |
 
 Her loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).

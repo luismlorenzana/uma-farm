@@ -1,7 +1,7 @@
 // The goods as the loop's screens show them: the Warehouse by stars in its family tabs, the bin's
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
-  binSales, binTotal, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, isDishId, lineOpen, refinedOf, RING_IDS, SEED_IDS, STARS,
+  binSales, binTotal, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, hasPrice, inDemand, isDishId, lineOpen, refinedOf, restaurantGrade, RING_IDS, SEED_IDS, STARS,
   type BinSale, type Good, type Market,
   type GoodFamily, type FarmSave, type ShopLine, type StarCounts,
 } from '@farm/domain'
@@ -89,12 +89,14 @@ export function goodPair(good: Good): string | null {
 export function goodRow(id: string, row: StarCounts, day: number, market: Market = {}): GoodRow {
   const good = goodOf(id)
   const steps = easeOf(market, id)
-  const cells = STARS.map((stars): StarCell => ({ stars, count: row[stars - 1] ?? 0, price: good ? easedPrice(id, stars, day, steps) : null }))
+  const sells = hasPrice(id)
+  const cells = STARS.map((stars): StarCell => ({ stars, count: row[stars - 1] ?? 0, price: sells ? easedPrice(id, stars, day, steps) : null }))
   const dish = !good && isDishId(id)
+  const grade = restaurantGrade(id)
   return {
     id, name: goodName(id), shelf: good ? shelfOf(good) : dish ? 'dishes' : 'seeds', total: row.reduce((a, b) => a + b, 0), cells,
-    demand: good ? inDemand(id, day) : false, facts: good ? goodFacts(good) : dish ? 'A dish: for a meal' : 'Seeds: they don’t sell', pair: good ? goodPair(good) : null,
-    sells: good !== undefined, worth: good ? binTotal({ [id]: row }, day, market) : 0, eased: good ? easedPercent(steps) : 0,
+    demand: sells && inDemand(id, day), facts: good ? goodFacts(good) : grade ? `Restaurant dish · G${grade}` : dish ? 'Kitchen dish · Meals and service' : 'Seeds: they don’t sell', pair: good ? goodPair(good) : null,
+    sells, worth: sells ? binTotal({ [id]: row }, day, market) : 0, eased: sells ? easedPercent(steps) : 0,
   }
 }
 

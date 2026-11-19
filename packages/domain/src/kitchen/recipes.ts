@@ -13,7 +13,7 @@ import { itemNameOf } from '../items/lines'
 import { placeBuilt } from '../farm/places'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
-import { DISH_FAMILIES, isDishId, type FarmSave } from '../save/v4'
+import { DISH_FAMILIES, isLegacyDishId, type FarmSave } from '../save/v4'
 import { MAX_STARS, parseStockKey } from '../save/warehouse'
 
 /** A dish's family: the eight kinds. */
@@ -86,7 +86,7 @@ export const kitchenBuilt = (save: Pick<FarmSave, 'buildings'>): boolean => plac
 /** The recipes the farm knows, in order: once the Kitchen stands, its first three, then each learnt in the order learnt;
  * before it, only those learnt (her signature dishes wait in the Kitchen's list). */
 export function knownRecipes(save: Pick<FarmSave, 'buildings' | 'workshops'>): string[] {
-  const learnt = save.workshops.recipes.filter(isDishId)
+  const learnt = save.workshops.recipes.filter(isLegacyDishId)
   return kitchenBuilt(save) ? [...new Set([...START_RECIPES, ...learnt])] : learnt
 }
 /** Whether the farm knows a recipe. */
