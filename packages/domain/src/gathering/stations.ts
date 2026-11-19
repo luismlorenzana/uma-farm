@@ -11,12 +11,15 @@
 // (`farm/builds.ts`). Loaded with the screens and the night.
 import { spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
-import { goodOf, refinedOf } from '../goods/ids'
+import { availableStock } from '../farm/production'
+import { discoverOutput } from '../goods/discovery'
+import { CATALOGUE, goodOf, type Good } from '../goods/ids'
+import { MAX_PRODUCTION_TARGET, MAX_STATION_TARGETS } from '../goods/production-catalogue'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
-import { STATION_MAX_LEVEL, type FarmSave, type StationLoad } from '../save/v4'
-import { addGoods, parseStockKey, takeGoods } from '../save/warehouse'
-import { STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type StationId, type StationJobId } from './ids'
+import { STATION_MAX_LEVEL, type FarmSave, type StationLoad, type StationTarget } from '../save/v4'
+import { addGoods, goodCount, parseStockKey, takeGoods } from '../save/warehouse'
+import { STATION_JOB_IDS, STATION_JOBS, stationJobLevel, stationJobOf, stationJobUnits, STATIONS, type StationId, type StationJobId } from './ids'
 import { stationBuilt } from './kinds'
 import { STATION_RATE } from './tables'
 
@@ -118,19 +121,39 @@ export interface StationOption {
   input: string
   stars: number
   held: number
+  units: number
+  available: number
+}
+
+const byInput = new Map<string, Good[]>()
+for (const good of CATALOGUE) if (good.input) {
+  const options = byInput.get(good.input)
+  if (options) options.push(good)
+  else byInput.set(good.input, [good])
+}
+
+export function stationRecipes(station: StationId, level = STATION_MAX_LEVEL): Good[] {
+  return CATALOGUE.filter((good) => {
+    const job = stationJobOf(good.id)
+    return job !== null && STATION_JOBS[job].station === station && stationJobLevel(good.id) <= level
+  })
 }
 
 /** What a station's jobs can take from the Warehouse now, job by job in the stations' order, then by grade and
  * stars. */
-export function stationOptions(save: Pick<FarmSave, 'items'>, station: StationId): StationOption[] {
+export function stationOptions(save: Pick<FarmSave, 'items'> & Partial<Pick<FarmSave, 'buildings' | 'farm'>>, station: StationId): StationOption[] {
   const out: StationOption[] = []
+  const level = save.buildings?.[station] ?? STATION_MAX_LEVEL
   for (const [input, row] of Object.entries(save.items)) {
-    const output = refinedOf(input)
-    const job = output ? stationJobOf(output) : null
-    if (!output || !job || STATION_JOBS[job].station !== station) continue
-    row.forEach((held, i) => {
-      if (held > 0) out.push({ job, item: `${output}@${i + 1}`, output, input, stars: i + 1, held })
-    })
+    for (const { id: output } of byInput.get(input) ?? []) {
+      const job = stationJobOf(output)
+      if (!job || STATION_JOBS[job].station !== station || stationJobLevel(output) > level) continue
+      const units = stationJobUnits(output)
+      row.forEach((held, i) => {
+        if (held >= units) out.push({ job, item: `${output}@${i + 1}`, output, input, stars: i + 1, held, units,
+          available: Math.min(held, availableStock(save, input)) })
+      })
+    }
   }
   const order = (o: StationOption) => [STATION_JOB_IDS.indexOf(o.job), goodOf(o.input)!.family, goodOf(o.input)!.grade, o.stars] as const
   return out.sort((a, b) => {
@@ -140,20 +163,55 @@ export function stationOptions(save: Pick<FarmSave, 'items'>, station: StationId
   })
 }
 
+export function setStationPlan<S extends FarmSave>(save: S, station: StationId, targets: readonly StationTarget[]): S {
+  const offered = new Set(stationRecipes(station, stationLevel(save, station)).map((good) => good.id))
+  if (targets.length > MAX_STATION_TARGETS || new Set(targets.map((entry) => entry.output)).size !== targets.length
+    || targets.some(({ output, target }) => !offered.has(output) || !Number.isInteger(target) || target < 1 || target > MAX_PRODUCTION_TARGET)) {
+    throw new SaveRuleError('bad-count', 'Choose up to six different unlocked outputs, each with a target from 1 to 99.')
+  }
+  const stationPlans = { ...save.farm.stationPlans }
+  if (targets.length > 0) stationPlans[station] = targets.map((entry) => ({ ...entry }))
+  else delete stationPlans[station]
+  return { ...save, farm: { ...save.farm, stationPlans } }
+}
+
+export function nextStationLoad(save: FarmSave, station: StationId, size: number): { option: StationOption; batches: number; target?: number } | null {
+  if (loadsLeft(save, station) === 0) return null
+  const options = stationOptions(save, station).filter((o) => o.available >= o.units).sort((a, b) => b.available - a.available)
+  const plan = save.farm.stationPlans?.[station]
+  if (!plan) {
+    const option = options[0]
+    return option ? { option, batches: Math.floor(Math.min(size, option.available) / option.units) } : null
+  }
+  for (const { output, target } of plan) {
+    const queued = loadsToday(save, station).reduce((sum, load) => sum + (parseStockKey(load.item)?.id === output ? load.count : 0), 0)
+    const remaining = target - queued - goodCount(save.items, output)
+    if (remaining <= 0) continue
+    const option = options.find((row) => row.output === output)
+    if (option) return { option, target: remaining, batches: Math.min(remaining, Math.floor(Math.min(size, option.available) / option.units)) }
+  }
+  return null
+}
+
 /** Starts a load: one action, `count` (1–8) of an output at its stars (`<output>@<stars>`), each taking one of its raw
  * good at the same stars now. Refused before the station is built (`locked`), once it holds its loads for the day (one
  * a level: `busy`), for an output it doesn't make (`bad-job`), a count outside 1–8 (`bad-count`) and when the Warehouse
  * is short (`no-items`). */
-export function startLoad<S extends FarmSave>(save: S, station: StationId, item: string, count: number): S {
+export function startLoad<S extends FarmSave>(save: S, station: StationId, item: string, count: number, useReserved = false): S {
   if (!stationBuilt(save, station)) throw new SaveRuleError('locked', 'Build it first.')
   if (loadsLeft(save, station) === 0) throw new SaveRuleError('busy', 'It’s busy until morning.')
   const at = parseStockKey(item)
   const input = at ? goodOf(at.id)?.input : null
   const job = at ? stationJobOf(at.id) : null
   if (!at || !input || !job || STATION_JOBS[job].station !== station) throw new SaveRuleError('bad-job', 'It doesn’t make that.')
-  if (!Number.isInteger(count) || count < 1 || count > LOAD_SIZE) throw new SaveRuleError('bad-count', `A load is 1 to ${LOAD_SIZE}.`)
-  if ((save.items[input]?.[at.stars - 1] ?? 0) < count) throw new SaveRuleError('no-items', 'Not enough in the Warehouse.')
-  return loadAt(spend(save, 'load'), station, item, count, count)
+  if (stationJobLevel(at.id) > stationLevel(save, station)) throw new SaveRuleError('locked', `Opens at station level ${stationJobLevel(at.id)}.`)
+  const units = stationJobUnits(at.id)
+  const most = Math.floor(LOAD_SIZE / units)
+  if (!Number.isInteger(count) || count < 1 || count > most) throw new SaveRuleError('bad-count', `A load is 1 to ${most}.`)
+  const inputs = count * units
+  if ((save.items[input]?.[at.stars - 1] ?? 0) < inputs) throw new SaveRuleError('no-items', 'Not enough in the Warehouse.')
+  if (!useReserved && availableStock(save, input) < inputs) throw new SaveRuleError('locked', 'That input is reserved.')
+  return loadAt(spend(save, 'load'), station, item, inputs, count)
 }
 
 /** A load itself, spending nothing, checked by its caller: `inputs` of the raw good leave the Warehouse now, and `out` of
@@ -176,14 +234,14 @@ export interface LoadDone {
  * the morning. In the stations' order, each station's in the order started. */
 export function finishLoads<S extends FarmSave>(save: S): { save: S; done: LoadDone[] } {
   const done: LoadDone[] = []
-  let items = save.items
+  let next = save
   for (const station of STATIONS) {
     for (const load of loadsToday(save, station)) {
       const at = parseStockKey(load.item)
       if (!at) continue
-      items = addGoods(items, at.id, at.stars, load.count)
+      next = discoverOutput({ ...next, items: addGoods(next.items, at.id, at.stars, load.count) }, at.id)
       done.push({ station, item: load.item, count: load.count })
     }
   }
-  return { save: done.length === 0 && Object.keys(save.loads).length === 0 ? save : { ...save, items, loads: {} }, done }
+  return { save: Object.keys(save.loads).length === 0 ? next : { ...next, loads: {} }, done }
 }

@@ -17,7 +17,9 @@ import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
 import { tileOf } from '../fields/fields'
-import { goodName } from '../goods/ids'
+import { discoverOutput } from '../goods/discovery'
+import { goodName, gradeStepId } from '../goods/ids'
+import { ANIMAL_PRODUCTS, COLLECTION_CAPS, type CollectionCap } from '../goods/production-catalogue'
 import { drawStars, heartsQuality, quality } from '../goods/stars'
 import type { RanchLine } from '../night/summary'
 import { spendGold } from '../save/gold'
@@ -40,13 +42,13 @@ export interface AnimalRule {
 /** The seven animals: a chicken from the Coop's Farm Rank 2, the Barn's cow and sheep from its Farm Rank 3, and dearer
  * ones as the farm grows. Every one gives its good each night it's fed. */
 export const ANIMALS: Readonly<Record<AnimalKind, AnimalRule>> = {
-  chicken: { name: 'Chicken', home: 'coop', good: 'egg', price: 500, rank: 2 },
-  duck: { name: 'Duck', home: 'coop', good: 'duck-egg', price: 1200, rank: 3 },
-  cow: { name: 'Cow', home: 'barn', good: 'milk', price: 1500, rank: 3 },
-  goat: { name: 'Goat', home: 'barn', good: 'goat-milk', price: 2500, rank: 4 },
-  sheep: { name: 'Sheep', home: 'barn', good: 'wool', price: 2000, rank: 3 },
-  alpaca: { name: 'Alpaca', home: 'barn', good: 'alpaca-fleece', price: 3500, rank: 5 },
-  'cashmere-goat': { name: 'Cashmere Goat', home: 'barn', good: 'cashmere-fleece', price: 5000, rank: 6 },
+  chicken: { name: 'Chicken', home: 'coop', good: ANIMAL_PRODUCTS.chicken, price: 500, rank: 2 },
+  duck: { name: 'Duck', home: 'coop', good: ANIMAL_PRODUCTS.duck, price: 1200, rank: 3 },
+  cow: { name: 'Cow', home: 'barn', good: ANIMAL_PRODUCTS.cow, price: 1500, rank: 3 },
+  goat: { name: 'Goat', home: 'barn', good: ANIMAL_PRODUCTS.goat, price: 2500, rank: 4 },
+  sheep: { name: 'Sheep', home: 'barn', good: ANIMAL_PRODUCTS.sheep, price: 2000, rank: 3 },
+  alpaca: { name: 'Alpaca', home: 'barn', good: ANIMAL_PRODUCTS.alpaca, price: 3500, rank: 5 },
+  'cashmere-goat': { name: 'Cashmere Goat', home: 'barn', good: ANIMAL_PRODUCTS['cashmere-goat'], price: 5000, rank: 6 },
 }
 /** The buildings' names. */
 export const HOME_NAMES: Readonly<Record<RanchHome, string>> = { coop: 'Coop', barn: 'Barn' }
@@ -61,6 +63,20 @@ export const FED_FONDNESS = 2
 export const HUNGRY_FONDNESS = 10
 /** An animal's hearts, 0–10. */
 export const heartsOf = (fondness: number): number => Math.min(MAX_FONDNESS / FONDNESS_A_HEART, Math.floor(fondness / FONDNESS_A_HEART))
+
+export function setCollectionCap<S extends FarmSave>(save: S, kind: AnimalKind, cap: CollectionCap): S {
+  if (!Object.hasOwn(ANIMALS, kind) || !COLLECTION_CAPS.includes(cap)) throw new SaveRuleError('bad-job', 'Choose a product grade cap.')
+  const collectionCaps = { ...save.farm.collectionCaps }
+  if (cap === 0) delete collectionCaps[kind]
+  else collectionCaps[kind] = cap
+  return { ...save, farm: { ...save.farm, collectionCaps } }
+}
+
+export function ranchProduct(save: Pick<FarmSave, 'farm'>, animal: Animal, careLevel = 0): string {
+  const hearts = heartsOf(animal.fondness)
+  const eligible = hearts >= 9 || (hearts >= 7 && careLevel >= 6) ? 2 : hearts >= 3 ? 1 : 0
+  return gradeStepId(ANIMAL_PRODUCTS[animal.kind], Math.min(save.farm.collectionCaps?.[animal.kind] ?? 0, eligible))
+}
 
 /** Fodder at the rancher's: 10g a feed. */
 export const FODDER_PRICE = 10
@@ -175,22 +191,22 @@ export function collect<S extends FarmSave>(save: S, home: RanchHome): { save: S
 }
 /** A collection itself, spending nothing: each waiting good at its animal's hearts' quality and `extra` (a farmhand's
  * aptitude), its stars `draw(uid, day, 'ranch:<kind>', n)`, n the farm's count of the ranch's goods. */
-export function collectAt<S extends FarmSave>(save: S, home: RanchHome, extra: number): { save: S; collected: Collected } {
-  let items = save.items
+export function collectAt<S extends FarmSave>(save: S, home: RanchHome, extra: number, careLevel = 0): { save: S; collected: Collected } {
+  let next = save
   let n = save.farm.counts[RANCH_GOODS] ?? 0
   const got: string[] = []
   const animals = save.ranch.animals.map((a) => {
     if (!a.ready || ANIMAL_HOME[a.kind] !== home) return a
-    const good = ANIMALS[a.kind].good
+    const good = ranchProduct(save, a, careLevel)
     const q = quality({ care: heartsQuality(heartsOf(a.fondness)) }) + extra
     const stars = drawStars(q, draw(save.account.uid, save.calendar.day, `ranch:${a.kind}`, n))
     n++
-    items = addGoods(items, good, stars, 1)
+    next = discoverOutput({ ...next, items: addGoods(next.items, good, stars, 1) }, good)
     got.push(stockKey(good, stars))
     return { ...a, ready: false }
   })
   return {
-    save: { ...save, items, ranch: { ...save.ranch, animals }, farm: { ...save.farm, counts: bump(save.farm.counts, RANCH_GOODS, got.length) } },
+    save: { ...next, ranch: { ...save.ranch, animals }, farm: { ...next.farm, counts: bump(save.farm.counts, RANCH_GOODS, got.length) } },
     collected: { home, items: got },
   }
 }

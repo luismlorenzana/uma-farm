@@ -884,13 +884,13 @@ Prices and refined forms in the table are for base-grade produce.
 <!-- live:crops -->
 | Crop | Id | Kind | Seasons | Grades | Shop | Seed | Watered nights | Yield | Regrows | Price ★1 | Refined at |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Carrot | `carrot` | Annual | Spring | G1–G2–G3 | Farm Rank 1 | 20g | 4 | 1 | — | 60g | — |
+| Carrot | `carrot` | Annual | Spring | G1–G2–G3 | Farm Rank 1 | 20g | 4 | 1 | — | 60g | Carrot Pickles (Sawmill) |
 | Potato | `potato` | Annual | Spring | G2–G3–G4 | Farm Rank 1 | 35g | 6 | 2 | — | 55g | — |
 | Mint | `mint` | Annual | Spring | G2–G3–G4 | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Mint (Sawmill) |
 | Onion | `onion` | Annual | Spring, Autumn | G4–G5–G6 | Farm Rank 2 | 30g | 5 | 1 | — | 100g | — |
 | Cabbage | `cabbage` | Annual | Spring, Winter | G3–G4–G5 | Farm Rank 2 | 90g | 8 | 1 | — | 260g | — |
 | Asparagus | `asparagus` | Annual | Spring | G8–G9–G10 | Farm Rank 4 | 150g | 10 | 1 | — | 480g | — |
-| Tomato | `tomato` | Annual | Summer | G5–G6–G7 | Farm Rank 1 | 50g | 7 | 1 | every 3 | 70g | — |
+| Tomato | `tomato` | Annual | Summer | G5–G6–G7 | Farm Rank 1 | 50g | 7 | 1 | every 3 | 70g | Tomato Sauce (Sawmill) |
 | Basil | `basil` | Annual | Summer | G1–G2–G3 | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Basil (Sawmill) |
 | Bell Pepper | `bell-pepper` | Annual | Summer | G6–G7–G8 | Farm Rank 1 | 60g | 6 | 1 | every 3 | 60g | — |
 | Eggplant | `eggplant` | Annual | Summer | G7–G8–G9 | Farm Rank 2 | 70g | 6 | 1 | every 4 | 95g | — |
@@ -914,14 +914,14 @@ Prices and refined forms in the table are for base-grade produce.
 | Radish | `radish` | Annual | Spring | G1–G2–G3 | Farm Rank 1 | 20g | 3 | 1 | — | 55g | — |
 | Lettuce | `lettuce` | Annual | Spring | G2–G3–G4 | Farm Rank 1 | 30g | 5 | 1 | — | 85g | — |
 | Green Peas | `green-peas` | Annual | Spring | G3–G4–G5 | Farm Rank 2 | 50g | 5 | 2 | every 3 | 65g | — |
-| Strawberry | `strawberry` | Annual | Spring | G2–G3–G4 | Farm Rank 2 | 65g | 5 | 2 | every 3 | 45g | — |
-| Raspberry | `raspberry` | Shrub | Spring | G3–G4–G5 | Farm Rank 3 | 130g | 6 | 3 | each bearing season | 55g | — |
+| Strawberry | `strawberry` | Annual | Spring | G2–G3–G4 | Farm Rank 2 | 65g | 5 | 2 | every 3 | 45g | Strawberry Jam (Mill) |
+| Raspberry | `raspberry` | Shrub | Spring | G3–G4–G5 | Farm Rank 3 | 130g | 6 | 3 | each bearing season | 55g | Raspberry Jam (Mill) |
 | Plum | `plum` | Tree | Spring | G4–G5–G6 | Farm Rank 4 | 220g | 8 | 3 | each bearing season | 70g | Plum Preserve (Mill) |
 | Cucumber | `cucumber` | Annual | Summer | G2–G3–G4 | Farm Rank 1 | 40g | 5 | 1 | every 3 | 85g | — |
 | Okra | `okra` | Annual | Summer | G4–G5–G6 | Farm Rank 2 | 55g | 5 | 1 | every 3 | 95g | — |
 | Zucchini | `zucchini` | Annual | Summer | G3–G4–G5 | Farm Rank 2 | 50g | 6 | 2 | — | 80g | — |
 | Peach | `peach` | Tree | Summer | G3–G4–G5 | Farm Rank 3 | 180g | 7 | 3 | each bearing season | 55g | Peach Preserve (Mill) |
-| Blueberry | `blueberry` | Shrub | Summer | G4–G5–G6 | Farm Rank 3 | 150g | 6 | 3 | each bearing season | 70g | — |
+| Blueberry | `blueberry` | Shrub | Summer | G4–G5–G6 | Farm Rank 3 | 150g | 6 | 3 | each bearing season | 70g | Blueberry Jam (Mill) |
 | Mango | `mango` | Tree | Summer | G7–G8–G9 | Farm Rank 6 | 360g | 8 | 3 | each bearing season | 155g | Mango Pulp (Mill) |
 | Turnip | `turnip` | Annual | Autumn | G1–G2–G3 | Farm Rank 1 | 25g | 4 | 1 | — | 65g | — |
 | Sweet Potato | `sweet-potato` | Annual | Autumn | G3–G4–G5 | Farm Rank 2 | 50g | 5 | 2 | — | 80g | — |
@@ -933,7 +933,7 @@ Prices and refined forms in the table are for base-grade produce.
 | Cauliflower | `cauliflower` | Annual | Winter | G5–G6–G7 | Farm Rank 2 | 65g | 6 | 2 | — | 115g | — |
 | Red Beet | `red-beet` | Annual | Winter | G3–G4–G5 | Farm Rank 2 | 45g | 5 | 2 | — | 85g | — |
 | Orange | `orange` | Tree | Winter | G5–G6–G7 | Farm Rank 4 | 220g | 7 | 3 | each bearing season | 95g | Orange Marmalade (Mill) |
-| Persimmon | `persimmon` | Tree | Winter | G6–G7–G8 | Farm Rank 4 | 245g | 7 | 3 | each bearing season | 120g | — |
+| Persimmon | `persimmon` | Tree | Winter | G6–G7–G8 | Farm Rank 4 | 245g | 7 | 3 | each bearing season | 120g | Persimmon Preserve (Mill) |
 | Pomegranate | `pomegranate` | Tree | Winter | G8–G9–G10 | Farm Rank 6 | 375g | 8 | 3 | each bearing season | 200g | Pomegranate Molasses (Mill) |
 <!-- /live -->
 
@@ -1291,6 +1291,22 @@ the farmhands. One reaches the Warehouse every night:
   deepest open spot, at a day's haul's stars, straight into the Warehouse (1 chore from Friendship 6, 2 from Romance 7, 3
   from Spouse 4). The morning's Hearts section says "Night chores · 3 items". The perks are the romance's.
 
+#### Catch grades
+
+Choose a catch mode at a spot. A Fish assignment can follow that setting or specify its own.
+
+| Mode | Qualification by hand | Uma qualification | Promotion |
+|---|---|---|---|
+| Standard | Any | Any | Base grade |
+| Improved catch | 12 landed manual catches | Fishing 4 | Every third eligible catch of the same species gets one grade higher |
+| Select catch | 40 landed manual catches | Fishing 7 | Every fifth eligible catch of the same species gets two grades higher |
+
+Progress is shared across workers and spots for the same species and mode. The game still draws the actual species
+and its stars and length as before. A miss, an unqualified cast or a passive night chore adds no promotion progress.
+Silverfin can reach G10 with Improved catch. Rainbow Koi is already G10. The Diary keeps the length record by species,
+and a record from an older save proves that species' base grade. The Smokehouse makes a fillet at the exact input
+grade and stars.
+
 ### The ranch
 
 The Coop and the Barn hold the farm's animals. Each day an animal wants feeding and care, an action each, and gives its
@@ -1319,13 +1335,19 @@ Seven animals, at the rancher's from their Farm Rank once their home stands. Eve
 fed; the wool and the two fleeces are uma-art's fibers, and the Mill weaves them into cloth. The eggs and milk are the
 farm's own goods, on uma-art's items atlas from 2.30.0.
 
+**Collection grade caps** are shared by product. Standard collects the base grade. The first upgrade needs three
+hearts. The second needs nine hearts, or seven if the collector has Animal care 6. The cap chooses the highest grade
+the animal and collector qualify for. The panel shows the grade waiting for manual collection. Stars still use
+fondness and worker quality. A **Feed only** assignment covers feed and grass for the silo and leaves collection
+and care for another worker.
+
 <!-- live:animals -->
 | Animal | Lives in | At the rancher’s | Opens at | Gives, each night it’s fed | ★1 | ★5 (10 hearts) | At the Mill |
 |---|---|---|---|---|---|---|---|
-| Chicken | The Coop | 500g | Farm Rank 2 | Egg (`egg`) | 60g | 120g | — |
-| Duck | The Coop | 1,200g | Farm Rank 3 | Duck Egg (`duck-egg`) | 100g | 200g | — |
-| Cow | The Barn | 1,500g | Farm Rank 3 | Milk (`milk`) | 80g | 160g | — |
-| Goat | The Barn | 2,500g | Farm Rank 4 | Goat Milk (`goat-milk`) | 130g | 260g | — |
+| Chicken | The Coop | 500g | Farm Rank 2 | Egg (`egg`) | 60g | 120g | Preserved Egg, 90g |
+| Duck | The Coop | 1,200g | Farm Rank 3 | Duck Egg (`duck-egg`) | 100g | 200g | Preserved Duck Egg, 150g |
+| Cow | The Barn | 1,500g | Farm Rank 3 | Milk (`milk`) | 80g | 160g | Cultured Yogurt, 120g |
+| Goat | The Barn | 2,500g | Farm Rank 4 | Goat Milk (`goat-milk`) | 130g | 260g | Goat Cheese, 325g |
 | Sheep | The Barn | 2,000g | Farm Rank 3 | Wool (`wool`) | 100g | 200g | Wool Cloth, 150g |
 | Alpaca | The Barn | 3,500g | Farm Rank 5 | Alpaca Fleece (`alpaca-fleece`) | 130g | 260g | Alpaca Cloth, 195g |
 | Cashmere Goat | The Barn | 5,000g | Farm Rank 6 | Cashmere Fleece (`cashmere-fleece`) | 170g | 340g | Cashmere Cloth, 255g |
@@ -1439,16 +1461,27 @@ night chores bring one find each from the deepest floor reached, at a face's sta
 
 ### The stations
 
-A station turns one raw good into its refined form, one for one, keeping its stars; the refined good sells for ×1.5.
+A station turns one exact raw grade into its matching refined grade at the same stars. One-input recipes are
+priced at ×1.5 the input. Two-input recipes use whole batches and are priced at ×1.25 their full raw cost.
 Five stations work, on the farm map's stations column and beside the digs: the Mill, the Sawmill and the Smokehouse,
 the Mine's Smelter and the Quarry's Cutter.
 
 ```
  a built station ──Load · 1──► up to 8 of one good at one star leave the Warehouse
-                               ──the night──► the same count of its refined form, at those stars, into the Warehouse
+                               ──the night──► completed batches, at that grade and stars, into the Warehouse
  a load a day a level (level 1, one; level 5, five); it's free again in the morning
  its next level: at its panel, gold only, from its Farm Rank ──the night──► one more load a day
 ```
+
+The Mill makes yogurt, butter, cheese and fruit preserves. The Sawmill makes carrot pickles, preserved eggs and
+tomato sauce. Each recipe names its station level and exact input below. Traditional one-input loads retain their
+farmhand yield bonus. The new food conversions use their stated ratios.
+
+**Roster load targets** let you order up to six exact outputs per station. Each target checks Warehouse stock
+and today's committed loads together. Umas use unreserved input, take the first target they can fill, and share the
+station's slots. With no targets the most-held eligible input takes priority. Inputs leave stock at load start.
+The Warehouse receives output and records its discovery when the load finishes. Manual loading can deliberately
+use protected stock from its labelled action.
 
 #### Building a station
 
@@ -1461,8 +1494,8 @@ Each station, what builds it, what opens it, its jobs and a load:
 <!-- live:stations -->
 | Station | Builds for | Opens | Jobs | A load |
 |---|---|---|---|---|
-| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits · Cloth: fibers | 1 to 8, ready the next morning; a load a day a level |
-| Sawmill | 1,500g · 40 logs | Farm Rank 3 | Planks: woods · Drying: mushrooms, herbs and spices | 1 to 8, ready the next morning; a load a day a level |
+| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits · Cloth: fibers · Dairy: eggs and milk | 1 to 8, ready the next morning; a load a day a level |
+| Sawmill | 1,500g · 40 logs | Farm Rank 3 | Planks: woods · Drying: mushrooms, herbs and spices · Pickles, eggs and sauce: vegetables, eggs and milk | 1 to 8, ready the next morning; a load a day a level |
 | Smokehouse | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking: fish | 1 to 8, ready the next morning; a load a day a level |
 | Smelter | 8,000g · 40 planks · 40 logs | Farm Rank 4 | Ingots: ores | 1 to 8, ready the next morning; a load a day a level |
 | Cutter | 10,000g · 40 planks · 40 logs | Farm Rank 5 | Cut gems: crystals · Stone blocks: stones | 1 to 8, ready the next morning; a load a day a level |
@@ -1526,173 +1559,195 @@ their ★1 prices in and out:
 <!-- live:station-recipes -->
 ##### Flour (Mill)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Wheat | 40g | Wheat Flour | 60g |
-| G2 | Oats | 40g | Rolled Oats | 60g |
-| G3 | Barley | 45g | Pearl Barley | 70g |
-| G4 | Rice | 50g | Polished Rice | 75g |
-| G5 | Corn | 140g | Cornmeal | 210g |
-| G6 | Rye | 60g | Rye Flour | 90g |
-| G7 | Buckwheat | 75g | Buckwheat Flour | 115g |
-| G8 | Wild Rice | 160g | Hulled Wild Rice | 240g |
-| G9 | Moonrice | 240g | Moonrice Flour | 360g |
-| G10 | Sunwheat | 260g | Sunwheat Flour | 390g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Wheat | 40g | Wheat Flour | 60g | 1 |
+| G2 | 1 × Oats | 40g | Rolled Oats | 60g | 1 |
+| G3 | 1 × Barley | 45g | Pearl Barley | 70g | 1 |
+| G4 | 1 × Rice | 50g | Polished Rice | 75g | 1 |
+| G5 | 1 × Corn | 140g | Cornmeal | 210g | 1 |
+| G6 | 1 × Rye | 60g | Rye Flour | 90g | 1 |
+| G7 | 1 × Buckwheat | 75g | Buckwheat Flour | 115g | 1 |
+| G8 | 1 × Wild Rice | 160g | Hulled Wild Rice | 240g | 1 |
+| G9 | 1 × Moonrice | 240g | Moonrice Flour | 360g | 1 |
+| G10 | 1 × Sunwheat | 260g | Sunwheat Flour | 390g | 1 |
 
 ##### Sugars and oils (Mill)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Peanut | 35g | Peanut Butter | 55g |
-| G2 | Sunflower Seed | 75g | Sunflower Oil | 115g |
-| G3 | Sesame | 50g | Sesame Paste | 75g |
-| G4 | Walnut | 65g | Walnut Paste | 100g |
-| G5 | Chestnut | 85g | Chestnut Paste | 130g |
-| G6 | Almond | 110g | Almond Paste | 165g |
-| G7 | Pistachio | 140g | Pistachio Paste | 210g |
-| G8 | Macadamia | 180g | Macadamia Butter | 270g |
-| G9 | Thundernut | 230g | Thundernut Oil | 345g |
-| G10 | Worldseed | 300g | Worldseed Oil | 450g |
-| G1 | Honeycomb | 35g | Honey | 55g |
-| G2 | Sugarcane | 45g | Cane Sugar | 70g |
-| G3 | Sugar Beet | 120g | Beet Sugar | 180g |
-| G4 | Maple Sap | 70g | Maple Syrup | 105g |
-| G5 | Cacao Pod | 95g | Chocolate | 145g |
-| G6 | Vanilla Pod | 120g | Vanilla Extract | 180g |
-| G7 | Agave Heart | 155g | Agave Syrup | 235g |
-| G8 | Palm Sap | 200g | Palm Sugar | 300g |
-| G9 | Fairy Honeycomb | 255g | Fairy Honey | 385g |
-| G10 | Ambrosia Blossom | 330g | Ambrosia | 495g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Peanut | 35g | Peanut Butter | 55g | 1 |
+| G2 | 1 × Sunflower Seed | 75g | Sunflower Oil | 115g | 1 |
+| G3 | 1 × Sesame | 50g | Sesame Paste | 75g | 1 |
+| G4 | 1 × Walnut | 65g | Walnut Paste | 100g | 1 |
+| G5 | 1 × Chestnut | 85g | Chestnut Paste | 130g | 1 |
+| G6 | 1 × Almond | 110g | Almond Paste | 165g | 1 |
+| G7 | 1 × Pistachio | 140g | Pistachio Paste | 210g | 1 |
+| G8 | 1 × Macadamia | 180g | Macadamia Butter | 270g | 1 |
+| G9 | 1 × Thundernut | 230g | Thundernut Oil | 345g | 1 |
+| G10 | 1 × Worldseed | 300g | Worldseed Oil | 450g | 1 |
+| G1 | 1 × Honeycomb | 35g | Honey | 55g | 1 |
+| G2 | 1 × Sugarcane | 45g | Cane Sugar | 70g | 1 |
+| G3 | 1 × Sugar Beet | 120g | Beet Sugar | 180g | 1 |
+| G4 | 1 × Maple Sap | 70g | Maple Syrup | 105g | 1 |
+| G5 | 1 × Cacao Pod | 95g | Chocolate | 145g | 1 |
+| G6 | 1 × Vanilla Pod | 120g | Vanilla Extract | 180g | 1 |
+| G7 | 1 × Agave Heart | 155g | Agave Syrup | 235g | 1 |
+| G8 | 1 × Palm Sap | 200g | Palm Sugar | 300g | 1 |
+| G9 | 1 × Fairy Honeycomb | 255g | Fairy Honey | 385g | 1 |
+| G10 | 1 × Ambrosia Blossom | 330g | Ambrosia | 495g | 1 |
 
 ##### Preserves (Mill)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Apple | 35g | Apple Preserve | 55g |
-| G2 | Pear | 45g | Pear Preserve | 70g |
-| G3 | Peach | 55g | Peach Preserve | 85g |
-| G4 | Plum | 70g | Plum Preserve | 105g |
-| G5 | Orange | 95g | Orange Marmalade | 145g |
-| G6 | Grape | 120g | Grape Jelly | 180g |
-| G7 | Mango | 155g | Mango Pulp | 235g |
-| G8 | Pomegranate | 200g | Pomegranate Molasses | 300g |
-| G9 | Starpeach | 255g | Starpeach Nectar | 385g |
-| G10 | Golden Apple | 330g | Golden Apple Preserve | 495g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Apple | 35g | Apple Preserve | 55g | 1 |
+| G2 | 1 × Pear | 45g | Pear Preserve | 70g | 1 |
+| G3 | 1 × Peach | 55g | Peach Preserve | 85g | 1 |
+| G4 | 1 × Plum | 70g | Plum Preserve | 105g | 1 |
+| G5 | 1 × Orange | 95g | Orange Marmalade | 145g | 1 |
+| G6 | 1 × Grape | 120g | Grape Jelly | 180g | 1 |
+| G7 | 1 × Mango | 155g | Mango Pulp | 235g | 1 |
+| G8 | 1 × Pomegranate | 200g | Pomegranate Molasses | 300g | 1 |
+| G9 | 1 × Starpeach | 255g | Starpeach Nectar | 385g | 1 |
+| G10 | 1 × Golden Apple | 330g | Golden Apple Preserve | 495g | 1 |
+| G2 | 1 × Strawberry | 45g | Strawberry Jam | 70g | 1 |
+| G3 | 1 × Raspberry | 55g | Raspberry Jam | 85g | 1 |
+| G4 | 1 × Blueberry | 70g | Blueberry Jam | 105g | 1 |
+| G6 | 1 × Persimmon | 120g | Persimmon Preserve | 180g | 1 |
 
 ##### Cloth (Mill)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Flax | 35g | Linen | 55g |
-| G2 | Jute | 50g | Burlap | 75g |
-| G3 | Hemp | 60g | Hemp Cloth | 90g |
-| G4 | Cotton | 80g | Cotton Cloth | 120g |
-| G5 | Wool | 100g | Wool Cloth | 150g |
-| G6 | Alpaca Fleece | 130g | Alpaca Cloth | 195g |
-| G7 | Cashmere Fleece | 170g | Cashmere Cloth | 255g |
-| G8 | Silk Cocoon | 215g | Silk | 325g |
-| G9 | Moonsilk Cocoon | 275g | Moonsilk | 415g |
-| G10 | Cloudfleece | 360g | Cloudweave | 540g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Flax | 35g | Linen | 55g | 1 |
+| G2 | 1 × Jute | 50g | Burlap | 75g | 1 |
+| G3 | 1 × Hemp | 60g | Hemp Cloth | 90g | 1 |
+| G4 | 1 × Cotton | 80g | Cotton Cloth | 120g | 1 |
+| G5 | 1 × Wool | 100g | Wool Cloth | 150g | 1 |
+| G6 | 1 × Alpaca Fleece | 130g | Alpaca Cloth | 195g | 1 |
+| G7 | 1 × Cashmere Fleece | 170g | Cashmere Cloth | 255g | 1 |
+| G8 | 1 × Silk Cocoon | 215g | Silk | 325g | 1 |
+| G9 | 1 × Moonsilk Cocoon | 275g | Moonsilk | 415g | 1 |
+| G10 | 1 × Cloudfleece | 360g | Cloudweave | 540g | 1 |
+
+##### Dairy (Mill)
+
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G2 | 1 × Milk | 80g | Cultured Yogurt | 120g | 1 |
+| G2 | 2 × Milk | 80g | Butter | 200g | 2 |
+| G2 | 2 × Milk | 80g | Farm Cheese | 200g | 3 |
+| G4 | 2 × Goat Milk | 130g | Goat Cheese | 325g | 3 |
 
 ##### Planks (Sawmill)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Pine Log | 25g | Pine Plank | 40g |
-| G2 | Birch Log | 30g | Birch Plank | 45g |
-| G3 | Cedar Log | 40g | Cedar Plank | 60g |
-| G4 | Maple Log | 50g | Maple Plank | 75g |
-| G5 | Oak Log | 70g | Oak Plank | 105g |
-| G6 | Cherry Log | 90g | Cherry Plank | 135g |
-| G7 | Mahogany Log | 110g | Mahogany Plank | 165g |
-| G8 | Ebony Log | 145g | Ebony Plank | 220g |
-| G9 | Elderwood Log | 185g | Elderwood Plank | 280g |
-| G10 | Yggdrasil Branch | 240g | Yggdrasil Plank | 360g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Pine Log | 25g | Pine Plank | 40g | 1 |
+| G2 | 1 × Birch Log | 30g | Birch Plank | 45g | 1 |
+| G3 | 1 × Cedar Log | 40g | Cedar Plank | 60g | 1 |
+| G4 | 1 × Maple Log | 50g | Maple Plank | 75g | 1 |
+| G5 | 1 × Oak Log | 70g | Oak Plank | 105g | 1 |
+| G6 | 1 × Cherry Log | 90g | Cherry Plank | 135g | 1 |
+| G7 | 1 × Mahogany Log | 110g | Mahogany Plank | 165g | 1 |
+| G8 | 1 × Ebony Log | 145g | Ebony Plank | 220g | 1 |
+| G9 | 1 × Elderwood Log | 185g | Elderwood Plank | 280g | 1 |
+| G10 | 1 × Yggdrasil Branch | 240g | Yggdrasil Plank | 360g | 1 |
 
 ##### Drying (Sawmill)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Basil | 45g | Dried Basil | 70g |
-| G2 | Mint | 45g | Dried Mint | 70g |
-| G3 | Rosemary | 45g | Dried Rosemary | 70g |
-| G4 | Thyme | 60g | Dried Thyme | 90g |
-| G5 | Ginger | 200g | Ground Ginger | 300g |
-| G6 | Peppercorn | 100g | Ground Pepper | 150g |
-| G7 | Cinnamon | 125g | Ground Cinnamon | 190g |
-| G8 | Saffron | 160g | Saffron Threads | 240g |
-| G9 | Mandrake | 520g | Mandrake Powder | 780g |
-| G10 | Phoenix Pepper | 270g | Phoenix Spice | 405g |
-| G1 | Button Mushroom | 30g | Dried Button Mushroom | 45g |
-| G2 | Shiitake | 40g | Dried Shiitake | 60g |
-| G3 | Oyster Mushroom | 50g | Dried Oyster Mushroom | 75g |
-| G4 | Enoki | 65g | Dried Enoki | 100g |
-| G5 | Chanterelle | 85g | Dried Chanterelle | 130g |
-| G6 | Porcini | 110g | Dried Porcini | 165g |
-| G7 | Morel | 140g | Dried Morel | 210g |
-| G8 | Truffle | 180g | Shaved Truffle | 270g |
-| G9 | Glowcap | 230g | Glowcap Powder | 345g |
-| G10 | King Reishi | 300g | Reishi Powder | 450g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Basil | 45g | Dried Basil | 70g | 1 |
+| G2 | 1 × Mint | 45g | Dried Mint | 70g | 1 |
+| G3 | 1 × Rosemary | 45g | Dried Rosemary | 70g | 1 |
+| G4 | 1 × Thyme | 60g | Dried Thyme | 90g | 1 |
+| G5 | 1 × Ginger | 200g | Ground Ginger | 300g | 1 |
+| G6 | 1 × Peppercorn | 100g | Ground Pepper | 150g | 1 |
+| G7 | 1 × Cinnamon | 125g | Ground Cinnamon | 190g | 1 |
+| G8 | 1 × Saffron | 160g | Saffron Threads | 240g | 1 |
+| G9 | 1 × Mandrake | 520g | Mandrake Powder | 780g | 1 |
+| G10 | 1 × Phoenix Pepper | 270g | Phoenix Spice | 405g | 1 |
+| G1 | 1 × Button Mushroom | 30g | Dried Button Mushroom | 45g | 1 |
+| G2 | 1 × Shiitake | 40g | Dried Shiitake | 60g | 1 |
+| G3 | 1 × Oyster Mushroom | 50g | Dried Oyster Mushroom | 75g | 1 |
+| G4 | 1 × Enoki | 65g | Dried Enoki | 100g | 1 |
+| G5 | 1 × Chanterelle | 85g | Dried Chanterelle | 130g | 1 |
+| G6 | 1 × Porcini | 110g | Dried Porcini | 165g | 1 |
+| G7 | 1 × Morel | 140g | Dried Morel | 210g | 1 |
+| G8 | 1 × Truffle | 180g | Shaved Truffle | 270g | 1 |
+| G9 | 1 × Glowcap | 230g | Glowcap Powder | 345g | 1 |
+| G10 | 1 × King Reishi | 300g | Reishi Powder | 450g | 1 |
+
+##### Pickles, eggs and sauce (Sawmill)
+
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 2 × Carrot | 60g | Carrot Pickles | 150g | 2 |
+| G1 | 1 × Egg | 60g | Preserved Egg | 90g | 2 |
+| G3 | 1 × Duck Egg | 100g | Preserved Duck Egg | 150g | 2 |
+| G5 | 2 × Tomato | 70g | Tomato Sauce | 175g | 2 |
 
 ##### Smoking (Smokehouse)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Carp | 40g | Carp Fillet | 60g |
-| G2 | Trout | 50g | Trout Fillet | 75g |
-| G3 | Sardine | 65g | Sardine Fillet | 100g |
-| G4 | Mackerel | 85g | Mackerel Fillet | 130g |
-| G5 | Salmon | 110g | Salmon Fillet | 165g |
-| G6 | Sea Bream | 145g | Sea Bream Fillet | 220g |
-| G7 | Eel | 180g | Eel Fillet | 270g |
-| G8 | Tuna | 235g | Tuna Fillet | 355g |
-| G9 | Silverfin | 300g | Silverfin Fillet | 450g |
-| G10 | Rainbow Koi | 390g | Rainbow Koi Fillet | 585g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Carp | 40g | Carp Fillet | 60g | 1 |
+| G2 | 1 × Trout | 50g | Trout Fillet | 75g | 1 |
+| G3 | 1 × Sardine | 65g | Sardine Fillet | 100g | 1 |
+| G4 | 1 × Mackerel | 85g | Mackerel Fillet | 130g | 1 |
+| G5 | 1 × Salmon | 110g | Salmon Fillet | 165g | 1 |
+| G6 | 1 × Sea Bream | 145g | Sea Bream Fillet | 220g | 1 |
+| G7 | 1 × Eel | 180g | Eel Fillet | 270g | 1 |
+| G8 | 1 × Tuna | 235g | Tuna Fillet | 355g | 1 |
+| G9 | 1 × Silverfin | 300g | Silverfin Fillet | 450g | 1 |
+| G10 | 1 × Rainbow Koi | 390g | Rainbow Koi Fillet | 585g | 1 |
 
 ##### Ingots (Smelter)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Copper Ore | 30g | Copper Ingot | 45g |
-| G2 | Tin Ore | 40g | Tin Ingot | 60g |
-| G3 | Iron Ore | 50g | Iron Ingot | 75g |
-| G4 | Silver Ore | 65g | Silver Ingot | 100g |
-| G5 | Cobalt Ore | 85g | Cobalt Ingot | 130g |
-| G6 | Gold Ore | 110g | Gold Ingot | 165g |
-| G7 | Platinum Ore | 140g | Platinum Ingot | 210g |
-| G8 | Titanium Ore | 180g | Titanium Ingot | 270g |
-| G9 | Mythril Ore | 230g | Mythril Ingot | 345g |
-| G10 | Orichalcum Ore | 300g | Orichalcum Ingot | 450g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Copper Ore | 30g | Copper Ingot | 45g | 1 |
+| G2 | 1 × Tin Ore | 40g | Tin Ingot | 60g | 1 |
+| G3 | 1 × Iron Ore | 50g | Iron Ingot | 75g | 1 |
+| G4 | 1 × Silver Ore | 65g | Silver Ingot | 100g | 1 |
+| G5 | 1 × Cobalt Ore | 85g | Cobalt Ingot | 130g | 1 |
+| G6 | 1 × Gold Ore | 110g | Gold Ingot | 165g | 1 |
+| G7 | 1 × Platinum Ore | 140g | Platinum Ingot | 210g | 1 |
+| G8 | 1 × Titanium Ore | 180g | Titanium Ingot | 270g | 1 |
+| G9 | 1 × Mythril Ore | 230g | Mythril Ingot | 345g | 1 |
+| G10 | 1 × Orichalcum Ore | 300g | Orichalcum Ingot | 450g | 1 |
 
 ##### Cut gems (Cutter)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Quartz | 50g | Cut Quartz | 75g |
-| G2 | Amethyst | 65g | Cut Amethyst | 100g |
-| G3 | Citrine | 80g | Cut Citrine | 120g |
-| G4 | Garnet | 105g | Cut Garnet | 160g |
-| G5 | Emerald | 135g | Cut Emerald | 205g |
-| G6 | Sapphire | 175g | Cut Sapphire | 265g |
-| G7 | Ruby | 225g | Cut Ruby | 340g |
-| G8 | Diamond | 290g | Cut Diamond | 435g |
-| G9 | Starstone | 370g | Cut Starstone | 555g |
-| G10 | Philosopher's Stone | 480g | Cut Philosopher's Stone | 720g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Quartz | 50g | Cut Quartz | 75g | 1 |
+| G2 | 1 × Amethyst | 65g | Cut Amethyst | 100g | 1 |
+| G3 | 1 × Citrine | 80g | Cut Citrine | 120g | 1 |
+| G4 | 1 × Garnet | 105g | Cut Garnet | 160g | 1 |
+| G5 | 1 × Emerald | 135g | Cut Emerald | 205g | 1 |
+| G6 | 1 × Sapphire | 175g | Cut Sapphire | 265g | 1 |
+| G7 | 1 × Ruby | 225g | Cut Ruby | 340g | 1 |
+| G8 | 1 × Diamond | 290g | Cut Diamond | 435g | 1 |
+| G9 | 1 × Starstone | 370g | Cut Starstone | 555g | 1 |
+| G10 | 1 × Philosopher's Stone | 480g | Cut Philosopher's Stone | 720g | 1 |
 
 ##### Stone blocks (Cutter)
 
-| Grade | In | ★1 | Out | ★1 |
-|---|---|---|---|---|
-| G1 | Limestone | 25g | Limestone Block | 40g |
-| G2 | Sandstone | 30g | Sandstone Block | 45g |
-| G3 | Slate | 40g | Slate Block | 60g |
-| G4 | Granite | 50g | Granite Block | 75g |
-| G5 | Basalt | 70g | Basalt Block | 105g |
-| G6 | Marble | 90g | Marble Block | 135g |
-| G7 | Obsidian | 110g | Obsidian Block | 165g |
-| G8 | Jade | 145g | Jade Block | 220g |
-| G9 | Runestone | 185g | Runestone Block | 280g |
-| G10 | Meteorite | 240g | Meteorite Block | 360g |
+| Base grade | In | ★1 each | Out | ★1 each | Level |
+|---|---|---|---|---|---|
+| G1 | 1 × Limestone | 25g | Limestone Block | 40g | 1 |
+| G2 | 1 × Sandstone | 30g | Sandstone Block | 45g | 1 |
+| G3 | 1 × Slate | 40g | Slate Block | 60g | 1 |
+| G4 | 1 × Granite | 50g | Granite Block | 75g | 1 |
+| G5 | 1 × Basalt | 70g | Basalt Block | 105g | 1 |
+| G6 | 1 × Marble | 90g | Marble Block | 135g | 1 |
+| G7 | 1 × Obsidian | 110g | Obsidian Block | 165g | 1 |
+| G8 | 1 × Jade | 145g | Jade Block | 220g | 1 |
+| G9 | 1 × Runestone | 185g | Runestone Block | 280g | 1 |
+| G10 | 1 × Meteorite | 240g | Meteorite Block | 360g | 1 |
 <!-- /live -->
 
 ### Goods and gold
@@ -1810,31 +1865,35 @@ Each season's families, and how many goods they lift:
 <!-- live:demand -->
 | Season | In demand (+20%) | Goods lifted |
 |---|---|---|
-| Spring | Vegetables, Sweets | 84 of 390 |
-| Summer | Fruits, Fish | 68 of 390 |
-| Autumn | Grains, Mushrooms, Nuts and seeds | 78 of 390 |
-| Winter | Dishes, Cloth (the refined row), Preserves (the refined row) | 20 of 390 |
+| Spring | Vegetables, Sweets | 92 of 522 |
+| Summer | Fruits, Fish | 130 of 522 |
+| Autumn | Grains, Mushrooms, Nuts and seeds | 96 of 522 |
+| Winter | Dishes, Cloth (the refined row), Preserves (the refined row) | 54 of 522 |
 <!-- /live -->
 
 #### The catalogue
 
-The catalogue holds 390 goods in 17 families. The 284 original goods keep their IDs, with 16 new kinds of produce
-and 90 crop grade variants. Eight existing wild fruits are also plantable. Grade variants share their species'
-art. The original Uma Farm produce sheet supplies the new species' icons and the orchard silhouettes. The bin takes
-produce and other priced goods. Seed is kept separately.
+The catalogue holds 522 goods in 17 families. The 284 original goods keep their IDs. Grades share the ingredient's
+art, and the new food conversions use their input's icon. The farm's produce sheet supplies new crops and orchard
+silhouettes. The bin takes priced goods. Seeds are stored separately.
+
+The first harvest, collection, catch, forage or completed load or cooking play proves the exact output grade.
+The proof stays when the output is used or sold. Purchases, gifts and expedition loot fill stock. Affection
+bonuses that copy work still use the same output ID. Verified legacy crop mastery, species length records and
+cooking counts prove their historical output IDs. The original Kitchen's recipe lookups keep their existing inputs.
 
 The crops' own prices, their refined forms and their season of demand:
 
 <!-- live:crop-prices -->
 | Crop | Id | Family | Price ★1 | Refined | Its price ★1 | In demand |
 |---|---|---|---|---|---|---|
-| Carrot | `carrot` | Vegetables | 60g | — | — | Spring |
+| Carrot | `carrot` | Vegetables | 60g | Carrot Pickles | 150g | Spring |
 | Potato | `potato` | Vegetables | 55g | — | — | Spring |
 | Mint | `mint` | Herbs and spices | 45g | Dried Mint | 70g | — |
 | Onion | `onion` | Vegetables | 100g | — | — | Spring |
 | Cabbage | `cabbage` | Vegetables | 260g | — | — | Spring |
 | Asparagus | `asparagus` | Vegetables | 480g | — | — | Spring |
-| Tomato | `tomato` | Vegetables | 70g | — | — | Spring |
+| Tomato | `tomato` | Vegetables | 70g | Tomato Sauce | 175g | Spring |
 | Basil | `basil` | Herbs and spices | 45g | Dried Basil | 70g | — |
 | Bell Pepper | `bell-pepper` | Vegetables | 60g | — | — | Spring |
 | Eggplant | `eggplant` | Vegetables | 95g | — | — | Spring |
@@ -1858,14 +1917,14 @@ The crops' own prices, their refined forms and their season of demand:
 | Radish | `radish` | Vegetables | 55g | — | — | Spring |
 | Lettuce | `lettuce` | Vegetables | 85g | — | — | Spring |
 | Green Peas | `green-peas` | Vegetables | 65g | — | — | Spring |
-| Strawberry | `strawberry` | Fruits | 45g | — | — | Summer |
-| Raspberry | `raspberry` | Fruits | 55g | — | — | Summer |
+| Strawberry | `strawberry` | Fruits | 45g | Strawberry Jam | 70g | Summer |
+| Raspberry | `raspberry` | Fruits | 55g | Raspberry Jam | 85g | Summer |
 | Plum | `plum` | Fruits | 70g | Plum Preserve | 105g | Summer |
 | Cucumber | `cucumber` | Vegetables | 85g | — | — | Spring |
 | Okra | `okra` | Vegetables | 95g | — | — | Spring |
 | Zucchini | `zucchini` | Vegetables | 80g | — | — | Spring |
 | Peach | `peach` | Fruits | 55g | Peach Preserve | 85g | Summer |
-| Blueberry | `blueberry` | Fruits | 70g | — | — | Summer |
+| Blueberry | `blueberry` | Fruits | 70g | Blueberry Jam | 105g | Summer |
 | Mango | `mango` | Fruits | 155g | Mango Pulp | 235g | Summer |
 | Turnip | `turnip` | Vegetables | 65g | — | — | Spring |
 | Sweet Potato | `sweet-potato` | Vegetables | 80g | — | — | Spring |
@@ -1877,7 +1936,7 @@ The crops' own prices, their refined forms and their season of demand:
 | Cauliflower | `cauliflower` | Vegetables | 115g | — | — | Spring |
 | Red Beet | `red-beet` | Vegetables | 85g | — | — | Spring |
 | Orange | `orange` | Fruits | 95g | Orange Marmalade | 145g | Summer |
-| Persimmon | `persimmon` | Fruits | 120g | — | — | Summer |
+| Persimmon | `persimmon` | Fruits | 120g | Persimmon Preserve | 180g | Summer |
 | Pomegranate | `pomegranate` | Fruits | 200g | Pomegranate Molasses | 300g | Summer |
 <!-- /live -->
 
@@ -1973,10 +2032,10 @@ their own places.
 The Warehouse holds everything the farm owns, by stars: each good has five counts, ★1 to ★5. It has no limit.
 
 - **Tabs**, in a row that scrolls sideways, each with its count: **Crops** (field produce and the grains' refined forms),
-  **Woods**, **Mushrooms**, **Herbs and spices**, **Fruits**, **Nuts and seeds**, **Sweets**, **Fish**, **Mining**
+  **Woods**, **Mushrooms**, **Herbs and spices**, **Fruits**, **Nuts and seeds**, **Sweets**, **Ranch**, **Fish**, **Mining**
   (ores, stones and crystals) and **Seeds**; and **Loot** (the expeditions' goods), **Rings** and **Dishes** only while
   something is on them. Orchard and berry produce appears in **Fruits**. The **Grade** picker filters the current tab,
-  and **Crop discoveries** shows exact grades even when stock is empty. A crop's refined form sits on its family's tab (Dried Basil on Herbs and spices, Peanut Butter
+  and **Discoveries** shows exact grades and their sources even when stock is empty. A crop's refined form sits on its family's tab (Dried Basil on Herbs and spices, Peanut Butter
   on Nuts and seeds).
 - **Each good:** its icon, name, **In demand**, **Eased −20%** after a flood, its total, and its five stars, each with its
   count and today's price (eased, after a flood).
@@ -1990,6 +2049,38 @@ The Warehouse holds everything the farm owns, by stars: each good has five count
   **Clear** and **Ship · 1 action**, which ships the crate and goes back to the bin. With nothing picked it says "Tap a
   star to put one in the crate." (or what's in the bin tonight). It opens on the first tab holding something that
   sells.
+
+Each exact ingredient can keep a reserve of up to 99 units across its stars. Roster seed saving, station loads,
+plain cooking and surplus shipping use stock above that floor. A named manual action can use protected stock.
+Price easing groups all grades of an ingredient into the same crate and groups each refined form separately.
+
+**Ship surplus** is an optional Work board assignment. Configure the exact goods, in order, and a limit of up to
+50 units. One farmhand spends one action to move one shared crate into tomorrow's bin after tonight's settlement.
+You can take goods back before the following settlement or add a manual shipment alongside it.
+
+#### Roster production playthrough
+
+The field trials harvested all 51 crops in year one with both 10 and 15 Umas. The 15-Uma orchard bore again in
+year two. For the full farm trial, five separate farms ran for four years with fixed assignments. They start with
+20,000g, one to five prepared plots, three level-2 stations, a small herd, and practiced workers where assigned.
+The two small farms start at Rank 6 and the others at Rank 10. The player buys seed by season and covers uncovered
+water and feed when able. The larger rosters each sent the same three specialists away on two five-day expeditions
+in year three, for 24 worker-days away between departure and return.
+
+| Umas | Year 4 roster share | Player actions free on a typical day | Year 4 bin sales | Year 4 takeout | Loads used out of 288 | Raw stock at year end |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 0% | 0 | 6,210g | 0g | 2 | 95 |
+| 3 | 80.4% | 8 | 28,775g | 540g | 34 | 107 |
+| 10 | 96.6% | 10 | 183,640g | 0g | 113 | 661 |
+| 20 | 99.8% | 10 | 373,560g | 0g | 139 | 5,226 |
+| 50 | 99.9% | 10 | 222,945g | 0g | 96 | 26,869 |
+
+The 10-, 20- and 50-Uma farms met the 80% coverage and eight-free-actions targets in all four years. The first
+G3 Yogurt arrived on the morning after days 4, 3 and 2 respectively. All three rosters repeated their graded station
+outputs. Seasonal seed buys kept the rotation stocked. Irrigation still has occasional gaps after a large planting
+shift, and surplus shipping is capped at one crate per night. The 50-Uma farm outproduced that crate and built up
+raw stock in several grades, even with spare load slots. The deterministic report records per-season gold, water
+and feed gaps, pantry use, exact grade discovery days and end-of-year stock by form.
 
 #### Every family's prices
 
@@ -2013,18 +2104,18 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 
 ##### Vegetables
 
-| Grade | Raw | ★1 | ★5 |
-|---|---|---|---|
-| G1 | Carrot (crop) | 60g | 120g |
-| G2 | Potato (crop) | 55g | 110g |
-| G3 | Cabbage (crop) | 260g | 520g |
-| G4 | Onion (crop) | 100g | 200g |
-| G5 | Tomato (crop) | 70g | 140g |
-| G6 | Bell Pepper (crop) | 60g | 120g |
-| G7 | Eggplant (crop) | 95g | 190g |
-| G8 | Asparagus (crop) | 480g | 960g |
-| G9 | Golden Carrot (crop) | 600g | 1,200g |
-| G10 | Emperor Pumpkin (crop) | 600g | 1,200g |
+| Grade | Raw | ★1 | ★5 | Refined | ★1 | ★5 |
+|---|---|---|---|---|---|---|
+| G1 | Carrot (crop) | 60g | 120g | Carrot Pickles | 150g | 300g |
+| G2 | Potato (crop) | 55g | 110g | — | — | — |
+| G3 | Cabbage (crop) | 260g | 520g | — | — | — |
+| G4 | Onion (crop) | 100g | 200g | — | — | — |
+| G5 | Tomato (crop) | 70g | 140g | Tomato Sauce | 175g | 350g |
+| G6 | Bell Pepper (crop) | 60g | 120g | — | — | — |
+| G7 | Eggplant (crop) | 95g | 190g | — | — | — |
+| G8 | Asparagus (crop) | 480g | 960g | — | — | — |
+| G9 | Golden Carrot (crop) | 600g | 1,200g | — | — | — |
+| G10 | Emperor Pumpkin (crop) | 600g | 1,200g | — | — | — |
 
 ##### Herbs and spices
 
@@ -2238,12 +2329,12 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 
 ##### Eggs and milk
 
-| Grade | Raw | ★1 | ★5 |
-|---|---|---|---|
-| G1 | Egg | 60g | 120g |
-| G2 | Milk | 80g | 160g |
-| G3 | Duck Egg | 100g | 200g |
-| G4 | Goat Milk | 130g | 260g |
+| Grade | Raw | ★1 | ★5 | Refined | ★1 | ★5 |
+|---|---|---|---|---|---|---|
+| G1 | Egg | 60g | 120g | Preserved Egg | 90g | 180g |
+| G2 | Milk | 80g | 160g | Cultured Yogurt | 120g | 240g |
+| G3 | Duck Egg | 100g | 200g | Preserved Duck Egg | 150g | 300g |
+| G4 | Goat Milk | 130g | 260g | Goat Cheese | 325g | 650g |
 <!-- /live -->
 
 ### Upkeep and loans
@@ -3320,13 +3411,14 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Plant | A plot’s tiles you choose (the board offers each plot’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
 | Clear and till | A plot’s tiles you choose (the board offers each plot’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
 | Save seed | One crop and grade in the Warehouse | Up to four units of produce of one grade become saved seed | At the seed target, knowledge threshold, or reserve floor | Planting | Farming |
-| Load | A built station | A load of the good the station holds most of, up to 8 (12 from her level 5), until the station holds its loads for the day: one a level | Once the station holds today’s loads, one a level | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
+| Load | A built station | A load toward its exact stock targets, or the eligible input most held, up to 8 (12 with her aptitude). Protects reserves and shares the station’s slots | Once the station holds today’s loads, one a level | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
 | Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
 | Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |
-| Fish | A spot the farm reaches | A cast: one fish (two casts from Fishing 6) | Never: her gathering shares what’s left, a turn each | Fishing | Fishing |
+| Fish | A spot the farm reaches | A cast: one fish (two casts from Fishing 6), with grade promotion in the selected mode when qualified | Never: her gathering shares what’s left, a turn each | Fishing | Fishing |
 | Care for animals | The Coop’s or the Barn’s animals | A hungry animal fed from the silo (two from Animal care 3), else grass cut on a weeds tile for it; then the building’s goods collected, +0.1 quality a level above 1; then an animal cared for (two from Animal care 5), +1 fondness a level above 1 | When every animal there is fed, collected and cared for | Animal care | Ranch |
 | Work a face | The Mine’s or the Quarry’s deepest floor | A face on the deepest floor: 2 finds by her yield (3 from Mining 5), a face more toward its stairs; the farmer takes them | Never: her digging shares what’s left, a turn each | Mining | Mining |
 | Cook | The farmhouse kitchen (the Kitchen’s, once it stands) | A batch from 2 goods of food by the plain rule: 6 meals at Cooking 1, up to 12 at Cooking 10, into the pantry | Once the pantry holds tonight’s meals for everyone, or the food runs out | Cooking | Cooking |
+| Ship surplus | Exact goods on the surplus plan | Move one shared crate of up to 50 goods into the bin for the following day | After one crate, or when no stock is above reserve | — | — |
 <!-- /live -->
 
 - **Her night, in order:** the field's tasks, the loads, the animals' care and the cooking first, in your order, each

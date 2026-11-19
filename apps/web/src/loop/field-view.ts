@@ -2,7 +2,7 @@
 // rows; and a row's farmhands, each with her task there, her aptitude and what she does an action (a tile, two, or the
 // whole row once her Watering has the trick). Pure, so the screen and the tests read the same.
 import {
-  aptitudeOf, countTiles, FIELD_PLOTS, fieldIndex, handsInOrder, isTileTask, plotLock, plotLockWords, plotName, rowOfPlot, taskAptitude, taskPlot,
+  aptitudeOf, countTiles, FIELD_PLOTS, fieldIndex, handsInOrder, isTileTask, plotLock, plotLockWords, plotName, rowOfPlot, taskPlot,
   tilesAnAction, TRICK_AT, type AptitudeId, type FarmSave, type FieldCounts, type PlotOpens, type TalentOf, type TileTaskKind,
 } from '@farm/domain'
 
@@ -66,7 +66,7 @@ export function rowHands(save: Pick<FarmSave, 'roster'>, plot: number, row: numb
     const uma = save.roster[id]!
     return (uma.tasks ?? []).flatMap((task): RowHand[] => {
       if (!isTileTask(task) || taskPlot(task) !== plot || !task.tiles.some((i) => tiles.has(i))) return []
-      const aptitude = taskAptitude(task)
+      const aptitude = task.kind
       const level = aptitudeOf(uma, aptitude, (a) => talentOf(id, a)).level
       return [{ id, kind: task.kind, aptitude, level, ...eachWords(task.kind, level) }]
     })

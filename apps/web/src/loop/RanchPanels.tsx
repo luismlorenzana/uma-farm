@@ -7,11 +7,12 @@
 import {
   actionsLeft, animalName, ANIMALS, animalsIn, DIG_NAMES, digFloor, floorFinds, gradeAt, haulsToday, heartsOf, HOME_NAMES, HOME_ROOM, itemNameOf, readyIn, SILO_ROOM,
   stairsAfter, stairsFound, stairsLock, type Animal, type DigId, type FarmSave, type RanchHome,
+  COLLECTION_CAPS, goodOf, gradeStepId, ranchProduct, type CollectionCap,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
-import { careForOne, collectAt, faceAt, feedOne, stairsAt } from './actions'
+import { careForOne, collectAt, faceAt, feedOne, pickCollectionCap, stairsAt } from './actions'
 import { ActionsLeft, goodsWords, Notes, ThinMark, useAct } from './FarmPanels'
 import { plural } from './words'
 
@@ -52,6 +53,20 @@ export function RanchPanel({ save, home }: { save: FarmSave; home: RanchHome }) 
         </p>
       ) : (
         <>
+          <details className="rounded-md border border-hairline px-2 text-[13px]">
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Collection grade caps</summary>
+            {[...new Set(animals.map((animal) => animal.kind))].map((kind) => (
+              <label key={kind} className="flex min-h-11 flex-wrap items-center justify-between gap-1">
+                {itemNameOf(ANIMALS[kind].good)}
+                <select className="min-h-11 bg-panel px-1" disabled={busy} value={save.farm.collectionCaps?.[kind] ?? 0}
+                  onChange={(e) => run(pickCollectionCap(kind, Number(e.currentTarget.value) as CollectionCap).then(() => null))}>
+                  {COLLECTION_CAPS.map((cap) => <option key={cap} value={cap}>
+                    {cap === 0 ? 'Standard' : 'Up to'} G{goodOf(gradeStepId(ANIMALS[kind].good, cap))!.grade}
+                  </option>)}
+                </select>
+              </label>
+            ))}
+          </details>
           <Button className="w-full" disabled={busy || out || ready === 0} data-action="collect"
             onClick={() => run(collectAt(home).then((c) => `Collected · +${goodsWords(c.items)}`))}>
             {ready === 0 ? 'Nothing to collect yet' : `Collect ${ready} · 1 action`}
@@ -70,7 +85,8 @@ export function RanchPanel({ save, home }: { save: FarmSave; home: RanchHome }) 
 function AnimalRow({ save, animal, busy, out, run }: { save: FarmSave; animal: Animal; busy: boolean; out: boolean; run: (p: Promise<string | null>) => void }) {
   const rule = ANIMALS[animal.kind]
   const name = animalName(save, animal)
-  const chips = [animal.fed ? 'Fed' : 'Hungry', ...(animal.cared ? ['Cared for'] : []), ...(animal.ready ? [`${itemNameOf(rule.good)} waiting`] : [])]
+  const chips = [animal.fed ? 'Fed' : 'Hungry', ...(animal.cared ? ['Cared for'] : []),
+    ...(animal.ready ? [`${itemNameOf(rule.good)} G${goodOf(ranchProduct(save, animal))!.grade} waiting`] : [])]
   return (
     <li className="space-y-1.5 rounded-sm border border-hairline bg-panel px-2.5 py-2" data-animal={animal.id} data-fed={animal.fed || undefined} data-cared={animal.cared || undefined}>
       <div className="flex items-center gap-2">

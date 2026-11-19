@@ -148,7 +148,7 @@ export function stationView(save: Pick<FarmSave, 'items' | 'loads' | 'buildings'
   const lock = levelLock(save, station)
   return {
     level: stationLevel(save, station), perDay: loadsADay(save, station), loads,
-    options: left > 0 ? stationOptions(save, station).map((o) => ({ ...o, most: Math.min(o.held, LOAD_SIZE) })) : [],
+    options: left > 0 ? stationOptions(save, station).map((o) => ({ ...o, most: Math.floor(Math.min(o.held, LOAD_SIZE) / o.units) })) : [],
     // A level bought today is the one shown, coming tomorrow; else the next to buy.
     next: lock?.by === 'tonight' ? { level: lock.level, loads: lock.level, cost: 0, lock: 'Ready tomorrow' }
       : next ? { level: next.level, loads: next.loads, cost: next.cost, lock: levelLockWords(lock) } : null,

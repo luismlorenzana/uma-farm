@@ -87,7 +87,7 @@ export interface SummaryLine {
   warn?: boolean
 }
 export interface SummaryPart {
-  section: SummarySection
+  section: SummarySection | 'discoveries'
   title: string
   lines: SummaryLine[]
 }
@@ -121,7 +121,16 @@ export interface ReadyNow {
 export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
   home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter, noteOf: NoteOf = noNote, world: WorldWords = NO_WORLD): SummaryPart[] {
   const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : sectionOf(summary, section).length > 0))
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf, noteOf, world) }))
+  return sections.flatMap((section): SummaryPart[] => {
+    const lines = sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf, noteOf, world)
+    if (section !== 'work') return [{ section, title: SECTION_TITLE[section], lines }]
+    const found = lines.filter((line) => line.key.startsWith('discovery:'))
+    const worked = lines.filter((line) => !line.key.startsWith('discovery:'))
+    return [
+      ...(found.length ? [{ section: 'discoveries' as const, title: 'Discoveries', lines: found }] : []),
+      ...(worked.length ? [{ section, title: SECTION_TITLE[section], lines: worked }] : []),
+    ]
+  })
 }
 
 /** A story release's note by its ship's number, from the release the game plays as the card shows; null for another
@@ -299,7 +308,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
             text: `The ${line.home === 'coop' ? 'Coop' : 'Barn'} · ${line.ready > 0 ? `${plural(line.ready, 'good')} to collect` : 'nothing to collect'}${line.hungry > 0 ? ` · ${line.hungry} went hungry` : ''}`,
             ...(line.hungry > 0 ? { tag: 'Feed them', warn: true } : {}),
           }
-          case 'discovery': return { key: `discovery:${line.id}`, to: '/warehouse', text: `Discovered · ${goodName(line.id)}` }
+          case 'discovery': return { key: `discovery:${line.id}`, to: `/warehouse?good=${line.id}`, text: goodName(line.id) }
           case 'seed-prize': return { key: `seed-prize:${line.crop}`, to: '/warehouse', text: `Seasonal seed prize · ${itemNameOf(line.crop)}` }
           case 'grew': return { key: 'grew', to: FIELDS, text: `The field · ${plural(line.tiles, 'crop')} grew${line.ripe > 0 ? ` · ${line.ripe} ripe` : ''}` }
           case 'withered': return { key: `withered:${line.crop}`, to: FIELDS, text: `The field · ${line.tiles} ${itemNameOf(line.crop)} withered` }

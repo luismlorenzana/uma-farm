@@ -9,10 +9,8 @@
 ## Scope
 
 This packet authors the Restaurant and its menu. **120 new recipes across eight stages** ship with the future
-Restaurant implementation, alongside the Kitchen's existing 80. Implement [F99, the roster-run farm](F99-farm-rework.md)
-first. Its shared ingredient catalogue and discovery rules let the Restaurant reward grades the player or roster
-has produced. The menu below is the authored baseline. Apply F99's grade integrations and recheck the full menu
-against the final farm sources before F98 ships. The Forge follows separately.
+Restaurant implementation, alongside the Kitchen's existing 80. The [roster-run farm](../../game-mechanics.md#the-catalogue)
+provides the exact grades and discovery ledger this menu uses. The Forge follows separately.
 
 ## Read first
 
@@ -128,9 +126,11 @@ work and her Serving-tip perks. Check that raw shipping, cooking and using meals
 
 ## Farm prerequisite
 
-[F99](F99-farm-rework.md) defines how every supported ingredient grade is earned and recorded by the player or the
-roster. Use its discovery ledger and the [Restaurant handoff](F99-farm-rework.md#release-sequence-and-the-restaurant-handoff)
-for recipe changes. Keep the base-grade routes for the first stage and at least one seasonal entry in each season.
+The [farm's catalogue](../../game-mechanics.md#the-catalogue) records grades earned by the player or roster.
+The source audit covers all 120 rows, exact stock grades, and every component's earlier recipe. It checks a fresh
+Stage 1 entry in every season. The four upgraded entries use Carrot G2 in R026, Carp Fillet G2 in R044,
+Apple Preserve G2 in R051 and Milk G3 in R063. R051 requires separate Apple G2 proof. Keep the base-grade
+routes for Stage 1 and point the source audit at the runtime menu when this packet is retired.
 
 ## Implement and verify
 
@@ -195,7 +195,7 @@ Same-grade stocks at any stars count. The tables below contain **120 distinct ne
 | R023 | Barley Mushroom Pilaf | 1 × `pearl-barley` G3 + 1 × `shiitake` G2 |
 | R024 | Cornmeal Griddle Cakes | 1 × `cornmeal` G5 + 1 × `milk` G2 |
 | R025 | Peanut Oat Crumble | 1 × `peanut-butter` G1 + 1 × `rolled-oats` G2 |
-| R026 | Sunflower Carrot Roast | 1 × `sunflower-oil` G2 + 1 × `carrot` G1 + 1 × `R015` G1 |
+| R026 | Sunflower Carrot Roast | 1 × `sunflower-oil` G2 + 1 × `carrot-grade-2` G2 + 1 × `R015` G1 |
 | R027 | Herb Cream | 1 × `milk` G2 + 1 × `dried-rosemary` G3 |
 | R028 | Tomato Pan Sauce | 2 × `tomato` G5 + 1 × `dried-basil` G1 |
 | R029 | Ginger Beet Glaze | 1 × `beet-sugar` G3 + 1 × `ground-ginger` G5 |
@@ -218,7 +218,7 @@ Same-grade stocks at any stars count. The tables below contain **120 distinct ne
 | R041 | Shiitake Salmon Soup | 1 × `salmon` G5 + 1 × `shiitake` G2 + 1 × `R015` G1 |
 | R042 | Oat Crusted Sardines | 1 × `sardine` G3 + 1 × `rolled-oats` G2 + 1 × `egg` G1 |
 | R043 | Smoked Trout Pastry | 1 × `trout-fillet` G2 + 1 × `R030` G2 + 1 × `onion` G4 |
-| R044 | Rosemary Fillet Supper | 1 × `carp-fillet` G1 + 1 × `dried-rosemary` G3 + 1 × `potato` G2 |
+| R044 | Rosemary Fillet Supper | 1 × `carp-fillet-grade-2` G2 + 1 × `dried-rosemary` G3 + 1 × `potato` G2 |
 | R045 | Harbour Fish Stock | 1 × `carp-fillet` G1 + 1 × `onion` G4 + 1 × `thyme` G4 |
 
 ### 4. Orchard Table
@@ -230,7 +230,7 @@ Same-grade stocks at any stars count. The tables below contain **120 distinct ne
 | R048 | Peach Custard Tart | 1 × `peach` G3 + 1 × `milk` G2 + 1 × `R030` G2 |
 | R049 | Plum Oat Squares | 1 × `plum` G4 + 1 × `rolled-oats` G2 + 1 × `egg` G1 |
 | R050 | Orange Peel Cakes | 1 × `orange` G5 + 1 × `wheat-flour` G1 + 1 × `cane-sugar` G2 |
-| R051 | Apple Rye Pudding | 1 × `apple-preserve` G1 + 1 × `rye-flour` G6 + 1 × `milk` G2 |
+| R051 | Apple Rye Pudding | 1 × `apple-preserve-grade-2` G2 + 1 × `rye-flour` G6 + 1 × `milk` G2 |
 | R052 | Peach Dressed Cabbage | 1 × `peach` G3 + 1 × `cabbage` G3 + 1 × `mint` G2 |
 | R053 | Pear Onion Toast | 1 × `pear` G2 + 1 × `onion` G4 + 1 × `R019` G2 |
 | R054 | Maple Plum Turnover | 1 × `plum-preserve` G4 + 1 × `maple-syrup` G4 + 1 × `R030` G2 |
@@ -247,7 +247,7 @@ Same-grade stocks at any stars count. The tables below contain **120 distinct ne
 |---|---|---|
 | R061 | Duck Egg Rye Toast | 1 × `duck-egg` G3 + 1 × `rye-flour` G6 + 1 × `R028` G2 |
 | R062 | Goat Milk Barley Bowl | 1 × `goat-milk` G4 + 1 × `pearl-barley` G3 |
-| R063 | Duck Egg Pepper Custard | 1 × `duck-egg` G3 + 1 × `bell-pepper` G6 + 1 × `milk` G2 |
+| R063 | Duck Egg Pepper Custard | 1 × `duck-egg` G3 + 1 × `bell-pepper` G6 + 1 × `milk-grade-3` G3 |
 | R064 | Goat Milk Onion Gratin | 1 × `goat-milk` G4 + 1 × `onion` G4 + 1 × `potato` G2 |
 | R065 | Goat Milk Herb Tart | 1 × `goat-milk` G4 + 1 × `dried-thyme` G4 + 1 × `R030` G2 |
 | R066 | Duck Egg Mushroom Parcel | 1 × `duck-egg` G3 + 1 × `oyster-mushroom` G3 + 1 × `R030` G2 |

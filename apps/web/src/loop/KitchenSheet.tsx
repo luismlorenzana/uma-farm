@@ -11,7 +11,8 @@
 import {
   actionCost, actionsLeft, aptitudeOf, APTITUDE_NAMES, assistantLock, assistantTerm, defaultMenu, dishesHeld, dishName, handDay, handsWorking, ingredientName, kitchenBase, kitchenBuilt,
   kitchenLevel, kitchenLevelLock, kitchenPlayBlock, kitchenPlayedToday, knownRecipes, KITCHEN_LEVELS, levelLockWords, mainsHeld, MEALS_A_DAY, MENU_RECIPES, menuLine, MOUTHS_A_DISH,
-  nextKitchenLevel, recipeWords, shareEvenly, sidesHeld, staffBlock, staffDays, staffPicks, staffTable, stoveSeed, type MenuLine, type SaveV4,
+  nextKitchenLevel, recipeWords, shareEvenly, sidesHeld, staffBlock, staffDays, staffPicks, staffTable, stoveSeed,
+  availableStock, menuTakes, parseStockKey, type MenuLine, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -107,6 +108,12 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
   const made = menu.reduce((n, l) => n + l.count, 0)
   const helper = assistant && assistantLock(save, assistant, pack) === null ? assistant : null
   const why = kitchenPlayBlock(save, menu, helper)
+  const ingredients = new Map<string, number>()
+  for (const [key, count] of menuTakes(menu)) {
+    const at = parseStockKey(key)
+    if (at) ingredients.set(at.id, (ingredients.get(at.id) ?? 0) + count)
+  }
+  const useReserve = [...ingredients].some(([id, count]) => (save.farm.reserves?.[id] ?? 0) > 0 && count > availableStock(save, id))
   // The assistant: a farmhand on the farm today (her farm day) with an action tonight.
   const hands = handsWorking(save, pack).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
   const set = (next: MenuLine[]) => setChosen(next)
@@ -184,7 +191,7 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
         {hands.length === 0 && <p className="text-[12px] text-ink-faint">A farmhand with an action tonight can assist: one of her actions is the play’s.</p>}
       </div>
       <Button className="w-full" disabled={busy || why !== null} onClick={() => onPlay(menu, helper)} data-action="kitchen-play" data-why={why ?? undefined}>
-        {`Play · ${actionCost('kitchen')} · ${plural(base, 'dish', 'dishes')}`}
+        {`${useReserve ? 'Play with reserve' : 'Play'} · ${actionCost('kitchen')} · ${plural(base, 'dish', 'dishes')}`}
       </Button>
       <p className="text-[12px] text-ink-faint" data-kitchen-why>{why ?? `Seed ${stoveSeed(save)} · 60 seconds at the stove · ${actionsLeft(save)} actions left`}</p>
     </section>

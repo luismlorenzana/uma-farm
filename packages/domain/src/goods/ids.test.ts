@@ -5,16 +5,16 @@ import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, LEGACY_CROP_IDS,
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
 
 describe('the goods', () => {
-  it('holds 390 goods, each once', () => {
-    expect(GOOD_IDS).toHaveLength(390)
-    expect(new Set(GOOD_IDS).size).toBe(390)
+  it('holds 522 goods, each once', () => {
+    expect(GOOD_IDS).toHaveLength(522)
+    expect(new Set(GOOD_IDS).size).toBe(522)
   })
 
   it('counts 27 crops and 10 flours, the forest 113, mining 60, fishing 20, expeditions 30, the ranch 24', () => {
     expect(of(['fibers'])).toHaveLength(20)
     expect(of(['eggs-milk']).map((g) => [g.id, g.grade, g.price])).toEqual([['egg', 1, 60], ['milk', 2, 80], ['duck-egg', 3, 100], ['goat-milk', 4, 130]])
     expect(['wool', 'alpaca-fleece', 'cashmere-fleece', 'wool-cloth'].map((id) => goodOf(id)!.price)).toEqual([100, 130, 170, 150])
-    expect(refinedOf('egg')).toBeNull()
+    expect(refinedOf('egg')).toBe('preserved-egg')
     expect(CROP_IDS).toHaveLength(51)
     expect(GOODS.filter((g) => g.crop && g.family !== 'fruits').map((g) => g.id).sort()).toEqual([...LEGACY_CROP_IDS].sort())
     expect(of(['grains']).filter((g) => g.refined)).toHaveLength(10)
@@ -29,7 +29,8 @@ describe('the goods', () => {
     expect(goodOf('silver-ingot')).toEqual({ id: 'silver-ingot', family: 'ores', grade: 4, refined: true, crop: false, price: 100, input: 'silver-ore' })
     expect(goodOf('sugar-beet')).toEqual({ id: 'sugar-beet', family: 'sweets', grade: 3, refined: false, crop: true, price: 120, input: null })
     expect(refinedOf('sugar-beet')).toBe('beet-sugar')
-    expect(refinedOf('carrot') ?? refinedOf('dragon-scale') ?? refinedOf('beet-sugar')).toBeNull()
+    expect(refinedOf('carrot')).toBe('carrot-pickles')
+    expect(refinedOf('dragon-scale') ?? refinedOf('beet-sugar')).toBeNull()
     expect(goodOf('chopped-carrot')).toBeUndefined()
     expect(isCropId('carrot') && !isCropId('chopped-carrot')).toBe(true)
   })

@@ -117,15 +117,15 @@ describe('the morning summary', () => {
       // 30g of takeout.
       day: 13, bin: [], money: [{ kind: 'takeout', meals: 2, paid: 30, due: 30 }, { kind: 'upkeep', paid: 15, due: 15 }], ranks: [], hearts: [],
       // Spring's last night: the watered Carrot grows a stage, then withers out of season.
-      work: [{ kind: 'load', station: 'mill', item: 'wheat-flour@1', count: 5 }, { kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'withered', crop: 'carrot', tiles: 1 }],
+      work: [{ kind: 'discovery', id: 'honeycomb' }, { kind: 'discovery', id: 'pine-log' }, { kind: 'discovery', id: 'wheat-flour' },
+        { kind: 'load', station: 'mill', item: 'wheat-flour@1', count: 5 }, { kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'withered', crop: 'carrot', tiles: 1 }],
       news: [{ kind: 'season', season: 'summer' }],
       nudges: [],
     })
     const spring = night(worked(farm(3)))
-    expect(spring.summary).toMatchObject({
-      work: [{ kind: 'discovery', id: 'mint' }, { kind: 'load' }, { kind: 'grew', tiles: 1, ripe: 0 }],
-      nudges: [{ kind: 'water', tiles: 1 }],
-    })
+    expect(spring.summary!.work.filter((line) => line.kind !== 'discovery')).toMatchObject([{ kind: 'load' }, { kind: 'grew', tiles: 1, ripe: 0 }])
+    expect(spring.summary!.work).toContainEqual({ kind: 'discovery', id: 'mint' })
+    expect(spring.summary!.nudges).toEqual([{ kind: 'water', tiles: 1 }])
     expect(summarySections(spring.summary!)).toEqual(['money', 'work', 'nudges'])
   })
 

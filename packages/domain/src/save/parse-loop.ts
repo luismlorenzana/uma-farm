@@ -6,8 +6,9 @@ import { DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { isStation, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
-import { cropBaseGrade, cropGoodId, cropGradeOf, goodOf, GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS, type CarrotGrade } from '../goods/ids'
+import { FISHING_SPOTS, isStation, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
+import { cropBaseGrade, cropGoodId, goodOf, GOOD_IDS, gradeVariants, isBaseFish, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS, type CarrotGrade } from '../goods/ids'
+import { FISH_MODES, FISH_PROMOTION, MAX_PRODUCTION_TARGET, MAX_STATION_TARGETS, MAX_SURPLUS, type CollectionCap } from '../goods/production-catalogue'
 import { established, orchardOf, RARE_CROPS } from '../fields/plantables'
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
@@ -17,7 +18,7 @@ import {
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   EXPEDITION_OUTCOMES, REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
   type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV5, type StarCounts,
-  type StationLoad, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
+  type StationLoad, type StationTarget, type SurplusPlan, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
@@ -364,7 +365,41 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs'] as const
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
+  'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders'] as const
+
+function parseStationPlans(value: unknown, path: string): NonNullable<SaveV5['farm']['stationPlans']> {
+  const plans: NonNullable<SaveV5['farm']['stationPlans']> = {}
+  for (const [id, raw] of Object.entries(record(value, path))) {
+    const at = `${path}.${id}`
+    const station = oneOf(id, at, STATIONS)
+    plans[station] = unique(list(raw, at, 1, MAX_STATION_TARGETS).map((v, i): StationTarget => {
+      const item = `${at}.${i}`
+      const o = object(v, item, ['output', 'target'])
+      const output = key(o.output, `${item}.output`)
+      const job = stationJobOf(output)
+      if (!job || STATION_JOBS[job].station !== station) fail(`${item}.output`, 'expected an output this station makes')
+      return { output, target: int(o.target, `${item}.target`, 1, MAX_PRODUCTION_TARGET) }
+    }), at, (entry) => entry.output)
+  }
+  return plans
+}
+
+function parseSurplus(value: unknown, path: string): SurplusPlan {
+  const o = object(value, path, ['goods', 'limit'])
+  const goods = unique(list(o.goods, `${path}.goods`, 1, MAX_SURPLUS).map((id, i) =>
+    typeof id === 'string' && isGoodId(id) ? id : fail(`${path}.goods.${i}`, 'unknown good')), `${path}.goods`)
+  return { goods, limit: int(o.limit, `${path}.limit`, 1, MAX_SURPLUS) }
+}
+
+function parseFishRemainders(value: unknown, path: string): Record<string, number> {
+  return Object.fromEntries(Object.entries(record(value, path)).map(([key, n]) => {
+    const [id, step] = key.split(':')
+    const at = `${path}.${key}`
+    if (!id || !isBaseFish(id) || (step !== '1' && step !== '2') || key !== `${id}:${step}` || !gradeVariants(id)[Number(step)]) fail(at, 'unknown fish grade')
+    return [key, int(n, at, 0, FISH_PROMOTION[step === '1' ? 'improved' : 'select'].every - 1)]
+  }))
+}
 
 function parseFieldPlans(value: unknown, path: string): NonNullable<SaveV5['farm']['fieldPlans']> {
   const plans: NonNullable<SaveV5['farm']['fieldPlans']> = {}
@@ -462,9 +497,21 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV5['
     market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isGoodOrRingId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),
     ...(o.discoveries === undefined ? {} : { discoveries: counts(o.discoveries, `${path}.discoveries`, (id) => isGoodId(id) || isDishId(id), 'unknown ingredient', (v, at) => int(v, at, 0, today)) }),
     ...(o.cropProofs === undefined ? {} : o.cropProofs === true ? { cropProofs: true as const } : fail(`${path}.cropProofs`, 'expected true')),
-    ...(o.reserves === undefined ? {} : { reserves: counts(o.reserves, `${path}.reserves`, (id) => cropGradeOf(id) !== undefined, 'unknown reserve ingredient', (v, at) => int(v, at, 1, 99)) }),
+    ...(o.reserves === undefined ? {} : { reserves: counts(o.reserves, `${path}.reserves`, isGoodId, 'unknown reserve ingredient', (v, at) => int(v, at, 1, MAX_PRODUCTION_TARGET)) }),
     ...(o.carrotRows === undefined ? {} : { carrotRows: parseCarrotRows(o.carrotRows, `${path}.carrotRows`) }),
     ...(o.fieldPlans === undefined ? {} : { fieldPlans: parseFieldPlans(o.fieldPlans, `${path}.fieldPlans`) }),
+    ...(o.collectionCaps === undefined ? {} : { collectionCaps: Object.fromEntries(Object.entries(record(o.collectionCaps, `${path}.collectionCaps`)).map(([id, cap]) => {
+      const at = `${path}.collectionCaps.${id}`
+      return [oneOf(id, at, ANIMAL_KINDS), int(cap, at, 0, 2) as CollectionCap]
+    })) }),
+    ...(o.stationPlans === undefined ? {} : { stationPlans: parseStationPlans(o.stationPlans, `${path}.stationPlans`) }),
+    ...(o.surplus === undefined ? {} : { surplus: parseSurplus(o.surplus, `${path}.surplus`) }),
+    ...(o.fishingModes === undefined ? {} : { fishingModes: Object.fromEntries(Object.entries(record(o.fishingModes, `${path}.fishingModes`)).map(([id, mode]) => {
+      const at = `${path}.fishingModes.${id}`
+      return [oneOf(id, at, FISHING_SPOTS), oneOf(mode, at, FISH_MODES)]
+    })) }),
+    ...(o.manualCatches === undefined ? {} : { manualCatches: count(o.manualCatches, `${path}.manualCatches`) }),
+    ...(o.fishRemainders === undefined ? {} : { fishRemainders: parseFishRemainders(o.fishRemainders, `${path}.fishRemainders`) }),
   }
 }
 
