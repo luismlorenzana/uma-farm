@@ -18,10 +18,14 @@ Keep the four 12-day seasons and 48-day years. Add a continuous seven-day cycle 
 is Monday. The work cycle crosses seasons and years without resetting. Existing occasions use their seasonal
 dates, so a wedding anniversary may fall on different weekdays in successive years.
 
-| Shifts for one profession | Mon | Tue | Wed | Thu | Fri | Sat | Sun |
+Each profession has an authored weekly day off shared by its two partners. Assign the first three of its other
+weekdays to the early-week partner and the last three to the late-week partner. On an assigned town day, one
+partner works the counter and the other has her farm shift. The bakery below takes Wednesday off as an example.
+
+| Bakery · Wednesday off | Mon | Tue | Wed | Thu | Fri | Sat | Sun |
 |---|---|---|---|---|---|---|---|
-| Early-week partner | Town | Town | Town | Farm | Farm | Farm | Free |
-| Late-week partner | Farm | Farm | Farm | Town | Town | Town | Free |
+| Early-week partner | Town | Town | Free | Town | Farm | Farm | Farm |
+| Late-week partner | Farm | Farm | Free | Farm | Town | Town | Town |
 
 - Each launch Uma has an authored profession and fixed partner shift. The 50 launch characters can staff 25
   professions. Before she becomes a farmhand, her three future farm days are personal days in town or at home.
@@ -34,11 +38,11 @@ dates, so a wedding anniversary may fall on different weekdays in successive yea
   shifts. A free day has no assigned chores. An authored free-day destination can put her in town as a visitor.
   Town, Calendar, Ledger and Library all show the same schedule. Farm services spending a worker's action
   check for a farm shift and availability.
-- **Sunday is a shared rest day.** A full roster supplies up to 25 scheduled farmhands on each other day and
-  zero scheduled chores on Sunday, or 3/7 of the roster per day on average. Test watering, feed and
-  production queues across the gap. Use existing
-  irrigation, stock buffers and manual coverage in the pilot. If routine Sunday work eats up the freed
-  actions, tune automation and buffers before adding any work to her free day.
+- **Days off are staggered across professions.** With 25 professions and seven weekdays, aim for three or four
+  professions off on each day. A full roster then schedules 21–22 farm workers and 21–22 town workers every day
+  before other absences. Give related jobs different days off when assigning the cast. Test daily coverage for
+  irrigation, feed, production queues and essential counters. Use existing irrigation, stock buffers and manual
+  coverage in the pilot.
 - Essential transactions work seven days a week through the same shop, permit and loan screens. If a counter is
   uncovered, use self-service. An expedition or festival can take a scheduled worker out of town. Show the
   absence and cover the counter through self-service. Test overlap between departure, return, shifts and home
@@ -47,8 +51,8 @@ dates, so a wedding anniversary may fall on different weekdays in successive yea
   the farmer needs her counter before meeting her. Replace fixed recurring NPC speakers in shops, contests,
   rival cards, the smith scene and town story with the role's available cast member. Use brief fallback copy
   when a role has no speaker. The launch data must validate staffed roles, unique job ownership for each Uma
-  and both shifts per profession. Ship the new scheduling rules with a validated launch-roster overlay. Old
-  authored stories can still load alongside it. Keep the last valid overlay if a release has broken staffing.
+  and both shifts and one day off per profession. Ship the new scheduling rules with a validated launch-roster
+  overlay. Old authored stories can still load alongside it. Keep the last valid overlay if a release has broken staffing.
 - **Mayor choice.** The first pass keeps one NPC mayor. If the farmer becomes mayor at the beginning, use
   the same construction, loan and permit services as a town ledger, with the opening, notices and town
   projects adjusted to match. Both paths keep the farm's essential services reachable.
@@ -66,8 +70,8 @@ an Uma's day job and story setting without adding a minigame or service.
 | Farms and woodland | Rancher, animal nurse, orchard keeper, woodland guide, beekeeper |
 | Water and works | Fisher, dock steward, boatwright, miller, expedition outfitter |
 
-The owner assigns the cast to jobs and shifts. Farm orders remain the player's choice and use her existing
-aptitudes and ranks independently of her profession.
+The owner assigns the cast to jobs and shifts and sets the staggered day off for each profession. Farm orders
+remain the player's choice and use her existing aptitudes and ranks independently of her profession.
 
 ## Five-spouse celebrations and the Greater Festival
 
@@ -217,10 +221,10 @@ to work. Test new rewards at smaller rosters before pricing them for the largest
 
 ## Build order and acceptance
 
-1. **Week and town pilot.** Play two cast members staffing a working shop through all four seasons and a year
-   boundary. Verify their same shifts before and after marriage, self-service on Sunday, contested bookings,
-   maintained residence and nighttime availability. Re-run four-season production for 10, 20 and 50 Umas and
-   measure Sunday water and feed, service coverage, meals and stock.
+1. **Week and town pilot.** Play two professions with different days off through all four seasons and a year
+   boundary. Verify each pair's non-overlapping shifts before and after marriage, self-service on an uncovered
+   counter, contested bookings, maintained residence and nighttime availability. Re-run four-season production
+   for 10, 20 and 50 Umas and measure daily water and feed, service coverage, meals and stock.
 2. **Housing, celebrations and ending.** Verify room availability from the first through fiftieth wedding.
    Test same-day wedding order, ten five-spouse cohorts, pending events, the Greater Festival at +48 days and
    a make-up, then Year 50 into Year 51 on a small and a large farm. Load a test expansion.
