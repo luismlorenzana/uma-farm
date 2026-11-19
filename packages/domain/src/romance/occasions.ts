@@ -21,6 +21,7 @@
 //              before) is the old game's one occasion that day: New Year's, the Flower Show or the derby's night
 //
 // It isn't her heart event: it neither needs her Ready nor stops her event today. Pure.
+import { recordLibrary } from '../library/receipts'
 import { actionCost, spendForEvent, type SpecialDays } from '../farm/actions'
 import { dateOf, festivalOn, FESTIVALS, isNewYear, NEW_YEAR_NAME, type FestivalId } from '../farm/calendar'
 import { SaveRuleError } from '../save/rules'
@@ -161,5 +162,6 @@ export function playOccasion(save: SaveV4, pack: OccasionPack, id: string, days:
   const next = occasionWith(save, pack, days, id)
   if (!next || (expected !== undefined && next.id !== expected)) throw new SaveRuleError('busy', 'You’ve spent today’s occasion with her.')
   const spent = spendForEvent(save, actionCost('event'), days)
-  return { ...spent, today: { ...spent.today, occasions: [...(spent.today.occasions ?? []), occasionKey(id, next.id)] } }
+  return recordLibrary({ ...spent, today: { ...spent.today, occasions: [...(spent.today.occasions ?? []), occasionKey(id, next.id)] } },
+    id, `occasion:${next.slot}:${next.id}:${next.event}:${next.kind}`, { activity: `occasion:${next.slot}:${next.id}` })
 }

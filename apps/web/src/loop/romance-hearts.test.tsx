@@ -97,12 +97,12 @@ afterEach(async () => {
 })
 
 describe('the bar and the routes', () => {
-  it('reads Farm · Town · People · Book · Diary down the rail, People lit on the Hearts page', async () => {
+  it('reads Farm · Town · Library · Ledger · Diary down the rail, Library lit on the Hearts page', async () => {
     await render(<FarmRail page="people" />, '/hearts')
-    expect(tabs()).toEqual([['Farm', '/'], ['Town', '/town'], ['People', '/hearts'], ['Book', '/book'], ['Diary', '/diary']])
-    const people = $('nav[aria-label="Pages"] a[href="/hearts"]')!
+    expect(tabs()).toEqual([['Farm', '/'], ['Town', '/town'], ['Library', '/library'], ['Ledger', '/book'], ['Diary', '/diary']])
+    const people = $('nav[aria-label="Pages"] a[href="/library"]')!
     expect(people.getAttribute('aria-current')).toBe('page')
-    expect(people.getAttribute('aria-label')).toBe('People')
+    expect(people.getAttribute('aria-label')).toBe('Library')
   })
 
   it('sends /roster to the Work view, her profile kept', async () => {

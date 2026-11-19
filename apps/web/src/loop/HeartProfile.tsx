@@ -118,7 +118,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
 /** She lives in town: **Where to find her** (today, and this season's days and places, from her fixed schedule; a
  * farmhand's farm days and town days), then "Lives in town": she moves to the farm after your wedding, or a spouse
  * waiting for a room once one is free. */
-function TownCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: string }) {
+export function TownCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: string }) {
   const find = findHer(save, pack, id)
   const waiting = save.love[id]?.stage === 'spouse'
   return (
@@ -141,13 +141,26 @@ function TownCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: stri
 
 /** The profile's Hearts side. */
 function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: HeartsPack; id: string; card: NextCard; nameOf: (id: string) => string }) {
+  const location = useLocation()
+  return (
+    <div className="space-y-4 pb-2">
+      <ProfileChapters save={save} pack={pack} id={id} card={card} nameOf={nameOf} />
+      <ProfileDetails save={save} pack={pack} id={id} nameOf={nameOf} />
+      <Section title="Memories">
+        <Link to={withParam(location, 'album', id)} state={{ back: true }} className="flex min-h-11 items-center justify-between text-[14px]" data-memories={(save.memories[id] ?? []).length} data-action="album">
+          <span className="tabular-nums">{memoryCount(save, id)}</span>
+          <span className="font-semibold text-accent-strong">Album ›</span>
+        </Link>
+      </Section>
+      <GallerySection save={save} id={id} />
+    </div>
+  )
+}
+
+export function ProfileChapters({ save, pack, id, card, nameOf }: { save: SaveV4; pack: HeartsPack; id: string; card: NextCard; nameOf: (id: string) => string }) {
   const love = save.love[id]!
   const track = routeTrack(love)
   const perks = perkList(save, pack, id, nameOf)
-  const gifts = giftSlots(pack, love, id)
-  const friend = friendLoved(save, pack, id)
-  const hers = fromHer(save, pack, id)
-  const ties = tieRows(save, pack, id)
   const location = useLocation()
   const played = track.filter((c) => c.state === 'played').length
   const advice = setupAdvice(readiness(save, pack, id).waits, nameOf)
@@ -161,6 +174,18 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
         ask={card.waits === 'friend' ? (canAsk(save, id) ? withParam(location, 'ask', id) : 'asked') : null} />
       <ChaptersSection view={chapters} colour={LADDER_COLOURS[ladderOf(love.stage)]} />
       {perks.length > 0 && <PerksSection perks={perks} />}
+    </div>
+  )
+}
+
+export function ProfileDetails({ save, pack, id, nameOf }: { save: SaveV4; pack: HeartsPack; id: string; nameOf: (id: string) => string }) {
+  const gifts = giftSlots(pack, save.love[id]!, id)
+  const friend = friendLoved(save, pack, id)
+  const hers = fromHer(save, pack, id)
+  const ties = tieRows(save, pack, id)
+  const ring = ringView(save, pack, id)
+  return (
+    <div className="space-y-4">
       {(hers.petName || hers.keepsake) && <FromHerSection hers={hers} />}
       <GiftsSection gifts={gifts} friend={friend ? lovedWords(friend.friend, friend.good, nameOf) : null} friendGood={friend?.good ?? null} />
       {ties.length > 0 && (
@@ -170,13 +195,6 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
           </ul>
         </Section>
       )}
-      <Section title="Memories">
-        <Link to={withParam(location, 'album', id)} state={{ back: true }} className="flex min-h-11 items-center justify-between text-[14px]" data-memories={(save.memories[id] ?? []).length} data-action="album">
-          <span className="tabular-nums">{memoryCount(save, id)}</span>
-          <span className="font-semibold text-accent-strong">Album ›</span>
-        </Link>
-      </Section>
-      <GallerySection save={save} id={id} />
       {ring && <RingSection id={id} ring={ring} />}
     </div>
   )

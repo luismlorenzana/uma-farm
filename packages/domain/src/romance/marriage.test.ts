@@ -41,6 +41,8 @@ import { clearTile, harvestTile, plantTile, seedsInSeason, stagesOf, tillTile, w
 import { chop, fish, forage, FULL_HAULS, haulsToday, reachList } from '../gathering/hauls'
 import { LOAD_SIZE, startLoad, stationOptions } from '../gathering/stations'
 import { goodOf, type CropId } from '../goods/ids'
+import { bookDiscoveries, bookHistory, bookMilestones, bookProgress, bookScenes, finishLibraryChanges } from '../library/books'
+import { recordLibrary } from '../library/receipts'
 import { runNight, type NightContext } from '../night/end-day'
 import { shipCrate, type CrateLine } from '../save/bin'
 import { parseSaveV5 } from '../save/parse-v4'
@@ -48,17 +50,19 @@ import { buy, lineOpen, shopLines } from '../save/shop'
 import { fieldTiles, EVENING_KINDS, FIELD_TILES, isOvergrown, newSave, type EveningKind, type SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { Step } from '../story/authored'
+import { storyPackFrom } from '../story/pack'
 import type { StoryPack } from '../story/pack'
 import { eventOf, favouriteGoodOf, festivalsOf, masterCastFrom, storyOf, weddingPlaces, type MasterOutfit } from '../story/placeholders'
 import { whereYouMeet, worksOn, type SchedulePack } from '../town/town'
 import { canPraise, chatV4, giftV4, praiseV4 } from './acts'
 import { benchGrades, benchOpen, benchPick, heldRings, makeRing } from './bench'
 import { birthdaysOf } from './days'
-import { answerInvite, favouriteKind, isFestivalNight, kindsNow, spendEvening } from './evening'
+import { answerInvite, eveningRole, favouriteKind, isFestivalNight, kindsNow, spendEvening } from './evening'
 import { playEvent } from './events'
 import { inviteToWork, isFarmhand } from './loop'
 import { authoredGain, finishArrival, pathFlags, walkScene } from './love'
 import { introduce } from './meeting'
+import { occasionsLeft, playOccasion } from './occasions'
 import { readiness, type Wait } from './ready'
 import { receptionDishes } from './wedding'
 
@@ -69,6 +73,7 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 /** Her: a farming Uma (Stamina her top stat), the first of master data, so the default story's cast holds her. */
 const HER = '9300001'
+const BIRTHDAYS = new Map([[HER, { month: 4, day: 7 }]])
 const COUNT = 159
 const stats = (s: readonly number[]) => ({ speed: s[0]!, stamina: s[1]!, power: s[2]!, guts: s[3]!, wit: s[4]! })
 const NONE = stats([0, 0, 0, 0, 0])
@@ -275,10 +280,10 @@ function farm(start: SaveV4, pack: (typeof PACKS)[Place]): SaveV4 {
 }
 
 /** One run: day by day until the wedding night, or the cap. */
-async function simulate(run: Run, seed: string): Promise<Result> {
-  const pack = PACKS[run.place]
-  const context: NightContext = { story: pack, birthdays: birthdaysOf(pack, new Map()) }
-  const year = festivalsOf(pack)
+async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)[Place]; onFinish(save: SaveV4): void }): Promise<Result> {
+  const pack = library?.pack ?? PACKS[run.place]
+  const days = { festivals: festivalsOf(pack), birthdays: birthdaysOf(pack, BIRTHDAYS) }
+  const context: NightContext = { story: pack, ...(library ? { days } : { birthdays: birthdaysOf(pack, new Map()) }) }
   const favourite = favouriteKind(pack, HER)
   let save: SaveV4 = { ...newSave(seed, AT), farmer: { name: 'Sim' } }
   const r: Result = {
@@ -287,6 +292,7 @@ async function simulate(run: Run, seed: string): Promise<Result> {
   }
   const spent = (before: SaveV4, after: SaveV4) => { r.actions += after.today.actions - before.today.actions + (after.today.eventActions - before.today.eventActions) }
   for (let n = 0; n < CAP_YEARS * DAYS_PER_YEAR; n++) {
+    const morning = save
     const day = save.calendar.day
     // The morning's invitation, if she asked: yes.
     if (save.today.invites.some((i) => i.id === HER && i.answer === null)) save = answerInvite(save, HER, 'yes')
@@ -329,9 +335,14 @@ async function simulate(run: Run, seed: string): Promise<Result> {
       }
       // Her evening when it's open (she's in front of you: on the farm, or asked out in town): devoted in her favourite
       // kind, casual the first offered.
-      const kinds: EveningKind[] = kindsNow(save, pack, HER).filter((k) => !isFestivalNight(k))
+      const kinds: EveningKind[] = kindsNow(save, pack, HER).filter((k) => library || !isFestivalNight(k))
       if (kinds.length > 0 && left(save) >= 2) {
-        const kind: EveningKind = run.profile === 'devoted' && kinds.includes(favourite) ? favourite : EVENING_KINDS.find((k) => kinds.includes(k))!
+        const first = save.library?.[HER]?.first ?? {}
+        const role = eveningRole(save.love[HER]!)
+        const newKind = library && (kinds.find(k => isFestivalNight(k) && first[`evening:${k}:${role}`] === undefined)
+          ?? kinds.find(k => !Object.keys(first).some(key => key.startsWith(`evening:${k}:`)))
+          ?? kinds.find(k => first[`evening:${k}:${role}`] === undefined))
+        const kind: EveningKind = newKind || (run.profile === 'devoted' && kinds.includes(favourite) ? favourite : EVENING_KINDS.find((k) => kinds.includes(k))!)
         save = spendEvening(save, pack, HER, kind, SCORE[run.profile]).save
         r.evenings++
       }
@@ -351,7 +362,7 @@ async function simulate(run: Run, seed: string): Promise<Result> {
           ...(state.rung === 'proposal' ? { ring: ring! } : {}),
           ...(state.rung === 'wedding' ? { place: weddingPlaces(pack, HER)[0]!, reception: receptionDishes(save)[0] ?? null } : {}),
         }
-        save = playEvent(save, pack, HER, outcome).save
+        save = playEvent(save, pack, HER, outcome, library ? days : GAME_DAYS).save
         played = true
         if (state.rung === 'f3') r.friend3 = day
         if (state.rung === 'confession') r.confession = day
@@ -362,9 +373,25 @@ async function simulate(run: Run, seed: string): Promise<Result> {
         const waits = readiness(save, pack, HER).waits
         if (waits) r.waits[waits.kind] = (r.waits[waits.kind] ?? 0) + 1
       }
+      if (library) {
+        for (const occasion of occasionsLeft(save, pack, days, HER)) {
+          if (!canSpendForEvent(save, actionCost('event'), days)) break
+          const event = await eventOf(pack, HER, occasion.event)
+          expect(walkScene(event.steps, picksFor(event.steps, save.love[HER]!.flags)).steps.length).toBeGreaterThan(0)
+          save = playOccasion(save, pack, HER, days, occasion.id)
+        }
+        if (r.wedding === day) save = recordLibrary(save, HER, 'life:wedding-night')
+      }
       spent(before, save)
     }
-    if (r.wedding !== null) {
+    if (library) {
+      save = finishLibraryChanges(morning, save, pack, days)
+      if (save.library?.[HER]?.complete !== undefined) {
+        library.onFinish(save)
+        r.gold = save.gold
+        return r
+      }
+    } else if (r.wedding !== null) {
       // The wedding night: tender, fading to morning. The run ends here, on the day's gold.
       r.gold = save.gold
       return r
@@ -374,7 +401,11 @@ async function simulate(run: Run, seed: string): Promise<Result> {
     if (save.summary?.money?.some((m) => m.kind === 'short')) r.shortNights++
     if (n % 24 === 0) expect(parseSaveV5(json(save))).toEqual(save)
   }
-  r.stuck = `not married by year ${CAP_YEARS}: ${save.love[HER] ? `${save.love[HER]!.stage} ${save.love[HER]!.level}` : 'never met'}`
+  r.stuck = library
+    ? JSON.stringify({ scenes: bookScenes(save, pack, HER, days).filter(scene => scene.core && !scene.earned).map(scene => scene.key),
+      facts: bookDiscoveries(save, pack, HER, days).filter(fact => !fact.value).map(fact => fact.key),
+      milestones: bookMilestones(save, HER).filter(row => !row.earned).map(row => row.key) })
+    : `not married by year ${CAP_YEARS}: ${save.love[HER] ? `${save.love[HER]!.stage} ${save.love[HER]!.level}` : 'never met'}`
   r.gold = save.gold
   return r
 }
@@ -439,6 +470,41 @@ if (process.env.MARRIAGE) {
 }
 
 describe('a route to marriage, simulated', () => {
+  it.each([false, true])('completes a fresh Uma book through gameplay (authored: %s)', async authored => {
+    const base = PACKS.default
+    const written = storyPackFrom({
+      cast: base.cast, ties: { version: 1, ties: [] },
+      umas: { [HER]: { characterId: HER, profileFacts: [{ id: 'kite', text: 'She mends paper kites.', reveal: { rung: 'f1' } }],
+        gifts: { loved: LOVED, liked: [...LIKED] } } },
+      routes: { [HER]: { characterId: HER, events: ['f1', 'birthday', 'anniversary', 'flower-show-night'].map(id =>
+        ({ id, steps: [{ say: HER, line: 'There’s a little wind in the orchard today.' }] })) } },
+    })
+    const pack = authored ? { ...base, route: written.route, scripted: written.scripted, bibles: written.bibles } : base
+    const days = { festivals: festivalsOf(pack), birthdays: birthdaysOf(pack, BIRTHDAYS) }
+    const result = await simulate({ profile: 'devoted', place: 'default' }, 'library-fresh', { pack, onFinish(save) {
+      const rows = bookScenes(save, pack, HER, days)
+      expect(rows.filter(row => row.group === 'route')).toHaveLength(27)
+      expect(rows.find(row => row.key === 'evening:walk')?.variants.map(v => v.title)).toEqual(expect.arrayContaining(['Hangout', 'Date']))
+      expect(rows.find(row => row.key === 'occasion:day:flower-show')?.earned).toBe(true)
+      expect(rows.find(row => row.key === 'occasion:night:fishing-derby-night')?.earned).toBe(true)
+      expect(rows.find(row => row.key === 'life:wedding-night')?.earned).toBe(true)
+      expect(bookHistory(save, HER).totals['occasion:day:flower-show']?.[0]).toBeGreaterThan(1)
+      expect(bookHistory(save, HER).totals['evening:walk']?.[3]).toBe(75)
+      expect(bookMilestones(save, HER).filter(row => row.core !== false).every(row => row.day !== null)).toBe(true)
+      const progress = bookProgress(save, pack, HER, days)
+      expect(progress.filled).toBe(progress.available)
+      expect(progress.completeDay).toBe(save.calendar.day)
+      if (authored) {
+        expect(rows.find(row => row.key === 'occasion:day:anniversary')?.earned).toBe(true)
+        expect(rows.find(row => row.key === 'occasion:night:flower-show-night')?.earned).toBe(true)
+        expect(bookDiscoveries(save, pack, HER, days).find(row => row.key === 'fact:note:kite')?.value).toBe('She mends paper kites.')
+      }
+      expect(parseSaveV5(json(save))).toEqual(save)
+      if (process.env.MARRIAGE) console.log(`Library · ${authored ? 'authored' : 'default'} · ${progress.filled}/${progress.available} · day ${save.calendar.day}`)
+    } })
+    expect(result.stuck).toBeNull()
+  }, 30_000)
+
   it('reaches the wedding night in every run, devoted and casual, on the default schedule and with a home', () => {
     expect(results).toHaveLength(RUNS.length * SEEDS.length)
     for (const x of results) {

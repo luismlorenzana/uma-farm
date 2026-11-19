@@ -394,7 +394,7 @@ describe('the town', () => {
     await until(() => $('[data-standing]')?.textContent === 'Farmhand · F3')
     expect($('[data-item="work"]')?.dataset.why).toBe('Works the farm ✓')
     // Spring 5 is her farm day: she's on the farm, off the town's map, and her menu says so.
-    expect($('[data-on-farm]')?.textContent).toBe('On the farm today, her farm day. Her profile ›')
+    expect($('[data-on-farm]')?.textContent).toBe('On the farm today, her farm day. Her book ›')
     expect($(`[data-place-panel="${at}"] [data-person="90001"]`)).toBeNull()
     // Her profile: on the farm today, she's in front of you, in town or not, so Chat is open.
     useGame.setState({ save: { ...save(), today: { ...save().today, town: false } } })
@@ -420,7 +420,7 @@ describe('the town', () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: met })
     await render(<TownPage />, '/town?uma=90001')
     await find('[data-on-farm]')
-    expect($('[data-on-farm]')?.textContent).toBe('She lives on the farm. Her profile ›')
+    expect($('[data-on-farm]')?.textContent).toBe('She lives on the farm. Her book ›')
   })
 
   it('sorts by name, and searches without minding case or accents', () => {

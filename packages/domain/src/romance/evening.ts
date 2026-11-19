@@ -15,6 +15,7 @@
 // home and whose favourite kind is open to them today, weighted `1 + min(14, days since her last evening)`. **Yes**
 // makes her Tonight's evening and pays **+20** with it; **Another day** costs nothing. **Tonight** opens while a slot
 // is free and someone can spend it. Pure; the app stamps.
+import { recordLibrary } from '../library/receipts'
 import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -327,7 +328,7 @@ export const eveningSeed = (uid: string, day: number, id: string, k: EveningKind
  * its slot spent) and when the day hasn't the 2 actions (`no-actions`). `birthday` is hers today (master data's, read by
  * the app). Never stamps.
  */
-export function spendEvening(save: SaveV4, pack: EveningPack & Pick<StoryPack, 'bibles'>, id: string, k: EveningKind, score: number, birthday = false): { save: SaveV4; card: EveningCard } {
+export function spendEvening(save: SaveV4, pack: EveningPack & Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'scripted'>>, id: string, k: EveningKind, score: number, birthday = false): { save: SaveV4; card: EveningCard } {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'You haven’t met her yet.')
   if (!eveningHere(save, pack, id)) throw new SaveRuleError('locked', 'She isn’t here today.')
@@ -348,9 +349,12 @@ export function spendEvening(save: SaveV4, pack: EveningPack & Pick<StoryPack, '
   const asked = due ? addLove(played.save, id, INVITE_POINTS, 'invite') : { save: played.save, paid: 0 }
   const after = asked.save
   const her = { ...after.love[id]!, evening: save.calendar.day }
+  const role = eveningRole(love)!
   const next: SaveV4 = { ...after, love: { ...after.love, [id]: her }, today: { ...after.today, evenings: [...after.today.evenings, { with: id, kind: k }] } }
+  const authored = pack.scripted?.get(id)?.has(eveningScene(role, k)) ? ':authored' : ''
+  const noted = recordLibrary(next, id, `evening:${k}:${role}${authored}`, { activity: `evening:${k}`, score })
   return {
-    save: next,
+    save: role === 'hangout' ? noted : recordLibrary(noted, id, 'milestone:first-date'),
     card: { with: id, kind: k, score, grade, base: EVENING_GRADE_POINTS[grade], factors, points: played.paid, invite: asked.paid, bar: bar(her) },
   }
 }

@@ -1,3 +1,4 @@
+import { recordLibrary } from '../library/receipts'
 import { availableDishes } from '../expeditions/stock'
 import { bookedForExpedition } from '../expeditions/presence'
 import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
@@ -108,6 +109,13 @@ function judge<S extends FarmSave>(save: S, id: FarmContest, entry: Omit<Contest
   }, gold)
   const activity = id === 'flower-show' ? 'farming' : id === 'fishing-derby' ? 'fishing' : 'ranch'
   for (const hand of credit) next = countChallenge(next, hand, activity, { kind: 'won', festival: id })
+  const shown = id === 'flower-show' || id === 'animal-show' ? [...new Set([...nominated, ...present])] : present
+  for (const hand of shown) {
+    const role = id === 'flower-show' ? 'grower' : id === 'animal-show' ? (present.includes(hand) ? 'handler' : 'caretaker')
+      : id === 'fishing-derby' ? 'caster' : 'presenter'
+    const won = credit.includes(hand) ? ':won' : ''
+    next = recordLibrary(next, hand, `festival:${id}:${role}:${place}${won}`, { activity: `festival:${id}`, score: entry.score })
+  }
   return present.length ? festivalTogether(next, present, id, year).save as S : next
 }
 

@@ -8,12 +8,13 @@
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { BootGates, UpdateNotice } from '@luismlorenzana/uma-kit/places'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Outlet } from 'react-router'
 import { boot, NEWER_SAVE_WORDS, startSyncTriggers } from '../save/game'
 import { signInEnabled } from './firebase-config'
-import { StartOverCard } from './StartOverCard'
 import { Upright } from './Upright'
+
+const StartOverCard = lazy(() => import('./StartOverCard').then(module => ({ default: module.StartOverCard })))
 
 /** A boot that stopped at a save this build can't play: one from a newer version of the farm. */
 const isNewerSave = (error: unknown): boolean => error instanceof Error && error.message === NEWER_SAVE_WORDS
@@ -51,7 +52,7 @@ export function Root() {
       <div className="fixed inset-0" data-landscape>
         <KitStage layout="landscape">
           <UpdateNotice clearSides />
-          <BootGates auth={auth} boot={bootFor} firstLaunch={(done) => <StartOverCard onDone={done} />}
+          <BootGates auth={auth} boot={bootFor} firstLaunch={(done) => <Suspense fallback={null}><StartOverCard onDone={done} /></Suspense>}
             words={{ name: 'Uma Farm', tagline: 'Gather, process, make.', ...(newer ? { bootFailed: NEWER_SAVE_WORDS } : {}) }}>
             <Outlet />
           </BootGates>

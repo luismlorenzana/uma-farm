@@ -5,6 +5,7 @@
 // its words. The day's town reads master data and the pack, so they wait for both. Loaded on demand with the town's
 // screen.
 import { birthdaysOf, chatV4, giftV4, introduce, inviteToWork, touched, unlockNotes, type SaveV4, type Taste } from '@farm/domain'
+import { libraryChange } from '../library/changes'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
 import { storyReady } from '../story/story'
@@ -20,9 +21,10 @@ function now(): SaveV4 {
  * Town notes it unlocked come back. */
 export async function introduceOnce(id: string, place: string): Promise<{ notes: string[] }> {
   const [pack] = await Promise.all([storyReady(), masterReady()])
-  const met = introduce(now(), pack, id)
+  const before = now()
+  const met = introduce(before, pack, id)
   const { save, unlocked } = unlockNotes(met, pack, { at: 'town', place })
-  await commit(touched(save, new Date().toISOString()))
+  await commit(touched(libraryChange(before, save, pack), new Date().toISOString()))
   return { notes: unlocked }
 }
 
@@ -30,9 +32,10 @@ export async function introduceOnce(id: string, place: string): Promise<{ notes:
  * notes it unlocked. */
 export async function talkOnce(id: string, place: string | null): Promise<{ paid: number; notes: string[] }> {
   const pack = await storyReady()
-  const talked = chatV4(now(), id)
+  const before = now()
+  const talked = chatV4(before, id)
   const { save, unlocked } = place ? unlockNotes(talked.save, pack, { at: 'town', place }) : { save: talked.save, unlocked: [] }
-  await commit(touched(save, new Date().toISOString()))
+  await commit(touched(libraryChange(before, save, pack), new Date().toISOString()))
   return { paid: talked.paid, notes: unlocked }
 }
 
@@ -40,13 +43,15 @@ export async function talkOnce(id: string, place: string | null): Promise<{ paid
  * unlocked. Her birthday (master data's, through the cast) triples it. */
 export async function giftOnce(id: string, item: string, stars: number): Promise<{ taste: Taste; paid: number; notes: string[] }> {
   const [pack, view] = await Promise.all([storyReady(), masterReady()])
-  const given = giftV4(now(), pack, id, item, stars, birthdaysOf(pack, view.birthdays))
+  const before = now()
+  const given = giftV4(before, pack, id, item, stars, birthdaysOf(pack, view.birthdays))
   const { save, unlocked } = unlockNotes(given.save, pack, { at: 'gift', good: item, taste: given.taste })
-  await commit(touched(save, new Date().toISOString()))
+  await commit(touched(libraryChange(before, save, pack), new Date().toISOString()))
   return { taste: given.taste, paid: given.paid, notes: unlocked }
 }
 
 /** Invite her to work the farm: one action, once; she's a farmhand from today. */
 export async function workOnce(id: string): Promise<void> {
-  await commit(touched(inviteToWork(now(), id), new Date().toISOString()))
+  const before = now()
+  await commit(touched(libraryChange(before, inviteToWork(before, id)), new Date().toISOString()))
 }

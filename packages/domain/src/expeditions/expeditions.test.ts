@@ -117,6 +117,9 @@ describe('the expedition post', () => {
     }
     expect(morning.roster[A]?.ranks.expeditions).toMatchObject({ points, challenge: 1 })
     expect(morning.bonds[pairKey(A, B)]).toBe(30)
+    for (const id of PARTY) {
+      expect(morning.library?.[id]?.recent ?? []).toEqual(party.includes(id) ? [[log.back, `expedition:${region}:${result}`, null]] : [])
+    }
     expect(returnExpeditions(morning, morning.calendar.day).save).toBe(morning)
   })
 

@@ -690,6 +690,8 @@ export interface SaveV5 {
   /** Her gallery, by character: the ids of her illustrations seen, in the order first seen, each kept for good (the
    * pictures and titles are master data's). An older v5 has none. */
   gallery: Record<CharacterId, string[]>
+  /** Dated receipts for the Library. Older v5 saves read their existing route and art evidence directly. */
+  library?: Record<CharacterId, import('../library/receipts').LibraryReceipts>
   summary: MorningSummary | null
   /** You and each Uma, by character: her talks so far, the last day you talked and the last you gave her a gift. An
    * older v4 has none. */

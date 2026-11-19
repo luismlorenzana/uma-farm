@@ -21,7 +21,7 @@ import { Frame } from './ScenePlayer'
 /** `<id>:<s2|s4>`, or null. */
 export function parseLevelParam(value: string | null): { id: string; rung: 's2' | 's4' } | null {
   const [id, rung, ...rest] = (value ?? '').split(':')
-  return id && /^\d+$/.test(id) && (rung === 's2' || rung === 's4') && rest.length === 0 ? { id, rung } : null
+  return id && /^s?\d{1,12}$/.test(id) && (rung === 's2' || rung === 's4') && rest.length === 0 ? { id, rung } : null
 }
 
 export default function NightLevel({ value }: { value: string }) {
@@ -64,7 +64,10 @@ export default function NightLevel({ value }: { value: string }) {
           return (
             <Frame title={title} label={title} scene={`level:${asked.rung}:${asked.id}`} onSkip={() => setPlayed(true)} skipping={false}>
               <SceneLookProvider value={{ own: scene.outfit, moments: [], day: save.calendar.day, leads: [asked.id] }}>
-                <LifeScene id={asked.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} onDone={(steps) => { setShown(steps); setPlayed(true) }}
+                <LifeScene id={asked.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} onDone={(steps) => {
+                  void import('./actions').then(actions => actions.readLifeOnce(asked.id, asked.rung, save.calendar.day)).catch(() => undefined)
+                  setShown(steps); setPlayed(true)
+                }}
                   data={{ 'data-night-scene': asked.rung }} />
               </SceneLookProvider>
             </Frame>

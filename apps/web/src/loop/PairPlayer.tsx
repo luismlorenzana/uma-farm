@@ -45,11 +45,11 @@ export default function PairPlayer({ read }: { read: string }) {
     if (nothing) close()
   }, [nothing]) // eslint-disable-line react-hooks/exhaustive-deps
   if (nothing || !pair || !save) return null
-  const finish = () => {
+  const finish = (seen: readonly number[]) => {
     if (leaving) return
     setLeaving(true)
     close()
-    void readPairOnce(pair.a, pair.b, levels.map((l) => l.hearts)).catch(() => undefined)
+    void readPairOnce(pair.a, pair.b, levels.map((l) => l.hearts), seen).catch(() => undefined)
   }
   return createPortal(
     <MasterGate skeleton={<div className="fixed inset-0 z-[60] bg-page" />}>{(master) => <Conversations save={save as SaveV4} pair={pair} levels={levels} master={master} leaving={leaving} onDone={finish} />}</MasterGate>,
@@ -58,19 +58,20 @@ export default function PairPlayer({ read }: { read: string }) {
 }
 
 function Conversations({ save, pair, levels, master, leaving, onDone }: {
-  save: SaveV4; pair: PairConversations; levels: PairConversations['levels']; master: MasterView; leaving: boolean; onDone: () => void
+  save: SaveV4; pair: PairConversations; levels: PairConversations['levels']; master: MasterView; leaving: boolean; onDone: (seen: readonly number[]) => void
 }) {
   const [index, setIndex] = useState(0)
   const story = useStory()
   const nameOf = namer(master, story)
   const level = levels[index]
   if (!level) return null
-  const next = () => (index + 1 < levels.length ? setIndex(index + 1) : onDone())
+  const seen = (through: number) => levels.slice(0, through).map(level => level.hearts)
+  const next = () => (index + 1 < levels.length ? setIndex(index + 1) : onDone(seen(index + 1)))
   // Both wear the level's own outfit when the story names one, else the day's season.
   return (
     <SceneLookProvider value={{ own: level.outfit, day: save.calendar.day, leads: [pair.a, pair.b] }}>
       <Conversation key={level.hearts} save={save} pair={pair} hearts={level.hearts} steps={level.steps} place={level.place ?? null} nameOf={nameOf}
-        of={levels.length > 1 ? `${index + 1}/${levels.length}` : null} leaving={leaving} onSkip={onDone} onDone={next} />
+        of={levels.length > 1 ? `${index + 1}/${levels.length}` : null} leaving={leaving} onSkip={() => onDone(seen(index))} onDone={next} />
     </SceneLookProvider>
   )
 }

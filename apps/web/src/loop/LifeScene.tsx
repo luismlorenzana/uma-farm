@@ -104,7 +104,7 @@ const MOMENTS: Readonly<Record<LifeKind, Moment[]>> = { morning: ['night-in'], '
 
 /** The scene `?life=` plays: its steps (her route's moving-in and invitation are read on demand), with her outfit when it
  * names one. */
-async function stepsFor(kind: LifeKind, save: SaveV4, story: StoryPack, master: MasterView, id: string): Promise<{ steps: readonly Step[]; outfit?: StoryOutfit }> {
+export async function stepsForLife(kind: LifeKind, save: SaveV4, story: StoryPack, master: MasterView, id: string): Promise<{ steps: readonly Step[]; outfit?: StoryOutfit }> {
   const name = namer(master, story)(id)
   switch (kind) {
     case 'morning': return { steps: greetingScene(save, story, id, talentTable(master).get(outfitFor(id))?.temperament ?? 'steady', name), outfit: 'pajamas' }
@@ -151,7 +151,7 @@ function Played({ kind, id, save, story, master, onClose }: { kind: LifeKind; id
   const [scene, setScene] = useState<{ steps: readonly Step[]; outfit?: StoryOutfit } | null>(null)
   useEffect(() => {
     let live = true
-    void stepsFor(kind, save, story, master, id).then((found) => live && setScene(found), () => live && onClose())
+    void stepsForLife(kind, save, story, master, id).then((found) => live && setScene(found), () => live && onClose())
     return () => { live = false }
   }, [kind, id]) // eslint-disable-line react-hooks/exhaustive-deps
   const names = namer(master, story)
@@ -163,7 +163,14 @@ function Played({ kind, id, save, story, master, onClose }: { kind: LifeKind; id
       {scene
         ? (
           <SceneLookProvider value={{ own: scene.outfit, moments: MOMENTS[kind], day: save.calendar.day, leads: [id] }}>
-            <LifeScene id={id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={kind === 'morning' ? MORNING_BACKDROP : null} onDone={onClose}
+            <LifeScene id={id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={kind === 'morning' ? MORNING_BACKDROP : null} onDone={() => {
+              const bible = story.bibles.get(id)
+              if (kind === 'moving-in' || kind === 'invited-to-work' || (kind === 'morning' && bible?.mornings?.length)
+                || ((kind === 'breakfast' || kind === 'dinner') && bible?.meals?.[kind]?.length)) {
+                void import('./actions').then(actions => actions.readLifeOnce(id, kind, save.calendar.day)).catch(() => undefined)
+              }
+              onClose()
+            }}
               illustrated={kind === 'morning' ? 'companion' : null} data={{ 'data-life': kind }} />
           </SceneLookProvider>
         )

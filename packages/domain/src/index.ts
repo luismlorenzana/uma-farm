@@ -211,3 +211,5 @@ export type {
 export { GAME_LOCATIONS, LOCATION_KINDS, SHOP_IDS } from './story/authored'
 export type { HerJob, LifeWhen, LocationKind, RoutineStop, ShopId, TownLocation } from './story/authored'
 
+export * from './library/receipts'
+export * from './library/books'

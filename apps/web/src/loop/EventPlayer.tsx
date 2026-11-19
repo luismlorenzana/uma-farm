@@ -61,14 +61,14 @@ import { WeddingNight } from './WeddingNight'
 type Mode = 'event' | 'ask' | 'replay'
 interface Request { mode: Mode; id: string; rung: string | null; from: number | null }
 
-const ID = /^\d{1,12}$/
+const ID = /^s?\d{1,12}$/
 /** What the URL asks the player for: `?event=`, `?ask=` or `?memory=<id>:<rung>[@<n>]`. */
 export function parseRequest(params: URLSearchParams): Request | null {
   const event = params.get('event')
   if (event && ID.test(event)) return { mode: 'event', id: event, rung: null, from: null }
   const ask = params.get('ask')
   if (ask && ID.test(ask)) return { mode: 'ask', id: ask, rung: 'confession', from: null }
-  const m = /^(\d{1,12}):([a-z0-9]{1,16})(?:@(\d{1,2}))?$/.exec(params.get('memory') ?? '')
+  const m = /^(s?\d{1,12}):([a-z0-9]{1,16})(?:@(\d{1,2}))?$/.exec(params.get('memory') ?? '')
   if (m) return { mode: 'replay', id: m[1]!, rung: m[2]!, from: m[3] ? Number(m[3]) : null }
   return null
 }
@@ -332,10 +332,11 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   // At a choice, the line before it stays in the bubble.
   const context = choiceNow ? [...before].reverse().find((s) => 'say' in s || 'narrate' in s || 'thought' in s) ?? null : null
   const emote = step && 'say' in step ? step.emote ?? null : lastSay(before, bustId)?.emote ?? null
-  const placed = placeCard(place ?? 'fields', save.calendar.day)
+  const day = (mode === 'replay' ? save.library?.[id]?.first[`route:${rung}`] : undefined) ?? save.calendar.day
+  const placed = placeCard(place ?? 'fields', day)
   // She wears the event's own outfit when the story names one, else its moment's (her wedding, her work, a picnic, the
   // summer shore), else the day's season. A wedding's guests wear the day's.
-  const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day: save.calendar.day }), day: save.calendar.day, leads: [id] }
+  const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day }), day, leads: [id] }
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
       {/* Her illustration while it's up; the play's sheet sits over it. */}

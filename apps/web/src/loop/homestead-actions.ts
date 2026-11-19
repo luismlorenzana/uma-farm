@@ -60,4 +60,4 @@ export const placePiece = (piece: number, house: number | null): Promise<void> =
 /** "Another night": the morning's "misses you" line put away for the day. */
 export const putAwayMisses = (): Promise<void> => change(anotherNight)
 /** A household scene or the finale played or skipped: read once, paying nothing. */
-export const readHouseholdOnce = (id: HouseholdId): Promise<void> => change((s) => readHousehold(s, id))
+export const readHouseholdOnce = (id: HouseholdId, seenBy: readonly string[] = []): Promise<void> => change((s) => readHousehold(s, id, seenBy))

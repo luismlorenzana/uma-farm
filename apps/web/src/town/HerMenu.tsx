@@ -159,9 +159,9 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       {error && <p role="status" className="text-[13px] font-semibold text-danger" data-menu-error>{error}</p>}
       <NoteFound ids={notes} pack={pack} />
       {onFarm ? (
-        <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm today, her farm day.'} <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
+        <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm today, her farm day.'} <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></p>
       ) : !at ? (
-        <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar.day)}{met && <> <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></>}</p>
+        <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar.day)}{met && <> <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></>}</p>
       ) : null}
       {items.length > 0 && (
         <ul className="grid shrink-0 grid-cols-2 gap-1.5" data-menu={items.map((i) => i.id).join(' ')}>

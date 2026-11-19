@@ -13,6 +13,7 @@
 //                  the Town notes'
 //
 // A sister (`s<outfitId>`) is met like anyone.
+import { recordLibrary } from '../library/receipts'
 import { seedTies } from '../farm/bonds'
 import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { dateOf, festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
@@ -89,5 +90,6 @@ export function introduceBlock(save: SaveV4, pack: MeetPack, id: string): string
 export function introduce(save: SaveV4, pack: MeetPack, id: string): SaveV4 {
   const block = introduceBlock(save, pack, id)
   if (block) throw new SaveRuleError(block === 'No actions left today.' ? 'no-actions' : 'not-ready', block)
-  return meet(spend(save, 'introduce'), id, pack).save
+  const at = whereYouMeet(save, pack, id).at
+  return recordLibrary(meet(spend(save, 'introduce'), id, pack).save, id, at ? `milestone:met:${at}` : 'milestone:met')
 }

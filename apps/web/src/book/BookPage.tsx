@@ -59,7 +59,7 @@ function Book({ save }: { save: FarmSave }) {
   return (
     <main className="@container absolute inset-0 space-y-3 overflow-y-auto overscroll-contain p-4" data-page="book">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="font-display text-[22px] font-bold text-ink">Book</h1>
+        <h1 className="font-display text-[22px] font-bold text-ink">Farm Book</h1>
         <HelpButton title="The farm’s book" label="About the book">
           <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who’s on it today and what you can build.</p>
           <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, and each spouse living on the farm. A farmhand costs her meals on her farm days.</p>

@@ -38,7 +38,10 @@ export function WeddingNight({ save, id, event: which = 'wedding-night', onDone 
     <SceneLookProvider value={{ own: event.outfit ?? look.own, moments: look.moments, day: save.calendar.day, leads: [id] }}>
       <MasterGate>
         {(master) => (
-          <LifeScene key={which} id={id} steps={event.steps} nameOf={namer(master, story)} farmer={save.farmer.name} onDone={onDone} illustrated={which === 'wedding-night' ? 'wedding-night' : null}
+          <LifeScene key={which} id={id} steps={event.steps} nameOf={namer(master, story)} farmer={save.farmer.name} onDone={() => {
+            void import('./actions').then(actions => actions.readLifeOnce(id, which, save.calendar.day)).catch(() => undefined)
+            onDone()
+          }} illustrated={which === 'wedding-night' ? 'wedding-night' : null}
             backdrop={which === 'wedding-night' ? NIGHT_BACKDROP : null} data={which === 'wedding-night' ? { 'data-wedding-night': true } : { 'data-moving-in': true }} />
         )}
       </MasterGate>
