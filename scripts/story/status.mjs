@@ -20,7 +20,7 @@ import { chosenIds, herName, masterDir, packDir, readMaster, StoryToolRefused } 
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const { draftNotes, leftWords, PARTS, umaStatus } = await import(pathToFileURL(join(ROOT, 'packages/domain/src/story/complete.ts')).href)
-const USAGE = 'pnpm story:status [--tier <n> | --ids <id,…> | --all] [--from <dir>]'
+const USAGE = 'pnpm story:status [--tier <n> | --ids <id,…> | --all] [--married-life] [--from <dir>]'
 
 /** The ids the status reads when none are named: every Uma with a route, in the cast's order (then any other route). */
 export function withRoute(files) {
@@ -65,6 +65,7 @@ export function parseArgs(argv) {
   for (let i = 0; i < args.length; i++) {
     const flag = args[i]
     if (flag === '--all') { options.all = true; continue }
+    if (flag === '--married-life') { options.marriedLife = true; continue }
     if (!['--tier', '--ids', '--from'].includes(flag)) throw new StoryToolRefused(`Unknown: ${flag}. Usage: ${USAGE}`)
     const value = args[++i]
     if (value === undefined) throw new StoryToolRefused(`${flag} needs a value. Usage: ${USAGE}`)
@@ -75,7 +76,7 @@ export function parseArgs(argv) {
 }
 
 /** The status of the pack in `from` for the Umas named, as lines; with `names` from master data when it's there. */
-export async function status({ from, tier, ids, all = false, env = process.env, master } = {}) {
+export async function status({ from, tier, ids, all = false, marriedLife = false, env = process.env, master } = {}) {
   const dir = packDir(from, env)
   const read = await readPack(dir)
   const { files } = releaseCheck(read.files)
@@ -85,7 +86,20 @@ export async function status({ from, tier, ids, all = false, env = process.env, 
   const names = new Map(data ? list.flatMap((id) => { const n = herName(data, files.cast, id); return n ? [[id, n]] : [] }) : [])
   const what = chosen ? chosen.from : all ? 'the whole cast' : 'every Uma with a route'
   const shown = dir.startsWith(ROOT) ? relative(ROOT, dir) : dir
-  return [`Story status: ${shown}, ${what} (${list.length} Uma${list.length === 1 ? '' : 's'})`, '', ...statusLines(files, list, names)]
+  const lines = [`Story status: ${shown}, ${what} (${list.length} Uma${list.length === 1 ? '' : 's'})`, '', ...statusLines(files, list, names)]
+  if (marriedLife) {
+    lines.push('', 'Married Life looks (hers · default · missing)')
+    for (const id of list) {
+      const slots = files.umas[id]?.marriedLife
+      const count = (key, total) => {
+        const scripts = Object.values(slots?.[key] ?? {}).filter(script => Object.keys(script).length > 0)
+        const defaults = scripts.filter(script => script.draft === 'default').length
+        return `${scripts.length - defaults} · ${defaults} · ${total - scripts.length}`
+      }
+      lines.push(`  ${id} ${names.get(id) ?? ''} · Pajamas ${count('pajamas', 10)} · Anniversary ${count('anniversary', 5)}`)
+    }
+  }
+  return lines
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

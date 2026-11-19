@@ -26,10 +26,11 @@ const { albumFixture } = await import('../album/testing')
 master.view = (await albumFixture()).view
 
 /** The stand-in with her paragraph changed, released, so the test knows which pack came back. */
-function serveRelease(): void {
+function serveRelease(expand = false): void {
   const cast = JSON.parse(JSON.stringify(STAND_IN_FILES.cast)) as { umas: { paragraph: string }[] }
   cast.umas[0]!.paragraph = 'Served by farm-api.'
   const named: [string, unknown][] = [[storyFileName.cast, cast], [storyFileName.ties, STAND_IN_FILES.ties], [storyFileName.uma('9000001'), STAND_IN_FILES.umas['9000001']]]
+  if (expand) named.push([storyFileName.world, { expansionCast: ['9000002'] }])
   const files: StoryIndex['files'] = {}
   for (const [name, value] of named) {
     const text = JSON.stringify(value)
@@ -88,5 +89,20 @@ describe('the loader seam', () => {
     const pack = await loadStoryPack()
     expect(pack.cast.umas.map((u) => u.characterId)).toEqual([...LAUNCH_CAST])
     expect(pack.cast.umas.every((u) => Object.keys(u).length === 1)).toBe(true)
+  })
+
+  it('offers an installed expansion after the ending and keeps met characters if an older save is opened', async () => {
+    vi.stubEnv('VITE_FARM_STORY', '')
+    serveRelease(true)
+    const story = await import('./story')
+    await story.storyReady()
+    expect(story.inCast('9000002')).toBe(false)
+    expect(story.storyPack()?.expansion?.map(uma => uma.characterId)).toEqual(['9000002'])
+    story.keepOnCast([], true)
+    expect(story.inCast('9000002')).toBe(true)
+    story.keepOnCast(['9000002'], false)
+    expect(story.inCast('9000002')).toBe(true)
+    story.keepOnCast([], false)
+    expect(story.inCast('9000002')).toBe(false)
   })
 })

@@ -56,6 +56,7 @@ import { heartDays, NO_BIRTHDAYS, type Birthdays } from '../romance/days'
 import { praiseOvernight } from '../romance/praise'
 import { fieldChores, gatherChores, leaveMorningItems, mentorsTonight, ranchChores, type ChoresDone } from '../romance/perk-effects'
 import { moveInWaiting } from '../romance/homestead'
+import { activateLongGame, collectFestivalGift, settleVisits } from '../romance/long-game'
 import { festivalOfVows, householdNight, houseMorning, levelsTonight, missesLine, noteTheNight, shareHouses, type NightHouse } from '../romance/household'
 import { atHome, dryTiles, newTodayV4, type ExpeditionReturn, type FarmSave, type OutfitId } from '../save/v4'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -403,7 +404,8 @@ export const settleThePlay: NightStep = (night) => {
  * clear for tomorrow. */
 export const noteTonight: NightStep = (night) => {
   const { save, night: house } = noteTheNight(night.save)
-  return { ...night, save, notes: { ...night.notes, house } }
+  const rested = settleVisits(night.save, house?.companion ?? null)
+  return { ...night, save: rested === night.save ? save : { ...save, longGame: rested.longGame }, notes: { ...night.notes, house } }
 }
 
 /** Step 6: +10 bond a night to each pair of residents sharing a house. A night without
@@ -423,9 +425,13 @@ export const levelAtNight: NightStep = (night) => {
 /** Step 8, after the bench: the household milestones as the married count passes 1, 5, 10, 15
  * and 20: news, the furniture set at 5, the finale's morning at 20. */
 export const householdMilestones: NightStep = (night) => {
-  const { save, news } = householdNight(night.save)
+  const { save, news } = householdNight(activateLongGame(night.save, night.context.story))
   return { ...night, save, notes: { ...night.notes, household: news } }
 }
+
+export const festivalPreparations: NightStep = (night) => ({
+  ...night, save: collectFestivalGift(night.save, night.notes.made, [...night.notes.returned]),
+})
 
 /** Step 9, after the reception: the morning of the house slept in: each resident +30, her
  * breakfast (S1) if no meal runs, one more morning item each at S2+; and a house you haven't slept in for 8 nights misses
@@ -632,11 +638,12 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 8, name: 'checkGoals', run: checkGoals, what: 'The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources' },
   { step: 8, name: 'unlockTownNotes', run: unlockTownNotes, what: 'Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them' },
   { step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning' },
-  { step: 8, name: 'householdMilestones', run: householdMilestones, what: 'Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning' },
+  { step: 8, name: 'householdMilestones', run: householdMilestones, what: 'Household milestones: the first wedding and each set of five through fifty are news once. Five spouses bring the furniture set. The closing celebration is Ready on the fiftieth wedding day. Earlier celebrations open the morning after their milestone wedding' },
+  { step: 8, name: 'festivalPreparations', run: festivalPreparations, what: 'A pledged Greater Festival contribution uses the next matching exact-grade farmhand output or expedition return in its preparation window and credits its producer or party' },
   { step: 9, name: 'serveTheReception', run: serveTheReception, what: 'A wedding’s reception: everyone who lives on the farm (the spouses in their rooms) well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running' },
   { step: 9, name: 'houseMorningStep', run: houseMorningStep, what: 'The house’s morning: each resident of the house slept in +30 (only hers on a birthday-alone night); her breakfast (S1) feeds everyone who lives on the farm with no meal left; each resident at S2+ leaves one more morning item; a house with residents not slept in for 8 nights misses you' },
   { step: 9, name: 'moveInRooms', run: moveInRooms, what: 'Rooms: the spouses waiting for a room, living in town, take one the morning one frees, in wedding order, by the same default as a wedding’s' },
-  { step: 9, name: 'vowsMorning', run: vowsMorning, what: 'The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight' },
+  { step: 9, name: 'vowsMorning', run: vowsMorning, what: 'The Festival of Vows: after the Greater Festival has been held, its scheduled date returns each year for +50 to every spouse and a festival-night slot. Older households keep the former date until they hold the Greater Festival' },
   { step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse' },
   { step: 9, name: 'morningItems', run: morningItems, what: 'Morning items: each Uma on the farm this morning (a spouse in her room, a farmhand on her farm day) leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+)' },
   { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among the spouses in their rooms (the Umas home) whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)' },

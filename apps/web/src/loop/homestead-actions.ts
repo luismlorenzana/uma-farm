@@ -24,6 +24,8 @@ const change = async (rule: (save: SaveV4) => SaveV4): Promise<void> => {
   if (next !== save) await commit(touched(next, now()))
 }
 
+export const changeHomestead = change
+
 /** The next house built and named: it stands at once. */
 export const buildHouseNamed = (name: string): Promise<void> => change((s) => buildHouse(s, name))
 /** A house extended: two more rooms at once. */

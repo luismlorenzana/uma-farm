@@ -99,9 +99,9 @@ Later    Release packs                     ── sets of Umas after the launch 
 Later    Parcels to the other games        ── parked until the farm's own game is done
 ```
 
-Phase 2 continues with the long game. The sea and expeditions (F97), roster-run production (F99), the Restaurant
-(F98), the Festival ground contests (F100) and the Uma Library (F101) are complete. Phase 3 polish and Phase 4
-reliability work can proceed alongside Phase 2.
+The sea and expeditions (F97), roster-run production (F99), the Restaurant
+(F98), the Festival ground contests (F100), the Uma Library (F101) and the long game (F102) are complete.
+Phase 3 covers polish and Phase 4 covers reliability.
 
 ### Phase 0: Clean slate (done)
 
@@ -148,9 +148,9 @@ home after the wedding (F95: a farmhand works the farm on the days her town life
 only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mechanics.md#farmhands),
 [the retired Dorm](game-mechanics.md#the-retired-dorm)). The Dock and Boat open the sea, and the Expedition post sends farmhands out from Farm Rank 7 ([expeditions](game-mechanics.md#expeditions)). **The Uma Library is in** (F101), with one shelf per launch Tier, portrait books, scene replays, discoveries and personal histories ([Uma Library](game-mechanics.md#uma-library)).
 
-| Step | What |
-|---|---|
-| 2.7 **The long game** | [Town professions and staggered shifts](game-mechanics.md#town-professions-and-the-week) are in. [F102](handoff/tasks/F102-long-game.md) continues with housing, five-spouse celebrations, the Greater Festival, Year 50, Greater Love, wardrobe rotations and True Love duos. |
+The long game adds [staggered town shifts](game-mechanics.md#town-professions-and-the-week),
+[the fiftieth-wedding celebration and Greater Festival](game-mechanics.md#celebrations-and-the-greater-festival), and
+[Greater Love and True Love duos](game-mechanics.md#greater-love-and-true-love).
 
 How each workshop is built:
 

@@ -11,7 +11,7 @@
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
-  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
+  actionsLeft, CELEBRATIONS, celebrationDate, celebrationTitle, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -140,7 +140,10 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
   const events = eventActionWords(day, eventActionsLeft(save, days))
   const played = day.when === 'today' ? playedToday(save).filter((id) => save.roster[id]) : []
   const town = useMemo(() => townRows(save, pack, day.day), [save, pack, day.day])
-  const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0 && town.length === 0
+  const celebrations = CELEBRATIONS.filter(id => celebrationDate(save, id) === day.day)
+  const greater = celebrationDate(save, 'greater-festival')
+  const ready = householdReady(save)
+  const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0 && town.length === 0 && celebrations.length === 0
   return (
     <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-y-auto overscroll-contain rounded-md border border-hairline bg-panel p-3" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
       <h3 className="font-display text-[17px] font-bold" data-day-heading>{dayHeading(day, today)}
@@ -148,6 +151,11 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
       </h3>
       {events && <p className="flex items-center gap-1 pt-0.5 text-[13px] font-semibold text-[#c2385e]" data-day-events><HeartIcon size={14} />{events}</p>}
       <ul className="space-y-1.5 pt-2 text-[14px]">
+        {celebrations.map(id => <li key={id}>
+          {ready.includes(id) ? <Link className="flex min-h-11 items-center gap-2 font-semibold text-accent" to={`/?household=${id}`} state={{ back: true }}>
+            <SparkIcon size={16} />{celebrationTitle(id)} ›
+          </Link> : <span className="flex items-center gap-2"><SparkIcon size={16} />{celebrationTitle(id)}</span>}
+        </li>)}
         {day.newYear && <li className="flex items-center gap-2" data-entry="new-year"><SparkIcon size={16} /> New Year’s</li>}
         {day.festival && (
           <li data-entry="festival" data-festival-row={day.festival.id}>
@@ -176,6 +184,7 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
       {town.length > 0 && <InTown rows={town} nameOf={nameOf} />}
       {empty && <p className="pt-2 text-[14px] text-ink-soft" data-day-empty>{day.when === 'past' ? 'A quiet day.' : 'Nothing marked yet.'}</p>}
       <div className="mt-auto space-y-0.5 pt-3 text-[12px] text-ink-faint">
+        {greater && <p data-greater-date>Greater Festival · {shortDate(greater)} · Year {dateOf(greater).year}</p>}
         <p data-next-festival>Next festival: {next.festival.name} · {shortDate(next.day)} · {whenWords(next.inDays)}</p>
         <p>Day {((today - 1) % DAYS_PER_YEAR) + 1} of {DAYS_PER_YEAR}. Days move only when you end them.</p>
       </div>

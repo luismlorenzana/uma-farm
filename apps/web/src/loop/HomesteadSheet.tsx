@@ -10,18 +10,19 @@
 // `?life=<meal>:<id>`); and the furniture set from 5 married, a piece a row and the house it stands in. "Married n/N" in
 // the header. Loaded on demand.
 import {
-  BATCH_MEALS, houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4,
+  BATCH_MEALS, houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, longGameEnabled, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { buildHouseNamed, cookABatch, cookTheMeal, extendHouseOnce, moveSpouseTo, placePiece, swapSpouseRooms } from './homestead-actions'
 import { Kitchen } from './Kitchen'
+import { Celebrations } from './Celebrations'
 import { startBatchAtStove } from './kitchen-actions'
 import { furnitureRows, HOMESTEAD_TEXT, homesteadView, priceWords, type HouseRow } from './homestead-view'
 
@@ -103,6 +104,9 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
                   {HOMESTEAD_TEXT.help.map((line) => <p key={line}>{line}</p>)}
                 </HelpButton>
               </div>
+              {view.married > 0 && longGameEnabled(save, pack) && <Link className="flex min-h-11 items-center rounded-md border border-hairline px-3 font-semibold"
+                to={withParam(location, 'visits', '1')} state={{ back: true }}>Night visits ›</Link>}
+              <Celebrations save={save} nameOf={nameOf} />
               <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="The houses">
                 {view.houses.map((row) => (
                   <li key={row.n} data-house={row.n} data-focus={focus === row.n || undefined} className={focus === row.n ? 'bg-sunken/60' : undefined}>

@@ -43,7 +43,9 @@ import { takeRoom } from './homestead'
 export const EVENT_POINTS = 50
 
 /** The pack an event reads: her bible's beats, which events are scripted, the cast, and the ties (a wedding's guests). */
-export type EventPack = Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties'>
+import { activateLongGame } from './long-game'
+
+export type EventPack = Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties'> & Partial<Pick<StoryPack, 'town'>>
 
 // --- The scene ----------------------------------------------------------------------------------------------------------
 
@@ -285,7 +287,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   // Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
   const dish = rung === 'f4' ? giveSignatureDish(played, pack, id) : null
   // The wedding gives her a room at once (her default), or with none free she lives in town until one frees.
-  const roomed = wedding ? takeRoom(dish?.save ?? played, pack, id) : null
+  const roomed = wedding ? takeRoom(activateLongGame(dish?.save ?? played, pack), pack, id) : null
   if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
   let next = spendForEvent(roomed?.save ?? dish?.save ?? played, actionCost('event'), days)
   next = recordLibrary(next, id, `route:${rung}`)

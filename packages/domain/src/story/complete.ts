@@ -25,7 +25,8 @@
 // marked, and her schedule while every part of it that's there is.
 import { TEMPERAMENTS, type Temperament } from '../farm/talents'
 import { defaultDays, DEFAULT_EVERY, scheduleOf } from '../town/town'
-import { RUNGS, EVENING_SCENES, SPOT_IDS, ARRIVAL, type Step, type StoryPlace, type World } from './authored'
+import { RUNGS, EVENING_SCENES, SPOT_IDS, ARRIVAL, DEFAULT_NIGHT_SCRIPT, type Step, type StoryPlace, type World } from './authored'
+import { ANNIVERSARY_LOOK_POINTS, PAJAMA_POINTS } from '../save/long-game'
 import { DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, HER, type DefaultScene } from './default-story'
 import { readStoryPack, type PackFiles, type StoryPack } from './pack'
 import {
@@ -380,7 +381,7 @@ const herLines = (lines: readonly string[], words: HerWords): string[] => lines.
 
 /** Her missing pieces, filled from the default story and marked, added to her cast entry, her bible and her route (each
  * a copy). Never overwrites a piece that's there, read or not. */
-function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefined; route: Obj | undefined; world: World | null }, pack: StoryPack): { cast: Obj; bible?: Obj; route?: Obj; wrote: Wrote[]; refused: string[] } {
+function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefined; route: Obj | undefined; world: World | null }, pack: StoryPack, includeMarriedLife: boolean): { cast: Obj; bible?: Obj; route?: Obj; wrote: Wrote[]; refused: string[] } {
   const { id } = her
   const wrote: Wrote[] = []
   const refused: string[] = []
@@ -432,6 +433,25 @@ function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefine
     plain(b, 'bible', 'petName', PLACEHOLDER_PET_NAME)
     object('wedding', { places: weddingPlaces(pack, id) as StoryPlace[] })
     plain(b, 'bible', 'wishes', [])
+    if (includeMarriedLife) {
+      if (b.marriedLife !== undefined && !isObject(b.marriedLife)) refused.push('marriedLife: expected an object')
+      else {
+        const life = isObject(b.marriedLife) ? b.marriedLife : {}
+        for (const [kind, points] of [['pajamas', PAJAMA_POINTS], ['anniversary', ANNIVERSARY_LOOK_POINTS]] as const) {
+          const prior = life[kind]
+          if (prior !== undefined && !isObject(prior)) { refused.push(`marriedLife.${kind}: expected an object`); continue }
+          const slots = isObject(prior) ? prior : {}
+          points.forEach((_, i) => {
+            const slot = String(i + 1)
+            if (slots[slot] !== undefined) return
+            slots[slot] = { ...DEFAULT_NIGHT_SCRIPT, draft: DRAFT }
+            wrote.push({ part: 'bible', piece: `marriedLife.${kind}.${slot}` })
+          })
+          life[kind] = slots
+        }
+        b.marriedLife = life
+      }
+    }
     if (bible.route !== undefined && !Array.isArray(bible.route)) refused.push('her beats: her bible’s route isn’t a list')
     else {
       const there = new Set(ids(bible.route))
@@ -473,7 +493,7 @@ const hersOnly = (id: string) => (line: string): boolean => line.includes(`(${id
  * unchecked); `master` gives her line when the pack gives none. An Uma whose pieces would read with an error the pack
  * didn't have is left as she was, with the errors.
  */
-export function scaffoldPack(files: PackFiles, hers: readonly ScaffoldHer[], master?: MasterCast): Scaffold {
+export function scaffoldPack(files: PackFiles, hers: readonly ScaffoldHer[], master?: MasterCast, options: { marriedLife?: boolean } = {}): Scaffold {
   const out: Scaffold = { umas: {}, routes: {}, wrote: {}, refused: {} }
   if (files.cast !== undefined && !(isObject(files.cast) && (files.cast.umas === undefined || Array.isArray(files.cast.umas)))) {
     for (const her of hers) out.refused[her.id] = ['cast.json isn’t a cast file (an object with an umas list), so nothing is written']
@@ -486,7 +506,7 @@ export function scaffoldPack(files: PackFiles, hers: readonly ScaffoldHer[], mas
     const before = current()
     const read = readStoryPack(before)
     const pack: StoryPack = { ...read.pack, ...(master ? { master } : {}) }
-    const one = scaffoldOne(her, { cast, bible: before.umas[her.id] as Obj | undefined, route: before.routes[her.id] as Obj | undefined, world: read.files.world ?? null }, pack)
+    const one = scaffoldOne(her, { cast, bible: before.umas[her.id] as Obj | undefined, route: before.routes[her.id] as Obj | undefined, world: read.files.world ?? null }, pack, options.marriedLife ?? false)
     if (one.wrote.length === 0) { out.wrote[her.id] = []; if (one.refused.length > 0) out.refused[her.id] = one.refused; continue }
     const after: PackFiles = { ...before, cast: one.cast, umas: { ...before.umas, ...(one.bible ? { [her.id]: one.bible } : {}) }, routes: { ...before.routes, ...(one.route ? { [her.id]: one.route } : {}) } }
     const was = new Set(errorsOf(before, her.id))

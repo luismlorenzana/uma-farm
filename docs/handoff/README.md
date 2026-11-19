@@ -120,7 +120,6 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 
 | Packet | Work | Status |
 |---|---|---|
-| [F102 · Long-game progression](tasks/F102-long-game.md) | Housing, five-spouse celebrations, the Greater Festival, Year 50 and married-life progression | Town professions and weekly shifts complete. Remaining slices in draft. |
 
 The Forge is [deferred pending a redesign](../roadmap.md#deferred).
 

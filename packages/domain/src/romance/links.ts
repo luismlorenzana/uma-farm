@@ -106,7 +106,7 @@ export const mayPlayOccasion = (save: Pick<SaveV4, 'calendar' | 'roster' | 'love
   occasionWith(save, pack, days, id) !== null
 
 /** `?household=<id>`: a household scene or the finale Ready; a replay (`&replay=1`, the Diary's) only once it's read. */
-export function mayPlayHousehold(save: Pick<SaveV4, 'homestead' | 'diary'>, id: string, replay: boolean): boolean {
+export function mayPlayHousehold(save: Pick<SaveV4, 'homestead' | 'diary'> & Partial<Pick<SaveV4, 'calendar' | 'love' | 'longGame'>>, id: string, replay: boolean): boolean {
   if (!isHouseholdId(id)) return false
   return replay ? save.diary.read.includes(id) : householdReady(save).includes(id)
 }

@@ -1,0 +1,88 @@
+import { DAYS_PER_YEAR } from '../farm/calendar'
+import type { EveningKind, SaveV4 } from './v4'
+
+export const COHORTS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50] as const
+export type Cohort = typeof COHORTS[number]
+export type Celebration = `cohort:${Cohort}` | 'greater-festival'
+export const CELEBRATIONS: readonly Celebration[] = [...COHORTS.map((at): Celebration => `cohort:${at}`), 'greater-festival']
+export const ENDING_SPOUSES = 50
+export const FARM_YEAR = DAYS_PER_YEAR
+export const ROOMS_PER_WING = 5
+export const MAX_LODGE_WINGS = 2000
+export const NIGHT_VISITS = 5
+export const TRUE_LOVE = 120
+export const PAJAMA_POINTS = [0, 6, 14, 24, 36, 48, 60, 75, 90, 105] as const
+export const ANNIVERSARY_LOOK_POINTS = [0, 24, 48, 72, 96] as const
+export const DUO_LIMIT = 3
+
+export type Duo = [string, string]
+export type NightKind = 'pajamas' | 'anniversary'
+export interface Visit {
+  day: number
+  kind: NightKind
+  who: [string] | Duo
+  looks: number[]
+  /** Anniversary number, independent of the night on which it played. */
+  anniversary?: number
+}
+export interface GreaterLove {
+  points: number
+  pajamas: number
+  anniversaries: number
+  trueDay?: number
+  anniversary?: number
+  memories: Visit[]
+}
+export interface FestivalGift {
+  day: number
+  key: string
+  crew: string[]
+}
+export interface DuoOuting {
+  day: number
+  who: Duo
+  kind: EveningKind
+}
+export interface LongGame {
+  weddings: string[]
+  celebrations: Partial<Record<Celebration, number>>
+  love: Record<string, GreaterLove>
+  night?: { day: number; visits: Visit[]; stay?: true }
+  morning?: Visit
+  duos?: Duo[]
+  outings?: DuoOuting[]
+  gifts?: FestivalGift[]
+  pledge?: { window: number; key: string }
+  tradition?: Cohort
+  ending?: { discoveries: number; milestones: number; workers: number }
+}
+
+export function endingRecord(save: Pick<SaveV4, 'diary' | 'farm' | 'roster'>): NonNullable<LongGame['ending']> {
+  return {
+    discoveries: Object.keys(save.farm.discoveries ?? {}).length,
+    milestones: save.diary.milestones.length,
+    workers: Object.values(save.roster).filter(uma => uma.farmhand !== undefined).length,
+  }
+}
+
+export const isCelebration = (id: string): id is Celebration => (CELEBRATIONS as readonly string[]).includes(id)
+export const visitMemoryKey = (visit: Visit): string => [visit.kind, visit.who.join(':'), visit.looks.join(':')].join('/')
+export const duoKey = ([a, b]: Duo): string => [a, b].sort((x, y) =>
+  Number(x.replace(/^s/, '')) - Number(y.replace(/^s/, '')) || x.localeCompare(y)).join(':')
+
+export function celebrationDate(save: Pick<SaveV4, 'love' | 'longGame'>, id: Celebration): number | null {
+  const count = id === 'greater-festival' ? ENDING_SPOUSES : Number(id.slice(7))
+  const person = save.longGame?.weddings[count - 1]
+  if (!person) return null
+  const wedding = save.love[person]!.wed!
+  return wedding + (id === 'greater-festival' ? FARM_YEAR : count === ENDING_SPOUSES ? 0 : 1)
+}
+
+/** One contribution per quarter of the waiting year. An overdue festival can still accept its last gift. */
+export function festivalGiftWindow(save: Pick<SaveV4, 'calendar' | 'love' | 'longGame'>): number | null {
+  const due = celebrationDate(save, 'greater-festival')
+  return due === null ? null : Math.min(3, Math.floor((save.calendar.day - due + FARM_YEAR) / 12))
+}
+
+export const unlockedLooks = (points: number, kind: NightKind): number =>
+  (kind === 'pajamas' ? PAJAMA_POINTS : ANNIVERSARY_LOOK_POINTS).filter(value => value <= points).length

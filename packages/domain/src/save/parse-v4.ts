@@ -34,9 +34,12 @@ import {
 export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
 export type { LoopPlaceId } from './parse-loop'
 
+import { parseLongGame } from './parse-long-game'
+import { MAX_LODGE_WINGS } from './long-game'
+
 export const SAVE_V5_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'fields', 'loads', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library',
+  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library', 'longGame',
 ] as const
 
 /** The most actions a day can hold: well past any budget the farm grows to. */
@@ -329,12 +332,13 @@ function parseHomestead(value: unknown, path: string, today: number, roster: Rea
   const o = object(value, path, ['houses', 'tonight', 'alone', 'slept', 'furniture', 'married', 'finale', 'companion'])
   const houses = list(o.houses, `${path}.houses`, 1, MAX_HOUSES).map((v, i) => {
     const at = `${path}.houses.${i}`
-    const h = object(v, at, ['name', 'extended'])
+    const h = object(v, at, ['name', 'extended', 'wings'])
     const name = text(h.name, `${at}.name`)
     if (houseNameIssue(name) !== null || cleanFarmerName(name) !== name) fail(`${at}.name`, 'expected 1–20 letters, spaces, apostrophes or hyphens')
     const extended = bool(h.extended, `${at}.extended`)
     if (i === 0 && (name !== FARMHOUSE.name || extended)) fail(at, 'expected the Farmhouse, never extended')
-    return { name, extended }
+    if (i !== 0 && h.wings !== undefined) fail(at, 'only the Farmhouse has residence wings')
+    return { name, extended, ...(h.wings === undefined ? {} : { wings: int(h.wings, at, 1, MAX_LODGE_WINGS) }) }
   })
   const tonight = o.tonight === null ? null : int(o.tonight, `${path}.tonight`, 0, houses.length - 1)
   const alone = o.alone === null ? null : member(o.alone, `${path}.alone`, roster)
@@ -578,6 +582,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     town: parseTown(o.town, `${path}.town`, today),
   }
   checkFestivalSave(save, path)
+  if (o.longGame !== undefined) save.longGame = parseLongGame(o.longGame, `${path}.longGame`, save)
   const service = save.workshops.restaurant
   const played = save.workshops.played.restaurant
   if (service?.shift && (service.shift.day !== today || played !== today || save.workshops.current || (service.last?.day ?? 0) >= today)) {

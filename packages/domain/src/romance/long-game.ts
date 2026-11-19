@@ -1,0 +1,216 @@
+import { awayForNight } from '../expeditions/presence'
+import { availableDishes } from '../expeditions/stock'
+import { SaveRuleError } from '../save/rules'
+import {
+  CELEBRATIONS, COHORTS, DUO_LIMIT, ENDING_SPOUSES, FARM_YEAR, NIGHT_VISITS, TRUE_LOVE,
+  celebrationDate, duoKey, festivalGiftWindow, unlockedLooks, visitMemoryKey, type Celebration, type Cohort, type Duo, type GreaterLove, type NightKind, type Visit,
+} from '../save/long-game'
+import { isDishId, vowsOn, type SaveV4 } from '../save/v4'
+import { parseStockKey, takeGoods } from '../save/warehouse'
+import type { StoryPack } from '../story/pack'
+import type { NightScript } from '../story/authored'
+import { chooseCompanion } from './loop'
+
+type WeddingSave = Pick<SaveV4, 'love' | 'roster'> & Partial<Pick<SaveV4, 'longGame'>>
+type LifePack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'household'>>
+type CalendarSave = Pick<SaveV4, 'calendar' | 'love'> & Partial<Pick<SaveV4, 'longGame'>>
+const titles = ['Welcome to the Homestead', 'Supper for Ten', 'At the Hearth', 'The Great Harvest', 'Market Evening',
+  'Lanterns at the Dock', 'A Garden Walk', 'A Homecoming', 'Setting the Tables', 'The Fiftieth Wedding'] as const
+
+export function celebrationTitle(id: Celebration): string {
+  return id === 'greater-festival' ? 'Greater Festival' : titles[COHORTS.indexOf(Number(id.slice(7)) as Cohort)]!
+}
+
+export function weddingOrder(save: WeddingSave): string[] {
+  const known = save.longGame?.weddings ?? []
+  const added = Object.keys(save.love).filter(id => save.love[id]?.stage === 'spouse' && !known.includes(id))
+    .sort((a, b) => (save.love[a]!.wed! - save.love[b]!.wed!) || (save.roster[a]!.joined - save.roster[b]!.joined) || a.localeCompare(b, 'en', { numeric: true }))
+  return added.length ? [...known, ...added] : known
+}
+
+export const longGameEnabled = (save: Pick<SaveV4, 'longGame'>, pack?: Partial<Pick<StoryPack, 'town'>> | null): boolean =>
+  !!(save.longGame || pack?.town?.professions?.length)
+
+export function activateLongGame(save: SaveV4, pack?: Partial<Pick<StoryPack, 'town'>> | null): SaveV4 {
+  if (!longGameEnabled(save, pack)) return save
+  const weddings = weddingOrder(save)
+  if (!weddings.length || save.longGame?.weddings === weddings) return save
+  return { ...save, longGame: { celebrations: {}, love: {}, ...save.longGame, weddings } }
+}
+
+export const softEndingReached = (save: Pick<SaveV4, 'longGame'>): boolean => save.longGame?.celebrations['cohort:50'] !== undefined
+
+export function celebrationGuests(save: Pick<SaveV4, 'longGame'>, id: Celebration): string[] {
+  const count = id === 'greater-festival' ? ENDING_SPOUSES : Number(id.slice(7))
+  return save.longGame?.weddings.slice(id === 'greater-festival' ? 0 : count - 5, count) ?? []
+}
+
+export function celebrationReached(save: CalendarSave, id: Celebration): boolean {
+  const date = celebrationDate(save, id)
+  return date !== null && date <= save.calendar.day
+}
+
+export const unreadCelebrations = (save: CalendarSave): Celebration[] =>
+  CELEBRATIONS.filter(id => celebrationReached(save, id) && save.longGame?.celebrations[id] === undefined)
+
+export function householdVows(save: CalendarSave & Partial<Pick<SaveV4, 'homestead'>>): boolean {
+  if (!save.longGame) return !!save.homestead && vowsOn(save.homestead, save.calendar.day)
+  const celebrated = save.longGame.celebrations['greater-festival']
+  if (!celebrated) return !!save.homestead && vowsOn(save.homestead, save.calendar.day)
+  const due = celebrationDate(save, 'greater-festival')
+  return due !== null && save.calendar.day > celebrated && (save.calendar.day - due) % FARM_YEAR === 0
+}
+
+export const preparingFestival = (save: CalendarSave): boolean =>
+  celebrationReached(save, 'cohort:50') && save.longGame?.celebrations['greater-festival'] === undefined
+
+export function giveFestivalGift(save: SaveV4, key: string, providers: readonly string[] = []): SaveV4 {
+  const window = festivalGiftWindow(save)
+  const gifts = save.longGame?.gifts ?? []
+  if (!save.longGame || !preparingFestival(save) || window === null || gifts.some(gift => festivalGiftWindow({ ...save, calendar: { day: gift.day } }) === window)) {
+    throw new SaveRuleError('not-ready', 'This contribution is already covered.')
+  }
+  const stock = parseStockKey(key)
+  if (!stock || (isDishId(stock.id) && availableDishes(save, key) < 1)) throw new SaveRuleError('no-items', 'That item isn’t available.')
+  const items = takeGoods(save.items, stock.id, stock.stars, 1)
+  const { pledge: _, ...game } = save.longGame
+  const crew = [...new Set(providers)].filter(id => save.roster[id])
+  return { ...save, items, longGame: { ...game, gifts: [...gifts, { day: save.calendar.day, key, crew }] } }
+}
+
+export function pledgeFestivalGift(save: SaveV4, key: string | null): SaveV4 {
+  const window = festivalGiftWindow(save)
+  if (!save.longGame || !preparingFestival(save) || window === null) throw new SaveRuleError('not-ready', 'The festival is still ahead.')
+  const { pledge: _, ...game } = save.longGame
+  if (key === null) return { ...save, longGame: game }
+  if (!parseStockKey(key) || game.gifts?.some(gift => festivalGiftWindow({ ...save, calendar: { day: gift.day } }) === window)) {
+    throw new SaveRuleError('not-ready', 'Choose an item for this contribution.')
+  }
+  return { ...save, longGame: { ...game, pledge: { window, key } } }
+}
+
+export function collectFestivalGift(save: SaveV4, made: readonly { outfitId: string; items: string[] }[], returned: NonNullable<SaveV4['expeditionLog']>): SaveV4 {
+  const pledge = save.longGame?.pledge
+  if (!pledge || !preparingFestival(save)) return save
+  if (pledge.window !== festivalGiftWindow(save)) return pledgeFestivalGift(save, null)
+  const worker = made.find(row => row.items.includes(pledge.key))?.outfitId
+  const crew = worker ? [worker] : returned.find(trip => (trip.loot[pledge.key] ?? 0) > 0)?.party ?? []
+  const stock = parseStockKey(pledge.key)
+  if (!crew.length || !stock || !(save.items[stock.id]?.[stock.stars - 1]) || (isDishId(stock.id) && availableDishes(save, pledge.key) < 1)) return save
+  return giveFestivalGift(save, pledge.key, crew)
+}
+
+export function chooseTradition(save: SaveV4, at: Cohort): SaveV4 {
+  if (!save.longGame || !preparingFestival(save) || at >= ENDING_SPOUSES || !save.longGame.celebrations[`cohort:${at}`]) {
+    throw new SaveRuleError('not-ready', 'Choose a celebration you’ve held.')
+  }
+  return { ...save, longGame: { ...save.longGame, tradition: at } }
+}
+
+export const greaterLoveOf = (save: Pick<SaveV4, 'longGame'>, id: string): GreaterLove =>
+  save.longGame?.love[id] ?? { points: 0, pajamas: 0, anniversaries: 0, memories: [] }
+
+export const nightVisits = (save: CalendarSave): Visit[] =>
+  save.longGame?.night?.day === save.calendar.day ? save.longGame.night.visits : []
+
+export function nightAvailable(save: SaveV4, pack: LifePack, id: string): boolean {
+  const love = save.love[id]
+  return !!(save.roster[id] && love?.stage === 'spouse' && love.house !== undefined
+    && !awayForNight(save, id, save.calendar.day) && longGameEnabled(save, pack))
+}
+
+export const anniversaryOffer = (save: CalendarSave, id: string): number | null => {
+  const wed = save.love[id]?.wed
+  if (!wed) return null
+  const year = Math.floor((save.calendar.day - wed) / FARM_YEAR)
+  return year > (greaterLoveOf(save, id).anniversary ?? 0) ? year : null
+}
+
+export const configuredDuos = (save: Pick<SaveV4, 'longGame'>, pack: Pick<LifePack, 'household'>): Duo[] =>
+  save.longGame?.duos ?? pack.household?.duos ?? []
+
+export const duoReady = (save: Pick<SaveV4, 'longGame'>, duo: Duo): boolean =>
+  duo.every(id => greaterLoveOf(save, id).points === TRUE_LOVE)
+
+export function editDuo(save: SaveV4, pack: LifePack, duo: Duo, remove: boolean): SaveV4 {
+  const next = activateLongGame(save, pack)
+  const valid = new Set(pack.cast.umas.map(uma => uma.characterId))
+  if (!next.longGame || duo[0] === duo[1] || duo.some(id => !valid.has(id))) throw new SaveRuleError('bad-job', 'Choose two different Umas.')
+  const key = duoKey(duo)
+  const before = configuredDuos(next, pack)
+  const duos = before.filter(other => duoKey(other) !== key)
+  if (!remove) {
+    if (duos.length !== before.length || duo.some(id => duos.filter(pair => pair.includes(id)).length >= DUO_LIMIT)) {
+      throw new SaveRuleError('bad-count', 'A pair can be listed once, with three partners per Uma.')
+    }
+    duos.push(duoKey(duo).split(':') as Duo)
+  }
+  return { ...next, longGame: { ...next.longGame, duos } }
+}
+
+export function visitScript(pack: LifePack, visit: Visit, index: number): NightScript {
+  const id = visit.who[index]!
+  const base = pack.bibles.get(id)?.marriedLife?.[visit.kind]?.[visit.looks[index]!]
+  const duo = visit.who.length === 2 ? pack.household?.duoLines?.[duoKey(visit.who)]?.[id] : undefined
+  return { ...base, ...duo }
+}
+
+export function planVisit(save: SaveV4, pack: LifePack, who: Visit['who'], kind: NightKind, birthdayAlone: (id: string) => boolean): Visit | null {
+  if (nightVisits(save).length >= NIGHT_VISITS || who.some(id => !nightAvailable(save, pack, id))) return null
+  if (who.length === 2 && (kind !== 'pajamas' || who.some(birthdayAlone) || !duoReady(save, who)
+    || !configuredDuos(save, pack).some(duo => duoKey(duo) === duoKey(who)))) return null
+  const anniversary = kind === 'anniversary' ? anniversaryOffer(save, who[0]) : null
+  if (kind === 'anniversary' && anniversary === null) return null
+  const looks = who.map(id => {
+    const heart = greaterLoveOf(save, id)
+    return ((kind === 'pajamas' ? heart.pajamas : heart.anniversaries) % unlockedLooks(heart.points, kind)) + 1
+  })
+  return { day: save.calendar.day, kind, who, looks, ...(anniversary === null ? {} : { anniversary }) }
+}
+
+function award(heart: GreaterLove, day: number): GreaterLove {
+  if (heart.points >= TRUE_LOVE) return heart
+  const points = heart.points + 1
+  return { ...heart, points, ...(points === TRUE_LOVE ? { trueDay: day } : {}) }
+}
+
+export function completeVisit(save: SaveV4, pack: LifePack, visit: Visit, slot: number, birthdayAlone: (id: string) => boolean): SaveV4 {
+  const next = activateLongGame(save, pack)
+  const visits = nightVisits(next)
+  const plan = planVisit(next, pack, visit.who, visit.kind, birthdayAlone)
+  if (!next.longGame || !plan || slot !== visits.length || visit.day !== plan.day || visit.anniversary !== plan.anniversary
+    || visitMemoryKey(visit) !== visitMemoryKey(plan)) throw new SaveRuleError('not-ready', 'Open a new visit for tonight.')
+  const love = { ...next.longGame.love }
+  for (const [i, id] of plan.who.entries()) {
+    const heart = award(greaterLoveOf(next, id), plan.day)
+    const memories = heart.memories.some(memory => visitMemoryKey(memory) === visitMemoryKey(plan)) ? heart.memories : [...heart.memories, plan]
+    love[id] = plan.kind === 'pajamas' ? { ...heart, pajamas: plan.looks[i]!, memories }
+      : { ...heart, anniversaries: plan.looks[i]!, anniversary: plan.anniversary!, memories }
+  }
+  return { ...next, longGame: { ...next.longGame, love, night: { day: plan.day, visits: [...visits, plan] } } }
+}
+
+export function setVisitStay(save: SaveV4, pack: LifePack, day: number, birthdayAlone: (id: string) => boolean): SaveV4 {
+  const night = save.longGame?.night
+  const last = night?.visits[NIGHT_VISITS - 1]
+  if (!save.longGame || night?.day !== day || day !== save.calendar.day || !last || last.who.some(id => !nightAvailable(save, pack, id))
+    || (last.who.length === 2 && last.who.some(birthdayAlone))) {
+    throw new SaveRuleError('not-ready', 'Stay after the fifth visit.')
+  }
+  const next = chooseCompanion(save, last.who[0], birthdayAlone(last.who[0]))
+  if (next === save && night.stay) return save
+  return { ...next, longGame: { ...save.longGame, night: { ...night, stay: true } } }
+}
+
+export function settleVisits(save: SaveV4, companion: string | null): SaveV4 {
+  if (!save.longGame) return save
+  const { night, morning: previous, ...game } = save.longGame
+  if (!night && !previous) return save
+  const last = night?.stay && night.day === save.calendar.day ? night.visits[NIGHT_VISITS - 1] : undefined
+  const stayed = last && last.who[0] === companion && (!save.homestead.alone || last.who.length === 1)
+    && last.who.every(id => save.love[id]?.house !== undefined && !awayForNight(save, id, last.day))
+  if (!stayed) return { ...save, longGame: game }
+  const love = { ...game.love }
+  for (const id of last.who) love[id] = award(greaterLoveOf(save, id), last.day + 1)
+  return { ...save, longGame: { ...game, love, morning: last } }
+}

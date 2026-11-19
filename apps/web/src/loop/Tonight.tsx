@@ -9,7 +9,7 @@
 // birthday-alone wisher's birthday "her birthday, just you two"; the pick (else the night's default) is marked, and a tap
 // picks her at once: her house is tonight's. She greets you in the morning. End the day never waits on it. Loaded on
 // demand.
-import { birthdaysOf, daySetState, marriedCount, type SaveV4, type StoryPack } from '@farm/domain'
+import { birthdaysOf, daySetState, longGameEnabled, marriedCount, NIGHT_VISITS, nightVisits, type SaveV4, type StoryPack } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { Link, useLocation } from 'react-router'
@@ -24,12 +24,13 @@ import { nudgeWords, shortDate } from './words'
 
 export default function Tonight({ save, pack, pending, error, onEnd, onBack }: {
   save: SaveV4
-  pack: Pick<StoryPack, 'cast' | 'bibles'>
+  pack: StoryPack
   pending: boolean
   error: string | null
   onEnd: () => void
   onBack: () => void
 }) {
+  const location = useLocation()
   return (
     <Sheet
       open
@@ -44,6 +45,8 @@ export default function Tonight({ save, pack, pending, error, onEnd, onBack }: {
       }
     >
       <div className="space-y-3 pb-1" data-tonight={save.calendar.day}>
+        {marriedCount(save) > 0 && longGameEnabled(save, pack) && <Link className="flex min-h-11 items-center justify-between rounded-md border border-hairline px-3 font-semibold"
+          to={withParam(location, 'visits', '1')} state={{ back: true }}>Night visits <span>{nightVisits(save).length}/{NIGHT_VISITS} ›</span></Link>}
         <MasterGate skeleton={<p className="text-ink-soft">…</p>}>
           {(master) => (
             <>

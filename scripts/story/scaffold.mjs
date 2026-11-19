@@ -28,7 +28,7 @@ import { chosenIds, herName, herTemperament, masterDir, packDir, readMaster, Sto
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const { PARTS, pieceWords, scaffoldPack } = await import(pathToFileURL(join(ROOT, 'packages/domain/src/story/complete.ts')).href)
-const USAGE = 'pnpm story:scaffold (--tier <n> | --ids <id,…>) [--dry-run] [--from <dir>]'
+const USAGE = 'pnpm story:scaffold (--tier <n> | --ids <id,…>) [--married-life] [--dry-run] [--from <dir>]'
 /** A file the scaffold can't read stands in as this, so the domain refuses it and nothing is written over it. */
 const UNREADABLE = 'unreadable'
 
@@ -39,6 +39,7 @@ export function parseArgs(argv) {
   for (let i = 0; i < args.length; i++) {
     const flag = args[i]
     if (flag === '--dry-run') { options.dryRun = true; continue }
+    if (flag === '--married-life') { options.marriedLife = true; continue }
     if (!['--tier', '--ids', '--from'].includes(flag)) throw new StoryToolRefused(`Unknown: ${flag}. Usage: ${USAGE}`)
     const value = args[++i]
     if (value === undefined) throw new StoryToolRefused(`${flag} needs a value. Usage: ${USAGE}`)
@@ -59,7 +60,7 @@ const stampOf = (now) => now.toISOString().replace(/\.\d+Z$/, 'Z').replaceAll(':
  * changed and where it backed them up. Throws `StoryToolRefused` before writing anything when it can't name the Umas, or
  * has no master data to name them by (a dry run lists them unnamed).
  */
-export async function scaffold({ from, tier, ids, dryRun = false, env = process.env, now = new Date(), log = console.log } = {}) {
+export async function scaffold({ from, tier, ids, dryRun = false, marriedLife = false, env = process.env, now = new Date(), log = console.log } = {}) {
   const dir = packDir(from, env)
   if (!existsSync(dir)) throw new StoryToolRefused(`No story pack in ${dir}`)
   const chosen = await chosenIds({ ids, tier }, env)
@@ -77,7 +78,7 @@ export async function scaffold({ from, tier, ids, dryRun = false, env = process.
   const hers = chosen.ids.map((id) => ({ id, name: herName(master, files.cast, id), temperament: herTemperament(master, files.cast, id) }))
   const unnamed = hers.filter((h) => h.name === null).map((h) => h.id)
   if (unnamed.length > 0 && !dryRun) throw new StoryToolRefused(`Master data at ${master.dir} has no name for ${unnamed.join(', ')}. Name only Umas master data holds (a sister needs her elder there)`)
-  const result = scaffoldPack(files, hers, master?.cast)
+  const result = scaffoldPack(files, hers, master?.cast, { marriedLife })
 
   // The files it changes, as written.
   const changes = [

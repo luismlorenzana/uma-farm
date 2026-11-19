@@ -140,6 +140,7 @@ export type RankLine = RankUp | PointsFull | AptitudeUp
 export interface HouseholdNews {
   kind: 'household'
   married: number
+  cohort?: true
 }
 
 /** §5 New today, first: a story release that reached the device since the last morning, once a release: "New story

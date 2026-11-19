@@ -42,10 +42,10 @@ export default function HeartsPage() {
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pb-2">
         <h1 className="font-display text-[22px] font-bold text-ink">People</h1>
         <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={`${married.married}/${married.met}`}>Married {married.married}/{married.met}</span>
-        {pack && householdReady(save).slice(0, 1).map((id) => (
+        {pack && householdReady(save).sort((a, b) => Number(b === 'cohort:50') - Number(a === 'cohort:50')).slice(0, 1).map((id) => (
           <Link key={id} to={`/hearts?household=${id}`} state={{ back: true }} aria-label={`${householdTitle(id)}: Ready`}
             className="grid min-h-11 shrink-0 place-items-center rounded-full bg-[#d9a227]/15 px-2.5 text-[12px] font-bold whitespace-nowrap text-[#8a6a14]" data-household-ready={id}>
-            ⌂ {id === 'finale' ? 'Harvest' : `Scene ${householdTitle(id).slice(-1)}`} ›
+            ⌂ {id === 'finale' ? 'Harvest' : id.startsWith('household:') ? `Scene ${householdTitle(id).slice(-1)}` : householdTitle(id)} ›
           </Link>
         ))}
         <EveningMarks save={save} />

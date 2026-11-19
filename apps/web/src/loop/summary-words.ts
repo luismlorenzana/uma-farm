@@ -16,7 +16,7 @@
 // name where she's met in town.
 import {
   ACTIVITY_NAMES, CONTEST_ID, EXPEDITION_REGIONS, EXPEDITION_WORDS, expeditionReturnLine, type ExpeditionReturn, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, isFarmContest, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
-  SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
+  householdTitle, isCelebration, SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
   type SummarySection,
 } from '@farm/domain'
 import { EXPEDITION_POST } from './expedition-words'
@@ -156,7 +156,9 @@ export const NO_HOME: HomeWords = { houseName: (n) => (n === 0 ? 'Farmhouse' : `
 export const storyNewsWords = (note: string | null): string => (note ? `New story arrived · ${note}` : 'New story arrived')
 
 /** §5's household milestones in words. */
-export function householdNews(married: number): { text: string; to: string } {
+export function householdNews(married: number, cohort = false): { text: string; to: string } {
+  const id = `cohort:${married}`
+  if (cohort && isCelebration(id)) return { text: `Married ${married} · ${householdTitle(id)}`, to: `/?household=${id}` }
   switch (married) {
     case 1: return { text: 'Married 1 · The homestead opens, and the night’s house', to: '/?sheet=homestead' }
     case 5: return { text: 'Married 5 · Household scene 1, the furniture set, +5% items', to: '/?household=household:5' }
@@ -347,7 +349,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           case 'built': return { key: `built:${line.place}`, text: builtWords(line.place, line.level), to: peek(farmPlace(line.place)?.on ?? line.place), tag: line.level ? 'Level' : 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
-          case 'household': return { key: `household:${line.married}`, ...householdNews(line.married), tag: 'Household' }
+          case 'household': return { key: `household:${line.married}`, ...householdNews(line.married, line.cohort), tag: 'Household' }
         }
       })
     case 'nudges':

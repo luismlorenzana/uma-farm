@@ -21,13 +21,15 @@ import { festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { SaveRuleError } from '../save/rules'
 import {
-  EVENING_KINDS, eveningsOn, FESTIVAL_NIGHT, invitesFor, marriedCount, vowsOn, type Evening, type EveningKind, type Invite, type InviteKind, type Love, type SaveV4,
+  EVENING_KINDS, eveningsOn, FESTIVAL_NIGHT, invitesFor, marriedCount, type Evening, type EveningKind, type Invite, type InviteKind, type Love, type SaveV4,
 } from '../save/v4'
 import type { DateGame } from '../story/authored'
 import { castOrder, type StoryPack } from '../story/pack'
 import type { Moment } from '../story/look'
 import { eveningSceneId, festivalsOf, routeBeats } from '../story/placeholders'
 import { awayOn } from '../expeditions/presence'
+import { configuredDuos, duoReady, householdVows, nightAvailable } from './long-game'
+import type { Duo } from '../save/long-game'
 import { whereYouMeet } from '../town/town'
 import { addLove, bar, dayFactor, isAnniversary, roundPoints, type Bar } from './love'
 import { EVENING_GRADE_POINTS, GRADES, gradeOf, type Grade } from './plays/grade'
@@ -197,9 +199,9 @@ export interface EveningSlots {
   /** The Festival of Vows today: festival night's slot. */
   vows: boolean
 }
-export const eveningSlots = (save: Pick<SaveV4, 'calendar' | 'love'> & Partial<Pick<SaveV4, 'homestead'>>, year: readonly Festival[] = FESTIVALS): EveningSlots => ({
+export const eveningSlots = (save: Pick<SaveV4, 'calendar' | 'love'> & Partial<Pick<SaveV4, 'homestead' | 'longGame'>>, year: readonly Festival[] = FESTIVALS): EveningSlots => ({
   evenings: eveningsOn(save.calendar.day, marriedCount(save)), festival: festivalOn(save.calendar.day, year),
-  vows: save.homestead !== undefined && vowsOn(save.homestead, save.calendar.day),
+  vows: householdVows(save),
 })
 
 /** What's left of today's slots: evenings unspent, and whether festival night is free. */
@@ -250,6 +252,13 @@ export function eveningUmas(save: SaveV4, pack: EveningPack): string[] {
 /** Whether Tonight opens: a slot is free and someone can spend it (the day has its 2 actions), or anyone is married, so
  * tonight's companion waits to be picked. */
 export const tonightOpens = (save: SaveV4, pack: EveningPack): boolean => marriedCount(save) > 0 || eveningUmas(save, pack).length > 0
+
+export function eveningDuos(save: SaveV4, pack: StoryPack, lead: string, birthdayAlone: (id: string) => boolean): string[] {
+  return configuredDuos(save, pack).flatMap(duo => {
+    if (!duo.includes(lead) || !duoReady(save, duo) || !duo.every(id => nightAvailable(save, pack, id) && !birthdayAlone(id))) return []
+    return duo.filter(id => id !== lead)
+  })
+}
 
 /** Roster ids in the cast's order, then numerically (the stand-in's and any id the pack doesn't hold). */
 function byCast(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): string[] {
@@ -303,6 +312,7 @@ export const invitePoints = (save: Pick<SaveV4, 'calendar' | 'love'>, id: string
 
 /** The evening's card: the grade, the sum, the invitation's +20 and her bar after. */
 export interface EveningCard {
+  partner?: string
   with: string
   kind: EveningKind
   score: number
@@ -357,6 +367,24 @@ export function spendEvening(save: SaveV4, pack: EveningPack & Pick<StoryPack, '
     save: role === 'hangout' ? noted : recordLibrary(noted, id, 'milestone:first-date'),
     card: { with: id, kind: k, score, grade, base: EVENING_GRADE_POINTS[grade], factors, points: played.paid, invite: asked.paid, bar: bar(her) },
   }
+}
+
+/** A shared activity uses the same play, slot and heart award for its lead. The partner shares its scene and receipt. */
+export function spendDuoEvening(save: SaveV4, pack: StoryPack, who: Duo, kind: EveningKind, score: number, birthday: boolean,
+  birthdayAlone: (id: string) => boolean): { save: SaveV4; card: EveningCard } {
+  const [lead, partner] = who
+  if (!save.longGame || !eveningDuos(save, pack, lead, birthdayAlone).includes(partner) || !kindsNow(save, pack, partner).includes(kind)) {
+    throw new SaveRuleError('not-ready', 'This duo can’t share that evening.')
+  }
+  const done = spendEvening(save, pack, lead, kind, score, birthday)
+  const day = save.calendar.day
+  const outings = save.longGame.outings ?? []
+  const first = !outings.some(prior => prior.kind === kind && prior.who[0] === lead && prior.who[1] === partner)
+  return { card: { ...done.card, partner }, save: {
+    ...done.save,
+    love: { ...done.save.love, [partner]: { ...done.save.love[partner]!, evening: day } },
+    longGame: { ...save.longGame, outings: first ? [...outings, { day, who, kind }] : outings },
+  } }
 }
 
 // --- Invitations ----------------------------------------------------------------------------------

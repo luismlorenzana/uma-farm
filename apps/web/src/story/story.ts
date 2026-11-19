@@ -11,7 +11,7 @@
 // the loaded seam, so the bars' date chip names the story's festival without the placeholders in the initial JS; and
 // the special days (the year's festivals and the met Umas' birthdays, master data's through the cast), so the bar's
 // actions chip shows a special day's event actions the same way.
-import type { Festival, SpecialDays, StoryPack } from '@farm/domain'
+import type { FarmSave, Festival, SpecialDays, StoryPack } from '@farm/domain'
 import { useSyncExternalStore } from 'react'
 
 let pack: StoryPack | null = null
@@ -19,12 +19,15 @@ let resolve: (id: string) => string = (id) => id
 let loading: Promise<StoryPack> | null = null
 let year: readonly Festival[] | undefined
 let special: SpecialDays | undefined
+let base: StoryPack | null = null
+let expansionActive = false
 /** The loaded seam's own pieces, kept for `keepOnCast`. */
 let seam: {
   install: (pack: StoryPack) => (id: string) => string
   withCast: (pack: StoryPack, ids: readonly string[]) => StoryPack
   festivalsOf: (pack: StoryPack) => readonly Festival[]
   specialDaysOf: (pack: StoryPack) => SpecialDays
+  activateLongGame: (save: FarmSave, pack: StoryPack | null) => FarmSave
 } | null = null
 const listeners = new Set<() => void>()
 
@@ -48,9 +51,10 @@ function turnOn(next: StoryPack): void {
 /** Loads the pack once (the boot and the night wait on it, as they do on master data) and turns the resolver on. A
  * failure lets the next call try again. Resolves the pack as it stands now (`keepOnCast` may have grown its cast). */
 export function storyReady(): Promise<StoryPack> {
-  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf, specialDaysOf }) => {
+  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf, specialDaysOf, activateLongGame }) => {
     const loaded = await loadStoryPack()
-    seam = { install: installStory, withCast, festivalsOf, specialDaysOf }
+    base = loaded
+    seam = { install: installStory, withCast, festivalsOf, specialDaysOf, activateLongGame }
     turnOn(loaded)
     return loaded
   }).catch((error: unknown) => {
@@ -60,12 +64,22 @@ export function storyReady(): Promise<StoryPack> {
   return loading.then(() => pack!)
 }
 
+export const prepareStorySave = (save: FarmSave): FarmSave => seam?.activateLongGame(save, pack) ?? save
+
 /** Keeps everyone on the farm in the cast: an Uma on the roster the pack doesn't hold (one a release dropped, or one
  * from an older story) joins it bare and plays on placeholders, her name and face her master data's (or a lettered
  * disc). The store calls it as a save comes in; nothing changes when the cast holds them all. */
-export function keepOnCast(ids: readonly string[]): void {
-  if (!pack || !seam || ids.every((id) => inCast(id))) return
-  turnOn(seam.withCast(pack, ids))
+export function keepOnCast(ids: readonly string[], ending = false): void {
+  if (!pack || !base || !seam) return
+  const added = ending ? base.expansion ?? [] : []
+  const current = new Set([...base.cast.umas, ...added].map(uma => uma.characterId))
+  for (const id of ids) current.add(id)
+  if (ending === expansionActive && pack.cast.umas.length === current.size && pack.cast.umas.every(uma => current.has(uma.characterId))) return
+  expansionActive = ending
+  const town = added.length && base.expansionProfessions?.length
+    ? { ...base.town, professions: [...(base.town?.professions ?? []), ...base.expansionProfessions] } : base.town
+  const next = added.length ? { ...base, town, cast: { ...base.cast, umas: [...base.cast.umas, ...added] } } : base
+  turnOn(seam.withCast(next, ids))
 }
 
 /** The pack in React: null until it loads. */

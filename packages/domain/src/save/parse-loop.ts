@@ -23,6 +23,7 @@ import {
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 import { parseFestival } from './parse-festivals'
+import { COHORTS } from './long-game'
 import { CONTESTS } from '../festivals/state'
 
 /** Work places with four notification slots each. Restaurant service has no scheduled output. */
@@ -752,7 +753,7 @@ const NEWS_KINDS = ['story', 'season', 'new-year', 'festival', 'days', 'notes', 
  * save reads the id's shape only). */
 const FESTIVAL_NEWS_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
 /** The household milestones a morning may announce. */
-const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
+const HOUSEHOLD_NEWS = [1, ...COHORTS]
 
 /** The most Umas a retired Dorm's "home" line named: its top level's 20 beds. */
 const DORM_HOME_NEWS = 20
@@ -805,8 +806,10 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       case 'home': list(object(v, at, ['kind', 'umas']).umas, `${at}.umas`, 1, DORM_HOME_NEWS).forEach((id, j) => member(id, `${at}.umas.${j}`, roster)); return null
       // A household milestone.
       case 'household': {
-        const married = object(v, at, ['kind', 'married']).married
-        return { kind, married: (HOUSEHOLD_NEWS as readonly unknown[]).includes(married) ? married as number : fail(`${at}.married`, 'expected 1, 5, 10, 15 or 20') }
+        const { married, cohort } = object(v, at, ['kind', 'married', 'cohort'])
+        if (cohort !== undefined && (cohort !== true || married === 1)) fail(at, 'expected a celebration cohort')
+        return { kind, married: (HOUSEHOLD_NEWS as readonly unknown[]).includes(married) ? married as number : fail(`${at}.married`, 'expected the first marriage or a celebration cohort'),
+          ...(cohort === true ? { cohort } : {}) }
       }
     }
   })

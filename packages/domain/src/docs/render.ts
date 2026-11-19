@@ -1227,11 +1227,11 @@ function receptionBlock(): string {
 /** The homestead's houses, rooms, prices and what opens each. */
 function housesBlock(): string {
   const rows = HOMESTEAD_PLACES.map((p) => p.n === 0
-    ? ['The Farmhouse', `${HOUSE_ROOMS} (your own home)`, '—', '—', 'Day 1']
+    ? ['The Farmhouse', `${HOUSE_ROOMS} plus residence wings as needed`, '—', '—', 'Day 1']
     : [`House ${p.n}`, `${HOUSE_ROOMS}, or ${EXTENDED_ROOMS} extended`, g(HOUSE_COSTS[p.n - 1]!), g(EXTENSION_COSTS[p.n - 1]!), `The ${ORDINAL[p.n]} wedding${p.n > 1 ? `, House ${p.n - 1} built` : ''}`])
   const sum = (list: readonly number[]) => list.reduce((a, b) => a + b, 0)
   return table(['', 'Rooms', 'Build', 'Extend', 'Opens'], [...rows,
-    ['**All**', `**${HOUSE_ROOMS + HOUSE_COSTS.length * EXTENDED_ROOMS} rooms**`, `**${g(sum(HOUSE_COSTS))}**`, `**${g(sum(HOUSE_COSTS) + sum(EXTENSION_COSTS))} extended**`, '']])
+    ['**Before wings**', `**${HOUSE_ROOMS + HOUSE_COSTS.length * EXTENDED_ROOMS} rooms**`, `**${g(sum(HOUSE_COSTS))}**`, `**${g(sum(HOUSE_COSTS) + sum(EXTENSION_COSTS))} extended**`, '']])
 }
 /** The homestead's rows on the map, after the yard, the town edge last. */
 function homesteadMap(): string {
@@ -1247,11 +1247,13 @@ function homesteadMap(): string {
 /** The household milestones. */
 function householdMilestonesBlock(): string {
   return table(['Married', 'Opens'], [
-    ['1', 'The homestead (House 1 to build); the night’s companion and her house; the household’s meals; anniversaries'],
-    ['5', 'Household scene 1; the furniture set (five pieces); +5% items crew-wide'],
-    ['10', 'Household scene 2; two evenings every fourth day; two invitations a morning'],
-    ['15', 'Household scene 3; +5% more items crew-wide'],
-    [`${FINALE_MARRIED}`, 'The finale, the Great Harvest; then the Festival of Vows each year'],
+    ['1', 'The homestead, night visits, the night’s companion, household meals and anniversaries'],
+    ['5', 'Welcome to the Homestead, the five-piece furniture set and +5% items crew-wide'],
+    ['10', 'Supper for Ten, two evenings every fourth day and two invitations a morning'],
+    ['15', 'At the Hearth and +5% more items crew-wide'],
+    [`${FINALE_MARRIED}`, 'The Great Harvest and its dance'],
+    ['25, 30, 35, 40, 45', 'Market Evening, Lanterns at the Dock, A Garden Walk, A Homecoming and Setting the Tables'],
+    ['50', 'The Fiftieth Wedding closing celebration and Greater Festival preparations'],
   ])
 }
 /** The house's morning, and the Festival of Vows. */
@@ -1263,8 +1265,8 @@ function houseMorningBlock(): string {
     ['A house line', 'One resident’s line from the pack’s `houseLines`, else her temperament’s template'],
     ['Her birthday alone', 'Her room: only her +30, breakfast and item'],
     [`Not slept in for ${MISSES_NIGHTS} nights`, '“Rose Cottage misses you”, with Tonight › and Another night; never a penalty'],
-    ['Shared houses', 'Every night, +10 bond to each pair of residents (step 6)'],
-    ['The Festival of Vows', `The finale’s day, each later year: every spouse +${VOWS_POINTS}, and a festival night`],
+    ['Shared houses or wings', 'Every night, +10 bond to each pair sharing a house or Farmhouse wing (step 6)'],
+    ['The Festival of Vows', `The Greater Festival’s scheduled day each year after it has been held. Every spouse +${VOWS_POINTS} and a festival night`],
   ])
 }
 /** The house lines' templates by temperament, for an Uma the pack writes none for. */

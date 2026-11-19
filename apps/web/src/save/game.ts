@@ -14,7 +14,7 @@ import {
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
 import { forgetArrived } from '../story/news'
-import { keepOnCast, storyReady } from '../story/story'
+import { keepOnCast, prepareStorySave, storyReady } from '../story/story'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, readStoredRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
@@ -40,7 +40,7 @@ const INITIAL: GameState = { uid: null, status: 'idle', save: null, revision: 0,
 export const useGame = create<GameState>(() => INITIAL)
 // Everyone on the farm stays in the story's cast as a save comes in (an Uma a release dropped plays on placeholders).
 useGame.subscribe((state, before) => {
-  if (state.save && state.save !== before.save) keepOnCast(Object.keys(state.save.roster))
+  if (state.save !== before.save) keepOnCast(Object.keys(state.save?.roster ?? {}), state.save?.longGame?.celebrations['cohort:50'] !== undefined)
 })
 
 /** The save once booted, or null. */
@@ -61,7 +61,7 @@ function playable(save: StoredSave): FarmSave {
 function playableEnvelope(envelope: SaveEnvelope): { revision: number; save: FarmSave | null; migrated: boolean } {
   if (!envelope.save) return { revision: envelope.revision, save: null, migrated: false }
   const save = playable(envelope.save)
-  return { revision: envelope.revision, save, migrated: save !== envelope.save }
+  return { revision: envelope.revision, save: prepareStorySave(save), migrated: save !== envelope.save }
 }
 
 /** A new account: day 1, nobody on the roster yet; the farmer's name is the first tap. */
@@ -109,7 +109,7 @@ export async function boot(uid: string): Promise<{ startOver: boolean }> {
         olderFound = { save: row.save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null, fromDevice: true }
         return { startOver: true }
       }
-      useGame.setState({ status: 'ready', save: row.save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
+      useGame.setState({ status: 'ready', save: prepareStorySave(row.save), revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
       void syncNow()
       return { startOver: false }
     }
@@ -120,7 +120,7 @@ export async function boot(uid: string): Promise<{ startOver: boolean }> {
       return { startOver: true }
     }
     if (remote.save) {
-      useGame.setState({ status: 'ready', save: remote.save, revision: remote.revision, dirty: false, sync: 'synced', lastSyncedAt: nowIso() })
+      useGame.setState({ status: 'ready', save: prepareStorySave(remote.save), revision: remote.revision, dirty: false, sync: 'synced', lastSyncedAt: nowIso() })
       await persist()
       return { startOver: false }
     }

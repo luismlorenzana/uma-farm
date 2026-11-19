@@ -19,7 +19,8 @@ import { talentsD, type TalentOf, type Temperament } from '../farm/talents'
 import { drawStars } from '../goods/stars'
 import type { HouseholdNews, HouseLine, ItemLine, LevelLine, VowsLine } from '../night/summary'
 import { awayForNight } from '../expeditions/presence'
-import { FINALE_MARRIED, FURNITURE_PIECES, HOUSEHOLD_MILESTONES, marriedCount, residentsOf, vowsOn, type SaveV4 } from '../save/v4'
+import { CELEBRATIONS, COHORTS, endingRecord, isCelebration, ROOMS_PER_WING, type Celebration } from '../save/long-game'
+import { FINALE_MARRIED, FURNITURE_PIECES, HOUSEHOLD_MILESTONES, HOUSE_ROOMS, marriedCount, residentsOf, type SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import type { Finale, Household, HouseholdAt, Step } from '../story/authored'
 import type { Moment, StoryOutfit } from '../story/look'
@@ -28,6 +29,7 @@ import { beatOf, placeholderHouseholdBeat } from '../story/placeholders'
 import { lineGood } from './days'
 import { defaultHouse, missesYou } from './homestead'
 import { companionTonight } from './loop'
+import { celebrationGuests, celebrationReached, celebrationTitle, householdVows, weddingOrder } from './long-game'
 import { addLove, advance, bar } from './love'
 import type { EventCard } from './events'
 import { perkOf } from './perks'
@@ -67,13 +69,22 @@ export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | 
 
 // --- Step 6: shared houses and night levels ---------------------------------------------------------
 
+function residenceGroups(save: SaveV4, house: number): string[][] {
+  if (!save.homestead.houses[house]?.wings) return [residentsOf(save, house)]
+  const residents = weddingOrder(save).filter(id => save.love[id]?.house === house)
+  const groups = [residents.slice(0, HOUSE_ROOMS)]
+  for (let at = HOUSE_ROOMS; at < residents.length; at += ROOMS_PER_WING) groups.push(residents.slice(at, at + ROOMS_PER_WING))
+  return groups
+}
+
 /** Step 6: +10 bond a night to each pair of residents sharing a house, through `addBond` (Romance 4's
  * ×1.5 inside). Every house, every night. */
 export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>, trips: Pick<SaveV4, 'expeditions'> = save): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
   let next = save
   const paid: { a: string; b: string; points: number }[] = []
-  save.homestead.houses.forEach((_, house) => {
-    const here = residentsOf(save, house).filter((id) => save.roster[id] && !awayForNight(trips, id, save.calendar.day)).sort((a, b) => Number(a) - Number(b))
+  const groups = save.homestead.houses.flatMap((_, house) => residenceGroups(save, house))
+  for (const group of groups) {
+    const here = group.filter((id) => save.roster[id] && !awayForNight(trips, id, save.calendar.day)).sort((a, b) => Number(a) - Number(b))
     for (let i = 0; i < here.length; i++) {
       for (let j = i + 1; j < here.length; j++) {
         const pay = addBond(next, pack, here[i]!, here[j]!, BOND_POINTS.house)
@@ -81,7 +92,7 @@ export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>, trips: 
         if (pay.paid > 0) paid.push({ a: here[i]!, b: here[j]!, points: pay.paid })
       }
     }
-  })
+  }
   return { save: next, paid }
 }
 
@@ -132,10 +143,13 @@ export function householdNight(save: SaveV4): { save: SaveV4; news: HouseholdNew
   const count = marriedCount(save)
   const h = save.homestead
   if (count === h.married) return { save, news: [] }
-  const passed = HOUSEHOLD_MILESTONES.filter((m) => h.married < m && m <= count)
+  const milestones = save.longGame ? [1, ...COHORTS] : HOUSEHOLD_MILESTONES
+  const passed = milestones.filter((m) => h.married < m && m <= count)
   const furniture = passed.includes(5) && h.furniture.length === 0 ? Array.from({ length: FURNITURE_PIECES }, () => null) : h.furniture
-  const finale = passed.includes(FINALE_MARRIED) && h.finale === 0 ? save.calendar.day : h.finale
-  return { save: { ...save, homestead: { ...h, married: count, furniture, finale } }, news: passed.map((married) => ({ kind: 'household', married })) }
+  const finale = !save.longGame && passed.includes(FINALE_MARRIED) && h.finale === 0 ? save.calendar.day : h.finale
+  return { save: { ...save, homestead: { ...h, married: count, furniture, finale } }, news: passed.map((married) => ({
+    kind: 'household', married, ...(save.longGame && married !== 1 ? { cohort: true } : {}),
+  })) }
 }
 
 // --- Step 9: the house's morning ---------------------------------------------------------------------
@@ -147,7 +161,9 @@ export function householdNight(save: SaveV4): { save: SaveV4; news: HouseholdNew
  * own count. On a birthday-alone night only she counts. An empty house's morning is quiet: no line.
  */
 export function houseMorning(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, night: NightHouse, talentOf: TalentOf = talentsD, away: ReadonlySet<string> = new Set()): { save: SaveV4; line: HouseLine | null; items: ItemLine[] } {
-  const umas = (night.alone !== null ? [night.alone] : residentsOf(save, night.house)).filter((id) => save.roster[id] && !away.has(id))
+  const groups = residenceGroups(save, night.house)
+  const room = groups.find(group => night.companion && group.includes(night.companion)) ?? groups[0] ?? []
+  const umas = (night.alone !== null ? [night.alone] : room).filter((id) => save.roster[id] && !away.has(id))
   if (umas.length === 0) return { save, line: null, items: [] }
   let next = save
   let paid = 0
@@ -192,7 +208,7 @@ export function anotherNight(save: SaveV4): SaveV4 {
 /** Step 9: on the finale's day of the year, each later year, the Festival of Vows: every spouse +50,
  * and a festival night tonight (`eveningSlots`). */
 export function festivalOfVows(save: SaveV4): { save: SaveV4; line: VowsLine | null } {
-  if (!vowsOn(save.homestead, save.calendar.day)) return { save, line: null }
+  if (!householdVows(save)) return { save, line: null }
   const spouses = Object.keys(save.love).filter((id) => save.roster[id] && save.love[id]!.stage === 'spouse').sort((a, b) => Number(a) - Number(b))
   let next = save
   let paid = 0
@@ -252,22 +268,26 @@ export function houseLineOf(uid: string, day: number, umas: readonly string[], h
 
 /** A household scene's or the finale's id in `diary.read`: `household:5`, `household:10`, `household:15`,
  * `finale`. */
-export type HouseholdId = `household:${HouseholdAt}` | 'finale'
-export const HOUSEHOLD_IDS: readonly HouseholdId[] = ['household:5', 'household:10', 'household:15', 'finale']
+export type HouseholdId = `household:${HouseholdAt}` | 'finale' | Celebration
+export const HOUSEHOLD_IDS: readonly HouseholdId[] = ['household:5', 'household:10', 'household:15', 'finale', ...CELEBRATIONS]
 export const isHouseholdId = (id: string): id is HouseholdId => (HOUSEHOLD_IDS as readonly string[]).includes(id)
 /** Its count: 5, 10, 15, or 20 for the finale. */
-export const householdAt = (id: HouseholdId): number => (id === 'finale' ? FINALE_MARRIED : Number(id.split(':')[1]))
+export const householdAt = (id: HouseholdId): number => (id === 'finale' ? FINALE_MARRIED : id === 'greater-festival' ? 50 : Number(id.split(':')[1]))
 /** Its title: "Household scene 1", …, "The Great Harvest". */
-export const householdTitle = (id: HouseholdId): string => (id === 'finale' ? 'The Great Harvest' : `Household scene ${HOUSEHOLD_IDS.indexOf(id) + 1}`)
+export const householdTitle = (id: HouseholdId): string => isCelebration(id) ? celebrationTitle(id) : id === 'finale' ? 'The Great Harvest' : `Household scene ${HOUSEHOLD_IDS.indexOf(id) + 1}`
 
 /** Whether a household scene or the finale is reached: the night saw its count (the morning after the
  * wedding that made it), the finale once its morning came. */
-export const householdReached = (save: Pick<SaveV4, 'homestead'>, id: HouseholdId): boolean =>
-  id === 'finale' ? save.homestead.finale > 0 : save.homestead.married >= householdAt(id)
+type HouseholdSave = Pick<SaveV4, 'homestead'> & Partial<Pick<SaveV4, 'calendar' | 'love' | 'longGame' | 'diary'>>
+export const householdReached = (save: HouseholdSave, id: HouseholdId): boolean => {
+  if (isCelebration(id)) return !!save.calendar && !!save.love && celebrationReached({ calendar: save.calendar, love: save.love, longGame: save.longGame }, id)
+  if (save.diary?.read.includes(id)) return true
+  return id === 'finale' ? save.homestead.finale > 0 : !save.longGame && save.homestead.married >= householdAt(id)
+}
 
 /** The household's Ready offers: each scene and the finale reached and not yet played, the pack's or the game's own
  * (`householdOf`). Never auto-played. */
-export function householdReady(save: Pick<SaveV4, 'homestead' | 'diary'>): HouseholdId[] {
+export function householdReady(save: HouseholdSave & Pick<SaveV4, 'diary'>): HouseholdId[] {
   return HOUSEHOLD_IDS.filter((id) => householdReached(save, id) && !save.diary.read.includes(id))
 }
 
@@ -292,7 +312,44 @@ export interface HouseholdPlay {
   outfit?: StoryOutfit
   moments: Moment[]
 }
-export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: Household, id: HouseholdId, participants?: readonly string[]): HouseholdPlay | null {
+const celebrationSettings: Partial<Record<Celebration, string>> = {
+  'cohort:25': 'The market stalls close early. Your household takes their turn behind the counters.',
+  'cohort:30': 'At the dock, the newest spouses light a lantern for each of their weddings.',
+  'cohort:35': 'Five paths through the garden lead back to a table beneath the trees.',
+  'cohort:40': 'The household looks through the old portraits before making a new one.',
+  'cohort:45': 'Five blank pages are set out for the household’s plans.',
+  'cohort:50': 'The bell rings for the fiftieth wedding. Five spouses step up together as the rest of the household gathers.',
+  'greater-festival': 'Ten tables, one for each group of five, stretch across the square.',
+}
+
+export function householdPlay(save: Pick<SaveV4, 'love' | 'roster' | 'longGame'> & Partial<Pick<SaveV4, 'diary' | 'farm'>>, household: Household, id: HouseholdId, participants?: readonly string[]): HouseholdPlay | null {
+  if (isCelebration(id)) {
+    const spouses = celebrationGuests(save, id)
+    if (!spouses.length) return null
+    const at = householdAt(id)
+    const scene = household.celebrations?.[id] ?? (at === 20 ? household.finale : household.scenes?.find(scene => scene.at === at))
+    const title = celebrationTitle(id)
+    const beats: HouseholdPlay['parts'] = spouses.flatMap((who, i) => {
+      const authored = scene?.each?.[who]
+      if (id === 'greater-festival' && i % 5 !== 0 && !authored) return []
+      const line = id === 'greater-festival' ? 'Our table is ready, husband. Everyone is here.' : 'I’m glad we get to share this day, husband.'
+      return [{ who, steps: authored ?? [{ say: who, line, emote: 'happy' }] }]
+    })
+    const tradition = save.longGame?.tradition
+    const prepared = save.longGame?.gifts?.length ?? 0
+    const details: Step[] = []
+    if (id === 'cohort:50') {
+      const record = save.longGame?.ending ?? (save.diary && save.farm ? endingRecord({ roster: save.roster, diary: save.diary, farm: save.farm }) : null)
+      if (record) details.push({ narrate: `The farm’s book records ${record.discoveries} discoveries and ${record.milestones} milestones. ${record.workers} Umas have joined the farm crew.` })
+    }
+    if (id === 'greater-festival' && tradition) details.push({ narrate: `The household brings back a tradition from ${celebrationTitle(`cohort:${tradition}`)}.` })
+    if (id === 'greater-festival' && prepared) details.push({ narrate: `The tables hold ${prepared} gifts gathered for the festival.` })
+    const close = id === 'cohort:50' ? 'Fifty weddings brought this household together. Tomorrow, the farm is yours to keep growing.'
+      : id === 'greater-festival' ? 'All ten groups raise their glasses to the years ahead.' : 'The five spouses gather for a portrait before the evening ends.'
+    return { id, title, spouses, play: id === 'cohort:20' ? household.finale?.play ?? null : null, moments: ['festival-night'], ...(scene?.outfit ? { outfit: scene.outfit } : {}),
+      parts: [{ who: null, steps: scene?.open ?? [{ narrate: celebrationSettings[id] ?? title + '.' }] }, ...beats,
+        { who: null, steps: [...details, ...(scene?.close ?? [{ narrate: close }])] }] }
+  }
   const scene = id === 'finale' ? household.finale : household.scenes?.find((s) => `household:${s.at}` === id)
   if (!scene) return null
   const spouses = spousesInOrder(save).filter(who => !participants || participants.includes(who))
@@ -311,7 +368,18 @@ export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: 
 export function readHousehold(save: SaveV4, id: HouseholdId, seenBy: readonly string[] = []): SaveV4 {
   if (!householdReached(save, id)) return save
   if (save.diary.read.includes(id)) return save
-  const next = { ...save, diary: { ...save.diary, read: [...save.diary.read, id] } }
-  const spouses = new Set(spousesInOrder(save))
+  let next = { ...save, diary: { ...save.diary, read: [...save.diary.read, id] } }
+  const ceremony = isCelebration(id) && save.longGame
+  if (ceremony) {
+    if (!seenBy.length) return save
+    const game = { ...ceremony, celebrations: { ...ceremony.celebrations, [id]: save.calendar.day } }
+    if (id === 'cohort:50') game.ending = endingRecord(save)
+    if (id === 'greater-festival') delete game.pledge
+    next = { ...next, longGame: game }
+    if (id === 'greater-festival') for (const gift of game.gifts ?? []) {
+      for (const worker of gift.crew) next = recordLibrary(next, worker, 'fact:keepsake:greater-festival')
+    }
+  }
+  const spouses = new Set(isCelebration(id) ? celebrationGuests(save, id) : spousesInOrder(save))
   return seenBy.filter(who => spouses.has(who)).reduce((s, who) => recordLibrary(s, who, `shared:${id}`), next)
 }

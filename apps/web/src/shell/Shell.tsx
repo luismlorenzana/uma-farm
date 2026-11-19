@@ -23,12 +23,12 @@ import { useGame } from '../save/game'
 import { playHeld } from '../loop/stove-session'
 import { castIds, useStory } from '../story/story'
 import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
-import { SyncWarning } from './SyncWarning'
 
 /** The field's screen: full screen, its own strip at the top, no rail. */
 const FIELD_PATH = '/field'
 
 const MenuSheet = lazy(() => import('./MenuSheet').then((module) => ({ default: module.MenuSheet })))
+const SyncWarning = lazy(() => import('./SyncWarning').then(module => ({ default: module.SyncWarning })))
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
 const ScenePlayer = lazy(() => import('../loop/ScenePlayer'))
 const NameSheet = lazy(() => import('../loop/NameSheet'))
@@ -42,6 +42,7 @@ const NightLevel = lazy(() => import('../loop/NightLevel'))
 const HouseholdPlayer = lazy(() => import('../loop/HouseholdPlayer'))
 const OccasionPlayer = lazy(() => import('../loop/OccasionPlayer'))
 const LifePlayer = lazy(() => import('../loop/LifeScene'))
+const NightVisits = lazy(() => import('../loop/NightVisits'))
 const Gallery = lazy(() => import('../loop/Gallery'))
 const KitchenSheet = lazy(() => import('../loop/KitchenSheet'))
 const RestaurantSheet = lazy(() => import('../loop/RestaurantSheet'))
@@ -69,6 +70,9 @@ export function Shell() {
   const household = search.get('household')
   const occasion = search.get('occasion')
   const life = search.get('life')
+  const visitReplay = search.get('visitReplay')
+  const visitMorning = search.has('visitMorning')
+  const visits = search.has('visits')
   const gallery = search.get('gallery')
   const farm = useGame((s) => s.save !== null)
   const free = farm && !naming && !scene
@@ -102,6 +106,9 @@ export function Shell() {
           {household && free && !read && !playing && <Suspense fallback={null}><HouseholdPlayer key={household} value={household} replay={search.get('replay') === '1'} /></Suspense>}
           {occasion && free && !read && !playing && <Suspense fallback={null}><OccasionPlayer key={occasion} id={occasion} /></Suspense>}
           {life && free && !read && !playing && <Suspense fallback={null}><LifePlayer key={life} value={life} /></Suspense>}
+          {(visits || visitReplay || visitMorning) && free && !read && !playing && <Suspense fallback={null}>
+            <NightVisits key={visitReplay ?? (visitMorning ? 'morning' : 'tonight')} replay={visitReplay} morning={visitMorning} />
+          </Suspense>}
           {gallery && free && !read && !playing && <Suspense fallback={null}><Gallery key={gallery} id={gallery} /></Suspense>}
           {sheet === 'kitchen' && free && <Suspense fallback={null}><KitchenSheet /></Suspense>}
           {sheet === 'restaurant' && free && <Suspense fallback={null}><RestaurantSheet /></Suspense>}
@@ -112,7 +119,7 @@ export function Shell() {
       }
     >
       <div className="flex h-full flex-col" data-farm-frame>
-        <SyncWarning />
+        <Suspense fallback={null}><SyncWarning /></Suspense>
         <div className="pr-safe pb-safe relative min-h-0 flex-1">
           <div className="relative h-full" data-farm-page>
             <Outlet />

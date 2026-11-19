@@ -43,6 +43,8 @@ export interface PackFiles {
 export interface StoryPack {
   /** The cast file: every character in its order, each with what the pack gives of her. */
   readonly cast: Cast
+  readonly expansion?: readonly CastEntry[]
+  readonly expansionProfessions?: Town['professions']
   readonly ties: Ties
   /** Her bible by character id; a character without one falls back to her calling and the game's own. */
   readonly bibles: ReadonlyMap<string, UmaBible>
@@ -132,6 +134,14 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
   const world = files.world === undefined ? null : take('world.json', checkWorld(files.world, { isGood }))
   const festivals = new Set((world?.festivals ?? []).map((e) => e.id).filter((id) => !isFestivalId(id)))
   const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), festivals, locations: locationIdsOf({ town }), ...(exported ? { exported } : {}) }))
+  if (world?.expansionCast) {
+    const ids = new Set(cast.umas.map(uma => uma.characterId))
+    world.expansionCast = world.expansionCast.filter(id => {
+      if (ids.has(id)) return true
+      errors.push(`world.json: expansionCast ${id} must be in cast.json; skipped`)
+      return false
+    })
+  }
   if (town?.professions?.some(job => job.partners.some(id => !cast.umas.some(uma => uma.characterId === id)))) {
     errors.push('town.json: professions must use people in cast.json; using the bundled schedule')
     const { professions: _, ...rest } = town
