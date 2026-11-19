@@ -26,6 +26,7 @@ import { actionCost, canSpendForEvent, type SpecialDays } from '../farm/actions'
 import { dateOf, festivalOn, SEASONS, type Festival, type FestivalId } from '../farm/calendar'
 import { farmRankOf } from '../farm/farm'
 import { handDay } from '../farm/farmhands'
+import { worksOn, type SchedulePack } from '../town/town'
 import { FESTIVAL_PLACE_POINTS } from '../farm/milestones'
 import { bookedForExpedition } from '../expeditions/presence'
 import { activeContest, festivalBooked } from '../festivals/state'
@@ -136,10 +137,11 @@ export interface ContestEntry {
 }
 
 /** Why she can't cook for the Contest, or null: a farmhand with an action tonight (the Kitchen's assistant's counted). */
-export function cookLock(save: FarmSave, id: string): string | null {
+export function cookLock(save: FarmSave, id: string, pack: SchedulePack | null = null): string | null {
   const day = handDay(save, id)
   if (!day) return 'Only a farmhand cooks for you.'
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
+  if (pack?.town?.professions?.length && !worksOn(save, pack, id)) return 'She has no farm shift today.'
   if (save.today.server === id) return 'She’s serving today.'
   if (festivalBooked(save, id)) return 'She’s booked for the festival.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
@@ -181,7 +183,7 @@ export const entryStars = (entry: Pick<ContestEntry, 'main' | 'side'>): number =
 
 /** Why the Contest can't be entered now, or null: its day (`days.festivals`, the story's year), the Kitchen built, one
  * entry, no play under way, three actions (event actions first), a known recipe with its main and side held, the cook. */
-export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEntry | null): string | null {
+export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEntry | null, pack: SchedulePack | null = null): string | null {
   if (!contestOn(save.calendar.day, days.festivals)) return 'No contest today.'
   if (!kitchenBuilt(save)) return 'Build the Kitchen to enter.'
   if (contestEntered(save)) return 'One entry a Contest.'
@@ -198,7 +200,7 @@ export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEn
     const held = save.items[at.id]?.[at.stars - 1] ?? 0
     if (held < need) return `Short ${need - held} ${itemNameOf(at.id)}.`
   }
-  return entry.cook === null ? null : cookLock(save, entry.cook)
+  return entry.cook === null ? null : cookLock(save, entry.cook, pack)
 }
 
 // --- The judging ----------------------------------------------------------------------------------------------------------

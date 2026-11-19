@@ -36,7 +36,8 @@ const { castLens, masterCast } = await import('../story/load')
 const { namer } = await import('../story/people')
 const { default: TownPage } = await import('./TownPage')
 const { default: HeartsPage } = await import('../loop/HeartsPage')
-const { findPeople, peopleRows, sortPeople } = await import('./town-view')
+const { findPeople, locationViews, peopleRows, sortPeople } = await import('./town-view')
+const { findHer } = await import('../loop/schedule-words')
 const { loopMenuGroups } = await import('../shell/MenuSheet')
 
 const AT = '2026-11-13T10:00:00.000Z'
@@ -133,6 +134,30 @@ afterEach(async () => {
 })
 
 describe('the town', () => {
+  it('shows working spouses at the counter and self-service on its own day off', () => {
+    const id = '90001'
+    const legacy = fixture.pack!
+    const pack: StoryPack = {
+      ...legacy, town: {
+        ...legacy.town, professions: [{ id: 'grocer', name: 'Grocer', at: 'store', off: 'wednesday',
+          partners: [id, SISTER], role: 'marta-quill' }],
+      },
+    }
+    const spouse = { ...farm(4), roster: { [id]: { ...newRosterUma(1), farmhand: 1 } },
+      love: { [id]: { ...newLove(), stage: 'spouse' as const, house: 0, wed: 2 } } }
+    const store = (at: SaveV4) => locationViews(townDay(at, pack), pack, at).find(view => view.loc.id === 'store')!
+    expect(store(spouse)).toMatchObject({ here: [id], selfService: false })
+    expect(findHer(spouse, pack, id)).toMatchObject({
+      today: 'The General Store, at work', season: 'Each week', farm: false,
+      lines: [{ at: 'store', text: 'Grocer · Mon, Tue, Thu' }, { at: 'farm', text: 'Farm shifts · Fri, Sat, Sun' }, { at: null, text: 'Day off · Wed' }],
+    })
+    const off = { ...spouse, calendar: { day: 3 } }
+    expect(store(off)).toMatchObject({ here: [], selfService: true })
+    expect(findHer(off, pack, id)).toMatchObject({ today: 'Day off', farm: true })
+    const late = { ...spouse, calendar: { day: 5 } }
+    expect(store(late)).toMatchObject({ here: [SISTER], selfService: false })
+  })
+
   it('opens the expedition post at Rank 7 and follows a party out and back', async () => {
     const id = '90001'
     const base = farm(5)

@@ -8,7 +8,7 @@
 // choose) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
-  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
+  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
   canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   MAX_SEED_TARGET, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
@@ -103,7 +103,12 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
   const away = awayOn(save, id, save.calendar.day)
   const back = !working && pack ? nextFarmDay(pack, id, save.calendar.day) : null
   const chips = working ? dayChips(day) : []
-  const farmDays = !pack ? null : atHome(save, id) ? 'every day' : daysList(farmDaysIn(pack, id, dateOf(save.calendar.day).season))
+  const weekly = pack ? professionOf(pack, id) : null
+  const { season, year } = dateOf(save.calendar.day)
+  const farmDays = weekly ? weekly.farm.map(weekdayShort).join(', ')
+    : !pack ? null : atHome(save, id) ? 'every day' : daysList(farmDaysIn(pack, id, season, year))
+  const offToday = pack && professionShift(pack, id, save.calendar.day) === 'off'
+  const offTomorrow = pack && professionShift(pack, id, save.calendar.day + 1) === 'off'
   const plots = save.fields.plots.length
   const edit = (next: FarmTask[]) => { setError(null); setHandTasks(id, next).catch((e: unknown) => setError(errorWords(e))) }
   const move = (i: number) => edit(tasks.map((t, k) => (k === i - 1 ? tasks[i]! : k === i ? tasks[i - 1]! : t)))
@@ -113,7 +118,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
         <Avatar id={id} size={44} label={name} />
         <span className="min-w-0 flex-1">
           <Link to={`/hearts?view=work&uma=${id}`} state={{ back: true }} className="block truncate text-[15px] font-semibold text-ink">{name}</Link>
-          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{pack ? jobWords(pack, id) : 'A job in town'}</span>
+          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{weekly ? weekly.profession.name : pack ? jobWords(pack, id) : 'A job in town'}</span>
           {farmDays && <span className="block truncate text-[12px] text-ink-soft" data-farm-days>Farm days · {farmDays}</span>}
         </span>
         {working && (
@@ -131,9 +136,9 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
       {working
         ? <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
         : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away)}</p>
-        : <p className="text-[13px] font-semibold" data-in-town>In town today{back ? ` · back ${shortDate(back)}` : ''}</p>}
+        : <p className="text-[13px] font-semibold" data-in-town={!offToday || undefined} data-day-off={offToday || undefined}>{offToday ? 'Day off' : 'In town today'}{back ? ` · back ${shortDate(back)}` : ''}</p>}
       {working && !worksOn(save, pack, id, save.calendar.day + 1) && (
-        <p className="text-[12px] text-ink-soft">{awayOn(save, id, save.calendar.day + 1) ? 'Away tomorrow' : 'In town tomorrow'}</p>
+        <p className="text-[12px] text-ink-soft">{awayOn(save, id, save.calendar.day + 1) ? 'Away tomorrow' : offTomorrow ? 'Day off tomorrow' : 'In town tomorrow'}</p>
       )}
       {tasks.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-no-tasks>No tasks yet: add one, and she starts tonight.</p>

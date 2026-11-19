@@ -9,20 +9,20 @@
 //                   her place in the cast, three Umas each) on every third day of each season, starting on day 1, 2 or 3
 //                   by her place in the cast; at home, off the map, the other days
 //   a spot          holds everyone the schedules put there: the map shows how many and their first faces
-//   on the farm     a spouse in her room lives at the farm, never in town; a farmhand is at the farm on her farm
-//                   days, the days her schedule doesn't put her out in town (`farmDaysIn`), and in town on the rest
-//   the posts       each of the town's people is at her post: the spot town.json has her keep, else the shop or office of
-//                   her role, else the spot the game has her keep
+//   professions     town and farm shifts alternate with her partner's. On their profession's day off, both rest.
+//                   Marriage changes her residence. Daytime presence follows her shift or free-day outing.
+//   the posts       the mayor keeps her post. Legacy casts also have static town people.
 //
-// The same day always shows the same town, and the same season the same days.
-import { dateOf, DAYS_PER_SEASON, type Season } from '../farm/calendar'
+// The same absolute farm day always shows the same schedule.
+import { dateOf, DAYS_PER_SEASON, farmDay, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { awayOn } from '../expeditions/presence'
 import { atHome, type SaveV4, type TownTalks } from '../save/v4'
 import { GAME_LOCATIONS, SHOP_IDS, SPOT_IDS, type LifeWhen, type LocationKind, type ShopId, type SpotId } from '../story/authored'
 import type { CastId } from '../story/cast'
-import { castOrder, type StoryPack } from '../story/pack'
+import { castEntry, castOrder, type StoryPack } from '../story/pack'
 import { favouriteSpotOf, herHomeOf, herJobOf, herRoutineOf, storyLocationsOf, townLinesOf, townOf } from '../story/placeholders'
+import { professionOf, professionShift } from './professions'
 
 /** The town's shops and offices: each one's name, line, the role that keeps it, and what it offers. */
 export interface TownShop {
@@ -171,7 +171,14 @@ const holdsIn = (when: LifeWhen, season: Season, day: number): boolean =>
 /** Where her schedule puts her on a farm day, and why: its first stop that holds; at null (at home, off the map) when none
  * does. Whether she's on the farm instead is the save's (`onFarmToday`). */
 export function whereOn(pack: SchedulePack, id: string, day: number): { at: string | null; by: HereBy | null } {
-  const stop = scheduleOf(pack, id).stops.find((s) => lifeHolds(s, day))
+  const job = professionOf(pack, id)
+  if (job) {
+    const shift = professionShift(pack, id, day)
+    if (shift === 'town') return { at: job.profession.at, by: 'job' }
+    const outing = shift === 'off' ? castEntry(pack, id)?.freeAt : undefined
+    if (outing) return { at: outing, by: 'routine' }
+  }
+  const stop = scheduleOf(pack, id).stops.find((s) => (!job || s.by !== 'job') && lifeHolds(s, day))
   return stop ? { at: stop.at, by: stop.by } : { at: null, by: null }
 }
 
@@ -191,13 +198,13 @@ export interface SeasonPlace {
   readonly days: readonly number[]
 }
 /** Her season by place: each place her schedule puts her and its days, in the order of the first. */
-export function seasonSchedule(pack: SchedulePack, id: string, season: Season): SeasonPlace[] {
+export function seasonSchedule(pack: SchedulePack, id: string, season: Season, year = 1): SeasonPlace[] {
   const out: { at: string | null; by: HereBy | null; days: number[] }[] = []
   const { stops } = scheduleOf(pack, id)
+  const weekly = professionOf(pack, id)
   for (let day = 1; day <= DAYS_PER_SEASON; day++) {
     const stop = stops.find((s) => holdsIn(s, season, day))
-    const at = stop?.at ?? null
-    const by = stop?.by ?? null
+    const { at, by } = weekly ? whereOn(pack, id, farmDay({ year, season, day })) : { at: stop?.at ?? null, by: stop?.by ?? null }
     const group = out.find((g) => g.at === at && g.by === by)
     if (group) group.days.push(day)
     else out.push({ at, by, days: [day] })
@@ -220,7 +227,9 @@ const farmDayCache = new WeakMap<object, Map<string, readonly number[]>>()
  * her out in town (`outIn`: her routine, her job or the default schedule's spot), including a day at her `home` in town
  * or at home off the map. A season her schedule leaves without one: the default schedule's other days (8 of 12, by her
  * place in the cast), so every farmhand works. Read once a pack. */
-export function farmDaysIn(pack: SchedulePack, id: string, season: Season): readonly number[] {
+export function farmDaysIn(pack: SchedulePack, id: string, season: Season, year = 1): readonly number[] {
+  if (professionOf(pack, id)) return Array.from({ length: DAYS_PER_SEASON }, (_, i) => i + 1)
+    .filter(day => professionShift(pack, id, farmDay({ year, season, day })) === 'farm')
   let known = farmDayCache.get(pack)
   if (!known) farmDayCache.set(pack, (known = new Map()))
   const key = `${id}:${season}`
@@ -237,6 +246,8 @@ export function farmDaysIn(pack: SchedulePack, id: string, season: Season): read
 
 /** Whether a day is one of her farm days (`farmDaysIn`). Every other day is a town day. */
 export function farmDayOn(pack: SchedulePack, id: string, day: number): boolean {
+  const shift = professionShift(pack, id, day)
+  if (shift !== null) return shift === 'farm'
   const date = dateOf(day)
   return farmDaysIn(pack, id, date.season).includes(date.day)
 }
@@ -247,19 +258,23 @@ export function nextFarmDay(pack: SchedulePack, id: string, day: number): number
   return null
 }
 
-/** Whether she's on the farm on a day (today, unless another is given): a spouse in her room every day, or a farmhand on
- * her farm days (`farmDayOn`). Either way she's in front of you there, and not in town. A farmhand's town days, and
- * everyone else you've met (a spouse waiting for a room among them, unless she's a farmhand on a farm day), are in town
- * by her schedule. A day ahead reads the save as it stands. */
-export const onFarmToday = (save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack, id: string, day = save.calendar.day): boolean =>
-  !awayOn(save, id, day) && !!save.roster[id] && (atHome(save, id) || (save.roster[id]!.farmhand !== undefined && farmDayOn(pack, id, day)))
+/** Daytime presence follows her shift and residence, with optional outings on the day off. */
+export function onFarmToday(save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack, id: string, day = save.calendar.day): boolean {
+  const uma = save.roster[id]
+  if (!uma || awayOn(save, id, day)) return false
+  const shift = professionShift(pack, id, day)
+  if (shift === null) return atHome(save, id) || (uma.farmhand !== undefined && farmDayOn(pack, id, day))
+  if (shift === 'town') return false
+  if (shift === 'off' && castEntry(pack, id)?.freeAt) return false
+  return atHome(save, id) || (shift === 'farm' && uma.farmhand !== undefined)
+}
 
-/** Whether she works the farm on a day (today, unless another is given): a farmhand on the farm (`onFarmToday`: her farm
- * day, or every day once she's a spouse in her room). With no pack to read her schedule, every farmhand works every day.
- * On a town day she's in town: she doesn't work, eat on the farm or cost anything. */
+/** Farm work uses her shift. Housed spouses still come home for the night after a day in town. */
 export function worksOn(save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack | null, id: string, day = save.calendar.day): boolean {
   if (save.roster[id]?.farmhand === undefined || awayOn(save, id, day)) return false
-  return pack === null || onFarmToday(save, pack, id, day)
+  if (!pack) return true
+  const shift = professionShift(pack, id, day)
+  return shift === null ? onFarmToday(save, pack, id, day) : shift === 'farm'
 }
 
 /** One day in town: who's at each location, and where each one out is. */
@@ -325,7 +340,12 @@ export const giftedToday = (save: Pick<SaveV4, 'town' | 'calendar'>, id: string)
 
 /** Her line when you find her in town today: one of her town lines (the pack's, else the game's), the same all day.
  * `{farmer}` fills as it shows. */
-export function townLineOf(save: Pick<SaveV4, 'account' | 'calendar'>, pack: Pick<StoryPack, 'bibles'>, id: string): string {
+export function townLineOf(save: Pick<SaveV4, 'account' | 'calendar'> & Partial<Pick<SaveV4, 'love'>>, pack: Pick<StoryPack, 'bibles'>, id: string): string {
   const lines = townLinesOf(pack, id)
-  return lines[Math.min(lines.length - 1, Math.floor(draw(save.account.uid, save.calendar.day, `town-line:${id}`, 0) * lines.length))]!
+  const line = lines[Math.min(lines.length - 1, Math.floor(draw(save.account.uid, save.calendar.day, `town-line:${id}`, 0) * lines.length))]!
+  return withSpouseAddress(line, save.love?.[id]?.stage)
 }
+
+/** Authored dialogue may use the farmer's name while courting and husband after marriage. */
+export const withSpouseAddress = (line: string, stage: SaveV4['love'][string]['stage'] | undefined): string =>
+  line.replaceAll('{address}', stage === 'spouse' ? 'husband' : '{farmer}')

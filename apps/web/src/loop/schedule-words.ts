@@ -2,7 +2,7 @@
 // town show it, and who's in town on a calendar day. Every placement is the schedule's, never a draw. Names are the
 // town map's (the pack's, else the game's). Pure, so the screens and the tests read the same.
 import {
-  atHome, awayOn, dateOf, farmDaysIn, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereOn, whereYouMeet,
+  atHome, awayOn, dateOf, farmDaysIn, isFarmhand, nextOut, onFarmToday, professionOf, professionShift, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, weekdayShort, whereOn, whereYouMeet,
   type SaveV4, type SeasonPlace, type StoryPack,
 } from '@farm/domain'
 import { awayWords } from './expedition-words'
@@ -67,6 +67,25 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
   const date = dateOf(save.calendar.day)
   const season = SEASON_NAMES[date.season]
   const away = awayOn(save, id, save.calendar.day)
+  const weekly = professionOf(pack, id)
+  if (weekly) {
+    const { profession, town, farm } = weekly
+    const works = isFarmhand(save, id)
+    const shift = professionShift(pack, id, save.calendar.day)
+    const here = whereYouMeet(save, pack, id)
+    return {
+      today: away ? awayWords(away) : shift === 'off' ? (here.at ? `Day off · ${placeName(pack, here.at)}` : 'Day off')
+        : here.farm ? 'On the farm' : here.at ? `${placeName(pack, here.at)}${shift === 'town' ? ', at work' : ''}` : 'At home',
+      at: here.at,
+      farm: here.farm,
+      season: 'Each week',
+      lines: [
+        { at: profession.at, text: `${profession.name} · ${town.map(weekdayShort).join(', ')}` },
+        { at: works ? 'farm' : null, text: `${works ? 'Farm shifts' : 'Personal days'} · ${farm.map(weekdayShort).join(', ')}` },
+        { at: null, text: `Day off · ${weekdayShort(profession.off)}` },
+      ],
+    }
+  }
   if (away) return { today: awayWords(away), at: null, season, lines: [], farm: false }
   if (save.roster[id] && atHome(save, id)) return { today: 'On the farm', at: null, season: 'Every day', lines: [{ at: null, text: 'She lives on the farm' }], farm: true }
   const hand = !!save.roster[id] && isFarmhand(save, id)

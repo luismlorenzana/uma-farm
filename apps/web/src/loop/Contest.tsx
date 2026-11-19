@@ -18,7 +18,7 @@ import { Avatar } from '../dialogue/Avatar'
 import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
-import { useSpecialDays, useStoryYear } from '../story/story'
+import { useSpecialDays, useStory, useStoryYear } from '../story/story'
 import { enterTheContest } from './kitchen-actions'
 import { useTalents } from './talents'
 import { plural } from './words'
@@ -106,6 +106,7 @@ export default function ContestSheet() {
 }
 
 function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
+  const pack = useStory()
   const year = useStoryYear() ?? FESTIVALS
   const days = useSpecialDays() ?? GAME_DAYS
   const navigate = useNavigate()
@@ -120,7 +121,7 @@ function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   const name = festival?.name ?? 'Cooking Contest'
   const result = contestResult(save)
   const entry = chosen ?? contestDefault(save)
-  const why = contestBlock(save, days, entry)
+  const why = contestBlock(save, days, entry, pack)
   const known = knownRecipes(save)
   const hands = handsInOrder(save).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
   const rivals = contestBoard(save, save.calendar.day, 0).rivals
@@ -207,7 +208,7 @@ function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
                 <button type="button" aria-pressed={!entry?.cook} onClick={() => set({ cook: null })} disabled={busy}
                   className={`min-h-11 rounded-full border px-3 text-[13px] ${!entry?.cook ? 'border-accent bg-accent/10 font-semibold' : 'border-hairline'}`} data-cook="none">None</button>
                 {hands.map((id) => {
-                  const lock = cookLock(save, id)
+                  const lock = cookLock(save, id, pack)
                   const lv = aptitudeOf(save.roster[id]!, 'cook', (a) => talents.of(id, a)).level
                   return (
                     <button key={id} type="button" aria-pressed={entry?.cook === id} onClick={() => set({ cook: id })} disabled={busy || lock !== null} title={lock ?? undefined}

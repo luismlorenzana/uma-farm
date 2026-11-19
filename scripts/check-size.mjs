@@ -151,6 +151,7 @@ export const LAZY_MODULES = [
   'domain/src/story/release.ts',
   'src/story/people.ts',
   'domain/src/town/town.ts',
+  'domain/src/town/professions.ts',
   'src/town/TownPage.tsx',
   'src/town/town-view.ts',
   'src/town/town-actions.ts',

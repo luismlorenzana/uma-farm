@@ -120,7 +120,7 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
   const known = knownRecipes(save)
   const made = menu.reduce((n, l) => n + l.count, 0)
   const helper = assistant && assistantLock(save, assistant, pack) === null ? assistant : null
-  const why = kitchenPlayBlock(save, menu, helper)
+  const why = kitchenPlayBlock(save, menu, helper, pack)
   const ingredients = new Map<string, number>()
   for (const [key, count] of menuTakes(menu)) {
     const at = parseStockKey(key)

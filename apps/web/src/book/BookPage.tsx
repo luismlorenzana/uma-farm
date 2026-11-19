@@ -9,7 +9,7 @@
 // Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
 // Loaded on demand.
 import {
-  atHome, awayOn, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, knownRestaurantRecipes, loansOwed, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
+  atHome, awayOn, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, knownRestaurantRecipes, loansOwed, onFarmToday, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
@@ -53,7 +53,8 @@ function Book({ save }: { save: FarmSave }) {
   const goods = stockTotal(save.items)
   const pack = useStory()
   // On the farm today: the spouses in their rooms, and the farmhands on their farm day.
-  const here = Object.keys(save.roster).filter((id) => !awayOn(save, id, save.calendar.day) && (atHome(save, id) || worksOn(save, pack, id))).length
+  const here = Object.keys(save.roster).filter(id => pack ? onFarmToday(save, pack, id)
+    : !awayOn(save, id, save.calendar.day) && (atHome(save, id) || worksOn(save, null, id))).length
   const met = Object.keys(save.roster).length
   const now = farmProjects(save).now.length
   return (

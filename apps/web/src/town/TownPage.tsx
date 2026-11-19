@@ -248,6 +248,7 @@ function Place({ view, save, nameOf, onOpen }: { view: LocationView; save: SaveV
       )}
       {(keeper || menu.length > 0) && (
         <div className="mt-2 space-y-1.5 border-t border-hairline pt-2" data-post={loc.id}>
+          {view.selfService && <p className="text-[13px] text-ink-soft" data-self-service>Self-service today</p>}
           {keeper && (
             <button type="button" onClick={() => onOpen(keeper.characterId)} className="flex min-h-11 w-full items-center gap-2 text-left" data-keeper={keeper.characterId}>
               <Face id={keeper.characterId} size={32} name={nameOf(keeper.characterId)} />

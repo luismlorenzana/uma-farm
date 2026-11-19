@@ -3,7 +3,7 @@
 // people, met or not, with where she is today), its search and its two sorts, a keeper's post and its menu, and her ties.
 // Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
 import {
-  atHome, awayOn, CAST, farmRankOf, placeBuilt, herJobOf, nextOut, onFarmToday, talkedToday, tieLineOf, townLocations, townOf, townsfolk, townTalksOf, type HereBy, type SaveV4, type ShopId, type StoryPack,
+  atHome, awayOn, CAST, farmRankOf, placeBuilt, herJobOf, nextOut, onDuty, onFarmToday, professionOf, professionShift, SHOPS, talkedToday, tieLineOf, townLocations, townOf, townsfolk, townTalksOf, type HereBy, type SaveV4, type ShopId, type StoryPack,
   type TownDay, type TownLocationPlayed, type TownPersonPlayed,
 } from '@farm/domain'
 import { awayWords } from '../loop/expedition-words'
@@ -16,6 +16,7 @@ export interface LocationView {
   loc: TownLocationPlayed
   here: readonly string[]
   keeper: TownPersonPlayed | null
+  selfService?: boolean
 }
 
 /** Every location of the map, in its order, with who's there now. */
@@ -25,7 +26,15 @@ export function locationViews(day: TownDay, pack: StoryPack, save?: SaveV4): Loc
   if (save && (farmRankOf(save.farm.points) >= 7 || placeBuilt(save, 'expeditions'))) {
     locations.push({ id: 'expeditions', name: 'Expedition post', line: 'Parties out for days.', group: 'work', keeper: null })
   }
-  return locations.map((loc) => ({ loc, here: day.at.get(loc.id) ?? [], keeper: loc.keeper ? town.byId.get(loc.keeper) ?? null : null }))
+  return locations.map(loc => {
+    const here = day.at.get(loc.id) ?? []
+    const npc = loc.keeper ? town.byId.get(loc.keeper) ?? null : null
+    if (!pack.town?.professions?.length || loc.group !== 'shop') return { loc, here, keeper: npc }
+    const role = SHOPS[loc.id as ShopId].keeper
+    const duty = onDuty(pack, save ?? {}, day.day, role)
+    const staffed = duty && here.includes(duty)
+    return { loc, here, keeper: npc, selfService: !npc && !staffed }
+  })
 }
 
 /** The map's groups, each a heading and its locations: the town's spots, its shops and offices, then the story's homes,
@@ -50,7 +59,7 @@ const inSentence = (name: string): string => name.replace(/^The /, 'the ')
 /** Why she's where she is, in a few words under her name: at work (her job's words when the story gives them), at home,
  * or nothing (her routine's stop, or her default schedule's day at her spot: she's simply there). */
 export function hereWords(pack: StoryPack, id: string, by: HereBy | undefined): string | null {
-  if (by === 'job') return herJobOf(pack, id)?.what ?? 'At work'
+  if (by === 'job') return professionOf(pack, id)?.profession.name ?? herJobOf(pack, id)?.what ?? 'At work'
   if (by === 'home') return 'At home'
   return null
 }
@@ -88,7 +97,8 @@ export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: 
     const farm = met && onFarmToday(save, pack, id, day.day)
     const next = farm || at ? null : nextOut(pack, id, day.day)
     const away = awayOn(save, id, day.day)
-    const where = away ? awayWords(away) : farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
+    const shift = professionShift(pack, id, day.day)
+    const where = away ? awayWords(away) : shift === 'off' ? (at ? `Day off · ${named.get(at)}` : 'Day off') : farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
       : at ? `At ${inSentence(named.get(at)!)}${day.by.get(id) === 'job' ? ', at work' : ''} today` : next ? `At home · out ${shortDate(next.day)}` : 'At home'
     return { id, name: nameOf(id), at, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null, where }
   })

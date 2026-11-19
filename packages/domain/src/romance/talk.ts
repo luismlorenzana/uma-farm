@@ -23,7 +23,7 @@ import type { SaveV4 } from '../save/v4'
 import { YOU, type GreetingTime, type SmallTalk, type Step } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { chatLinesOf, defaultTalksOf, greetingsOf, smallTalkOf, talkStageOf } from '../story/placeholders'
-import { whereYouMeet, type SchedulePack } from '../town/town'
+import { whereYouMeet, withSpouseAddress, type SchedulePack } from '../town/town'
 import { chatSet } from './acts'
 import { isBirthday, NO_BIRTHDAYS, type Birthdays } from './days'
 import { isFarmhand } from './loop'
@@ -104,7 +104,7 @@ export function talkOf(
   const small = smallTalkOf(pack, id).filter((t) => smallTalkFits(t, at, season, set))
   const drawn = pick<string | SmallTalk>(save, `chat:${id}`, [...lines, ...small])!
   const greeting = greetingOf(save, pack, id, at, options.birthday ?? false)
-  const her = (line: string): Step => ({ say: id, line, emote: 'happy' })
+  const her = (line: string): Step => ({ say: id, line: withSpouseAddress(line, love?.stage), emote: 'happy' })
   const body: Step[] = typeof drawn === 'string' ? [her(drawn)] : drawn.lines.map(([who, line]) => (who === YOU ? { say: YOU, line } : her(line)))
   return { greeting, steps: [...(greeting ? [her(greeting)] : []), ...body], small: typeof drawn === 'string' ? null : drawn }
 }

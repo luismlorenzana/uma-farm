@@ -730,6 +730,36 @@ the first line. Any length the story wants.
 
 ## The town: `town.json`
 
+### Weekly professions
+
+The launch cast uses a bundled roster of two Umas per profession until a complete authored plan replaces it.
+Set `professions` in the town file. Each row has a unique `id`, a short `name`, the workplace's map ID in
+`at`, an `off` weekday in lowercase, and two `partners` from `cast.json`. The first partner works the first
+three of the remaining weekdays in town. The second partner works the last three. Both take the listed
+day off. In a complete launch plan each of the 50 Umas appears once.
+
+```json
+{
+  "id": "grocer",
+  "name": "Grocer",
+  "at": "store",
+  "off": "wednesday",
+  "partners": ["9000101", "9000102"],
+  "role": "marta-quill"
+}
+```
+
+`role` is optional. Use it for the role whose counter or scene this profession handles. For instance,
+the store reads `marta-quill`, the Cooking Contest reads `rosa-bell`, and the ring bench reads `ida-stone`.
+Keep `hollis-pryor` in `people` for the mayor. The other professions appear as romanceable cast members.
+An unavailable worker leaves the counter's services open. An invalid or incomplete launch schedule uses
+the bundled roster.
+
+An optional `freeAt` on an Uma's cast entry gives her a place to visit on her profession's day off, including
+after marriage. The existing `home` and `routine` give her places on personal days. Her fixed shifts take
+precedence over old part-time job hours. In town lines and chats, `{address}` displays the farmer's name
+before marriage and “husband” afterward.
+
 The town's people, its six spots, and the locations the story adds to the town map. Every part is optional.
 
 ```json

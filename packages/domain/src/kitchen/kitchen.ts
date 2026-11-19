@@ -130,8 +130,8 @@ export function startStoveBatch<S extends FarmSave>(save: S, picks: readonly str
  * (`today.cook`), and its dish under way, 60 s on its seed. Refused with its block's words (`contestBlock`): not today
  * (`not-ready`), no Kitchen (`locked`), entered or a play under way (`busy`), actions short (`no-actions`), an ingredient
  * short (`no-items`), the recipe or the cook (`bad-job`). Never stamps. */
-export function enterContest<S extends FarmSave>(save: S, entry: ContestEntry, days: SpecialDays): S {
-  const block = contestBlock(save, days, entry)
+export function enterContest<S extends FarmSave>(save: S, entry: ContestEntry, days: SpecialDays, pack: SchedulePack | null = null): S {
+  const block = contestBlock(save, days, entry, pack)
   if (block) {
     const reason = block === 'No contest today.' ? 'not-ready' : block.startsWith('Build') ? 'locked' : block === 'One entry a Contest.' || block === 'A play is under way.' ? 'busy'
       : block.startsWith('Entering') ? 'no-actions' : block.startsWith('Short') ? 'no-items' : 'bad-job'
@@ -304,26 +304,26 @@ export function cooksDishes(save: FarmSave, pack: PerkPack | null): number {
 
 /** Why the Kitchen can't be played now, or null: built, once a day, no play under way, an action, the menu, the
  * assistant. */
-export function kitchenPlayBlock(save: FarmSave, menu: readonly MenuLine[], assistant: string | null = null): string | null {
+export function kitchenPlayBlock(save: FarmSave, menu: readonly MenuLine[], assistant: string | null = null, pack: SchedulePack | null = null): string | null {
   if (!placeBuilt(save, 'kitchen')) return 'Build the Kitchen first.'
   if (kitchenPlayedToday(save)) return 'The Kitchen plays once a day.'
   if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) return 'A play is under way.'
   if (actionsLeft(save) < actionCost('kitchen')) return 'No actions left today.'
   const block = menuBlock(save, menu)
   if (block) return block
-  return assistant === null ? null : assistantLock(save, assistant)
+  return assistant === null ? null : assistantLock(save, assistant, pack)
 }
 
 /** **Play the Kitchen · 1**: once a day, one action; the menu's inputs out of the Warehouse now, and the play under way,
  * 60 s on its seed, with its assistant (one of her actions tonight is the play's). Refused with its block's words: not
  * built (`locked`), played today or a play under way (`busy`), the menu (`no-items` short, `bad-job` else), the
  * assistant (`bad-job`), no action left (`no-actions`). Never stamps. */
-export function startKitchenPlay<S extends FarmSave>(save: S, menu: readonly MenuLine[], assistant: string | null = null): S {
+export function startKitchenPlay<S extends FarmSave>(save: S, menu: readonly MenuLine[], assistant: string | null = null, pack: SchedulePack | null = null): S {
   if (!placeBuilt(save, 'kitchen')) throw new SaveRuleError('locked', 'Build the Kitchen first.')
   if (kitchenPlayedToday(save)) throw new SaveRuleError('busy', 'The Kitchen plays once a day.')
   if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) throw new SaveRuleError('busy', 'A play is under way.')
   const spent = spend(save, 'kitchen')
-  const block = menuBlock(save, menu) ?? (assistant === null ? null : assistantLock(save, assistant))
+  const block = menuBlock(save, menu) ?? (assistant === null ? null : assistantLock(save, assistant, pack))
   if (block) throw new SaveRuleError(block.startsWith('Short') ? 'no-items' : 'bad-job', block)
   let items = spent.items
   for (const [key, n] of menuTakes(menu)) {

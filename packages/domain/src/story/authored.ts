@@ -26,6 +26,7 @@ import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type Sto
 import { EXPEDITION_OUTCOMES, type ExpeditionOutcome } from '../save/v4'
 import { ILLUSTRATION_ID } from '../save/gallery'
 import { NO_ILLUSTRATION } from './illustrations'
+import { WEEKDAYS, type TownProfession } from '../town/professions'
 
 /** The farm's places plus the romance's own backdrops. `dorm` is the retired Dorm's: off the farm map, and still a
  * backdrop a scene may name. */
@@ -178,6 +179,8 @@ export interface CastEntry {
   spot?: SpotId
   /** Her home: a location of the town map (`town.json`'s, usually), where she is when nothing else holds. */
   home?: string
+  /** Optional outing on her profession's free day. */
+  freeAt?: string
   /** Her part-time job, and where it is. */
   job?: HerJob
   /** Where she is, when: the first stop that holds today wins, before her job and her home. */
@@ -216,7 +219,7 @@ export interface TownSpot { id: SpotId; name?: string; blurb?: string; keeper?: 
  * joined by `-`), with its name and a line. */
 export interface TownLocation { id: string; name: string; line?: string; kind?: LocationKind }
 /** town.json: the town's people, its spots, and the locations the story adds. Every part optional. */
-export interface Town { version?: 1; people?: TownPerson[]; spots?: TownSpot[]; locations?: TownLocation[] }
+export interface Town { version?: 1; people?: TownPerson[]; spots?: TownSpot[]; locations?: TownLocation[]; professions?: TownProfession[] }
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------
 
@@ -902,8 +905,9 @@ function readLocation(v: unknown, at: string, f: Findings, ctx: Pick<StoryContex
 
 /** Her life in town, read: her `home`, her `job` and her `routine`. An error skips the field (or the routine's stop)
  * it's in; with none of them, she keeps the game's default schedule (`town/town.ts`'s `scheduleOf`). */
-function readLife(u: Record<string, unknown>, it: string, f: Findings, ctx: Pick<StoryContext, 'locations'>): Pick<CastEntry, 'home' | 'job' | 'routine'> {
+function readLife(u: Record<string, unknown>, it: string, f: Findings, ctx: Pick<StoryContext, 'locations'>): Pick<CastEntry, 'home' | 'job' | 'routine' | 'freeAt'> {
   const home = u.home === undefined ? undefined : readLocation(u.home, `${it} home`, f, ctx)
+  const freeAt = u.freeAt === undefined ? undefined : readLocation(u.freeAt, `${it} freeAt`, f, ctx)
   let job: HerJob | undefined
   if (u.job !== undefined) {
     if (!isObject(u.job)) f.errors.push(`${it} job: { what, at, days, seasons }; skipped`)
@@ -929,7 +933,7 @@ function readLife(u: Record<string, unknown>, it: string, f: Findings, ctx: Pick
       })
     }
   }
-  return { home, job, routine }
+  return { home, job, routine, freeAt }
 }
 
 /** cast.json: who the pack holds, in its order, each with what's given of her and her life in town. A character is master
@@ -1124,7 +1128,35 @@ export function checkTown(raw: unknown): Read<Town | null> {
   }
   const unfilled = CAST_IDS.filter((id) => !roles.has(id))
   if (unfilled.length > 0) f.notes.push(`people: no one plays ${unfilled.join(', ')}, so master data fills ${unfilled.length === 1 ? 'it' : 'them'}`)
-  return { value: kept<Town>(raw, { people, spots, locations }), ...f }
+  const professions = raw.professions === undefined ? undefined : readProfessions(raw.professions, locations ?? [], f)
+  return { value: kept<Town>(raw, { people, spots, locations, professions }), ...f }
+}
+
+function readProfessions(raw: unknown, locations: readonly TownLocation[], f: Findings): TownProfession[] | undefined {
+  const reject = (message: string) => { f.errors.push(`professions: ${message}; using the bundled schedule`); return undefined }
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 100) return reject('expected 1–100 jobs')
+  const result: TownProfession[] = []
+  const places = new Set([...GAME_LOCATIONS, ...locations.map(place => place.id)])
+  const ids = new Set<string>(), partners = new Set<string>(), roles = new Set<string>()
+  for (const job of raw) {
+    if (!isObject(job) || typeof job.id !== 'string' || !WORLD_ID.test(job.id) || job.id.length > 48
+      || typeof job.name !== 'string' || !job.name.trim() || job.name.length > LINE_LIMITS.job
+      || typeof job.at !== 'string' || !places.has(job.at) || !oneOf(WEEKDAYS, job.off)
+      || !Array.isArray(job.partners) || job.partners.length !== 2) return reject('expected { id, name, at, off, partners }')
+    const [a, b] = job.partners
+    if (typeof a !== 'string' || typeof b !== 'string' || !STORY_ID.test(a) || !STORY_ID.test(b)
+      || a === b || partners.has(a) || partners.has(b) || ids.has(job.id)) return reject(`${job.id} needs a unique job and two distinct members`)
+    const role = job.role
+    if (role !== undefined && (typeof role !== 'string' || !isCastId(role) || role === 'hollis-pryor' || roles.has(role))) {
+      return reject(`${job.id} has an invalid or repeated role`)
+    }
+    ids.add(job.id)
+    partners.add(a)
+    partners.add(b)
+    if (role) roles.add(role)
+    result.push({ id: job.id, name: job.name.trim(), at: job.at, off: job.off, partners: [a, b], ...(role ? { role } : {}) })
+  }
+  return result
 }
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------

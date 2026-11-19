@@ -45,9 +45,10 @@ export async function chooseTonight(id: string, alone = false): Promise<void> {
 }
 /** A meal cooked for the household: one action. Whose line plays as you sit down, and the points it paid in all. */
 export async function cookTheMeal(meal: Meal): Promise<{ speaker: string | null; paid: number }> {
+  const pack = await storyReady()
   let paid = 0
   await change((s) => {
-    const done = cookMeal(s, meal)
+    const done = cookMeal(s, meal, pack)
     paid = done.paid
     return done.save
   })

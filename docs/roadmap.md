@@ -150,7 +150,7 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.7 **The long game** | [F102 draft](handoff/tasks/F102-long-game.md) covers town professions and weekly shifts, five-spouse celebrations, the Greater Festival, Year 50, Greater Love, wardrobe rotations and True Love duos. |
+| 2.7 **The long game** | [Town professions and staggered shifts](game-mechanics.md#town-professions-and-the-week) are in. [F102](handoff/tasks/F102-long-game.md) continues with housing, five-spouse celebrations, the Greater Festival, Year 50, Greater Love, wardrobe rotations and True Love duos. |
 
 How each workshop is built:
 

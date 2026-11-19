@@ -3434,12 +3434,37 @@ The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see
 ### The town
 
 **The cast lives in town from day 1:** the owner's Umas, the story's cast (sisters included), in her default outfit or
-the pack's outfit for her. Nobody else from master data is in the game. The town is a map you walk around: going in takes one of the day's actions, and
-walking between its places is free. Each place lists who's there **now**. **Nobody is placed at random:** every Uma
-keeps a fixed schedule, the story's (her home, her part-time job, the places she likes, and when), else the game's
-default (her favourite spot every third day of each season), and her profile and the calendar show it. The town's
-people, fourteen Umas in the town's roles, are at their posts. Tap an Uma for her menu: you meet her by introducing
-yourself (see [meeting her](#meeting-her)).
+the pack's outfit for her. The town is a map you walk around. Going in takes one action and walking between
+its places is free. Each place lists who's there now. The launch cast works the town's professions in pairs.
+The mayor keeps her office. Tap a cast member to introduce yourself, including an Uma you meet on her town shift.
+
+#### Town professions and the week
+
+The week runs continuously from Monday on farm day 1, through the four 12-day seasons and the year boundary.
+The two Umas in each profession share a day off. The early partner works the first three of the other weekdays
+in town. The late partner covers the last three. Each works the other three days on the farm after hiring.
+Before hiring those are personal days. Her profile and Uma Library show town, farm and rest days, the Calendar
+shows the weekday, and the Ledger runs farm orders only on scheduled farm shifts.
+
+Marriage changes her residence. Once housed, she commutes to the same town shifts and comes home for meals
+and evenings. On her profession's day off she can visit an authored location or spend the day at home. A
+spouse who has yet to be hired keeps her personal days. Expeditions take precedence over her daytime
+location. The service links at a shop or office are available even if its scheduled worker is off or away.
+
+The launch plan covers 50 Umas in 25 professions. It uses provisional pairs in launch order and distributes
+days off across the week. A complete valid story-pack plan can replace those assignments. An older cast member
+without a profession uses her legacy schedule. The Cooking Contest goes straight to its result board when
+its judge is off, away or entered with the farm. The ring bench leaves a note when the smith is unavailable.
+
+In the four-season shift pilot, both partners in one profession married through the game's wedding rule and
+kept their shifts. Both returned for household meals on town and rest days. The prepared plots and Coop received
+watering and care over the year, and the same shift cycle continued into Spring of Year 2.
+
+| Hired Umas | Scheduled farm workers per day | Scheduled town workers per day within the hired roster |
+|---:|---:|---:|
+| 10 | 4–5 | 4–5 |
+| 20 | 8–9 | 8–9 |
+| 50 | 21–22 | 21–22 |
 
 ```
  the farm map ──► the Town: Go into town · 1 action (the town and its shop open for the day)
@@ -3499,36 +3524,34 @@ The shops and offices are the game's own, each kept by one of the town's people:
 
 #### Who's where
 
-**Every Uma keeps a fixed schedule, and nothing is drawn.** One pure function, `scheduleOf(pack, id)`
-(`town/town.ts`), gives her days and places; `whereOn(pack, id, day)` reads a day of it. The town, her profile ("Where
-to find her") and the calendar's days ("In town") all read it, so what her profile says is where you'll find her.
+**Every Uma keeps a fixed schedule.** The town, her profile and the Calendar read the shift and her current
+presence through `town/town.ts`. Personal time uses the authored outing, routine or home.
 
 <!-- live:town-schedule -->
 |  | The rule |
 |---|---|
-| Her story | Her routine’s first stop that holds that day (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there. On a day none holds, she’s at home, off the map |
-| The default schedule | An Uma the story hasn’t scheduled (no `routine`, `job` or `home` on the map): at her favourite spot on every third day of each season, by her place in the cast (the 1st, 4th, 7th… on 1, 4, 7, 10; the 2nd, 5th, 8th… on 2, 5, 8, 11; the 3rd, 6th, 9th… on 3, 6, 9, 12); at home, off the map, the other days |
+| Weekly profession | Three town shifts, three farm shifts after hiring and the profession’s day off. The partners alternate town and farm shifts across the six working days |
+| Personal time | A free-day outing, else her routine or home. A hired Uma keeps assigned farm days for farm work |
+| Legacy schedules | An Uma without a weekly profession uses the story’s routine, job and home. The game’s fallback is her favourite spot on 1, 4, 7, 10, 2, 5, 8, 11 or 3, 6, 9, 12 each season, according to cast order |
 | Her favourite spot | Her cast entry’s `spot`; else the 6 in turn by her place in the cast, 3 Umas each (the 1st to 3rd at `plaza`, the 4th to 6th at `market`…, the 19th starting again) |
 | A spot | Holds everyone the schedules put there, with no cap; nobody is placed at random |
-| On the farm | A spouse in her room lives at the farm, never in town. A farmhand is at the farm on her farm days, the days the rows above don’t put her out in town (a day at her `home` or at home off the map is one); a season with none, the default schedule’s other days (8 of 12). On her town days she’s in town by her schedule |
-| The town’s people | Each at her post: her role’s shop or office, else the spot she keeps |
+| On the farm | A spouse with a room lives on the farm and commutes on her assigned town days. Farmhand tasks run on her farm shifts. A spouse with a room joins the household at night after town shifts and days off |
+| The town’s people | The mayor keeps her post. The romance cast fill the town professions on their shifts. Shop menus work on days off |
 | Her line | One a day (`draw(uid, day, 'town-line:<id>', 0)`) of her bible’s `townLines`, else the game’s 6: “Oh, hello! Out for a walk too?” “Lovely day for it, isn’t it?” “You’re from the farm up the road, aren’t you?” “I come here when I need to think.” “Good to see you, {farmer}.” “Busy day? Mine’s only just starting.” |
 <!-- /live -->
 
-- **Her story's schedule** is hers when it's written ([her life in town](#her-life-in-town)): her routine's first stop
+- **Without a weekly profession,** her story's schedule uses her routine's first stop
   whose days of the season and seasons hold, else her job on its days, else her home. A location the map doesn't hold is
   passed over; with none left, the story hasn't scheduled her. On a day none of it holds, she's at home, off the map.
-- **The default schedule** plays until hers is written: her favourite spot (her cast `spot`, else the six in turn by her
+- **The fallback for an Uma without a profession or written schedule** is her favourite spot (her cast `spot`, else the six in turn by her
   place in the cast) on every third day of each season, starting on day 1, 2 or 3 by her place in the cast, so a third
   of the cast is out each day and the next Uma in the cast is out the day after. The same four days every season.
 - **A spot** holds everyone the schedules put there; the map shows a crowded one by its count and "+n" ([the
   map](#the-map)).
-- **The posts:** each of the town's people is at one post: the spot `town.json` has her keep, else her role's shop or
-  office, else the spot the game has her keep. A place whose keeper is posted elsewhere shows none (with no `town.json`,
-  the mayor is at her office and the shopkeeper at the store, so the plaza and the market show no keeper).
-- **On the farm:** a spouse in her room lives on the farm and isn't in town; a farmhand on her farm day isn't either,
-  and on her town days she's in town by her schedule ([farmhands](#farmhands)). Nobody else moves when one moves in.
-  One you've met who lives in town keeps her days, and so does a spouse waiting for a room.
+- **The posts:** the mayor's assigned post is permanent. Town professions show the cast members working that day,
+  and an uncovered counter offers self-service.
+- **On the farm:** a farmhand comes on her farm shifts. A spouse with a room comes home at night, including after
+  her town shifts. A spouse waiting for a room keeps her current residence and schedule.
 
 #### Her menu
 
@@ -3554,6 +3577,7 @@ open is greyed with why. **Back** returns to the map.
   a talk plays today's talk over the town ([talk that knows the day](#talk-that-knows-the-day): her greeting for where
   she is, then her line or a small talk), and then her last line stays, her face happy; after a gift, her line for its
   taste ([talk that knows the day](#talk-that-knows-the-day)), her face by her taste. `{farmer}` is your name.
+  The authored `{address}` token in town lines and chats uses your name before marriage and “husband” afterward.
 - **Introduce yourself** meets her: she joins the roster at Friendship 0 and keeps living in town, and her meeting
   scene plays over the town at once ([her meeting scene](#her-meeting-scene)).
 - **Talk** and **Give a gift** are the romance's acts: +15, and her taste's points (see [her route](#her-route)),
@@ -3655,22 +3679,19 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 | Half pace: from the second short night of upkeep in a row, until it’s paid | Half of them all, rounded down, never below 1 |
 <!-- /live -->
 
-- **Her farm days** (`farmDaysIn(pack, id, season)`, `town/town.ts`): every day of the season her schedule doesn't put
-  her out in town by her routine, her job or the default schedule, including a day at her `home` in town or at home off
-  the map. On the default schedule that's the eight days of each season's twelve she isn't at her favourite spot (the
-  first in the cast: 2, 3, 5, 6, 8, 9, 11 and 12). **A season her schedule leaves without one** (a job every day, say):
-  her farm days that season are the default schedule's other days, eight of twelve, so every farmhand works. A spouse in
-  her room is on the farm every day, and works every day.
-- **Her part-time job is her town days:** the story's `job` for her ([her life in town](#her-life-in-town)), its words
-  or where it is ("Waits tables", "Works at the Bakery"); else the game's default, a job at her favourite spot ("Helps
-  out at the Café": her cast `spot`, else her default schedule's). It costs the farm nothing, and the board says it.
+- **Her farm days** are the three weekly shifts from her [town profession](#town-professions-and-the-week).
+  The Ledger shows them by weekday. Legacy farmhands without a profession use the days their town routine leaves
+  free, including at-home days, and a legacy spouse with a room can work every day.
+- **Her town job** is the other three working days, opposite her partner. The Ledger shows town days, her day
+  off and her next farm shift separately.
 - **On a farm day she's on the farm by day,** in front of you ([where you meet her](#her-menu)): Chat, Gift and her
   evening are on her profile and her menu without going into town. The town's People list says "On the farm today" and
   her profile's **Where to find her** "Today · On the farm", then the season's farm days ("On the farm · 2, 3, 5, 6, 8,
   9, 11, 12") and her town days by place ("The Café · 1, 4, 7, 10"). That night she works her board's tasks and eats two
   meals, the pantry first, then takeout ([food](#food)); at night she goes home to town.
 - **On a town day she's at her place in town,** by her schedule: her menu is there once you go into town, and the board
-  says "In town today · back Spring 5" (her next farm day). She doesn't work, eat on the farm or cost anything. A
+  says "In town today · back Spring 5" (her next farm day). She has no farm work. A spouse with a room still
+  comes home to eat. A
   festival or any other occasion never moves her: a farm day on a festival is still a farm day, and every occasion she
   has plays from the calendar wherever she is ([occasion scenes](#occasion-scenes)).
 - **Settled in** is a season after you invited her (`roster[id].farmhand`, the day you did). **Married:** once she's
@@ -7205,9 +7226,8 @@ The homestead's rows on the map:
   her into a free room by hand at once.
 - **Moves are at once and free,** any time: on the homestead's sheet tap a face, then a free room in another house (a
   move) or another house's face (a swap).
-- **A spouse in her room lives on the farm,** the only Uma who does: she's on the farm every day (and, a farmhand, works
-  it every day), plays her events, spends evenings, does her chores, leaves her morning items, and eats breakfast and the
-  reception with the household.
+- **A spouse in her room lives on the farm.** She keeps her weekly town and farm shifts. She returns to the
+  household for meals, evenings and the night's companion routine.
 - **Her own house:** an own-house wisher is happiest alone in a house; while she shares or waits her profile says, softly,
   **"She'd love her own house"**. Nothing is lost while she waits.
 

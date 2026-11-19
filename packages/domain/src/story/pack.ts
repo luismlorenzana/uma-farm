@@ -127,11 +127,16 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
     notes.push(...read.notes.map((n) => `${file}: ${n}`))
     return read.value
   }
-  const town = files.town === undefined ? null : take('town.json', checkTown(files.town))
+  let town = files.town === undefined ? null : take('town.json', checkTown(files.town))
   // The world first: a cast's festival trigger may name one of the story's own festivals.
   const world = files.world === undefined ? null : take('world.json', checkWorld(files.world, { isGood }))
   const festivals = new Set((world?.festivals ?? []).map((e) => e.id).filter((id) => !isFestivalId(id)))
   const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), festivals, locations: locationIdsOf({ town }), ...(exported ? { exported } : {}) }))
+  if (town?.professions?.some(job => job.partners.some(id => !cast.umas.some(uma => uma.characterId === id)))) {
+    errors.push('town.json: professions must use people in cast.json; using the bundled schedule')
+    const { professions: _, ...rest } = town
+    town = rest
+  }
   const ctx = packContext({ cast, town, world }, isGood)
   const ties = take('ties.json', checkTies(files.ties, ctx))
   const bibles = new Map<string, UmaBible>()
