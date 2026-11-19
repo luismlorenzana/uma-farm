@@ -7344,9 +7344,10 @@ the default. Married Life in the Uma Library shows the separate collection, earn
 Replays preserve the participants and look numbers and cost no slots or points.
 
 **True Love** is 120 points. A curated duo opens when both spouses reach it. Use the Duo editor to add or remove
-mutual pairs, up to three partners per Uma. An eligible duo can share a night visit or a regular evening.
-A shared visit uses one slot, and a shared evening keeps its original play and payment. Both books link to
-the shared memory. Removing a pair retires future offers and keeps the memory.
+mutual pairs, up to three partners per Uma. An eligible duo can share a pajama visit, an anniversary or a regular
+evening. A shared anniversary uses one slot. The spouse whose date it is wears and advances her anniversary look,
+and her partner joins in pajamas and keeps her own anniversary offer. A shared evening keeps its original play
+and payment. Both books link to the shared memory. Removing a pair retires future offers and keeps the memory.
 
 #### Bonds and ties
 

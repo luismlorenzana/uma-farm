@@ -1,7 +1,7 @@
 import { int, list, object, record } from './parse'
 import { fail, member, outfit, unique } from './parse-loop'
 import {
-  COHORTS, DUO_LIMIT, FARM_YEAR, NIGHT_VISITS, TRUE_LOVE, celebrationDate, duoKey, festivalGiftWindow, isCelebration, unlockedLooks, visitMemoryKey,
+  COHORTS, DUO_LIMIT, FARM_YEAR, NIGHT_VISITS, TRUE_LOVE, celebrationDate, duoKey, festivalGiftWindow, isCelebration, unlockedLooks, visitLookKind, visitMemoryKey,
   type Celebration, type Cohort, type Duo, type GreaterLove, type LongGame, type Visit,
 } from './long-game'
 import { EVENING_KINDS, type SaveV4 } from './v4'
@@ -28,8 +28,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     const day = int(row.day, path, Math.max(...who.map(id => save.love[id]!.wed!)), today)
     const kind = row.kind
     if (kind !== 'pajamas' && kind !== 'anniversary') return fail(path, 'unknown visit kind')
-    const looks = list(row.looks, path, who.length, who.length).map(look => int(look, path, 1, unlockedLooks(TRUE_LOVE, kind)))
-    if (kind === 'anniversary' && who.length !== 1) fail(path, 'an anniversary has one spouse')
+    const looks = list(row.looks, path, who.length, who.length).map((look, i) => int(look, path, 1, unlockedLooks(TRUE_LOVE, visitLookKind({ kind }, i))))
     if (kind === 'pajamas' && row.anniversary !== undefined) fail(path, 'expected a pajama visit')
     const anniversary = kind === 'anniversary' ? int(row.anniversary, path, 1, Math.floor((day - save.love[who[0]]!.wed!) / FARM_YEAR)) : undefined
     return { who, day, kind, looks, ...(anniversary === undefined ? {} : { anniversary }) }
@@ -41,7 +40,10 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     const since = save.love[id]!.wed!
     const memories = list(row.memories, path, 0, 10_000).map(visitOf)
     unique(memories.map(visitMemoryKey), path)
-    if (memories.some(v => !v.who.includes(id) || v.looks[v.who.indexOf(id)]! > unlockedLooks(points, v.kind))) fail(path, 'expected her unlocked night looks')
+    if (memories.some(v => {
+      const i = v.who.indexOf(id)
+      return i === -1 || v.looks[i]! > unlockedLooks(points, visitLookKind(v, i))
+    })) fail(path, 'expected her unlocked night looks')
     const heart: GreaterLove = { points, memories, pajamas: int(row.pajamas, path, 0, unlockedLooks(points, 'pajamas')),
       anniversaries: int(row.anniversaries, path, 0, unlockedLooks(points, 'anniversary')) }
     if (points === TRUE_LOVE) heart.trueDay = int(row.trueDay, path, since, today)
