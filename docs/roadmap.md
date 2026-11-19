@@ -41,11 +41,12 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **A day of ten actions, and the tile farm** | **Deployed** (save v5) | Home is the tile farm: the field's sign opens the field's own screen, full screen, a plot of 40 tiles a page, cleared, tilled, planted, watered daily and harvested by hand; a forage, a chop or a catch at the woods' and the pond's edge; a station's loads, one a level; a crate shipped; going into town. Each takes an action, and the night settles the day ([a day](game-mechanics.md#a-day-ten-actions), [Home](game-mechanics.md#home-the-farm-map), [the field's screen](game-mechanics.md#the-fields-screen)) |
 | **The field's plots** | **Built** (F89, F91) | The field is plots of 8 × 5, a page each: plot 1 is the field the farm always had, and up to seven more are cleared one a Farm Rank from 3 to 9 (2,500g to 50,000g and an action), wild, with no upkeep. Farmhands' field tasks name their plot and rows ([the field's plots](game-mechanics.md#the-fields-plots)) |
 | **Work at scale** | **Built** (F91, F95) | A station's level is a load a day (levels 2–5 bought at the station from Farm Rank 3 to 6); each forest area, fishing spot and dig gives four full hauls a day, then thin ones; a good shipped past a crate of 50 eases its price for a few days. Simulated at 10, 20 and 50 Umas on their farm days: two thirds of them on the farm a day, all in real jobs with real work waiting, 50 included ([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)) |
+| **Roster-run production** | **Deployed** (F99) | The Umas can tend 51 seasonal crops and orchards, collect graded animal products, land graded fish and run processing orders. Exact-grade discoveries record what the farm has produced ([the catalogue](game-mechanics.md#the-catalogue)). |
 | **The farm's places** | **Deployed** | The Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the Farm Rank. The farm grows by building: the Farm Rank offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects ([the farm's progress](game-mechanics.md#the-farms-progress)) |
 | **The ranch and the mine** | **Deployed** | The Coop and the Barn, with seven kinds of animal bought at the rancher's in town, fed from the silo and cared for, their goods starred by their hearts; the Mine and the Quarry, thirty floors each, a face at a time; the Smelter and the Cutter ([the ranch](game-mechanics.md#the-ranch), [the Mine and the Quarry](game-mechanics.md#the-mine-and-the-quarry)) |
 | **Upkeep and loans** | **Built** (F95) | Each night's upkeep for what's built and the spouses who live on the farm (a farmhand's cost is her meals on her farm days; no Dorm beds); short of it, a warning, then half pace for the farmhands until it's paid. The mayor's office lends toward a build, repaid from each night's income ([upkeep and loans](game-mechanics.md#upkeep-and-loans)) |
 | **Food** | **Built** (F90, F92) | Everyone who eats on the farm eats twice a night, from the pantry first; what it's short is takeout, 15g a meal, charged with the upkeep from the first night. The farmer cooks a batch in the farmhouse kitchen (six meals from two goods, 90g of takeout saved), plain or **at the stove**, a 30-second cooking game (6, 8, 9 or 12 meals by its tier); a household meal cooks one too, and a farmhand on Cook cooks for everyone, 6 to 12 meals a batch by her Cooking; a ★2+ meal leaves an Uma well fed ([food](game-mechanics.md#food), [the stove](game-mechanics.md#the-stove-the-cooking-game)) |
-| **The Kitchen** | **Built** (F92, F93) | From Farm Rank 3 (3,000g · 40 logs · 20 vegetables), levels 1–5 (6 to 15 dishes a play): once a day, a menu of up to three known recipes cooked at the stove for 60 s, with a farmhand as its assistant; 80 recipes (three known when it stands, the rest at the shop's Recipes shelf); dishes don't ship, they feed **the staff meal**: a dish for every three mouths, eaten in place of their meals, everyone well fed by its stars ([the Kitchen](game-mechanics.md#the-kitchen)). **The Cooking Contest** on Autumn 10 is the first festival you play: three actions, one dish cooked live, judged against the orchard and the ranch, the places paying gold and Farm Rank points ([the Cooking Contest](game-mechanics.md#the-cooking-contest)) |
+| **The Kitchen** | **Deployed** (F92, F93, F98) | From Farm Rank 3, cook up to three recipes in one daily stove play with an optional Uma assistant. The Kitchen cooks its original 80 recipes and any Restaurant recipes learned. The staff meal takes one dish per three mouths. **The Cooking Contest** on Autumn 10 takes three actions and awards gold and Farm Rank points ([the Kitchen](game-mechanics.md#the-kitchen), [the Cooking Contest](game-mechanics.md#the-cooking-contest)). |
 | **The calendar** | **Deployed** | The bar's date opens the year on one screen: its festivals, the story's days, birthdays, anniversaries and the faces of the Umas with an event each day. Special days add actions for events, and the occasion scenes play on their days ([the calendar](game-mechanics.md#the-calendar-screen)) |
 | **The town** | **Built** (F95) | A map you walk around: who's at each place now (each Uma's fixed schedule: the story's home, job and routine, else her favourite spot every third day), the town's people at their posts, and her menu. You meet her by introducing yourself; there's no welcome week. Everyone you meet lives there until she marries you, and a farmhand is there on her town days ([the town](game-mechanics.md#the-town), [meeting her](game-mechanics.md#meeting-her)) |
 | **The launch cast** | **Built** (F96) | The game's Umas are the Uma Ranker's Tier 1–5, 50 of them; the story's other Umas wait for a release pack, and the town's people keep their posts ([the launch cast](game-mechanics.md#the-launch-cast)) |
@@ -59,7 +60,8 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's. The Umas' faces and busts on cards and lists are master data's, and so are twelve Umas' dialogue portraits and nine illustrations each, from Uma Character Art's Farm Life. Every other Uma plays scenes on the blank bust. [The art brief](design/her-look.md#the-art-brief) says what's drawn next |
 | **The HD-2D farm** | **Retired** | The tile farm is Home. The portrait preview, its stage and its kit are gone; an HD-2D look may come back when uma-platform's look path is ready |
 | **Expeditions** | **Built** (F97) | The town post opens at Farm Rank 7. Farmhands take supplies to one of seven regions and return with loot, rank points and bonds. The post keeps a return log ([expeditions](game-mechanics.md#expeditions)). |
-| **The workshops still to build** | **Not built** | The Restaurant's and the Forge's games and the other festivals' contests. |
+| **The Restaurant** | **Deployed** (F98) | From Farm Rank 7, clear eight stages to open 120 recipes. Learn each through exact-grade production. Sell the dishes, cook with them or save them for meals ([the Restaurant](game-mechanics.md#the-restaurant)). |
+| **Remaining festival contests** | **Open** | The Flower Show, Fishing Derby, Animal Show and Harvest Cup are on the calendar. Their playable contests remain open. The first three are required for the Farming, Fishing and Ranch Legend challenges. |
 | **Sound** | **Deferred** | Music and sound effects are outside the active roadmap. |
 | **Safety nets** | **Partial** | The save syncs with rescues and backups. Error reporting and restore checks are open. The browser playthrough in CI is deferred. |
 | **Parcels to the other games** | **Parked** | The farm sending items to uma-quest, uma-rpg and uma-racer comes after the farm's own game |
@@ -77,8 +79,8 @@ The farm is a full game when all eight of these hold:
 4. **Each Uma's story to its end, and the farm built out.** Her chapters play from meeting her to married life, its meals
    and the night's companion. Every place can be built, and the homestead fills with houses. The game keeps going:
    years, festivals, the household, records.
-5. **Every place works.** The ranch, the Mine and Quarry, the Kitchen, the sea, and expeditions are in. The Restaurant's
-   and Forge's games are still to come.
+5. **Every active place works.** The ranch, the Mine and Quarry, the Kitchen, the sea, expeditions and the Restaurant are
+   in. The remaining festival contests are open.
 6. **Real art everywhere.** Every Uma's portraits and illustrations, finished frames, and farm-work animations.
 7. **It feels finished.** A quick start, places that explain themselves the first time, and pacing proven by simulation
    and by your play.
@@ -91,16 +93,15 @@ Phase 0  Clean slate                       ── done
 Phase 1  One game, built around the Umas   ── done: one build on v5, the farm by building, the lean start, the town,
                                               her chapters, and the rework (landscape, a day of actions, the Uma loop,
                                               farmhands, upkeep, the calendar, the ranch and the mine)
-Phase 2  The whole farm                    ── the Restaurant, the Forge, festivals and the long game
+Phase 2  The whole farm                    ── festivals and the long game
 Phase 3  Feel and polish                   ── animation, first times, balance, speed, painted maps
 Phase 4  Steady                            ── error reports, save safety, releases
 Later    Release packs                     ── sets of Umas after the launch cast (the Ranker's Tier 1–5)
 Later    Parcels to the other games        ── parked until the farm's own game is done
 ```
 
-Phase 2 is under way, one workshop at a time: the Kitchen is in, with the Cooking Contest (your go, 2026-11-15; F92
-and F93); the launch cast is in (F96), and so are farm days and home after the wedding (F95); the sea and expeditions are in (F97). The Restaurant and the Forge are next. Phase 3 can start now that the first workshop plays.
-Phase 4's error reports and save safety are small and can come any time.
+Phase 2 continues with festivals and the long game. The sea and expeditions (F97), roster-run production (F99)
+and the Restaurant (F98) are live. Phase 3 polish and Phase 4 reliability work can proceed alongside Phase 2.
 
 ### Phase 0: Clean slate (done)
 
@@ -149,8 +150,7 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.5 **The Forge's game** | The Forge's merge game and tool upgrades. |
-| 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |
+| 2.6 **The long game** | Playable contests for the remaining festivals, reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. The dates and rewards still need design. |
 
 How each workshop is built:
 
@@ -182,6 +182,7 @@ How each workshop is built:
 
 These items are outside the active roadmap and the finish criteria.
 
+- **The Forge:** Workshop gameplay and tool upgrades are deferred pending a redesign.
 - **Sound:** Music, sound effects, mute and volume.
 - **Accessibility:** The planned VoiceOver, motion, and text size pass.
 - **Browser playthrough in CI:** A headless browser playing the first days on every push.
