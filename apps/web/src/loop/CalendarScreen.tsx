@@ -11,7 +11,7 @@
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
-  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays,
+  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -151,6 +151,8 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
           <li data-entry="festival" data-festival-row={day.festival.id}>
             <span className="flex items-center gap-2"><TrophyIcon size={16} /> {day.festival.name}</span>
             {day.festival.happens && <span className="block pl-6 text-[13px] text-ink-soft" data-festival-happens>{day.festival.happens}</span>}
+            {day.festival.rule && isFarmContest(day.festival.rule) && <Link className="flex min-h-11 items-center pl-6 font-semibold text-accent"
+              to={`/?sheet=festival&contest=${day.festival.rule}`}>Contest ›</Link>}
           </li>
         )}
         {day.storyDays.map((d) => (

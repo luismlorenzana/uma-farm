@@ -15,7 +15,7 @@
 // season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
 // name where she's met in town.
 import {
-  ACTIVITY_NAMES, CONTEST_ID, EXPEDITION_REGIONS, EXPEDITION_WORDS, expeditionReturnLine, type ExpeditionReturn, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
+  ACTIVITY_NAMES, CONTEST_ID, EXPEDITION_REGIONS, EXPEDITION_WORDS, expeditionReturnLine, type ExpeditionReturn, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, isFarmContest, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
   SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
   type SummarySection,
 } from '@farm/domain'
@@ -289,6 +289,8 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
       // and what withered, which open the farm.
       return summary.work.map((line): SummaryLine => {
         switch (line.kind) {
+          case 'festival-result': return { key: `festival-result:${line.id}`, to: `/?sheet=festival&contest=${line.id}`,
+            text: `${world.festival(line.id)} · ${line.place ? `${['1st', '2nd', '3rd'][line.place - 1]} · +${goldWords(line.gold)}` : 'No placement'}` }
           case 'farmhand': return {
             key: `farmhand:${line.id}`, to: BOARD, text: `${nameOf(line.id)} · ${nightWords(line)}`,
             ...(line.half ? { tag: 'Half pace', warn: true } : line.fed ? { tag: 'Well fed' } : line.tasks === 0 ? { tag: 'No tasks' } : {}),
@@ -338,7 +340,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           case 'new-year': return { key: `new-year:${line.when}`, text: `${NEW_YEAR_NAME} ${line.when}${line.when === 'today' ? ` · +${NEW_YEAR_ACTIONS} for events` : ''}`, to: CALENDAR }
           case 'festival': return {
             key: `festival:${line.when}`, text: `${world.festival(line.festival)} ${line.when}${line.when === 'today' ? ` · +${FESTIVAL_ACTIONS} for events` : ''}`,
-            to: line.festival === CONTEST_ID ? KITCHEN : CALENDAR,
+            to: line.festival === CONTEST_ID ? KITCHEN : isFarmContest(line.festival) ? `/?sheet=festival&contest=${line.festival}` : CALENDAR,
           }
           case 'days': return daysNews(line.ids, line.when, world)
           case 'notes': return notesNews(line.ids, world)

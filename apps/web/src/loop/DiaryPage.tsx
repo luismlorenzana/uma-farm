@@ -5,7 +5,7 @@
 // offers; and the milestones with the Umas, each with how far along you are. Below, the Farm Rank (opening its sheet)
 // and the milestones paid so far; each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations**
 // (loaded apart). Loaded on demand.
-import { buildCostWords, buildLockWords, diaryEntries, farmProjects, type BuildPlace, type FarmSave, type Project } from '@farm/domain'
+import { buildCostWords, buildLockWords, CONTESTS, diaryEntries, farmProjects, festivalNameOf, festivalResult, festivalsOf, type BuildPlace, type FarmSave, type Project } from '@farm/domain'
 import { HelpButton, Panel } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
@@ -20,6 +20,7 @@ const MemoriesShelf = lazy(() => import('./MemoriesShelf'))
 
 export default function DiaryPage() {
   const save = useLoopSave()
+  const story = useStory()
   if (!save) return null
   return (
     <main className="@container absolute inset-0 overflow-y-auto overscroll-contain p-4" data-page="diary">
@@ -42,6 +43,18 @@ export default function DiaryPage() {
           <span className="text-ink-soft">{save.farm.points.toLocaleString('en-US')} points ›</span>
         </Link>
         <Milestones save={save} />
+        {save.workshops.festival?.last && <section className="rounded-md border border-hairline bg-panel p-2.5">
+          <h2 className="text-micro">Festival results</h2>
+          {CONTESTS.flatMap((id) => {
+            const card = festivalResult(save, id)
+            if (!card) return []
+            const best = save.diary.records[`festival:${id}`]
+            return <Link key={id} className="flex min-h-11 items-center justify-between gap-2 text-[13px]" to={`/diary?sheet=festival&contest=${id}`}>
+              <span>{festivalNameOf(festivalsOf(story), id)}{best !== undefined ? ` · Best ${best}` : ''}</span>
+              <span>{card.place ? ['1st', '2nd', '3rd'][card.place - 1] : 'No placement'} ›</span>
+            </Link>
+          })}
+        </section>}
         <Suspense fallback={null}><MemoriesShelf save={save} /></Suspense>
         <Suspense fallback={null}><Conversations save={save} /></Suspense>
       </div>

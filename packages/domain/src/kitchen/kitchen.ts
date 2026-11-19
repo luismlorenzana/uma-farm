@@ -28,6 +28,8 @@
 // same. Pure; never stamps.
 import { actionCost, actionsLeft, spend, spendForEvent, type SpecialDays } from '../farm/actions'
 import { discoverOutput } from '../goods/discovery'
+import { noteCupWork } from '../festivals/evidence'
+import { activeContest, festivalBooked } from '../festivals/state'
 import { goodName } from '../goods/names'
 import { exactHeld, knowsRestaurantRecipe, restaurantRecipe } from '../restaurant/recipes'
 import { draw } from '../farm/draw'
@@ -111,7 +113,7 @@ function begin<S extends FarmSave>(save: S, play: Omit<PlayInProgress, 'workshop
  * plain rule's when none) out of the Warehouse now, and the play under way, 30 s on its seed. Refused as the plain batch
  * is (`batchBlock`), while a play is under way (`busy`), and with no action left. Never stamps. */
 export function startStoveBatch<S extends FarmSave>(save: S, picks: readonly string[] | null = null): S {
-  if (save.workshops.current || save.workshops.restaurant?.shift) throw new SaveRuleError('busy', 'A play is under way.')
+  if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) throw new SaveRuleError('busy', 'A play is under way.')
   const block = batchBlock(save, picks)
   if (block) throw new SaveRuleError(block === 'A batch takes two goods.' ? 'bad-count' : block === 'Only food goes in a batch.' ? 'bad-job' : 'no-items', block)
   const goods = [...(picks ?? plainBatch(save)!)]
@@ -286,6 +288,7 @@ export function assistantLock(save: FarmSave, id: string, pack: SchedulePack | n
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (!worksOn(save, pack, id)) return 'She’s in town today.'
   if (save.today.server === id) return 'She’s serving today.'
+  if (festivalBooked(save, id)) return 'She’s booked for the festival.'
   return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
 }
 
@@ -304,7 +307,7 @@ export function cooksDishes(save: FarmSave, pack: PerkPack | null): number {
 export function kitchenPlayBlock(save: FarmSave, menu: readonly MenuLine[], assistant: string | null = null): string | null {
   if (!placeBuilt(save, 'kitchen')) return 'Build the Kitchen first.'
   if (kitchenPlayedToday(save)) return 'The Kitchen plays once a day.'
-  if (save.workshops.current || save.workshops.restaurant?.shift) return 'A play is under way.'
+  if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) return 'A play is under way.'
   if (actionsLeft(save) < actionCost('kitchen')) return 'No actions left today.'
   const block = menuBlock(save, menu)
   if (block) return block
@@ -318,7 +321,7 @@ export function kitchenPlayBlock(save: FarmSave, menu: readonly MenuLine[], assi
 export function startKitchenPlay<S extends FarmSave>(save: S, menu: readonly MenuLine[], assistant: string | null = null): S {
   if (!placeBuilt(save, 'kitchen')) throw new SaveRuleError('locked', 'Build the Kitchen first.')
   if (kitchenPlayedToday(save)) throw new SaveRuleError('busy', 'The Kitchen plays once a day.')
-  if (save.workshops.current || save.workshops.restaurant?.shift) throw new SaveRuleError('busy', 'A play is under way.')
+  if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) throw new SaveRuleError('busy', 'A play is under way.')
   const spent = spend(save, 'kitchen')
   const block = menuBlock(save, menu) ?? (assistant === null ? null : assistantLock(save, assistant))
   if (block) throw new SaveRuleError(block.startsWith('Short') ? 'no-items' : 'bad-job', block)
@@ -426,6 +429,7 @@ export function finishPlay<S extends FarmSave>(save: S, taps: readonly StoveTap[
     next = { ...next, roster: { ...next.roster, [id]: { ...uma, practice: { ...uma.practice, cook: (uma.practice?.cook ?? 0) + 1 } } } }
     next = countChallenge(next, id, 'cooking', { kind: 'play', grade: tier.grade })
     next = countChallenge(next, id, 'cooking', { kind: 'dishes', stars: dishes.flatMap((d) => Array.from({ length: d.count }, () => d.stars)) })
+    if (dishes.some((dish) => dish.count > 0)) next = noteCupWork(next, id, 'kitchen')
   }
   return { save: next, result: { play: 'kitchen', score, grade: tier.grade, stopped: !taps, meals: 0, stars: 0, dishes } }
 }

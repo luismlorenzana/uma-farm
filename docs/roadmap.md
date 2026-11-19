@@ -61,7 +61,6 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **The HD-2D farm** | **Retired** | The tile farm is Home. The portrait preview, its stage and its kit are gone; an HD-2D look may come back when uma-platform's look path is ready |
 | **Expeditions** | **Built** (F97) | The town post opens at Farm Rank 7. Farmhands take supplies to one of seven regions and return with loot, rank points and bonds. The post keeps a return log ([expeditions](game-mechanics.md#expeditions)). |
 | **The Restaurant** | **Deployed** (F98) | From Farm Rank 7, clear eight stages to open 120 recipes. Learn each through exact-grade production. Sell the dishes, cook with them or save them for meals ([the Restaurant](game-mechanics.md#the-restaurant)). |
-| **Remaining festival contests** | **Open** | The Flower Show, Fishing Derby, Animal Show and Harvest Cup are on the calendar. Their playable contests remain open. The first three are required for the Farming, Fishing and Ranch Legend challenges. |
 | **Sound** | **Deferred** | Music and sound effects are outside the active roadmap. |
 | **Safety nets** | **Partial** | The save syncs with rescues and backups. Error reporting and restore checks are open. The browser playthrough in CI is deferred. |
 | **Parcels to the other games** | **Parked** | The farm sending items to uma-quest, uma-rpg and uma-racer comes after the farm's own game |
@@ -80,7 +79,7 @@ The farm is a full game when all eight of these hold:
    and the night's companion. Every place can be built, and the homestead fills with houses. The game keeps going:
    years, festivals, the household, records.
 5. **Every active place works.** The ranch, the Mine and Quarry, the Kitchen, the sea, expeditions and the Restaurant are
-   in. The remaining festival contests are open.
+   in. The four [Festival ground contests](game-mechanics.md#festival-contests) are complete.
 6. **Real art everywhere.** Every Uma's portraits and illustrations, finished frames, and farm-work animations.
 7. **It feels finished.** A quick start, places that explain themselves the first time, and pacing proven by simulation
    and by your play.
@@ -100,8 +99,8 @@ Later    Release packs                     ── sets of Umas after the launch 
 Later    Parcels to the other games        ── parked until the farm's own game is done
 ```
 
-Phase 2 continues with festivals and the long game. The sea and expeditions (F97), roster-run production (F99)
-and the Restaurant (F98) are live. Phase 3 polish and Phase 4 reliability work can proceed alongside Phase 2.
+Phase 2 continues with the long game. The sea and expeditions (F97), roster-run production (F99), the Restaurant
+(F98) and the Festival ground contests (F100) are complete. Phase 3 polish and Phase 4 reliability work can proceed alongside Phase 2.
 
 ### Phase 0: Clean slate (done)
 
@@ -150,7 +149,6 @@ only a spouse moves in, into a room; the Dorm is retired: [farmhands](game-mecha
 
 | Step | What |
 |---|---|
-| 2.6 **Festival contests** | The [F100 packet](handoff/tasks/F100-festival-contests.md) authors the Flower Show, Fishing Derby, Animal Show and Harvest Cup around the farm's current state and the Umas' work. |
 | 2.6 **The long game** | Reasons to keep playing across years, household milestones and records, rewards for getting to know the town, and group scenes for families, crews and festivals. |
 
 How each workshop is built:

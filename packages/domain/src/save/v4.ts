@@ -649,7 +649,8 @@ export interface SaveV5 {
   /** The workshops: the day of each one's last play (the Kitchen's, once a day), the play at the stove under way, the
    * recipes learnt (her signature dishes and those bought; the Kitchen's first three are known once it stands) and each
    * workshop's best score. A save from before the stove has no play under way. */
-  workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number>; restaurant?: import('../restaurant/rules').RestaurantState }
+  workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number>
+    restaurant?: import('../restaurant/rules').RestaurantState; festival?: import('../festivals/state').FestivalState }
   expeditions: Expedition[]
   expeditionLog?: ExpeditionReturn[]
   /** Bond points by pair: `pairKey` of character ids. */

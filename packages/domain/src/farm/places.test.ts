@@ -39,11 +39,11 @@ describe('the farm map', () => {
   it('opens day 1\'s places, a build once it stands, and the board with five Umas met', () => {
     const day1 = newSave('u1', '2026-11-09T10:00:00.000Z')
     const open = (save: typeof day1) => FARM_PLACES.filter((p) => placeOpen(save, p)).map((p) => p.id)
-    expect(open(day1)).toEqual(['fields', 'forest', 'fishery', 'bin', 'warehouse', 'gate', 'shop', 'town'])
+    expect(open(day1)).toEqual(['fields', 'forest', 'fishery', 'bin', 'warehouse', 'gate', 'shop', 'festival', 'town'])
     // The Farm Rank alone builds nothing.
     expect(open({ ...day1, farm: { ...day1.farm, points: 22_000 } })).toEqual(open(day1))
     const built = { ...day1, buildings: { ...day1.buildings, mill: 1, dock: 1, boat: 1 } }
-    expect(open(built)).toEqual(['fields', 'mill', 'forest', 'fishery', 'bin', 'warehouse', 'gate', 'dock', 'shop', 'town', 'boat'])
+    expect(open(built)).toEqual(['fields', 'mill', 'forest', 'fishery', 'bin', 'warehouse', 'gate', 'dock', 'shop', 'festival', 'town', 'boat'])
     expect(placeBuilt(built, 'mill')).toBe(true)
     // A Mill paid for today, or an older save's plans (0), isn't built.
     expect(placeBuilt({ buildings: { dorm: 1, mill: 0 } }, 'mill')).toBe(false)

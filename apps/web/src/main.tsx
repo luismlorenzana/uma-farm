@@ -1,9 +1,5 @@
 import './index.css'
 
-import buildingsIndex from '@luismlorenzana/uma-art/buildings/atlas.json'
-import buildingsUrl from '@luismlorenzana/uma-art/buildings/atlas.png?url'
-import tilesIndex from '@luismlorenzana/uma-art/tiles/atlas.json'
-import tilesUrl from '@luismlorenzana/uma-art/tiles/atlas.png?url'
 import uiIndex from '@luismlorenzana/uma-art/ui/atlas.json'
 import uiUrl from '@luismlorenzana/uma-art/ui/atlas.png?url'
 import { AuthProvider, idToken } from '@luismlorenzana/uma-kit/auth'
@@ -31,8 +27,6 @@ setTokenProvider(() => idToken(FIREBASE))
 
 const ART: KitArt = {
   ui: { url: uiUrl, index: uiIndex },
-  tiles: { url: tilesUrl, index: tilesIndex },
-  buildings: { url: buildingsUrl, index: buildingsIndex },
 }
 
 const root = document.getElementById('root')

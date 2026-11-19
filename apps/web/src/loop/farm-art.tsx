@@ -4,8 +4,8 @@
 // chunk.
 import type { CropLook, Tile } from '@farm/domain'
 import { CROPS, cropLook, established } from '@farm/domain'
-import { useKitArt } from '@luismlorenzana/uma-kit/ui'
 import { ItemIcon } from '../items/ItemIcon'
+import { useBuildingAtlas } from './building-atlas'
 
 /** The ground's colours: grass under what's overgrown, then light earth, tilled soil and watered soil. */
 const GRASS = '#86ad63'
@@ -15,7 +15,7 @@ const WET = '#5d3b20'
 
 /** A building from uma-art's sheet, `size` points wide, pixel-crisp; a plain roof shape until the sheet loads. */
 export function BuildingArt({ frame, size, dim = false }: { frame: string; size: number; dim?: boolean }) {
-  const art = useKitArt().buildings
+  const art = useBuildingAtlas()
   const f = art?.index.frames[frame]
   if (!art || !f) {
     return (

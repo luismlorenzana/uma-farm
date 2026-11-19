@@ -23,10 +23,10 @@ import { useGame } from '../save/game'
 import { playHeld } from '../loop/stove-session'
 import { castIds, useStory } from '../story/story'
 import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
+import { SyncWarning } from './SyncWarning'
 
 /** The field's screen: full screen, its own strip at the top, no rail. */
 const FIELD_PATH = '/field'
-import { SyncWarning } from './SyncWarning'
 
 const MenuSheet = lazy(() => import('./MenuSheet').then((module) => ({ default: module.MenuSheet })))
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
@@ -46,6 +46,7 @@ const Gallery = lazy(() => import('../loop/Gallery'))
 const KitchenSheet = lazy(() => import('../loop/KitchenSheet'))
 const RestaurantSheet = lazy(() => import('../loop/RestaurantSheet'))
 const ContestSheet = lazy(() => import('../loop/Contest'))
+const FestivalSheet = lazy(() => import('../loop/FestivalSheet'))
 const StovePlayer = lazy(() => import('../loop/StovePlayer'))
 
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
@@ -105,6 +106,7 @@ export function Shell() {
           {sheet === 'kitchen' && free && <Suspense fallback={null}><KitchenSheet /></Suspense>}
           {sheet === 'restaurant' && free && <Suspense fallback={null}><RestaurantSheet /></Suspense>}
           {sheet === 'contest' && free && <Suspense fallback={null}><ContestSheet /></Suspense>}
+          {sheet === 'festival' && free && <Suspense fallback={null}><FestivalSheet /></Suspense>}
           {stove && free && <Suspense fallback={null}><StovePlayer key={stove} /></Suspense>}
         </>
       }

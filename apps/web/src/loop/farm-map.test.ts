@@ -51,7 +51,7 @@ describe('the farm map', () => {
     // Paid today, it builds tonight; built, the Dock opens its quick look (the Boat's Build).
     expect(lock('mill', { ...day1, farm: { ...day1.farm, builds: ['mill'] } })).toBe('Builds tonight')
     expect(lock('dock', { ...day1, buildings: { ...day1.buildings, dock: 1 } })).toBeNull()
-    expect(lockOf(day1, farmPlace('festival')!, new Set(['festival']))).toBe('Soon')
+    expect(lockOf(day1, farmPlace('festival')!, new Set(['festival']))).toBe(null)
     // The Dorm is retired: no place, no lot, no page. The Gate opens its quick look, the town its screen.
     expect(farmPlace('dorm')).toBeUndefined()
     expect(LOT_COLUMNS.flat()).not.toContain('dorm')

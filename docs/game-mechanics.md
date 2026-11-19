@@ -136,21 +136,93 @@ with each Uma you've met who has them ([occasion scenes](#occasion-scenes)).
   against the two rival farms, and the places pay gold and Farm Rank points ([the Cooking
   Contest](#the-cooking-contest)). Its morning lines, "Cooking Contest tomorrow" and "Cooking Contest today · +3 for
   events", open the Kitchen.
-- **The others' contests come later** (the Flower Show, the Fishing Derby, the Animal Show and the Harvest Cup, with
-  their places, in roadmap step 2.6): no contest is played and no prize is given on their days, and the Festival ground
-  on the map stays locked ("Opens soon").
+- **The Festival ground** opens from the map, the Calendar and the morning's festival notice. Prepare entries
+  there for the Flower Show, Fishing Derby, Animal Show and Harvest Cup. The entry opens on the festival's
+  resolved day. [Festival contests](#festival-contests) covers preparation, results and farmhand credit.
 
 **The story's festivals.** The pack's `world.json` may rename, move or add festivals ([the world in the
 pack](#the-world-in-the-pack)); the year is then the story's everywhere: the calendar, the date chip, the morning,
 festival night, and `festival` triggers and gates.
 - **One of the game's five keeps its game rule under the story's name, wherever it falls:** its festival night, its news,
-  the triggers and gates naming it, and its contest (the Cooking Contest's today; the others' once they're built), which
-  its rank challenge counts. A moved one plays all of it on its new day every year, and none on its old day.
+  the triggers and gates naming it, its contest and any linked rank challenge. A move shifts all of them to the new day
+  every year.
 - **One of the story's own** is a festival day and nothing more: marked, said, its night, and its triggers.
 - **One festival a day:** a move onto a day another holds is skipped, and that festival keeps the game's day.
 
 A festival day also opens a festival night for the evening, and once the household's finale is reached, the Festival
 of Vows returns on its day each year. Both are the romance's.
+
+##### Festival contests
+
+Each entry costs three farmer actions. The game spends event actions first. The Festival ground shows what the
+farm can enter, the two rival scores and the latest result. The Farm Rank from the morning's settlement fixes
+the rival scores and prize when the entry starts. A tie goes to the player.
+
+| Contest | Default day | First rival score at Farm Rank R | Base first prize |
+|---|---|---|---:|
+| Flower Show | Spring 10 | The orchard · min(88, 36 + 5 × (R − 1)) | 500g |
+| Fishing Derby | Summer 10 | The river team · min(82, 34 + 5 × (R − 1)) | 700g |
+| Animal Show | Winter 10 | The ranch · min(88, 42 + 5 × (R − 1)) | 900g |
+| Harvest Cup | Winter 12 | The valley growers · min(88, 30 + 6 × (R − 1)) | 1,200g |
+
+The second rival scores ten points fewer. First prize scales by `(1 + 0.06 × (R − 1)) × min(2, 1 + 0.15 × (year − 1))`
+and rounds to 5g. Second and third pay half and one fifth, rounded to 5g. A judged entry pays immediately
+and records its place, score and Diary best. Farm Rank counts 150, 75 or 25 points overnight. Each rule allows
+one attempt per year. Derby and Animal Show save each turn. End day judges the work completed so far.
+An entry with no landed fish or correct cue has no placement, payout or Diary score.
+
+- **Flower Show.** Donate one exact grade and star lot of raw crop or orchard fruit from the Warehouse or the
+  display box. During the ten days through the show, mark one tilled tile and the crop to exhibit. Planting,
+  watering that advances growth, and harvesting on that tile earn one tending date each per day. The first real
+  harvest of that cycle reserves its best single unit in the box, highest stars first, then grade. The box returns
+  to stock on cancellation or when its show closes unused. Score `10 × stars + 2 × grade + 6 × min(5, tending dates)`.
+  Name any one Uma who took part in those dated actions to give her the Farming Legend challenge on first place,
+  even if she's away. Only the crop in the box carries that work history.
+- **Fishing Derby.** Pick one reachable spot and assign its three casts to the farmer and up to two distinct farmhands.
+  The current season, Rod, fishing mode and each caster's skills supply the ordinary fishing terms.
+  The farmer reels in on the timing ring within four seconds. An Uma takes her cast using her aptitude and rank.
+  Each catch scores `40 × size percentile + 8 × stars + 0.20 × timing`, rounded. Average and round the two best
+  cast scores, with a missing catch scoring zero. Actual catches enter the Warehouse at settlement with their
+  graded IDs and stars, update length records and advance discoveries. Participating Umas get Fishing practice.
+  A first-place team gives Fishing Legend credit to each Uma who landed an official catch.
+- **Animal Show.** Pick a specific working Coop or Barn animal. Score `3 × hearts + 10 if fed today + 5 × min(4, care dates)
+  + 10 × correct cues`. Care dates are successful care on that animal today and in the preceding six days. Name a
+  caretaker with at least two of its dates to give her Ranch Legend credit on first place. An available caretaker can
+  also act as handler and answer the first cue, or the first two from Animal care 6. Choose Stand, Walk or Brush for
+  the remaining cues. Her care practice comes from handling. The animal stays on the farm.
+- **Harvest Cup.** Donate three held exact lots from distinct categories. Each scores `4 × stars + grade`. The
+  categories are Field (raw plantable crops and orchard fruit), Ranch (raw animal products), Fish (raw fish),
+  Wild (remaining edible forage), Workshop (edible station output) and Kitchen (finished dishes). The Kitchen
+  exhibit uses its recipe grade, or its Restaurant stage. A presenter adds three points when she did successful
+  work in that category on one of the last three completed days. That means harvesting, ranch work, landing a fish,
+  bringing home edible forage, starting an edible station load, or cooking a batch or assisting a stove dish,
+  respectively. Each Uma presents one category. Reserved expedition dishes stay unavailable.
+
+Booking a caster, handler or presenter commits one of her work actions for that day. The scheduler checks town
+days and current Kitchen, Restaurant and expedition bookings. A contestant who performs her role on a judged
+entry earns +50 hearts once per contest per year. Naming a grower or caretaker for the Legend challenge is free.
+
+###### Festival year playthroughs
+
+The first-year solo run started with the day-one save and used hand work throughout. It built the Coop using the
+farm's logs and vegetables and bought and tended a chicken before Winter 10. The roster runs started in Year 2
+with established workers and a Coop and Mill, and produced their contest goods during the run. All four farms
+played all 48 days and entered all four contests. Each table cell gives place, score and gold.
+
+| Farm | Farm Ranks at entry | Flower Show | Fishing Derby | Animal Show | Harvest Cup | Uma work actions / booked for contests |
+|---|---|---|---|---|---|---:|
+| First-year solo | 1, 2, 3, 3 | 1st · 42 · 500g | 2nd · 33 · 370g | 1st · 82 · 1,010g | 3rd · 27 · 270g | 0 / 0 |
+| 10 Umas | 3, 4, 4, 4 | 1st · 72 · 645g | 1st · 62 · 950g | 1st · 100 · 1,220g | 1st · 66 · 1,630g | 1,274 / 6 |
+| 20 Umas | 6, 6, 6, 6 | 1st · 72 · 750g | 1st · 80 · 1,045g | 1st · 100 · 1,345g | 1st · 78 · 1,795g | 2,555 / 5 |
+| 50 Umas | 10, 10, 10, 10 | 2nd · 72 · 445g | 3rd · 64 · 250g | 1st · 100 · 1,595g | 2nd · 81 · 1,065g | 6,394 / 6 |
+
+The solo farm grew a G1 ★1 Carrot, cast at the Pond, showed its only chicken and donated sweet potato, shiitake
+and rainbow koi. The roster farms grew G1 ★4 Carrots and sent two Umas to cast alongside the farmer. The
+20-Uma farm's caretaker earned the Ranch challenge while she was in town. Its Workshop presenter had worked a
+Mill load. The 10-Uma Cup used Wild, Ranch and Fish after its Field presenters were unavailable. The 50-Uma Cup
+used a summer tomato from storage, an egg and a fish. The roster farms each used 22 routine farmer actions,
+plus the festival event actions, and met winter's meal costs with takeout. Zero entries stalled. Farm Rank 10 still
+rewarded selective exhibits and stronger catches, even with a full roster working.
 
 #### The calendar screen
 
@@ -346,7 +418,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The Umas | Invite her to work | 1 | Now |
 | The Umas | A hangout or a date | 2 | Now |
 | The Umas | Her event, when it’s ready, or an occasion scene with her | 1 | Now |
-| A festival | Enter the Cooking Contest, at the Kitchen on its day: the day’s event actions first (the other festivals’ contests come later) | 3 | Now |
+| A festival | Enter on its day at the Festival ground, or at the Kitchen for the Cooking Contest. Event actions go first | 3 | Now |
 | The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove | 1 | Now |
 | The Kitchen | Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day | 1 | Now |
 | The Restaurant | Serve a shift from a stocked menu of dishes, once a day | 1 | Now |
@@ -574,7 +646,7 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Gate | `scenario-gate` | Day 1 |
 | Dock | `ley-spring` (borrowed) | Farm Rank 6, then built |
 | Shop | `exchange` | Day 1 |
-| Festival ground | `racecourse` | Not built yet |
+| Festival ground | `racecourse` | Day 1 |
 | Expedition post | `rangers-lodge` (borrowed) | Farm Rank 7, then built |
 | Town | `trophy-hall` (borrowed) | Day 1 |
 | Boat | At the Dock | Farm Rank 6, then built after the Dock |
@@ -603,8 +675,7 @@ What a tap does:
   built (the Kitchen, the Restaurant, the expedition post, the Forge's merge game), whose Build card shows its cost and
   can't be bought.
 - **The Requests board:** "Opens with 5 Umas met"; then "Opens soon", its game not built.
-- **"Opens soon":** its rule is met but it has nothing to do yet: the Festival ground, and a place that stands with no
-  game.
+- **"Opens soon":** a place that stands while its game is still in development.
 - **The Forge** opens as the ring bench the night after the first Romance 8 event ("Opens with your first Romance 8"
   before that); its merge game is a build at Farm Rank 8, not built yet.
 
@@ -1109,7 +1180,7 @@ The challenge toward each farming rank:
 | Skilled | 40 crops of ★3+ she tended | At harvest, for the tender |
 | Expert | Tend a crop of level 4+ to harvest | At harvest, for the tender |
 | Master | 30 crops of ★5 | At harvest, for the tender |
-| Legend | 1st at a Flower Show with a crop she tended | A festival win (its contest isn’t built yet) |
+| Legend | 1st at a Flower Show with a crop she tended | Name her as the grower of a winning boxed harvest |
 <!-- /live -->
 
 #### The field at night
@@ -3872,10 +3943,10 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 <!-- live:challenges -->
 | Activity | Hand | Skilled | Expert | Master | Legend | Counted by |
 |---|---|---|---|---|---|---|
-| Farming | Harvest 30 crops she tended | 40 crops of ★3+ she tended | Tend a crop of level 4+ to harvest | 30 crops of ★5 | 1st at a Flower Show with a crop she tended | At harvest, for the tender; a festival win (its contest isn’t built yet) |
-| Ranch | Care for animals 10 days | An animal in her care reaches 4 hearts | An animal in her care reaches 7 hearts | An animal in her care reaches 10 hearts | 1st at an Animal Show with an animal in her care | A farmhand’s night at the Coop or the Barn; a farmhand’s care for an animal; a festival win (its contest isn’t built yet) |
+| Farming | Harvest 30 crops she tended | 40 crops of ★3+ she tended | Tend a crop of level 4+ to harvest | 30 crops of ★5 | 1st at a Flower Show with a crop she tended | At harvest, for the tender; name her as the grower of a winning boxed harvest |
+| Ranch | Care for animals 10 days | An animal in her care reaches 4 hearts | An animal in her care reaches 7 hearts | An animal in her care reaches 10 hearts | 1st at an Animal Show with an animal in her care | A farmhand’s night at the Coop or the Barn; a farmhand’s care for an animal; name her as the caretaker of a winning animal |
 | Mining | Dig 40 ores or stones | Dig at floor 10 | Dig at floor 15 | Dig at floor 20 | Dig at floor 25 | A farmhand’s faces at the Mine or the Quarry |
-| Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); a festival win (its contest isn’t built yet) |
+| Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); have her land an official catch for the winning team |
 | Foraging | Gather 50 items | Gather 20 items in the Hills | Gather 20 items in the Old Forest | Gather 20 items on the Mountain | Gather 20 items in the Misty Vale | The night’s hauls (night step 4) |
 | Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; the Cooking Contest’s judging, its cook |
 | Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant’s shift, its server |
@@ -5832,7 +5903,7 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 | Gift (one good, its stars your choice) | Loved +60, Liked +30, Neutral +10, Disliked 0; × (1 + 0.1 a star above ★1) | One action; one a day each, where you meet her; ×3 on her birthday | `giftV4` |
 | Praise (a ★3+ day’s work, a rank-up, a Fine play) | +20 | Once a day, when earned | `praiseV4` |
 | Her line (she worked it today) | +10 | Paid at night, step 6 | `payLines` |
-| A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether`: the Cooking Contest’s cook (the other festivals’ when they’re built) |
+| A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether`: the Cooking Contest’s cook, Derby casters who took their turn, the Animal Show handler and Harvest Cup presenters |
 | Her arrival scene | +50, and its choice (+10 or +30) | Once | `finishArrival` |
 | A heart event | +50, its choices and its play’s grade | One action (a special day’s event actions first); one of hers a day | `playEvent` |
 | The evening (a hangout from F3, a date from R1; 2 actions) | Fine +60, Great +100, Perfect +150; ×1.5 in her favourite kind, on her birthday and on her anniversary, each once | One evening a day across all the Umas; two on some days from 10 married | `spendEvening` |
@@ -5891,9 +5962,9 @@ A disliked gift pays 0 and never takes points away. She says one of the default 
   unpaid, pays once, and both lists clear at night.
 - **Her line:** at night, +10 to each Uma who worked today at one of her line's places. One a night each; a day
   elsewhere pays nothing. Only farmhands work, so only they earn it.
-- **A festival together:** +50 to each Uma on a festival's team or entry, once a festival a year each: today the
-  Cooking Contest's cook, at its judging ([the Cooking Contest](#the-cooking-contest)); the other festivals pay it once
-  their contests are built.
+- **A festival together:** +50 to each Uma who performs her role on a judged entry once per festival per year.
+  This includes the [Cooking Contest](#the-cooking-contest) cook and the casters, handler and presenters of the
+  [Festival ground contests](#festival-contests).
 
 #### Birthdays and anniversaries
 
