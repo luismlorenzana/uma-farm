@@ -1,3 +1,4 @@
+import { setImmediate } from 'node:timers/promises'
 import { actionsLeft, goToTown } from './actions'
 import { dateOf, DAYS_PER_YEAR, SEASONS, type Season } from './calendar'
 import { FARM_RANK_POINTS } from './farm'
@@ -180,7 +181,7 @@ interface ProductionDay {
   capacity: number; loads: number; gold: number; repeats: number; shipped: number; takeout: number; pantry: number; stock: ReturnType<typeof stash>
 }
 
-export function playProductionFarm(crew: CrewSize) {
+export async function playProductionFarm(crew: CrewSize) {
   const { save: initial, story, ids, plots, width, tiles } = setup(crew)
   let save = initial
   const days: ProductionDay[] = []
@@ -228,7 +229,10 @@ export function playProductionFarm(crew: CrewSize) {
       pantry: morning.money?.find((line) => line.kind === 'pantry')?.meals ?? 0,
       stock: stash(save),
     })
-    if (day === 12) save = parseSaveV5(JSON.parse(JSON.stringify(save)))
+    if (day === 12) {
+      save = parseSaveV5(JSON.parse(JSON.stringify(save)))
+      await setImmediate()
+    }
   }
   const years = Array.from({ length: 4 }, (_, i) => {
     const year = i + 1

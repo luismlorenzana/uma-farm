@@ -16,6 +16,7 @@
 //
 // `SCALE=1` prints the three farms' tables, year by year. The night reads a pack of the fifty alone (`castPack`: invented,
 // on the default schedule, no bible), for their farm days; everyone a D talent.
+import { setImmediate } from 'node:timers/promises'
 import { describe, expect, it } from 'vitest'
 import { actionsLeft, goToTown, spendActions } from './actions'
 import { buildLock, heldFor, payBuild, pickFor } from './builds'
@@ -698,14 +699,18 @@ interface Year {
   built: string[]
 }
 
-function simulate(stage: Stage, expeditions = false, yearsToPlay = YEARS): { log: Day[]; years: Year[]; end: SaveV4; mornings: SaveV4[] } {
+async function simulate(stage: Stage, expeditions = false, yearsToPlay = YEARS) {
   let save: SaveV4 = { ...newSave(`scale-${stage}`, AT), farmer: { name: 'Sim' } }
   const log: Day[] = []
   const years: Year[] = []
   const mornings: SaveV4[] = []
   for (let n = 0; n < DAYS_PER_YEAR * yearsToPlay; n++) {
     save = play(save, stage, log, expeditions)
-    if (n % DAYS_PER_SEASON === DAYS_PER_SEASON - 1) mornings.push(save)
+    if (n % DAYS_PER_SEASON === DAYS_PER_SEASON - 1) {
+      mornings.push(save)
+      // Allow the test worker to exchange progress messages between simulated seasons.
+      await setImmediate()
+    }
     if ((n + 1) % DAYS_PER_YEAR === 0) {
       const days = log.slice(-DAYS_PER_YEAR)
       const avg = (pick: (d: Day) => number) => Math.round(sum(days.map(pick)) / days.length)
@@ -727,7 +732,8 @@ function simulate(stage: Stage, expeditions = false, yearsToPlay = YEARS): { log
   return { log, years, end: save, mornings }
 }
 
-const farms = Object.fromEntries(STAGES.map((stage) => [stage, simulate(stage)])) as Record<Stage, ReturnType<typeof simulate>>
+const farms = {} as Record<Stage, Awaited<ReturnType<typeof simulate>>>
+for (const stage of STAGES) farms[stage] = await simulate(stage)
 /** Each farm's stage: the years it works with all its Umas (10 from year 2, 20 from year 3, 50 in year 4). */
 const STAGE_YEARS: Readonly<Record<Stage, readonly number[]>> = { 10: [2, 3, 4], 20: [3, 4], 50: [4] }
 
@@ -769,9 +775,9 @@ if (process.env.SCALE) {
 }
 
 describe('expeditions at farm scale', () => {
-  it.each(STAGES)('sends and ships from expeditions on the %i-Uma farm', (stage) => {
-    const run = simulate(stage, true, EXPEDITION_YEARS)
-    const base = simulate(stage, false, EXPEDITION_YEARS)
+  it.each(STAGES)('sends and ships from expeditions on the %i-Uma farm', async (stage) => {
+    const run = await simulate(stage, true, EXPEDITION_YEARS)
+    const base = await simulate(stage, false, EXPEDITION_YEARS)
     const last = run.log.slice(-DAYS_PER_YEAR)
     const sameDays = base.log.slice(-DAYS_PER_YEAR)
     const shipped = sum(last.map((day) => day.sources.expeditions))
@@ -787,12 +793,12 @@ describe('expeditions at farm scale', () => {
     expect(missed).toBeGreaterThan(0)
     expect(last.filter((day) => day.short)).toEqual([])
     for (const morning of run.mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
-  }, 60000)
+  }, 90_000)
 })
 
 describe('F99 fixed production plans over four years', () => {
-  it.each(PRODUCTION_CREWS)('plays the recurring farm with %i Umas', (crew) => {
-    const run = playProductionFarm(crew)
+  it.each(PRODUCTION_CREWS)('plays the recurring farm with %i Umas', async (crew) => {
+    const run = await playProductionFarm(crew)
     if (process.env.F99_REPORT === '1') {
       console.log(JSON.stringify({ crew, first: run.first, seasons: run.seasonGold, absence: run.missingFarmhands, crops: run.cropCount }))
       console.table(run.years)
