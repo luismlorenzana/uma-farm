@@ -32,7 +32,7 @@ export class FieldPondRenderer {
       this.stage.scene.add(this.scene.root)
       this.stage.useCamera('front')
       this.stage.life.sway = false
-      this.graphics('standard')
+      this.graphics('saver')
       this.stage.onFrame = (ms) => this.record(ms)
     } catch (error) {
       this.dispose()

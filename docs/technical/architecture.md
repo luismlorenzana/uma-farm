@@ -97,7 +97,7 @@ Sheets and scenes are query parameters on the page under them:
 | `src/app/` | Root and the start-over card, the upright card, the router, the build id, the Firebase config |
 | `src/shell/` | uma-kit's `AppFrame` as a rail and a bar: the rail (`BottomBar side="left"`: Farm · Town · Library · Ledger · Diary), the bar (`AccountBar landscape="bar"`: date, gold, sync chip, then actions left, End the day, Menu), the Menu's panel, the sync warning |
 | `src/library/` | Lazy portrait shelves and individual books, with scene and illustration viewers loaded on demand. The v5 save holds dated proof and bounded outing receipts. Route scripts and art remain in their releases. |
-| `src/hd2d/` | Optional Field and Pond review. Pure save projection, original instanced scene, and a lazy shared `LookStage` adapter. The React place links use the farm's normal routes. |
+| `src/hd2d/` | Default Field and Pond Home view on WebGL 2. Pure save projection, original instanced scene, and a lazy shared `LookStage` adapter. The tile map remains available for all farm places and renderer fallback. |
 | `src/guide/` | Illustrated help topics shared by the contextual sheets and lazy `/guide` index. Topics carry three steps, a short rule, and optional reference details at the call site. |
 | `src/home/` | Account |
 | `src/book/` | The farm's book |

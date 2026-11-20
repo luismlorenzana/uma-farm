@@ -128,7 +128,7 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 
 | Packet | Work | Status |
 |---|---|---|
-| [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | The shared-renderer pilot is implemented. The iPhone measurements and look review are open. |
+| [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
 | [F104](tasks/F104-longer-seasons.md) | 30-day seasons, calendar pacing and whole-farm balance | Draft seasonal schedule, system audit and save conversion scope. The 120-day playthroughs and implementation are open. |
 
 The Forge is [deferred pending a redesign](../roadmap.md#deferred).
