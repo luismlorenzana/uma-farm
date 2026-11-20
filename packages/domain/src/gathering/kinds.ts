@@ -3,7 +3,7 @@
 // Umas' multi-day jobs retired with the day of actions; these rules stay for what still reads an Uma's work (her line's
 // goods and night chores, `romance/days.ts` and `perk-effects.ts`) and for the farmhands. The farmer's own hauls are
 // `hauls.ts`. Talents aren't saved, so callers pass the app's `talentOf`.
-import { dateOf } from '../farm/calendar'
+import { dateDayOf, dateOf } from '../farm/calendar'
 import { placeBuilt } from '../farm/places'
 import { draw } from '../farm/draw'
 import { rankBenefits, rankQuality } from '../farm/rank-rules'
@@ -141,7 +141,7 @@ export type WorkPlace = LoopPlaceId | 'fields'
 
 /** A seeded pick of a place's season's goods: `draw(uid, day, what, n)`. */
 export const pickOn = (save: Pick<FarmSave, 'account' | 'calendar'>, place: GatherPlace, where: string, what: string, n: number): string =>
-  pickShare(sharesOn(place, where, save.calendar.day), draw(save.account.uid, save.calendar.day, what, n))
+  pickShare(sharesOn(place, where, dateDayOf(save.calendar.day, save.calendar)), draw(save.account.uid, save.calendar.day, what, n))
 
 /** A seeded star draw at quality `q`: `draw(uid, day, what, n)`. */
 export const starsOn = (save: Pick<FarmSave, 'account' | 'calendar'>, q: number, what: string, n: number): number =>

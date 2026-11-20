@@ -8,7 +8,7 @@
 //
 // The table prices every action the design lists, the town's and the Umas' among them; `from` says which part of the
 // game charges one that isn't played yet. Pure; never stamps.
-import { DAYS_PER_YEAR, FESTIVALS, festivalOn, isNewYear, type Festival } from './calendar'
+import { dateDayOf, DAYS_PER_YEAR, FESTIVALS, festivalOn, type Festival } from './calendar'
 import { SaveRuleError } from '../save/rules'
 import type { FarmSave } from '../save/v4'
 
@@ -122,10 +122,11 @@ export interface EventGrant {
 /** A day's event actions, by why: New Year's (from the second year) first, then its festival, then the birthdays of
  * the Umas on the roster (by id). Only events spend them. */
 export function eventGrants(save: Pick<FarmSave, 'calendar' | 'roster'>, days: SpecialDays, day = save.calendar.day): EventGrant[] {
-  const ofYear = ((day - 1) % DAYS_PER_YEAR) + 1
-  const festival = festivalOn(day, days.festivals)
+  const date = dateDayOf(day, save.calendar)
+  const ofYear = ((date - 1) % DAYS_PER_YEAR) + 1
+  const festival = festivalOn(day, days.festivals, save.calendar)
   return [
-    ...(isNewYear(day) && day > DAYS_PER_YEAR ? [{ kind: 'new-year' as const, id: null, actions: NEW_YEAR_ACTIONS }] : []),
+    ...(ofYear === 1 && date > DAYS_PER_YEAR ? [{ kind: 'new-year' as const, id: null, actions: NEW_YEAR_ACTIONS }] : []),
     ...(festival ? [{ kind: 'festival' as const, id: festival.id, actions: FESTIVAL_ACTIONS }] : []),
     ...Object.keys(save.roster).filter((id) => days.birthdays.get(id) === ofYear).sort((a, b) => Number(a) - Number(b))
       .map((id) => ({ kind: 'birthday' as const, id, actions: BIRTHDAY_ACTIONS })),

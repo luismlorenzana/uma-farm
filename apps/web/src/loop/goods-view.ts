@@ -1,7 +1,7 @@
 // The goods as the loop's screens show them: the Warehouse by stars in its family tabs, the bin's
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
-  binSales, binTotal, CROPS, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, hasPrice, inDemand, isDishId, lineOpen, refinedOf, restaurantGrade, RING_IDS, SEASON_NAMES, seedOf, SEED_IDS, STARS,
+  binSales, binTotal, CROPS, dateDayOf, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, hasPrice, inDemand, isDishId, lineOpen, refinedOf, restaurantGrade, RING_IDS, SEASON_NAMES, seedOf, SEED_IDS, STARS,
   type BinSale, type Good, type Market,
   type GoodFamily, type FarmSave, type ShopLine, type StarCounts,
 } from '@farm/domain'
@@ -105,7 +105,7 @@ export function warehouseTabs(save: Pick<FarmSave, 'items' | 'calendar'> & Parti
   const rows = Object.entries(save.items)
     .filter(([, row]) => row.some((n) => n > 0))
     .sort(([a], [b]) => orderOf(a) - orderOf(b))
-    .map(([id, row]) => goodRow(id, row, save.calendar.day, save.farm?.market))
+    .map(([id, row]) => goodRow(id, row, dateDayOf(save.calendar.day, save.calendar), save.farm?.market))
   return SHELVES.map((shelf) => {
     const on = rows.filter((row) => row.shelf === shelf)
     return { shelf, label: SHELF_NAMES[shelf], count: on.reduce((n, row) => n + row.total, 0), rows: on }
@@ -129,8 +129,8 @@ export interface BinView {
 export function binView(save: Pick<FarmSave, 'bin' | 'calendar'> & Partial<Pick<FarmSave, 'farm'>>): BinView {
   const market = save.farm?.market ?? {}
   return {
-    lines: binSales(save.bin, save.calendar.day, market).map((sale) => ({ ...sale, name: goodName(sale.id) })),
-    total: binTotal(save.bin, save.calendar.day, market),
+    lines: binSales(save.bin, dateDayOf(save.calendar.day, save.calendar), market).map((sale) => ({ ...sale, name: goodName(sale.id) })),
+    total: binTotal(save.bin, dateDayOf(save.calendar.day, save.calendar), market),
   }
 }
 

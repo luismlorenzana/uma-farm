@@ -10,7 +10,7 @@
 // of her marriage: every act pays ×2 (the evening ×1.5 instead), and that morning she leaves a ★5 item of her line in the
 // Warehouse (`lineGood`). The morning says each the day before and on the day (step 9). Loaded with the night and the
 // romance's screens.
-import { dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR } from '../farm/calendar'
+import { dateDayOf, dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR, type FarmClock } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import type { Rank } from '../farm/ranks'
 import { SHOP_SEEDS } from '../fields/crops'
@@ -85,7 +85,8 @@ export function birthdaysOf(pack: Pick<StoryPack, 'cast'>, master: ReadonlyMap<s
 }
 
 /** Whether a farm day is her birthday. */
-export const isBirthday = (birthdays: Birthdays, id: string, day: number): boolean => birthdays.get(id) === dayOfYear(day)
+export const isBirthday = (birthdays: Birthdays, id: string, day: number, clock?: FarmClock): boolean =>
+  birthdays.get(id) === dayOfYear(dateDayOf(day, clock))
 
 // --- An item of her line -----------------------------------------------------
 
@@ -122,7 +123,7 @@ export function lineGood(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
   if (ranks && (line === 'foraging' || line === 'fishing')) {
     const place = line === 'foraging' ? 'forest' : 'fishery'
     const where = deepestOpen(save, place, ranks[line].rank)
-    if (where) return { id: pickShare(sharesOn(place, where, day), u), stars }
+    if (where) return { id: pickShare(sharesOn(place, where, dateDayOf(day, save.calendar)), u), stars }
   }
   if (line === 'mining' || line === 'quarry') {
     const dig = line === 'quarry' ? 'quarry' : 'mine'
@@ -132,7 +133,7 @@ export function lineGood(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
     const kinds = keptKinds(save)
     if (kinds.length > 0) return { id: ANIMALS[kinds[Math.floor(u * kinds.length)]!].good, stars }
   }
-  const crops = SHOP_SEEDS[dateOf(day).season]
+  const crops = SHOP_SEEDS[dateOf(day, save.calendar).season]
   return { id: crops[Math.floor(u * crops.length)]!, stars }
 }
 
@@ -155,7 +156,7 @@ export function heartDays(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>
   const lines: (BirthdayLine | AnniversaryLine)[] = []
   for (const when of ['today', 'tomorrow'] as const) {
     const on = when === 'today' ? day : day + 1
-    for (const id of ids) if (isBirthday(birthdays, id, on)) lines.push({ kind: 'birthday', id, when })
+    for (const id of ids) if (isBirthday(birthdays, id, on, save.calendar)) lines.push({ kind: 'birthday', id, when })
     for (const id of ids) {
       const love = save.love[id]
       if (!love || !isAnniversary(love, on)) continue

@@ -17,7 +17,7 @@
 // replays the same on plot 1.
 import { clearFlowerMark, flowerGrew, flowerHarvested, flowerPlanted, flowerWatered } from '../festivals/evidence'
 import { spend } from '../farm/actions'
-import { dateOf, DAYS_PER_SEASON, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
+import { dateDayOf, dateOf, DAYS_PER_SEASON, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import type { PlaceOpens } from '../farm/places'
 import { rankBenefits, rankQuality } from '../farm/rank-rules'
@@ -94,7 +94,7 @@ export const CLEAR_FINDS: Readonly<Record<Overgrowth, string | null>> = { weeds:
 /** The words for what covers a tile. */
 export const GROUND_NAMES: Readonly<Record<Tile['ground'], string>> = { weeds: 'Weeds', stone: 'A stone', stump: 'A stump', clear: 'Cleared ground', tilled: 'Tilled soil' }
 
-const seasonOf = (save: Pick<FarmSave, 'calendar'>): Season => dateOf(save.calendar.day).season
+const seasonOf = (save: Pick<FarmSave, 'calendar'>): Season => dateOf(save.calendar.day, save.calendar).season
 const bump = (counts: Record<string, number>, key: string, n = 1): Record<string, number> => ({ ...counts, [key]: (counts[key] ?? 0) + n })
 
 /** The field's tile at a field index, or undefined for one that isn't there (a plot not cleared). */
@@ -361,7 +361,7 @@ export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<numbe
     grew++
     if (i === marked && tile.watered) markedGrew = true
     if (ready) ripened++
-    return { ...tile, growth, ready, watered: false, ...(woody && ready ? { fruitSeason: orchardSeason(save.calendar.day) } : {}) }
+    return { ...tile, growth, ready, watered: false, ...(woody && ready ? { fruitSeason: orchardSeason(dateDayOf(save.calendar.day, save.calendar)) } : {}) }
   })
   return { save: flowerGrew({ ...save, fields }, markedGrew), grew, ripened }
 }
@@ -373,8 +373,8 @@ export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<numbe
  */
 export function witherTiles<S extends FarmSave>(save: S): { save: S; withered: Withered[] } {
   const day = save.calendar.day
-  if (!isSeasonEnd(day)) return { save, withered: [] }
-  const next = dateOf(day + 1).season
+  if (!isSeasonEnd(day, save.calendar)) return { save, withered: [] }
+  const next = dateOf(day + 1, save.calendar).season
   const withered: Withered[] = []
   let changed = false
   let markedLost = false
@@ -399,9 +399,9 @@ const orchardSeason = (day: number): number => Math.floor((day - 1) / DAYS_PER_S
 
 /** A mature plant reserves one pick for a bearing season. A pending pick uses the new season's slot too. */
 export function setOrchardFruit<S extends FarmSave>(save: S): S {
-  if (dateOf(save.calendar.day).day !== 1) return save
+  if (dateOf(save.calendar.day, save.calendar).day !== 1) return save
   const season = seasonOf(save)
-  const pick = orchardSeason(save.calendar.day)
+  const pick = orchardSeason(dateDayOf(save.calendar.day, save.calendar))
   return { ...save, fields: mapTiles(save, (tile) => (
     tile.crop && established(tile) && growsIn(tile.crop, season) && tile.fruitSeason !== pick
       ? { ...tile, ready: true, fruitSeason: pick } : tile

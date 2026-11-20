@@ -37,7 +37,7 @@ export default function NightVisits({ replay, morning }: { replay: string | null
   const found = morning ? save.longGame?.morning : memory
   return createPortal(<MasterGate skeleton={null}>{master => {
     const birthdays = birthdaysOf(pack, master.birthdays)
-    const birthday: BirthdayCheck = (farm, id) => wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, farm.calendar.day)
+    const birthday: BirthdayCheck = (farm, id) => wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, farm.calendar.day, farm.calendar)
     const nameOf = namer(master, pack)
     if (outing && owner && outing.who.includes(owner)) return <EveningScene save={save} pack={pack} master={master}
       id={outing.who[0]} name={nameOf(outing.who[0])} role="spouse" kind={outing.kind} partner={outing.who[1]} day={outing.day} onDone={close} />

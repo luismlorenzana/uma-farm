@@ -55,6 +55,7 @@ export const LAZY_MODULES = [
   'src/library/LibraryReplay.tsx',
   'domain/src/library/books.ts',
   'src/app/StartOverCard.tsx',
+  'src/app/FarmUpdateNotice.tsx',
   'src/loop/LoopSheets.tsx',
   'src/loop/actions.ts',
   'domain/src/night/end-day.ts',

@@ -35,7 +35,7 @@ export default function Tonight({ save, pack, pending, error, onEnd, onBack }: {
     <Sheet
       open
       onClose={onBack}
-      title={`Tonight · ${shortDate(save.calendar.day)}`}
+      title={`Tonight · ${shortDate(save.calendar.day, save.calendar)}`}
       label="Tonight"
       footer={
         <div className="grid grid-cols-2 gap-2">

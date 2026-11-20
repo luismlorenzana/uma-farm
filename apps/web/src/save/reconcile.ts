@@ -25,6 +25,11 @@ export function reconcile<S extends StoredSave>(local: LocalState<S>, remote: Re
   const remoteEnvelope = { revision: remote.revision, save: remote.save }
   if (!local.save) return { kind: 'adopt', envelope: remoteEnvelope, replacesUnsynced: false }
   if (!local.dirty) return remote.revision > local.revision ? { kind: 'adopt', envelope: remoteEnvelope, replacesUnsynced: false } : { kind: 'none' }
+  // A calendar restart was applied to the cloud save. Keep unsynced work in the usual device recovery copy.
+  if (remote.revision > local.revision && 'calendar' in remote.save && 'calendar' in local.save
+    && remote.save.calendar.start !== local.save.calendar.start) {
+    return { kind: 'adopt', envelope: remoteEnvelope, replacesUnsynced: true }
+  }
   if (remote.revision === local.revision) return { kind: 'push', baseRevision: local.revision, save: local.save }
   // The server moved on while this device had changes: the save changed last wins whole.
   return resolveConflict(local.save, remote.save) === local.save

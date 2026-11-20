@@ -8,7 +8,8 @@ import { fail, key, member, unique } from './parse-loop'
 import { ANIMAL_KINDS, FIELD_TILES, HOME_ROOM, MAX_FIELD_TILES, isDishId, type FarmSave } from './v4'
 import { parseStockKey } from './warehouse'
 
-export function parseFestival(value: unknown, path: string, today: number, roster: ReadonlySet<string>): FestivalState {
+export function parseFestival(value: unknown, path: string, clock: FarmSave['calendar'], roster: ReadonlySet<string>): FestivalState {
+  const { day: today } = clock
   const o = object(value, path, ['mark', 'box', 'care', 'worked', 'active', 'last'])
   const out: FestivalState = {}
   const who = (v: unknown, at: string) => v === null ? null : member(v, at, roster)
@@ -24,7 +25,7 @@ export function parseFestival(value: unknown, path: string, today: number, roste
       const p = `${at}.${i}`
       const row = object(v, p, ['day', 'hands'])
       const day = when(row.day, p)
-      if (dateOf(day).year !== year) fail(p, 'expected the exhibition year')
+      if (dateOf(day, clock).year !== year) fail(p, 'expected the exhibition year')
       return { day, hands: crew(row.hands, p, 3) }
     }), at, (date) => String(date.day))
     return rows
@@ -33,7 +34,7 @@ export function parseFestival(value: unknown, path: string, today: number, roste
     const p = `${path}.mark`
     const row = object(o.mark, p, ['day', 'year', 'tile', 'crop', 'dates', 'water'])
     const day = when(row.day, p)
-    const year = int(row.year, p, dateOf(day).year, dateOf(day).year)
+    const year = int(row.year, p, dateOf(day, clock).year, dateOf(day, clock).year)
     const crop = typeof row.crop === 'string' ? cropGradeOf(row.crop)?.crop : undefined
     if (!crop || crop !== row.crop) fail(p, 'expected a crop')
     out.mark = { day, year, crop: crop!, tile: bounded(row.tile, p, MAX_FIELD_TILES - 1), dates: dates(row.dates, p, year),
@@ -43,7 +44,7 @@ export function parseFestival(value: unknown, path: string, today: number, roste
   if (o.box !== undefined) {
     const p = `${path}.box`
     const row = object(o.box, p, ['year', 'key', 'dates'])
-    const year = int(row.year, p, 1, dateOf(today).year)
+    const year = int(row.year, p, 1, dateOf(today, clock).year)
     if (out.mark) fail(p, 'a boxed crop already holds the place')
     out.box = { year, key: stock(row.key, p, (id) => !!cropGradeOf(id)), dates: dates(row.dates, p, year) }
   }
@@ -150,7 +151,7 @@ export function checkFestivalSave(save: FarmSave, path: string) {
   const mark = state.mark
   if (mark && mark.tile >= save.fields.plots.length * FIELD_TILES) fail(at, 'marked tile is outside the farm')
   const cards = Object.values(state.last ?? {}).filter((card) => card.day === day)
-  if (play && (save.workshops.current || save.workshops.restaurant?.shift || cards.length || (state.last?.[play.id] && dateOf(state.last[play.id]!.day).year === dateOf(day).year))) fail(at, 'invalid concurrent play')
+  if (play && (save.workshops.current || save.workshops.restaurant?.shift || cards.length || (state.last?.[play.id] && dateOf(state.last[play.id]!.day, save.calendar).year === dateOf(day, save.calendar).year))) fail(at, 'invalid concurrent play')
   if (cards.length > 1) fail(at, 'more than one contest today')
   for (const id of play ? contestStaff(play) : cards.flatMap((card) => card.staff)) {
     if (save.roster[id]?.farmhand === undefined || [save.today.assistant, save.today.cook, save.today.server].includes(id)

@@ -110,7 +110,7 @@ export function companionViews(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, bi
   const now = companionTonight(save)
   return companions(save).map((id): CompanionView => {
     const house = save.love[id]!.house!
-    const alone = wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, save.calendar.day)
+    const alone = wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, save.calendar.day, save.calendar)
     const away = missesYou(save, house) ? nightsAway(save, house) : null
     return {
       id, name: nameOf(id), house, home: alone ? 'Her room · her birthday, just you two' : save.homestead.houses[house]?.name ?? 'Farmhouse',

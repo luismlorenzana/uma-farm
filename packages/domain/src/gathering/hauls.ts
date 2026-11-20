@@ -9,6 +9,7 @@
 // reach is the Farm Rank's: each depth an Uma's rank opened (Novice … Legend) opens for him at Farm Rank 1, 2, 4, 6, 8
 // and 10, the sea's spots once their place stands too. Every pick is a seeded draw, numbered by the farm's lifetime
 // count of what came home, so each haul draws anew and every device draws alike. Pure; never stamps.
+import { dateDayOf } from '../farm/calendar'
 import { spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
@@ -141,7 +142,7 @@ export function chop<S extends FarmSave>(save: S, area: string): { save: S; haul
 /** A chop itself, spending nothing. A thin area's chop is half (`haulAt`). */
 export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer): { save: S; haul: Haul } {
   const before = save.farm.counts[LOGS_CHOPPED] ?? 0
-  const woods = sharesOn('forest', area, save.calendar.day).filter(([id]) => goodOf(id)?.family === 'woods')
+  const woods = sharesOn('forest', area, dateDayOf(save.calendar.day, save.calendar)).filter(([id]) => goodOf(id)?.family === 'woods')
   let items = save.items
   const got: string[] = []
   const many = haulAt(save, area, by.count)

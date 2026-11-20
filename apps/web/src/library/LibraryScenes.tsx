@@ -112,13 +112,13 @@ export default function LibraryScenes({ save, pack, days, id, master }: {
         const live = scene.earned ? null : readyLink(scene)
         return scene.earned ? <button type="button" key={scene.key} className="lib-scene" data-library-scene={scene.key}
           aria-pressed={openedScene?.key === scene.key} onClick={() => pick({ tile: openedScene?.key === scene.key ? null : scene.key })}>
-          <Thumb picture={art} owner={id} /><span><strong>{scene.title}</strong><small>{libraryDate(scene.variants[0]?.day ?? scene.day ?? null)}</small></span>
+          <Thumb picture={art} owner={id} /><span><strong>{scene.title}</strong><small>{libraryDate(scene.variants[0]?.day ?? scene.day ?? null, save.calendar)}</small></span>
         </button> : live ? <Link key={scene.key} className="lib-scene" data-locked data-ready to={live} state={{ back: true }}>
           <Thumb locked /><span><strong>Ready to play</strong><small>{GROUPS[scene.group]}</small></span>
         </Link> : <div key={scene.key} className="lib-scene" data-locked><Thumb locked /><span><strong>Locked scene</strong><small>{GROUPS[scene.group]}</small></span></div>
       })}
       {group === 'art' && visibleArt.map(picture => {
-        if (typeof picture === 'string') return <div key={picture} className="lib-scene"><Thumb /><span><strong>Archived illustration</strong><small>{libraryDate(save.library?.[id]?.first[`art:${picture}`] ?? null)}</small></span></div>
+        if (typeof picture === 'string') return <div key={picture} className="lib-scene"><Thumb /><span><strong>Archived illustration</strong><small>{libraryDate(save.library?.[id]?.first[`art:${picture}`] ?? null, save.calendar)}</small></span></div>
         const unlocked = seen.includes(picture.id)
         return unlocked
           ? <Link key={picture.id} className="lib-scene" to={artHref(picture)} state={{ back: true }} data-library-art={picture.id}>

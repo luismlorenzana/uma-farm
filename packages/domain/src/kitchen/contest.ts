@@ -51,8 +51,8 @@ export const CONTEST_ACTIONS = actionCost('festival')
 
 /** The Contest on a farm day: the year's festival there whose rule is the Cooking Contest (the game's on Autumn 10, or
  * wherever the story moves it); null on any other day. */
-export function contestOn(day: number, year: readonly Festival[]): Festival | null {
-  const festival = festivalOn(day, year)
+export function contestOn(day: number, year: readonly Festival[], clock?: FarmSave['calendar']): Festival | null {
+  const festival = festivalOn(day, year, clock)
   return festival?.rule === CONTEST_ID ? festival : null
 }
 /** Its result on a day (today's by default), or null. */
@@ -98,8 +98,8 @@ export const FIRST_PRIZE = 600
 export const PRIZE_SHARE: Readonly<Record<ContestPlace, number>> = { 1: 1, 2: 1 / 2, 3: 1 / 5 }
 /** A place's gold on the Contest's day: 1st 600g × the season's number (Spring 1 … Winter 4) × the year; 2nd half; 3rd a
  * fifth. Autumn of year 1: 1,800g, 900g, 360g. */
-export function contestPrize(day: number, place: ContestPlace): number {
-  const date = dateOf(day)
+export function contestPrize(day: number, place: ContestPlace, clock?: FarmSave['calendar']): number {
+  const date = dateOf(day, clock)
   return Math.round(FIRST_PRIZE * (SEASONS.indexOf(date.season) + 1) * date.year * PRIZE_SHARE[place])
 }
 
@@ -112,11 +112,11 @@ export interface ContestBoard {
   points: number
 }
 /** The board for a score on a day, the rivals at the farm's Farm Rank (as last night left it). */
-export function contestBoard(save: Pick<FarmSave, 'farm'>, day: number, score: number): ContestBoard {
+export function contestBoard(save: Pick<FarmSave, 'farm'> & Partial<Pick<FarmSave, 'calendar'>>, day: number, score: number): ContestBoard {
   const rank = farmRankOf(save.farm.points)
   const rivals = RIVALS.map((r) => ({ id: r.id, farm: r.farm, score: rivalScore(r, rank) }))
   const place = contestPlace(score, rivals.map((r) => r.score))
-  return { score, place, rivals, gold: contestPrize(day, place), points: FESTIVAL_PLACE_POINTS[place] }
+  return { score, place, rivals, gold: contestPrize(day, place, save.calendar), points: FESTIVAL_PLACE_POINTS[place] }
 }
 /** The board's rows, the best first: you, then the rivals; you ahead on a tie, the orchard before the ranch on theirs. */
 export function boardRows(board: Pick<ContestBoard, 'score' | 'rivals'>): { who: 'you' | CastId; farm: string | null; score: number }[] {
@@ -184,9 +184,10 @@ export const entryStars = (entry: Pick<ContestEntry, 'main' | 'side'>): number =
 /** Why the Contest can't be entered now, or null: its day (`days.festivals`, the story's year), the Kitchen built, one
  * entry, no play under way, three actions (event actions first), a known recipe with its main and side held, the cook. */
 export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEntry | null, pack: SchedulePack | null = null): string | null {
-  if (!contestOn(save.calendar.day, days.festivals)) return 'No contest today.'
+  if (!contestOn(save.calendar.day, days.festivals, save.calendar)) return 'No contest today.'
   if (!kitchenBuilt(save)) return 'Build the Kitchen to enter.'
-  if (contestEntered(save)) return 'One entry a Contest.'
+  if (contestEntered(save) || save.farm.festivals.some(result => result.id === CONTEST_ID
+    && dateOf(result.day, save.calendar).year === dateOf(save.calendar.day, save.calendar).year)) return 'One entry a Contest.'
   if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) return 'A play is under way.'
   if (!canSpendForEvent(save, CONTEST_ACTIONS, days)) return `Entering takes ${CONTEST_ACTIONS} actions.`
   if (!entry) return 'Choose a recipe.'
@@ -218,7 +219,7 @@ export function judgeContest<S extends FarmSave>(save: S, day: number, stars: nu
   let next: S = { ...paid, farm: { ...paid.farm, festivals: [...paid.farm.festivals, result] }, diary: { ...paid.diary, records } }
   if (cook !== null && next.roster[cook] && next.love[cook]) {
     if (board.place === 1) next = countChallenge(next, cook, 'cooking', { kind: 'won', festival: CONTEST_ID })
-    next = festivalTogether(next, [cook], CONTEST_ID, dateOf(day).year).save as S
+    next = festivalTogether(next, [cook], CONTEST_ID, dateOf(day, save.calendar).year).save as S
     next = recordLibrary(next, cook, `festival:${CONTEST_ID}:cook:${board.place}${board.place === 1 ? ':won' : ''}`,
       { day, activity: `festival:${CONTEST_ID}`, score: board.score })
   }

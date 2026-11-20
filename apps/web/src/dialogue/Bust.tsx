@@ -11,12 +11,13 @@
 //      picture (`Avatar.tsx`);
 //   3. a role no one plays: its lettered disc.
 // While her portraits load, the panel holds her place, so a pilot's bust never flashes blank. Loaded with the players.
-import { CAST, dressOf, faceFor, isCastId, isSister, sisterOutfit, type CastId, type SceneLook } from '@farm/domain'
+import { CAST, dateDayOf, dressOf, faceFor, isCastId, isSister, sisterOutfit, type CastId, type SceneLook } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { useArtUrl, type ArtSource } from '@luismlorenzana/uma-kit/content'
 import { useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useMaster } from '../master/master'
+import { useGame } from '../save/game'
 import { whoIs } from '../story/people'
 import { useStory } from '../story/story'
 import { BLANK_BASE, BlankBust, blankTint, type BlankTint } from './blank'
@@ -26,7 +27,11 @@ import { portraitArt, portraitPick, usePortraitsState, usePreload, type Portrait
 
 const LookContext = createContext<SceneLook>({ day: 1 })
 /** Each player gives its scene's look: the story's outfit for it, its moments, the day and its own Umas. */
-export const SceneLookProvider = LookContext.Provider
+export function SceneLookProvider({ value, children }: { value: SceneLook; children: ReactNode }) {
+  const clock = useGame(state => state.save?.calendar)
+  const look = clock?.start ? { ...value, day: Math.max(1, dateDayOf(value.day, clock)) } : value
+  return <LookContext.Provider value={look}>{children}</LookContext.Provider>
+}
 export const useSceneLook = (): SceneLook => useContext(LookContext)
 
 /** What a speaker shows for a line: who she is once roles are filled, her portrait's pick (null without portraits), and

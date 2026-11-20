@@ -3,6 +3,7 @@
 // and nothing is ever bought back. The bin is `save.bin`, star counts like the Warehouse's. None of these stamp
 // `updatedAt`: shipping and taking back are the player's operations, which stamp around them, and the night stamps once
 // after its nine steps.
+import { dateDayOf } from '../farm/calendar'
 import { spend } from '../farm/actions'
 import { baseGoodId, GOOD_IDS } from '../goods/ids'
 import { availableDishes } from '../expeditions/stock'
@@ -94,7 +95,8 @@ export const binTotal = (bin: Warehouse, day: number, market: Market = {}): numb
 export function crateWorth(save: Pick<FarmSave, 'bin' | 'calendar' | 'farm'>, lines: readonly CrateLine[]): number {
   let bin = save.bin
   for (const line of lines) if (line.count > 0 && hasPrice(line.id)) bin = addGoods(bin, line.id, line.stars, line.count)
-  return binTotal(bin, save.calendar.day, save.farm.market) - binTotal(save.bin, save.calendar.day, save.farm.market)
+  const day = dateDayOf(save.calendar.day, save.calendar)
+  return binTotal(bin, day, save.farm.market) - binTotal(save.bin, day, save.farm.market)
 }
 
 /** What one night's bin paid. */

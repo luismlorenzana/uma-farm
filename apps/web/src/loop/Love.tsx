@@ -117,7 +117,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
           onGive={(item, stars) => {
             setGiving(false)
             giftHer(id, item, stars).then((r) => {
-              const said = fill(giftLineV4(save, pack, id, r.taste, item, isBirthday(birthdays, id, save.calendar.day)), name, save.farmer.name)
+              const said = fill(giftLineV4(save, pack, id, r.taste, item, isBirthday(birthdays, id, save.calendar.day, save.calendar)), name, save.farmer.name)
               paid(r.paid, r.paid > 0 ? `${said} ${gain(r.paid)}` : said)
             }, fail)
           }} />

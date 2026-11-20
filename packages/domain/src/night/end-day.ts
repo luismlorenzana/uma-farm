@@ -30,7 +30,7 @@
 // (`vowsMorning`). A night without the story pack runs the farm's steps and skips the romance's.
 import { awayForNight } from '../expeditions/presence'
 import { packExpeditions, returnExpeditions } from '../expeditions/expeditions'
-import { festivalOn, isNewYear, isSeasonStart, dateOf, type Festival } from '../farm/calendar'
+import { dateDayOf, festivalOn, isNewYear, isSeasonStart, dateOf, type FarmClock, type Festival } from '../farm/calendar'
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
 import { PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
 import { talentsD, type TalentOf } from '../farm/talents'
@@ -189,7 +189,7 @@ const same: NightStep = (night) => night
  * the date turns. Gold, `farm.counts['gold-shipped']` and `diary.shipped` rise; the bin empties. */
 export const payTheBin: NightStep = (night) => {
   const bin = night.save.bin
-  const { save, sales } = payBin(night.save, night.save.calendar.day)
+  const { save, sales } = payBin(night.save, dateDayOf(night.save.calendar.day, night.save.calendar))
   // Then the market moves: a good shipped past a crate stays eased; every other eased good recovers a step.
   const market = marketNight(save.farm.market, bin)
   return { ...night, save: market === save.farm.market ? save : { ...save, farm: { ...save.farm, market } }, notes: { ...night.notes, sold: sales } }
@@ -352,7 +352,7 @@ export const witherCrops: NightStep = (night) => {
  * already withered crops out of season.
  */
 export const turnCalendar: NightStep = (night) =>
-  ({ ...night, save: setOrchardFruit({ ...night.save, calendar: { day: night.save.calendar.day + 1 }, today: newTodayV4() }) })
+  ({ ...night, save: setOrchardFruit({ ...night.save, calendar: { ...night.save.calendar, day: night.save.calendar.day + 1 }, today: newTodayV4() }) })
 
 /** Step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and the morning says so. */
 export const raiseBuildings: NightStep = (night) => {
@@ -460,14 +460,15 @@ export const vowsMorning: NightStep = (night) => {
 
 /** The morning's news (the summary's §5): the season's first day; today's, then tomorrow's: New Year's, a festival (the
  * year's: the game's five, or the story's) and the story's holidays and minor days (world.json's `days`, by id). */
-function newsOf(day: number, year: readonly Festival[], pack: Partial<Pick<StoryPack, 'world'>> | null): NewsLine[] {
+function newsOf(clock: FarmClock, year: readonly Festival[], pack: Partial<Pick<StoryPack, 'world'>> | null): NewsLine[] {
   const news: NewsLine[] = []
-  if (isSeasonStart(day)) news.push({ kind: 'season', season: dateOf(day).season })
+  const { day } = clock
+  if (isSeasonStart(day, clock)) news.push({ kind: 'season', season: dateOf(day, clock).season })
   for (const [on, when] of [[day, 'today'], [day + 1, 'tomorrow']] as const) {
-    if (isNewYear(on)) news.push({ kind: 'new-year', when })
-    const festival = festivalOn(on, year)
+    if (isNewYear(on, clock)) news.push({ kind: 'new-year', when })
+    const festival = festivalOn(on, year, clock)
     if (festival) news.push({ kind: 'festival', festival: festival.id, when })
-    const own = storyDaysOn(pack, on)
+    const own = storyDaysOn(pack, on, clock)
     if (own.length > 0) news.push({ kind: 'days', ids: own.map((d) => d.id), when })
   }
   return news
@@ -593,7 +594,7 @@ export const buildSummary: NightStep = (night) => {
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),
     news: [
-      ...storyNews(night.context), ...newsOf(save.calendar.day, festivalsOf(night.context.story), night.context.story ?? null),
+      ...storyNews(night.context), ...newsOf(save.calendar, festivalsOf(night.context.story), night.context.story ?? null),
       ...(notes.townNotes.length > 0 ? [{ kind: 'notes' as const, ids: [...notes.townNotes] }] : []), ...goalNews(notes, save), ...notes.household,
     ],
     nudges,

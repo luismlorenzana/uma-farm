@@ -200,7 +200,7 @@ export interface EveningSlots {
   vows: boolean
 }
 export const eveningSlots = (save: Pick<SaveV4, 'calendar' | 'love'> & Partial<Pick<SaveV4, 'homestead' | 'longGame'>>, year: readonly Festival[] = FESTIVALS): EveningSlots => ({
-  evenings: eveningsOn(save.calendar.day, marriedCount(save)), festival: festivalOn(save.calendar.day, year),
+  evenings: eveningsOn(save.calendar.day, marriedCount(save)), festival: festivalOn(save.calendar.day, year, save.calendar),
   vows: householdVows(save),
 })
 

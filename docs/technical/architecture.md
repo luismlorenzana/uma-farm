@@ -311,12 +311,32 @@ stay in place, so notifications can come back without new plumbing.
 |---|---|---|
 | `saves/{uid}` | `revision`; `save`, as JSON text (Firestore refuses a list inside a list); `updatedAt`, the server's time | Each accepted upload, in a transaction |
 | `saveBackups/{uid}-v{n}` | The stored `saves/{uid}` document as it was, whole, and `backedUpAt` | In the same transaction, when an upload's version is higher than the stored version `n`: the first v5 over an older save backs that one up (`saveBackups/{uid}-v4` for a farm of blocks, `-v3` for an older one) |
+| `saveBackups/{uid}-maintenance-r{n}` | The whole cloud document at revision `n` and `backedUpAt` | In the same conditional Firestore commit as an owner maintenance adjustment |
 | `saveRescues/{uid}` | `upload` (JSON text, exactly as sent), `reason`, `rescuedAt` | Each refused upload; the newest only |
 | `push/{uid}` | `subscriptions` (the newest five), `active` (any subscriptions), `schedule`, `checkedAt` (ms), `updatedAt` | The push routes and the tick, each setting only its own fields |
 
 **Locally** the saves are one JSON file, `apps/api/.data/save.json` (`LOCAL_SAVE_FILE` moves it): `{ [uid]: { revision,
 save } }`, written atomically (a temporary file, then a rename) with calls serialized. A refused upload goes to
 `save.json.rescue.json` beside it (the newest only). There are no backups locally, and push lives in memory.
+
+### Owner maintenance
+
+The command-line tool `scripts/farm-save-maintenance.mjs` uses the operator's existing Google Cloud sign-in,
+scoped to the `farm` database. It previews one adjustment. It can set gold, set a Warehouse count at exact stars,
+or restart the first Spring at day 1. Run `pnpm --filter @farm/domain build` first and use one of these commands.
+
+- `node scripts/farm-save-maintenance.mjs spring-1`
+- `node scripts/farm-save-maintenance.mjs gold 500`
+- `node scripts/farm-save-maintenance.mjs stock carrot@1 9`
+
+Add `--apply <preview-revision> <verified-deployed-commit>` for an owner-authorized write. Both the live revision and
+the document's update time must match. Firestore stores the full prior revision and the adjustment in one commit.
+The tool verifies the saved result and backup. A Spring restart records the current turn in `calendar.start`.
+Signed dates, changes already made today, and every elapsed countdown stay on the same counter. A restart is available
+once, in the first Spring before weddings or a live contest. The calendar uses Spring 1 at that counter and uses the
+normal schedule from there. Older entries retain their original stored turns. The app uses its normal sync to adopt
+the restart and saves a device recovery copy if there were unsynced changes. Restoring a device copy from the same
+turn or later carries the calendar setting forward.
 
 ### Revisions and refusals
 

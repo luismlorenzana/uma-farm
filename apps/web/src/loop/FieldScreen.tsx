@@ -334,7 +334,7 @@ function RowPanel({ save, plot, row }: { save: FarmSave; plot: number; row: numb
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const counts = countsWords(rowCounts(save, plot, row))
   const hands = rowHands(save, plot, row, talents.of)
-  const today = dateOf(save.calendar.day).season
+  const today = dateOf(save.calendar.day, save.calendar).season
   const forecast = rowPlan(save, plot, row, today) ? rowCounts(handsTonight(save, save, talents.of, story).save, plot, row) : null
   return (
     <div className="space-y-2.5 p-4" data-row-panel={row + 1}>

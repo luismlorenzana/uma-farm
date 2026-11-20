@@ -25,7 +25,7 @@
 // Her work counts as an Uma's work does: rank points in the day's activity (where she spent the most actions), the
 // challenges, bonds at the same place, her line, side by side's and the perks' extras, praise. Her reach is the farm's
 // (the Farm Rank's areas and spots). Pure; never stamps. Loaded with the night and the Book.
-import { DAYS_PER_SEASON, dateOf } from './calendar'
+import { DAYS_PER_SEASON, dateOf, type FarmClock } from './calendar'
 import { draw } from './draw'
 import { atPace, halfPace } from './economy'
 import { addBatch, cookBatchAt, eatTonight, isFoodId, mealsNeeded, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
@@ -318,9 +318,10 @@ export const loadSizeAt = (level: number): number => (level >= TRICK_AT.bigLoad 
 // --- Her night ---------------------------------------------------------------------------------------------------
 
 /** Whether a seed planted today can ripen before its season's last night withers it. */
-function ripensInTime(crop: CropId, day: number): boolean {
-  const daysLeft = DAYS_PER_SEASON - dateOf(day).day + 1
-  return stagesOf(crop, false) <= daysLeft || growsIn(crop, dateOf(day + daysLeft).season)
+function ripensInTime(crop: CropId, clock: FarmClock): boolean {
+  const { day } = clock
+  const daysLeft = DAYS_PER_SEASON - dateOf(day, clock).day + 1
+  return stagesOf(crop, false) <= daysLeft || growsIn(crop, dateOf(day + daysLeft, clock).season)
 }
 
 /** One action of a task: what it did (tiles or hauls), the goods it brought (stock keys) and its challenge events. */
@@ -451,7 +452,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
         const named = plan ? plan.crop : task.crop
         const seed = seedsInSeason(next).find((s) => {
           if (named && s.crop !== named) return false
-          if (CROPS[s.crop].woody ? !named : !ripensInTime(s.crop, next.calendar.day)) return false
+          if (CROPS[s.crop].woody ? !named : !ripensInTime(s.crop, next.calendar)) return false
           return plan?.crop ? (s.grade ?? cropBaseGrade(s.crop)) === plan.grade : s.grade === undefined
         })
         if (!seed) continue

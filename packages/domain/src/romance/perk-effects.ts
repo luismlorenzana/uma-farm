@@ -18,6 +18,7 @@
 //
 // Counts are expected values: a fraction becomes a whole item by a seeded draw, `draw(uid, day, 'perk:<id>…', n)`, so a
 // night replays the same. Loaded with the night and the romance's screens.
+import { dateDayOf } from '../farm/calendar'
 import { addBond, BOND_POINTS, placesToday } from '../farm/bonds'
 import { awayOn } from '../expeditions/presence'
 import { draw } from '../farm/draw'
@@ -182,7 +183,7 @@ export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = 
     const q = gatherQuality({ ...terms, keepsake: keepsakeQuality(save, pack, id, place) }, terms.wellFed > 0)
     const left: string[] = []
     for (let k = 0; k < n; k++) {
-      const good = pickShare(sharesOn(place, where, save.calendar.day), choreDraw(save, id, 2 * k))
+      const good = pickShare(sharesOn(place, where, dateDayOf(save.calendar.day, save.calendar)), choreDraw(save, id, 2 * k))
       const stars = drawStars(q, choreDraw(save, id, 2 * k + 1))
       items = addGoods(items, good, stars, 1)
       left.push(stockKey(good, stars))

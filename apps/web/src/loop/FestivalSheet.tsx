@@ -1,6 +1,6 @@
 import {
   activeContest, animalPreview, animalName, ANIMALS, aptitudeOf, castDerby, CONTESTS, contestCutoffs, contestDate, CROP_IDS, CUE_WORDS, cupCategory, cupPreview, cupWorkDay,
-  dateOf, derbyMeet, DERBY_TURN_MS, enterAnimal, enterCup, enterDerby, enterFlower, farmRankOf, festivalEntryLock, festivalHandLock, festivalResult,
+  dateDayOf, dateOf, derbyMeet, DERBY_TURN_MS, enterAnimal, enterCup, enterDerby, enterFlower, farmRankOf, festivalEntryLock, festivalHandLock, festivalResult,
   festivalsOf, FESTIVAL_ACTION_COST, FESTIVAL_CONTESTS, festivalStock, fieldTiles, FIELD_TILES, FISHING_SPOTS, flowerMarkLock, flowerPreview,
   goodName, goodOf, isFarmContest, markFlowerTile, NO_BIRTHDAYS, answerAnimal, parseStockKey, reachLock, recipeOf, releaseFlower, restaurantGrade, settleFestival, sharesOn,
   SHOW_CUES, SPOT_NAMES, stockKey, touched, type ActiveContest, type ContestCard, type ContestContext, type CropId,
@@ -52,8 +52,8 @@ export default function FestivalSheet() {
   const inFlight = useRef(false)
   const params = new URLSearchParams(location.search)
   const requested = params.get('contest')
-  const year = dateOf(save?.calendar.day ?? 1).year
-  const upcoming = CONTESTS.map((id) => ({ id, day: contestDate(id, year, days) }))
+  const year = dateOf(save?.calendar.day ?? 1, save?.calendar).year
+  const upcoming = CONTESTS.map((id) => ({ id, day: contestDate(id, year, days, save?.calendar) }))
     .filter(({ day }) => day !== null && day >= (save?.calendar.day ?? 1)).sort((a, b) => a.day! - b.day!)
   const [chosen, setChosen] = useState<FarmContest | null>(null)
   if (!save) return null
@@ -110,14 +110,14 @@ type FormProps = EntryProps & { lock: string | null }
 
 function Entry({ id, ...props }: EntryProps & { id: FarmContest }) {
   const { save, context } = props
-  const year = dateOf(save.calendar.day).year
-  const planned = contestDate(id, year, context.days)
-  const date = planned !== null && planned < save.calendar.day ? contestDate(id, year + 1, context.days) : planned
+  const year = dateOf(save.calendar.day, save.calendar).year
+  const planned = contestDate(id, year, context.days, save.calendar)
+  const date = planned !== null && planned < save.calendar.day ? contestDate(id, year + 1, context.days, save.calendar) : planned
   const lock = festivalEntryLock(save, id, context.days)
   const [first, second] = contestCutoffs(id, farmRankOf(save.farm.points))
   return (
     <div className="space-y-2">
-      <p className="text-[13px] text-ink-soft">{date === null ? 'Outside this year’s calendar' : shortDate(date)} · {FESTIVAL_CONTESTS[id].rivals[0]} {first} · {FESTIVAL_CONTESTS[id].rivals[1]} {second}</p>
+      <p className="text-[13px] text-ink-soft">{date === null ? 'Outside this year’s calendar' : shortDate(date, save.calendar)} · {FESTIVAL_CONTESTS[id].rivals[0]} {first} · {FESTIVAL_CONTESTS[id].rivals[1]} {second}</p>
       {id === 'flower-show' ? <Flower {...props} lock={lock} /> : id === 'fishing-derby' ? <Derby {...props} lock={lock} />
         : id === 'animal-show' ? <Animal {...props} lock={lock} /> : <Cup {...props} lock={lock} />}
     </div>
@@ -210,8 +210,8 @@ function Derby(props: FormProps) {
   const { save, context, act, lock } = props
   const [spot, setSpot] = useState<FishingSpotId>('pond')
   const [crew, setCrew] = useState(['', '', ''])
-  const date = contestDate('fishing-derby', dateOf(save.calendar.day).year, context.days) ?? save.calendar.day
-  const fish = sharesOn('fishery', spot, date).filter(([, share]) => share > 0)
+  const date = contestDate('fishing-derby', dateOf(save.calendar.day, save.calendar).year, context.days, save.calendar) ?? save.calendar.day
+  const fish = sharesOn('fishery', spot, dateDayOf(date, save.calendar)).filter(([, share]) => share > 0)
   const hands = Object.keys(save.roster).filter((id) => save.roster[id]?.farmhand !== undefined)
   return <div className="space-y-2">
     <div className="grid gap-2 sm:grid-cols-2">
@@ -300,7 +300,7 @@ function Cup(props: FormProps) {
               .map((key) => <option key={key} value={key}>{CATEGORIES[category(key)!]} · {lotName(key)}</option>)}
           </select>
           <Available {...props} label={`Presenter ${i + 1}`} selected={entry.by ?? ''} hands={presenters} onPick={(id) => update(i, { ...entry, by: id || null })} />
-          {entry.by && kind && cupWorkDay(save, entry.by, kind) && <p>Worked {shortDate(cupWorkDay(save, entry.by, kind)!)}</p>}
+          {entry.by && kind && cupWorkDay(save, entry.by, kind) && <p>Worked {shortDate(cupWorkDay(save, entry.by, kind)!, save.calendar)}</p>}
         </div>
       })}
     </div>

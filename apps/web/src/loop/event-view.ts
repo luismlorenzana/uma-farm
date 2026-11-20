@@ -5,7 +5,7 @@
 import {
   CAKE_DAYS, captionOf, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
   ringName, ringPercent, rungName, NIGHT_RUNGS, SEASON_NAMES,
-  type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StageUp,
+  type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type FarmClock, type SaveV4, type Season, type StageUp,
   type StoryPack, type Wait, type WeddingCard,
 } from '@farm/domain'
 import { placeWords } from './hearts-view'
@@ -135,7 +135,7 @@ export const perkLineWords = (perk: PerkId | null, line: PerkLine | null): strin
 
 /** The facts a stage-up screen lists beyond the ladder: her ring's grade and her wedding's day; her room's house
  * (its name, or null when none was free). */
-export interface StageFacts { ring?: number | null; wed?: number | null; house?: string | null }
+export interface StageFacts { ring?: number | null; wed?: number | null; house?: string | null; clock?: FarmClock }
 
 /** What a stage opens, for its stage-up screen: the ladder, then each perk that opens a kind or a chat set, by rung; the
  * proposal's wedding and ring; the wedding's spouse ladder, ring, evenings and anniversary. */
@@ -160,7 +160,7 @@ export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFa
     ]
     case 'married': {
       const wed = facts.wed ?? null
-      const date = wed !== null ? dateOf(wed) : null
+      const date = wed !== null ? dateOf(wed, facts.clock) : null
       return [
         'The spouse ladder, Spouse 1–5',
         ...(ring ? [`Her ring: +${ringPercent(ring)}% at ${place}`] : []),

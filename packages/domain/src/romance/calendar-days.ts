@@ -85,7 +85,7 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
   const today = save.calendar.day
   const when: DayWhen = day < today ? 'past' : day === today ? 'today' : 'ahead'
   const met = metInOrder(save, pack)
-  const birthdays = met.filter((id) => isBirthday(days.birthdays, id, day))
+  const birthdays = met.filter((id) => isBirthday(days.birthdays, id, day, save.calendar))
   const anniversaries = met.filter((id) => save.love[id] !== undefined && isAnniversary(save.love[id]!, day))
   const weddings = met.filter(id => (save.love[id]?.wed ?? save.love[id]?.weddingDay) === day)
   const celebrations = CELEBRATIONS.filter(id => celebrationDate(save, id) === day)
@@ -103,7 +103,7 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
     if (anniversaries.includes(id)) reasons.push('anniversary')
     if (weddings.includes(id)) reasons.push('wedding')
     if (when !== 'past' && readyOn(save, pack, id, day)) reasons.push('ready')
-    const nightSave = when === 'ahead' ? { ...save, calendar: { day } } : save
+    const nightSave = when === 'ahead' ? { ...save, calendar: { ...save.calendar, day } } : save
     const specialNight = when !== 'past' && (when === 'today' || birthdays.includes(id) || anniversaries.includes(id)) && nightAvailable(nightSave, pack, id)
       ? { birthday: birthdayOffer(nightSave, id, days.birthdays) !== null,
           anniversary: (when === 'today' || anniversaries.includes(id)) && anniversaryOffer(nightSave, id) !== null }
@@ -113,14 +113,15 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
   })
   const own = (f: DayFace) => f.reasons.some((r) => r !== 'ready')
   return {
-    day, date: dateOf(day), when, newYear: isNewYear(day), festival: festivalOn(day, days.festivals), storyDays: storyDaysOn(pack, day),
+    day, date: dateOf(day, save.calendar), when, newYear: isNewYear(day, save.calendar),
+    festival: festivalOn(day, days.festivals, save.calendar), storyDays: storyDaysOn(pack, day, save.calendar),
     birthdays, anniversaries, weddings, celebrations, trips, crew,
     faces: [...faces.filter(own), ...faces.filter((f) => !own(f))], eventActions: eventActionsOn(save, days, day),
   }
 }
 
 /** A season's 12 days of this year (or `year`'s). */
-export function seasonDays(save: SaveV4, pack: DaysPack, days: SpecialDays, season: Season, year = dateOf(save.calendar.day).year): CalendarDay[] {
-  const first = farmDay({ year, season, day: 1 })
+export function seasonDays(save: SaveV4, pack: DaysPack, days: SpecialDays, season: Season, year = dateOf(save.calendar.day, save.calendar).year): CalendarDay[] {
+  const first = farmDay({ year, season, day: 1 }, save.calendar)
   return Array.from({ length: DAYS_PER_SEASON }, (_, i) => calendarDay(save, pack, days, first + i))
 }

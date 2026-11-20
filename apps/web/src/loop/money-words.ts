@@ -34,7 +34,7 @@ export const projectInSentence = (project: string, names: ProjectNames): string 
 /** A loan as the Book and the projects list say it: "440g owed · 45g a night · clears in about 10 nights (Spring 11)". */
 export function loanWords(save: Pick<FarmSave, 'calendar'>, loan: Loan): string {
   const { nights, day } = loanClears(save, loan)
-  return `${gold(loan.owed)} owed · ${gold(loan.nightly)} a night · clears in about ${plural(nights, 'night')} (${shortDate(day)})`
+  return `${gold(loan.owed)} owed · ${gold(loan.nightly)} a night · clears in about ${plural(nights, 'night')} (${shortDate(day, save.calendar)})`
 }
 
 /** The upkeep's breakdown, a line each that counts: "2 places built · 30g", "1 house · 15g", "2 spouses on the farm ·

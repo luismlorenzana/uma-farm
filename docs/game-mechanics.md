@@ -226,6 +226,9 @@ rewarded selective exhibits and stronger catches, even with a full roster workin
 
 #### The calendar screen
 
+For an owner-requested restart of the first Spring, the date can return to Spring 1, Year 1 while the farm keeps
+completed turns, today's spent actions, earned progress, and running countdowns.
+
 The bar's date opens the calendar over the whole screen; looking is free, and Close (or Back) returns to the page under
 it. The days are read live from the save as it stands and the story's year, never stored.
 

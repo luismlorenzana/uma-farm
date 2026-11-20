@@ -14,7 +14,7 @@
 //
 // The roster, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
-import { DAYS_PER_YEAR } from '../farm/calendar'
+import { DAYS_PER_YEAR, type FarmClock } from '../farm/calendar'
 import { needsWater } from '../fields/plantables'
 import { draw } from '../farm/draw'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
@@ -626,7 +626,7 @@ export interface SaveV5 {
   account: Account
   /** '' until the name sheet. */
   farmer: { name: string }
-  calendar: { day: number }
+  calendar: FarmClock
   gold: number
   today: TodayV4
   roster: Record<CharacterId, RosterUma>

@@ -11,7 +11,7 @@
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
-  actionsLeft, canPlanWedding, celebrationDate, celebrationTitle, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
+  actionsLeft, canPlanWedding, celebrationDate, celebrationTitle, dateDayOf, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
   householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, NIGHT_VISITS, nightVisits, planWedding, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
@@ -43,16 +43,18 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const [picked, setPicked] = useState(() => planner ? save?.love[planner]?.weddingDay ?? today + 1 : today)
   const swipe = useRef<{ x: number; y: number } | null>(null)
   const suppressTapUntil = useRef(0)
-  const { year, season } = dateOf(picked)
+  const start = save?.calendar.start ?? 1
+  const selected = Math.max(start, picked)
+  const { year, season } = dateOf(selected, save?.calendar)
   const pack = useMemo(() => story ?? noPack(), [story])
   const days = useMemo((): SpecialDays => special ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }, [special, story])
   const list = useMemo(() => (save ? seasonDays(save, pack, days, season, year) : []), [save, pack, days, season, year])
   if (!save) return null
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
-  const chosen = list.find(d => d.day === picked)!
+  const chosen = list.find(d => d.day === selected)!
   const pick = (s: Season, y = year) => {
-    const now = dateOf(today)
-    setPicked(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }))
+    const now = dateOf(today, save.calendar)
+    setPicked(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }, save.calendar))
   }
   const shiftSeason = (offset: -1 | 1) => {
     const index = SEASONS.indexOf(season) + offset
@@ -96,7 +98,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
           </ol>
         </section>
         <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} planner={planner}
-          previous={() => setPicked((d) => Math.max(1, d - 1))} nextDay={() => setPicked((d) => d + 1)} />
+          previous={() => setPicked(Math.max(start, selected - 1))} nextDay={() => setPicked(selected + 1)} />
       </div>
     </div>,
     document.body,
@@ -106,11 +108,11 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
 /** The date and year, the seasons, the day's actions and Close. */
 function Header({ save, days, season, onSeason, onClose }: { save: FarmSave; days: SpecialDays; season: Season; onSeason: (s: Season) => void; onClose: () => void }) {
   const today = save.calendar.day
-  const date = dateOf(today)
+  const date = dateOf(today, save.calendar)
   const events = eventActionsLeft(save, days)
   return (
     <header className="flex min-h-12 shrink-0 items-center gap-1 pr-1 pl-3">
-      <h2 className="font-display shrink-0 text-[17px] font-bold whitespace-nowrap" data-calendar-title>{shortDate(today)} · Year {date.year}</h2>
+      <h2 className="font-display shrink-0 text-[17px] font-bold whitespace-nowrap" data-calendar-title>{shortDate(today, save.calendar)} · Year {date.year}</h2>
       <ol className="flex min-w-0 flex-1 justify-center gap-0.5" aria-label="Seasons">
         {SEASONS.map((s) => (
           <li key={s}>
@@ -184,7 +186,7 @@ function DayPanel({ save, pack, days, day, nameOf, planner, previous, nextDay }:
   previous(): void; nextDay(): void
 }) {
   const today = save.calendar.day
-  const next = nextFestival(today, days.festivals)
+  const next = nextFestival(today, days.festivals, save.calendar)
   const events = eventActionWords(day, eventActionsLeft(save, days))
   const played = day.when === 'today' ? playedToday(save).filter((id) => save.roster[id]) : []
   const town = useMemo(() => townRows(save, pack, day.day), [save, pack, day.day])
@@ -196,7 +198,7 @@ function DayPanel({ save, pack, days, day, nameOf, planner, previous, nextDay }:
   return (
     <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-hidden rounded-md border border-hairline bg-panel" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
       <div className="flex shrink-0 items-center justify-between border-b border-hairline">
-        <button type="button" onClick={previous} disabled={day.day === 1} aria-label="Previous day"
+        <button type="button" onClick={previous} disabled={day.day === (save.calendar.start ?? 1)} aria-label="Previous day"
           className="grid size-11 shrink-0 place-items-center text-ink-soft disabled:opacity-40"><ChevronLeftIcon size={20} /></button>
         <h3 className="min-w-0 text-center font-display text-[16px] leading-tight font-bold" data-day-heading>{dayHeading(day, today)}
           {Boolean(pack.town?.professions?.length) && <span className="ml-2 text-[13px] text-ink-soft">{weekdayShort(weekdayOf(day.day))}</span>}
@@ -249,9 +251,9 @@ function DayPanel({ save, pack, days, day, nameOf, planner, previous, nextDay }:
       {town.length > 0 && <InTown rows={town} nameOf={nameOf} />}
       {empty && <p className="pt-2 text-[14px] text-ink-soft" data-day-empty>{day.when === 'past' ? 'A quiet day.' : 'Nothing marked yet.'}</p>}
       <div className="mt-auto space-y-0.5 pt-3 text-[12px] text-ink-faint">
-        {greater && <p data-greater-date>Greater Festival · {shortDate(greater)} · Year {dateOf(greater).year}</p>}
-        <p data-next-festival>Next festival: {next.festival.name} · {shortDate(next.day)} · {whenWords(next.inDays)}</p>
-        <p>Day {((today - 1) % DAYS_PER_YEAR) + 1} of {DAYS_PER_YEAR}. Days move only when you end them.</p>
+        {greater && <p data-greater-date>Greater Festival · {shortDate(greater, save.calendar)} · Year {dateOf(greater, save.calendar).year}</p>}
+        <p data-next-festival>Next festival: {next.festival.name} · {shortDate(next.day, save.calendar)} · {whenWords(next.inDays)}</p>
+        <p>Day {((dateDayOf(today, save.calendar) - 1) % DAYS_PER_YEAR) + 1} of {DAYS_PER_YEAR}. Days move only when you end them.</p>
       </div>
       </div>
     </aside>
@@ -271,7 +273,7 @@ function WeddingPlanner({ save, day, id, name }: { save: FarmSave; day: number; 
   }
   return <section className="my-2 space-y-1.5 rounded-md border border-hairline bg-sunken/40 p-2" aria-label="Wedding planner" data-wedding-planner>
     <p className="font-semibold">{name} · Wedding plan</p>
-    {planned && <p className="text-[13px] text-ink-soft" data-planned-date>{shortDate(planned)} · Year {dateOf(planned).year}</p>}
+    {planned && <p className="text-[13px] text-ink-soft" data-planned-date>{shortDate(planned, save.calendar)} · Year {dateOf(planned, save.calendar).year}</p>}
     <p className="text-[12px] text-ink-soft">{save.love[id]?.stage === 'wedding' ? 'The ceremony opens on the planned day.' : 'Finish the proposal to hold the ceremony.'}</p>
     <div className="flex flex-wrap gap-1">
       <Button disabled={busy || day <= save.calendar.day || day === planned} onClick={() => void setDay(day)} data-action="save-wedding-date">

@@ -324,7 +324,7 @@ export function sleepRows(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthda
       nights: missesYou(save, house) ? away : null, alone: null,
     }
   })
-  const rooms = Object.keys(save.love).filter((id) => save.love[id]!.house !== undefined && wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, save.calendar.day))
+  const rooms = Object.keys(save.love).filter((id) => save.love[id]!.house !== undefined && wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, save.calendar.day, save.calendar))
     .sort((a, b) => Number(a) - Number(b))
     .map((id): SleepRow => {
       const house = save.love[id]!.house!
@@ -338,7 +338,7 @@ export function sleepRows(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthda
  * her room on any other night or for someone not in that house. */
 export function sleepAt(save: SaveV4, house: number, alone: string | null = null, birthdays: Birthdays | null = null): SaveV4 {
   if (!save.homestead.houses[house]) throw new SaveRuleError('bad-job', 'That house isn’t built.')
-  if (alone !== null && (save.love[alone]?.house !== house || (birthdays !== null && !isBirthday(birthdays, alone, save.calendar.day)))) {
+  if (alone !== null && (save.love[alone]?.house !== house || (birthdays !== null && !isBirthday(birthdays, alone, save.calendar.day, save.calendar)))) {
     throw new SaveRuleError('bad-job', 'Her room is hers on her birthday.')
   }
   if (save.homestead.tonight === house && save.homestead.alone === alone && save.homestead.companion === undefined) return save

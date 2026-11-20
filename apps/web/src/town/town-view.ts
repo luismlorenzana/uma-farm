@@ -95,11 +95,11 @@ export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: 
     const met = !!save.roster[id]
     // On the farm that day: she lives there (a spouse in her room), or it's her farm day (a farmhand).
     const farm = met && onFarmToday(save, pack, id, day.day)
-    const next = farm || at ? null : nextOut(pack, id, day.day)
+    const next = farm || at ? null : nextOut(pack, id, day.day, save.calendar)
     const away = awayOn(save, id, day.day)
     const shift = professionShift(pack, id, day.day)
-    const where = away ? awayWords(away) : shift === 'off' ? (at ? `Day off · ${named.get(at)}` : 'Day off') : farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
-      : at ? `At ${inSentence(named.get(at)!)}${day.by.get(id) === 'job' ? ', at work' : ''} today` : next ? `At home · out ${shortDate(next.day)}` : 'At home'
+    const where = away ? awayWords(away, save.calendar) : shift === 'off' ? (at ? `Day off · ${named.get(at)}` : 'Day off') : farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
+      : at ? `At ${inSentence(named.get(at)!)}${day.by.get(id) === 'job' ? ', at work' : ''} today` : next ? `At home · out ${shortDate(next.day, save.calendar)}` : 'At home'
     return { id, name: nameOf(id), at, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null, where }
   })
   const people = town.people.map((p): PersonRow => {
