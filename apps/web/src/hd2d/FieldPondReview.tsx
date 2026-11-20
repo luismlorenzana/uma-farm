@@ -31,7 +31,7 @@ export default function FieldPondReview({ save, story, covered, onReady, onUnava
   const drag = useRef<{ id: number; x: number } | null>(null)
   const [projections, setProjections] = useState<Projections | null>(null)
   const [compact, setCompact] = useState(false)
-  const [graphics, setGraphics] = useState<Graphics>('standard')
+  const [graphics, setGraphics] = useState<Graphics>('saver')
   const [run, setRun] = useState<PhoneRun | null>(null)
 
   useEffect(() => {
@@ -134,7 +134,7 @@ export default function FieldPondReview({ save, story, covered, onReady, onUnava
         onPointerMove={move} onLostPointerCapture={() => { drag.current = null }}
       />
       <div className="absolute inset-x-2 top-1 flex flex-wrap items-start gap-1" aria-label="Field and Pond options">
-        <button type="button" onClick={onClose} className={`${CHIP} px-3`}>Tile map</button>
+        <button type="button" onClick={onClose} className={`${CHIP} px-3`}>All farm places</button>
         <button type="button" onClick={() => setGraphics((mode) => mode === 'saver' ? 'standard' : 'saver')}
           className={`${CHIP} px-3`} aria-label={`Graphics: ${graphics}`} data-quality={graphics}>{graphics === 'saver' ? 'Saver' : 'Standard'}</button>
         <button type="button" onClick={() => renderer.current?.toggleRun()} className={`${CHIP} px-3`} data-phone-run>

@@ -1,7 +1,7 @@
 # F103 — HD-2D farm
 
-**Status · Shared-renderer pilot implemented 2026-11-20.** Open **How the farm works → Field and Pond preview** in the
-game or open [the preview on the farm](https://uma-farm.web.app/?map=field-pond). The iPhone look and ten-minute
+**Status · Field and Pond opens on Home.** [Open the farm](https://uma-farm.web.app/) on a WebGL 2 phone.
+Home starts in Saver and **All farm places** opens the tile map. The iPhone look and ten-minute
 measurements are open. The [original composition study](F103-field-and-pond.html) is available for comparison.
 
 ## Why
@@ -71,7 +71,7 @@ published assets and artwork review are the gates for a player-facing rollout.
   forecast, and the morning view uses the actual report. The six sprite positions represent work in this band.
   The worker counts include the other hands doing the same work. Original review sprites show the type of work.
 - The high-resolution app links use the existing destinations. When an open sheet narrows the map, the links
-  move into a compact grid. Context loss and a failed lazy import restore the tile map. The preview choice stays
+  move into a compact grid. Context loss and a failed lazy import restore the tile map. The map choice stays
   in the session; the renderer is downloaded on first entry and cached separately from the main app.
 - The camera looks down at 41 degrees, facing the yard straight on so the main path reads horizontally.
 - The **Phone test** HUD records up to ten minutes with the map in the foreground. It gives FPS, p95 frame gap,

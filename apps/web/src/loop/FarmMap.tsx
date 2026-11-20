@@ -56,13 +56,14 @@ function FieldPondUnavailable({ onUnavailable }: FieldPondReviewProps) {
 }
 
 function storedFieldPond(): boolean {
-  try { return sessionStorage.getItem(FIELD_POND) === '1' } catch { return false }
+  if (typeof WebGL2RenderingContext === 'undefined') return false
+  try { return sessionStorage.getItem(FIELD_POND) !== '0' } catch { return true }
 }
 
 function rememberFieldPond(on: boolean) {
   try {
     if (on) sessionStorage.setItem(FIELD_POND, '1')
-    else sessionStorage.removeItem(FIELD_POND)
+    else sessionStorage.setItem(FIELD_POND, '0')
   } catch { /* A private session can play with the view open until it leaves the map. */ }
 }
 
@@ -119,9 +120,9 @@ function useCell(): [React.RefObject<HTMLDivElement | null>, number] {
 const at = (area: Area, cell: number): CSSProperties => ({ left: area.col * cell, top: area.row * cell, width: area.cols * cell, height: area.rows * cell })
 
 /** How the farm works, behind the help button, at the map's foot on the left. */
-function FarmHelp({ onPreview }: { onPreview(): void }) {
+function FarmHelp({ onPreview }: { onPreview?: () => void }) {
   return (
-    <div className="absolute bottom-3 left-3 z-20">
+    <div className={`absolute z-20 flex items-center gap-2 ${onPreview ? 'bottom-3 left-3' : 'right-3 top-2'}`}>
       <div className="rounded-full border border-hairline-strong bg-panel/95 shadow-3" data-farm-help>
         <HelpButton title="The farm" label="How the farm works">
           <GuideContent topic="farm">
@@ -129,9 +130,10 @@ function FarmHelp({ onPreview }: { onPreview(): void }) {
             <p>End the day to grow crops, sell goods and settle bills. Tap the date to see the calendar.</p>
           </GuideContent>
           <Link to="/guide?topic=actions" state={{ back: true }} className="flex min-h-11 items-center font-semibold text-accent-strong">Daily actions</Link>
-          <Button variant="secondary" onClick={onPreview}>Field and Pond preview</Button>
         </HelpButton>
       </div>
+      {onPreview && typeof WebGL2RenderingContext !== 'undefined' &&
+        <Button variant="secondary" className="min-h-11 shadow-2" onClick={onPreview}>Field and Pond</Button>}
     </div>
   )
 }
@@ -282,7 +284,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           </Suspense>
         </div>
       )}
-      {!previewReady && <FarmHelp onPreview={() => choosePreview(true)} />}
+      <FarmHelp onPreview={previewReady ? undefined : () => choosePreview(true)} />
       {(previewFailed || (preview && !previewReady)) && (
         <p role="status" className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-panel px-3 py-2 text-[12px] shadow-2">
           {previewFailed ? 'Field and Pond is unavailable. Tile map restored.' : 'Loading Field and Pond…'}
