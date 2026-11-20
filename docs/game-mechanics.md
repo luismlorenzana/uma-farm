@@ -2153,8 +2153,9 @@ The gold chip in the bar shows the coin and your gold, and opens the bin.
 #### The shop
 
 Open the shop from Town, the Menu, or a tile's **Seeds at the shop, in town**. From the farm, **Go into town · Free**
-opens its stock if you haven't visited today. It lists the season's seeds, each with its icon, name and price and, while shut, its gate
-("From Farm Rank 2"). A tap opens a buy sheet: ×1, ×5, ×10, ×25 or a typed count, up to 99, and **Buy 9 · 180g**, held
+opens its stock if you haven't visited today. Each seed shows its growing seasons or, for orchard plants, when it fruits.
+A locked seed also shows the Farm Rank it needs. The buy sheet repeats the season label. Choose ×1, ×5, ×10, ×25 or a
+typed count up to 99, and **Buy 9 · 180g**, held
 back with "Need 30g more" when gold is short. What you buy goes in the Warehouse at ★1. The shop checks its lines again
 as you buy, so a sheet left open past a season's turn can't buy last season's seeds. Beds and stations are bought at
 their own places.
