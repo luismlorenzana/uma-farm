@@ -706,7 +706,7 @@ and mornings.
 - `celebrations` is keyed by `cohort:5`, `cohort:10` and each successive multiple of five through `cohort:50`,
   plus `greater-festival`. Each has optional `open`, `each`, `close` and `outfit`, in the household scene
   format. The game picks participants from the save's actual wedding order. The fiftieth wedding is the
-  closing chapter. The Greater Festival has its own date, 48 farm days later.
+  closing chapter. The Greater Festival falls on the same calendar date the following year.
 - `duos` is a list of two-character arrays. Both directions come from one entry. Use distinct cast IDs, including
   a sister's `s<outfitId>` if appropriate. Each Uma can have three partners. The Homestead's Night visits sheet
   has a Duo editor with an export you can copy into the household file. In-game edits are local to the save.

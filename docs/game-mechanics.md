@@ -4990,7 +4990,7 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 
 ## Part 3 — Hearts: the cast and the romance
 
-> **The romance is the game's.** It plays on save v5 from the story pack, and with the default story wherever the pack is
+> **The romance is the game's.** It plays on save v6 from the story pack, and with the default story wherever the pack is
 > silent: anyone in town can be met by introducing yourself there, and **People** is the rail's third page (Farm · Town ·
 > People · Book · Diary), with the
 > roster's album as its Work view. A save from before v5 starts over as a new farm (see
@@ -7403,7 +7403,7 @@ decorations draw them:
 - **The Fiftieth Wedding is the soft ending.** Play it from the wedding card on the day of the 50th marriage,
   including Winter 12. It recalls discoveries, farm milestones and the crew. You can keep playing on the same
   save. New release cast in `world.json`'s `expansionCast` becomes available after the closing scene.
-- **The Greater Festival is 48 farm days after the 50th marriage.** The Calendar keeps its scheduled
+- **The Greater Festival is on the same calendar date the year after the 50th marriage.** The Calendar keeps its scheduled
   date if you hold the ceremony later. All 50 have a place in the festival, represented in ten groups.
   Select a tradition from a completed celebration or contribute one exact-grade item per 30-day preparation
   window. A pledge credits the farmhand or expedition party that delivers the selected item. The festival stays
