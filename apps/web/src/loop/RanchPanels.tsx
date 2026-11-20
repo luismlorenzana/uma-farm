@@ -11,6 +11,7 @@ import {
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
+import { GuideButton } from '../guide/Guide'
 import { ItemIcon } from '../items/ItemIcon'
 import { careForOne, collectAt, faceAt, feedOne, pickCollectionCap, stairsAt } from './actions'
 import { ActionsLeft, goodsWords, Notes, ThinMark, useAct } from './FarmPanels'
@@ -45,7 +46,7 @@ export function RanchPanel({ save, home }: { save: FarmSave; home: RanchHome }) 
   const out = actionsLeft(save) === 0
   return (
     <div className="space-y-2.5 p-4" data-ranch={home}>
-      <Silo save={save} />
+      <div className="flex items-center justify-between gap-2"><Silo save={save} /><GuideButton topic="animals" label="How animals work" /></div>
       <Notes note={note} error={error} />
       {animals.length === 0 ? (
         <p className="text-[14px] text-ink-soft" data-no-animals>
@@ -121,10 +122,11 @@ export function DigPanel({ save, dig }: { save: FarmSave; dig: DigId }) {
   const need = stairsAfter(floor)
   return (
     <div className="space-y-2.5 p-4" data-dig={dig} data-floor={floor}>
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <p className="font-display text-[20px] font-bold" data-floor-name>Floor {floor}</p>
         <p className="text-[12px] text-ink-soft">G{gradeAt(floor)}{at.deepest === 0 ? ' · not dug yet' : ''}</p>
         <ThinMark hauls={haulsToday(save, dig)} noun="face" />
+        <GuideButton topic="mining" label="How mining works" />
       </div>
       <div className="flex flex-wrap gap-1" aria-label={`Finds: ${finds.map((id) => itemNameOf(id)).join(', ')}`}>
         {finds.map((id) => <ItemIcon key={id} id={id} size={24} label={itemNameOf(id)} />)}

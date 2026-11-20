@@ -61,7 +61,7 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('stairs', 'The mine and the quarry', 'Take the stairs, once found', 0),
   rule('load', 'Stations', 'Start a load', 1),
   rule('ship', 'The bin', 'Ship what you choose', 1),
-  rule('town', 'The town', 'Go into town', 1),
+  rule('town', 'The town', 'Go into town', 0),
   rule('shop', 'The town', 'Shop, order a build, borrow or repay, once in town', 0),
   rule('introduce', 'The Umas', 'Introduce yourself', 1),
   rule('talk', 'The Umas', 'Talk', 1),
@@ -158,10 +158,8 @@ export function spendForEvent<S extends Pick<FarmSave, 'calendar' | 'roster' | '
 /** Whether you've gone into town today: the town and its shop are open until the night. */
 export const inTown = (save: Pick<FarmSave, 'today'>): boolean => save.today.town
 
-/** Goes into town: one action, once a day; the town and its shop stay open for the rest of the day. Going again changes
- * nothing. */
-export function goToTown<S extends Pick<FarmSave, 'calendar' | 'today'>>(save: S): S {
+/** Arrives in town for the day, free. The flag records the visit and unlocks the town's services. */
+export function goToTown<S extends Pick<FarmSave, 'today'>>(save: S): S {
   if (save.today.town) return save
-  const spent = spend(save, 'town')
-  return { ...spent, today: { ...spent.today, town: true } }
+  return { ...save, today: { ...save.today, town: true } }
 }

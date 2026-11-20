@@ -140,7 +140,7 @@ describe('loans at the mayor\'s office', () => {
     expect(lent.farm.builds).toEqual(['mill'])
     expect(lent.items['pine-log']).toBeUndefined()
     expect(lent.farm.loans).toEqual([{ for: 'mill', day: 1, lent: 400, fee: 40, owed: 440, nightly: 45 }])
-    expect(lent.today.actions).toBe(1)
+    expect(lent.today.actions).toBe(save.today.actions)
     expect(lent.account).toEqual(save.account)
     expect(loanClears(lent, lent.farm.loans[0]!)).toEqual({ nights: 10, day: 11 })
     expect(parseSaveV5(json(lent))).toEqual(lent)

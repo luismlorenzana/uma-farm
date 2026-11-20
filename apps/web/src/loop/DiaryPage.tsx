@@ -6,7 +6,8 @@
 // and the milestones paid so far; each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations**
 // (loaded apart). Loaded on demand.
 import { buildCostWords, buildLockWords, CONTESTS, diaryEntries, farmProjects, festivalNameOf, festivalResult, festivalsOf, type BuildPlace, type FarmSave, type Project } from '@farm/domain'
-import { HelpButton, Panel } from '@luismlorenzana/uma-kit/ui'
+import { Panel } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { useLoopSave } from '../save/game'
@@ -26,13 +27,13 @@ export default function DiaryPage() {
     <main className="@container absolute inset-0 overflow-y-auto overscroll-contain p-4" data-page="diary">
       <div className="flex items-center justify-between gap-2 pb-3">
         <h1 className="font-display text-[22px] font-bold text-ink">Diary</h1>
-        <HelpButton title="The Diary" label="About the Diary">
+        <GuideButton topic="diary" title="The Diary" label="About the Diary">
           <p>The farm grows by building. The Farm Rank offers places, and you build each with gold and the farm’s goods. It stands the next morning.</p>
           <p>Your life with the Umas opens the rest: the ring bench, a house with each wedding, more of the homestead and the town.</p>
           <p>Milestones pay gold once, and each adds to the Farm Rank. Everything is checked when you end the day.</p>
           <p>Memories keeps each Uma’s events. Replay any from any choice; replays give no points.</p>
           <p>Conversations keeps what each pair has said as their bond grew. Replay any you’ve read.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       {/* Its panels sit in two columns where they fit. */}
       <div className="space-y-3 @xl:columns-2 @xl:gap-3 [&>*]:break-inside-avoid">

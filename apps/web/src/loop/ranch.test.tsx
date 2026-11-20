@@ -108,7 +108,7 @@ describe('the rancher\'s and the Coop', () => {
     await click($('[data-animal="chicken-1"] [data-action="feed"]'))
     await click($('[data-animal="chicken-1"] [data-action="care"]'))
     expect(save().ranch.animals[0]).toMatchObject({ fed: true, cared: true, fondness: 8 })
-    expect(save().today.actions).toBe(3)
+    expect(save().today.actions).toBe(2)
     expect(($('[data-action="collect"]') as HTMLButtonElement).disabled).toBe(true)
 
     expect(await endTheDay(7)).toBe(true)

@@ -6,7 +6,8 @@ import {
   animalGoodName, animalLock, ANIMAL_KINDS, ANIMALS, animalsIn, FODDER_PRICE, goodOf, HOME_NAMES, HOME_ROOM, SILO_ROOM, siloRoom, siloStands, starPrice,
   type AnimalKind, type FarmSave,
 } from '@farm/domain'
-import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useState } from 'react'
 import { ItemIcon } from '../items/ItemIcon'
 import { buyAnimalOf, buyFodderOf } from '../loop/actions'
@@ -47,11 +48,11 @@ function Animals({ save, busy, run }: { save: FarmSave; busy: boolean; run: Run 
     <section aria-label="Animals" data-animals>
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-micro">Animals</h3>
-        <HelpButton title="Animals" label="How animals work">
+        <GuideButton topic="animals" title="Animals" label="How animals work">
           <p>An animal moves into its home at once: chickens and ducks into the Coop, the rest into the Barn, {HOME_ROOM} to each.</p>
           <p>Each day, feed it (an action and a feed from the silo) and it leaves its good by morning; care for it (an action) and it grows fonder. Collect a building’s goods for an action.</p>
           <p>The more hearts, the better its goods’ stars: ten hearts is always ★5. One left hungry loses fondness, but never dies.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       <ul className="divide-y divide-hairline rounded-md border border-hairline">
         {ANIMAL_KINDS.map((kind) => <AnimalRow key={kind} save={save} kind={kind} busy={busy} run={run} />)}

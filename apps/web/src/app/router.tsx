@@ -16,6 +16,7 @@ const DiaryPage = lazy(() => import('../loop/DiaryPage'))
 const WarehousePage = lazy(() => import('../loop/WarehousePage'))
 const TownPage = lazy(() => import('../town/TownPage'))
 const BookPage = lazy(() => import('../book/BookPage'))
+const GuidePage = lazy(() => import('../guide/GuidePage'))
 const AccountView = lazy(() => import('../home/AccountView').then(module => ({ default: module.AccountView })))
 
 const loading = (page: ReactNode) => <Suspense fallback={<p className="p-4 text-ink-soft">Loading…</p>}>{page}</Suspense>
@@ -38,6 +39,7 @@ export const ROUTES: RouteObject[] = [
   { path: 'warehouse', element: loading(<WarehousePage />) },
   { path: 'town', element: loading(<TownPage />) },
   { path: 'book', element: loading(<BookPage />) },
+  { path: 'guide', element: loading(<GuidePage />) },
   { path: 'account', element: loading(<AccountView />) },
   { path: '*', element: <Navigate to="/" replace /> },
 ]

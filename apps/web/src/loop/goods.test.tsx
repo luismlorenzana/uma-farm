@@ -214,13 +214,14 @@ describe('the shop', () => {
     return { ...save, today: { ...save.today, town: true } }
   }
 
-  it('is in town: one action goes in, and it stays open for the day', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: newSave('u1', AT) })
+  it('opens the shop from the farm even when all actions are spent', async () => {
+    const home = newSave('u1', AT)
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...home, today: { ...home.today, actions: 10 } } })
     await render(<LoopSheets sheet="shop" />, '/?sheet=shop')
     expect($('[data-row]')).toBeNull()
     expect($('[data-into-town]')?.textContent).toContain('The shop is in town.')
     await click('[data-action="into-town"]')
-    expect(save().today).toMatchObject({ town: true, actions: 1 })
+    expect(save().today).toMatchObject({ town: true, actions: 10 })
     expect(document.body.querySelectorAll('[data-row]').length).toBeGreaterThan(0)
   })
 

@@ -19,7 +19,7 @@ function farm(gold = 5000, points = 200): SaveV4 {
   return goToTown({ ...save, farmer: { name: 'Sim' }, gold, buildings: { ...save.buildings, coop: 1 }, farm: { ...save.farm, points } })
 }
 const night = (save: SaveV4): SaveV4 => runNight(save, {})
-/** The next morning, in town again (an action) and the summary put away. */
+/** The next morning, in town again and the summary put away. */
 const morning = (save: SaveV4): SaveV4 => ({ ...night(save), summary: null })
 const WEEDS = (save: SaveV4): number => fieldTiles(save).findIndex((t) => t.ground === 'weeds')
 
@@ -28,7 +28,7 @@ describe('the rancher\'s', () => {
     const { save, animal } = buyAnimal(farm(), 'chicken')
     expect(animal).toEqual({ id: 'chicken-1', kind: 'chicken', fondness: 0, fed: false, cared: false, ready: false })
     expect(save.gold).toBe(5000 - ANIMALS.chicken.price)
-    expect(save.today.actions).toBe(1) // going into town; buying is free
+    expect(save.today.actions).toBe(0)
     expect(animalsIn(save, 'coop')).toEqual([animal])
     expect(buyAnimal(save, 'chicken').animal.id).toBe('chicken-2')
   })
@@ -62,7 +62,7 @@ describe('a day\'s care', () => {
     const fed = feedAnimal(chicken(), 'chicken-1')
     expect(fed.ranch.silo).toBe(9)
     expect(fed.ranch.animals[0]!.fed).toBe(true)
-    expect(actionsLeft(fed)).toBe(DAY_ACTIONS - 2)
+    expect(actionsLeft(fed)).toBe(DAY_ACTIONS - 1)
     expect(() => feedAnimal(fed, 'chicken-1')).toThrow('Fed already today.')
     expect(() => feedAnimal(buyAnimal(farm(), 'chicken').save, 'chicken-1')).toThrow('The silo is empty: cut grass or buy fodder.')
     expect(() => feedAnimal(chicken(), 'cow-9')).toThrow('No such animal.')
@@ -78,7 +78,7 @@ describe('a day\'s care', () => {
     const save = farm()
     const at = WEEDS(save)
     const { save: cut, feed } = cutGrass(save, at)
-    expect([feed, cut.ranch.silo, fieldTiles(cut)[at]!.ground, cut.today.actions]).toEqual([GRASS_CUT, GRASS_CUT, 'weeds', 2])
+    expect([feed, cut.ranch.silo, fieldTiles(cut)[at]!.ground, cut.today.actions]).toEqual([GRASS_CUT, GRASS_CUT, 'weeds', 1])
     expect(() => cutGrass(save, 0)).toThrow('Only weeds give grass.')
     expect(() => cutGrass({ ...save, buildings: { dorm: 1 } }, at)).toThrow('Build the Coop or the Barn first')
     expect(() => cutGrass({ ...save, ranch: { animals: [], silo: SILO_ROOM } }, at)).toThrow('The silo is full.')

@@ -256,7 +256,7 @@ it. The days are read live from the save as it stands and the story's year, neve
   ring in the season's colour), New Year's or a celebration's spark, a holiday's ribbon, a minor day's dot and a wedding
   heart. Under them are a short label for that date and a special day's event actions (♥+3).
   Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
-  and days gone by are faded.
+  and days gone by are faded. Swipe the grid left or right to move a season, including over a year boundary.
 - **The chosen day's panel** (today when the calendar opens): its heading ("Spring 10 · in 7 days"); a special day's
   event actions ("+3 actions for events", today "2 of 3 actions left for events"); New Year's; its festival, with what
   happens at it when the story says; the story's holidays and minor days, each with its line; then everyone with an
@@ -264,7 +264,9 @@ it. The days are read live from the save as it stands and the story's year, neve
   town · n**: who's in town that day and where, a row a place in the map's order, its name, its first five faces (met
   first) and "+n", read from every Uma's fixed schedule ([who's where](#whos-where)), so a day ahead shows who'll be
   there. Expand **Farm shift** or **Day off** to see the full names. The panel also lists expedition departures and
-  returns, planned or held weddings, and the household's celebration dates. At its foot, the next festival and countdown.
+  returns, planned or held weddings, and the household's celebration dates. The date and its previous and next day
+  buttons stay in place while the day’s details scroll. Selecting a date starts those details at the top.
+  At its foot, the next festival and countdown.
 - **Today's rows play:** **Play · 1** for her next occasion scene (the day's, then a festival's night; or "No actions"
   with none left of either kind), and **Event ›** for her Ready event. Those who've played an occasion today are listed
   under it ("Played today: …"). Her birthday or her anniversary said by its occasion isn't said twice.
@@ -362,14 +364,13 @@ each Uma who has it written. A day with no scene written for anyone is a marked 
   ("Water · 1 action", "Fish · 1"), and a side panel says "7 actions left of 10". With none left, an action is refused
   ("No actions left today.") and its buttons are greyed.
 - **One tap of work is one action:** a tile cleared, tilled, planted, watered or harvested; a forage, a chop or a catch;
-  a station's load started; a crate shipped; going into town; with the Umas, introducing yourself, a talk, a gift, the
+  a station's load started; a crate shipped; with the Umas, introducing yourself, a talk, a gift, the
   invitation to work, her event, or an occasion scene with her; a batch cooked in the farmhouse kitchen; and once
   married, a household meal. **A hangout or a date takes two,** and entering the Cooking Contest three (the festival's
-  event actions first). Looking is free, and so are building a place, walking between the town's places and
-  choosing tonight's companion; the shop is free once you're in town.
-- **Going into town** takes one action and opens the town and its shop for the rest of the day.
+  event actions first). Looking, building, walking around town, shopping and choosing tonight's companion are free.
+- **Going into town** is free. Opening Town arrives automatically, even after all ten actions are spent.
 - **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
-  with **End the day** and **Not yet** (to build or spend the evening first). The day never ends by itself.
+  with **End the day** and **Not yet** (to build or visit town, for example). The day never ends by itself.
 - **Special days** grant actions for events only, on top of the ten: New Year's from the second year, each festival, and
   the birthday of each Uma you've met. The bar shows them after the day's own (♥+3), and so does the calendar. Her
   event, an occasion scene and the Cooking Contest's entry spend them **before the day's own**, so on a festival with
@@ -420,7 +421,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The mine and the quarry | Take the stairs, once found | Free | Now |
 | Stations | Start a load | 1 | Now |
 | The bin | Ship what you choose | 1 | Now |
-| The town | Go into town | 1 | Now |
+| The town | Go into town | Free | Now |
 | The town | Shop, order a build, borrow or repay, once in town | Free | Now |
 | The Umas | Introduce yourself | 1 | Now |
 | The Umas | Talk | 1 | Now |
@@ -590,6 +591,14 @@ Hearts shows whenever it has a line or someone is Ready. The romance describes i
 The farm sends no notifications. With days as turns nothing finishes while the app is closed, so Account's Notifications
 card reads "Off: days are turns".
 
+### Farm guides
+
+The **ⓘ** buttons open optional guides in context. Each uses three illustrated steps and a short rule.
+**More details** expands existing reference text where available. **Menu → Farm guides** opens the topic index.
+The Farm, Fields, Town, shops and loans, calendar, work board, workshops, relationships, Library and other main
+systems share this format. **All farm guides** from a panel opens the index at that topic. Back returns to where
+you were.
+
 ### The farm map and the bars
 
 #### Home: the farm map
@@ -632,7 +641,8 @@ farm's places start six columns sooner than when the map held the field's 40 til
 - **Opening a place** opens its panel or quick look at the right, the map left as it was.
 
 **Field and Pond preview (F103).** Open **How the farm works** on the tile map, then choose **Field and Pond preview**.
-The 3D view shows the west band, with the woods, fields, fishery, shipping bin and Farmhouse opening their usual screens.
+The 3D view looks down over the west band, with the main path running straight across the screen. The woods, fields,
+fishery, shipping bin and Farmhouse open their usual screens.
 Drag the ground to pan. **Tile map** brings back the whole farm. The preview stays selected for the session as the
 player moves between pages and ends the day. If the graphics context fails, the tile map comes back automatically.
 
@@ -689,7 +699,7 @@ What a tap does:
 | The Warehouse | The Warehouse |
 | The Gate | Its quick look: everyone lives in town, and the Town |
 | The Dock | Its quick look: its Build card, then the Boat's |
-| The road to town | The town map: Go into town · 1 action, then its places, who's there now and the People list (see [the town](#the-town)) |
+| The road to town | The town map opens free, with its places, who's there now and the People list (see [the town](#the-town)) |
 | Every other place | Its quick look: what it is, and what opens it; a place to build, its Build card |
 
 **Locks.** A locked place shows a lock, and its quick look says why:
@@ -2142,9 +2152,8 @@ The gold chip in the bar shows the coin and your gold, and opens the bin.
 
 #### The shop
 
-The shop is in town: its sheet (from the town's **Shop**, the Menu, or a tile's **Seeds at the shop, in town**) first
-asks you to go in, "The shop is in town." with **Go into town · 1 action**; once you're in town today, it's open, free,
-for the rest of the day. It lists the season's twelve seeds, each with its icon, name and price and, while shut, its gate
+Open the shop from Town, the Menu, or a tile's **Seeds at the shop, in town**. From the farm, **Go into town · Free**
+opens its stock if you haven't visited today. It lists the season's seeds, each with its icon, name and price and, while shut, its gate
 ("From Farm Rank 2"). A tap opens a buy sheet: ×1, ×5, ×10, ×25 or a typed count, up to 99, and **Buy 9 · 180g**, held
 back with "Need 30g more" when gold is short. What you buy goes in the Warehouse at ★1. The shop checks its lines again
 as you buy, so a sheet left open past a season's turn can't buy last season's seeds. Beds and stations are bought at
@@ -2476,7 +2485,7 @@ so it can stand ahead of the gold; each night's income pays it back. The rules a
                      enough gold ───────────────────────────────────────────────────────────┤ all paid
                      short ── what gold there is pays, the rest is owed ──► the morning warns (night 1)
                                                                         ──► half pace (night 2 on), until it's paid
- the day:  Go into town · 1 ──► the mayor's office (free): Borrow 400g · Build ──► the build is ordered at once
+ the day:  Go into town for free ──► the mayor's office: Borrow 400g · Build ──► the build is ordered at once
 ```
 
 #### Upkeep
@@ -2514,8 +2523,7 @@ Every night the farm covers takeout, upkeep and any arrears first. The remaining
 
 #### Loans
 
-The mayor's office, in town, lends toward a build. Going into town takes its action; at the office, ordering and
-borrowing are free.
+The mayor's office, in town, lends toward a build. The trip, ordering and borrowing are all free of actions.
 
 <!-- live:loans -->
 | Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -3388,7 +3396,7 @@ no farm-wide story.
 
 ```
  day 1: your name ──► the opening's lines ──► Home: nobody met, everyone in town
- the town: Go into town (1 action) ──► walk to her (free) ──► Introduce yourself (1 action): met ──► her meeting scene
+ the town: Enter for free ──► walk to her ──► Introduce yourself (1 action): met ──► her meeting scene
            she lives in town ──► Friendship 3: Invite her to work (1 action) ──► a farmhand, on the farm on her farm days
  the wedding ──► her room in a house ──► she lives on the farm
              └─► no room free: "Needs a room", in town ── the morning a room frees ──► she moves in
@@ -3461,8 +3469,7 @@ The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see
 ### The town
 
 **The cast lives in town from day 1:** the owner's Umas, the story's cast (sisters included), in her default outfit or
-the pack's outfit for her. The town is a map you walk around. Going in takes one action and walking between
-its places is free. Each place lists who's there now. The launch cast works the town's professions in pairs.
+the pack's outfit for her. Enter town and walk between its places for free. Each place lists who's there now. The launch cast works the town's professions in pairs.
 The mayor keeps her office. Tap a cast member to introduce yourself, including an Uma you meet on her town shift.
 
 #### Town professions and the week
@@ -3494,7 +3501,7 @@ watering and care over the year, and the same shift cycle continued into Spring 
 | 50 | 21–22 | 21–22 |
 
 ```
- the farm map ──► the Town: Go into town · 1 action (the town and its shop open for the day)
+ the farm map ──► the Town opens for free (the town and its shop stay open for the day)
                     the map: its places (the six spots, the shops and offices, the story's workplaces and homes)
                       tap a place (free) ──► who's here now, with faces · its keeper at her post, and her post's menu
                         tap an Uma ──► her menu: Introduce yourself · 1 │ Talk · 1 │ Give a gift · 1 │ Ask her out · 2
@@ -3645,8 +3652,7 @@ occasion** either: her birthday, a festival's day and night and the story's days
 #### The town's screen
 
 - **The Town** on the farm map opens `/town`, loaded on demand: **Map** and **People** in tabs (`?view=people`), and
-  **Shop**. Its title is the town's name when the world gives one, else "Town". Before you go in today, **Go into town
-  · 1 action**.
+  **Shop**. Its title is the town's name when the world gives one, else "Town". It records your arrival on open.
 - **People:** everyone in town and the town's people, each with her face and name and where she is today ("At the
   Café today", "At the Bakery, at work today", "At home · out Spring 7" with her next day out, "On the farm" for a
   spouse in her room, "On the farm today" for a farmhand on her farm day, "At the Café, most days" for a keeper, "In
@@ -4362,21 +4368,23 @@ settlement. Each run continues exactly 48 days after reaching Rank 10.
 
 The tuned trial puts watering, feed and meals ahead of expanding fields, works two rows per staffed plot,
 adds fallback gathering orders and limits expeditions to one party with enough shifts left on the farm.
-It holds a six-item reserve for eight tracked exact grades and orders eight Wheat Flour at the Mill.
+The farmer checks which planted tiles will still need watering after the crew works. The trial usually holds
+six of each tracked exact grade and orders eight Wheat Flour at the Mill. On staffed farms, it targets a reserve
+of 24 each for Carrot and improved Carrot on Spring 1.
 The nine goods tracked are Carrot, Wheat, Egg, Milk, Carp, Basil, Wheat Flour, improved Carp and improved Carrot.
 
 | Metric | Solo | 10 Umas | 20 Umas | 50 Umas |
 |---|---:|---:|---:|---:|
-| Day Farm Rank 10 opens | 1,414 | 478 | 378 | 288 |
-| Day the trial ends | 1,462 | 526 | 426 | 336 |
+| Day Farm Rank 10 opens | 1,413 | 534 | 379 | 285 |
+| Day the trial ends | 1,461 | 582 | 427 | 333 |
 | Farm shifts per day in the final year | 0 | 4.3 | 8.6 | 21.4 |
-| Farmer actions free per day in the final year | 0 | 4 | 4 | 4 |
-| Meals bought as takeout in the final year | 0 / 96 | 0 / 578 | 0 / 1,030 | 0 / 2,248 |
+| Farmer actions free per day in the final year | 0 | 3 | 3.6 | 3.8 |
+| Meals bought as takeout in the final year | 0 / 96 | 0 / 578 | 0 / 1,014 | 0 / 2,266 |
 | Upkeep in the final year | 1,440g | 9,360g | 9,360g | 9,360g |
 | Short nights across the run | 0 | 0 | 0 | 0 |
 | Missed individual animal feeds in the final year | 0 | 0 | 0 | 0 |
-| Growing tiles missed by watering in the final year | 0% | 2.9% | 6.9% | 2.4% |
-| Exact-grade ingredient-days with at least two held, out of 432 | 192 | 323 | 350 | 424 |
+| Growing tiles missed by watering in the final year | 0% | 3.2% | 4.4% | 1.8% |
+| Exact-grade ingredient-days with at least two held, out of 432 | 192 | 322 | 352 | 422 |
 
 An ingredient-day counts one exact grade on one morning. These are snapshots of the stock available for
 recipes. The separate Restaurant playthrough covers all 120 unlocks and actual dish use. The new benchmark
@@ -4406,7 +4414,7 @@ batch when it won't cover a few nights' takeout. It checks:
 - **every day spends exactly its ten actions,** and every morning has ten again;
 - **watered crops grow and dry ones don't,** and something is harvested;
 - **the season's last night withers what's left** (only Corn and Cabbage carry over);
-- **the bin pays:** over 1,000g shipped in Spring, gold above the 500g start, and Farm Rank points earned;
+- **the bin pays:** over 1,000g shipped in Spring, enough cash for the next bill, and Farm Rank points earned;
 - **the Mill stands early on a loan,** and Spring runs a surplus over its takeout, upkeep and loan;
 - **the bill is always paid:** never a short night, never half pace;
 - **every season earns more than its takeout, upkeep and loans take,** and the year ends richer than it started;
@@ -4414,11 +4422,16 @@ batch when it won't cover a few nights' takeout. It checks:
 - **takeout bites from the first night** (the first morning says "Takeout · 30g") and comes to a sixth of what he ships;
   **he cooks to bridge the Mill's tight night,** and the year ends within a tenth of the same farm on takeout alone;
 - **cooking every night he can alone:** a third run cooks whenever the pantry won't hold his two meals; he eats every
-  meal (nothing spoils), buys under a third of the takeout, never runs short, and ends the year within a tenth of the
+  meal (nothing spoils), buys under a third of the takeout, never runs short, and ends the year within a fifth of the
   farm on takeout;
 - **every morning's save parses** as v5.
 
-The run as it stands (`SEASON=1` prints it, and the same farms on takeout alone beside them). Spring, day by day:
+With free town visits, the solo farm ships 1,075g in Spring and ends the year with 5,005g. Takeout alone ends
+with 5,255g and cooking at every opportunity ends with 4,340g. With two farmhands, cooking cuts takeout from
+840g to 480g in Autumn and from 840g to 525g in Winter. Those runs have no short nights. Run the test with
+`SEASON=1` to print the current comparisons.
+
+The earlier run, when town visits cost an action, began as follows:
 
 | Spring | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -4481,7 +4494,7 @@ beside it. It checks:
 - **their aptitudes rise:** the field hand reaches Watering 5 (two tiles an action) by the year's end, and the gatherer
   Foraging 4 and Fishing 4;
 - **takeout bites:** on takeout alone it's between a sixth and three tenths of what the farm ships, and never sinks it;
-- **cooking pays its way once the field yields:** less takeout each season from Summer, under two thirds of the takeout
+- **cooking pays its way once the field yields:** under two thirds of the takeout
   farm's by Winter, the pantry feeding part of every night from Autumn, the cook at Cooking 2 or more, some well-fed
   nights and nothing spoiled; the year ends richer than on takeout;
 - **every morning's save parses** as v5.
@@ -5783,7 +5796,7 @@ and married life, in [her own chapters](#her-chapters); she shows on the People 
 meet, and nobody moves to the farm by meeting her: only a spouse lives there.
 
 ```
- the farm ──► Go into town · 1 ──► walk to her (free) ──► her menu: Introduce yourself · 1 ──► met: her meeting scene
+ the farm ──► Town (free) ──► walk to her (free) ──► her menu: Introduce yourself · 1 ──► met: her meeting scene
                                                                                                   │
                                                        she lives in town ◄─────────────────────────┘
                                                          └── Friendship 3: Invite her to work ──► on the farm on her farm days
@@ -6822,10 +6835,12 @@ The event also gives:
 
 #### The level-up and stage-up cards
 
+The level-up card shows the same seasonal profile picture as the Uma's profile.
+
 ```
 ┌──────────────────────────────────────────┐
 │          ♥  Friendship 5  ♥              │  a short sparkle (still with reduced motion)
-│   (bust)  “This bench is ours now.”      │  her last line of the event
+│ (profile) “This bench is ours now.”      │  her last line of the event
 ├──────────────────────────────────────────┤
 │ +50 event · +30 choice · +30 Perfect     │
 │   = +110 toward Friendship 6 (+40 banked)│  "(+N banked)": what was past her full bar before

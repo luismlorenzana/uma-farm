@@ -27,13 +27,14 @@ describe('the shop', () => {
     ])
   })
 
-  it('is in town: one action goes there, and buying is free for the rest of the day', () => {
-    const farm = newSave('u1', AT)
+  it('allows free travel and shopping even when no actions remain', () => {
+    const base = newSave('u1', AT)
+    const farm = { ...base, today: { ...base.today, actions: actionsLeft(base) } }
     expect(reason(() => buy(farm, CARROT, 1))).toBe('locked')
     const town = goToTown(farm)
-    expect(actionsLeft(town)).toBe(9)
+    expect(actionsLeft(town)).toBe(0)
     expect(goToTown(town)).toBe(town)
-    expect(actionsLeft(buy(buy(town, CARROT, 1), CARROT, 1))).toBe(9)
+    expect(actionsLeft(buy(buy(town, CARROT, 1), CARROT, 1))).toBe(0)
   })
 
   it('buys through gold into the Warehouse at ★1, without a stamp', () => {

@@ -28,7 +28,7 @@ import { playProductionFarm, PRODUCTION_CREWS } from './production-scale.fixture
 import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
 import { expeditionCoverage, expeditionMemberBlock, expeditionMemberPower, expeditionPower, expeditionSlots, EXPEDITION_FAMILIES, EXPEDITION_REGIONS, MAX_EXPEDITION_SUPPLIES, sendExpedition } from '../expeditions/expeditions'
 import { dishesHeld } from '../kitchen/kitchen'
-import { REGION_IDS } from '../save/v4'
+import { fieldTiles, REGION_IDS } from '../save/v4'
 import { castPack } from '../story/authored.fixture'
 import { addBatch, cookBatch, cookBatchAt, foodHeld, MEALS_A_DAY, mealsNeeded, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
 import { kitchenBase, kitchenLevelLock, nextKitchenLevel, staffTable, upgradeKitchen } from '../kitchen/kitchen'
@@ -885,8 +885,11 @@ function balanceStockPlan(save: SaveV4, grew: boolean): SaveV4 {
     }
     save = setFishingMode(save, 'pond', 'improved')
   }
-  if (save.calendar.day === 1) {
-    for (const id of BALANCE_INGREDIENTS) if (id !== 'wheat-flour') save = setStockReserve(save, id, 6)
+  if (save.calendar.day === 1) for (const id of BALANCE_INGREDIENTS) {
+    if (id !== 'wheat-flour') save = setStockReserve(save, id, 6)
+  }
+  if (grew && season === 'spring' && dateOf(save.calendar.day).day === 1) {
+    for (const id of ['carrot', 'carrot-grade-2']) save = setStockReserve(save, id, 24)
   }
   if (stationLevel(save, 'mill') && !save.farm.stationPlans?.mill) save = setStationPlan(save, 'mill', [{ output: 'wheat-flour', target: 8 }])
   return save
@@ -967,6 +970,15 @@ async function playBalance(target: 0 | Stage) {
     const recipe = botRecipe(save, spare(save))
     if (recipe && save.today.town && recipeLock(save, recipe) === null) save = buyRecipe(save, recipe)
     save = assign(save, BALANCE_PACK, true).save
+    // Use spare farmer actions on planted tiles the crew expects to leave dry, keeping one for the shipping crate.
+    if (count && actionsLeft(save) > 1) {
+      const forecast = handsTonight(save, save, tripTalents, BALANCE_PACK).save
+      const remaining = fieldTiles(forecast)
+      for (const [index, tile] of fieldTiles(save).entries()) {
+        if (actionsLeft(save) <= 1) break
+        if (needsWater(tile) && remaining[index] && needsWater(remaining[index]!)) save = waterTile(save, index)
+      }
+    }
     save = ship(save, planFor(true), BALANCE_PACK, true)
     const morning = runNight(save, { story: BALANCE_PACK, talentOf: tripTalents }, rank10
       ? NIGHT_STEPS.map(step => step.name === 'growCrops' ? { run: (night: Parameters<typeof step.run>[0]) => {

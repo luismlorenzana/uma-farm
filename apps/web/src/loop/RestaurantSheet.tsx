@@ -5,7 +5,8 @@ import {
   shiftLength, shiftTime, ticketOpen, tierByGrade, type FarmSave, type RestaurantResult, type RestaurantShift, type StockPortions,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
@@ -63,11 +64,11 @@ export default function RestaurantSheet() {
                 </button>
               ))}
             </div>
-            <HelpButton title="Restaurant" label="How the Restaurant works">
+            <GuideButton topic="restaurant" title="Restaurant" label="How the Restaurant works">
               <p>Stock cooked dishes for a shift. Tap an open ticket, then its matching plate. A wrong plate costs time.</p>
               <p>Clear a stage to open 15 recipes. Produce their exact ingredients to learn them, then cook them at the Kitchen.</p>
               <p>Sell the dishes, use them in another recipe, or save them for meals. One shift costs one action. An Uma serving spends one work action.</p>
-            </HelpButton>
+            </GuideButton>
           </div>
           {tab === 'recipes' ? <RecipeBook save={save} /> : <ShiftSetup save={save} locked={pending}
             onStart={(stage, tray, server) => void act(() => openRestaurantShift(stage, tray, server))} onRecipes={() => setTab('recipes')} />}

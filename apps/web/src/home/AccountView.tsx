@@ -10,6 +10,7 @@ import { AccountPage } from '@luismlorenzana/uma-kit/places'
 import { Button, Panel } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
+import { GuideButton } from '../guide/Guide'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
 import { useStory } from '../story/story'
@@ -101,7 +102,7 @@ export function AccountView() {
           { label: 'Story', value: storyWords(story) },
         ]}
         notifications={<NotificationsOff />}
-        sections={<><YourName /><SafetyCopies /></>}
+        sections={<><YourName /><SafetyCopies /><div className="flex justify-end"><GuideButton topic="sync" label="How saving and sync work" /></div></>}
         onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
       />
     </div>

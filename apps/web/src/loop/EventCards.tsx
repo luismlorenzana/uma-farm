@@ -9,16 +9,16 @@
 // now" and **Continue**. The night levels (S2, S4) show the level-up card from the morning. Loaded on demand with the
 // player.
 import { celebrationReached, dishName, freeRooms, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type SaveV4, type StageUp, type StoryPack } from '@farm/domain'
-import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button, UiMark, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { moveSpouseTo } from './homestead-actions'
 import { RouteTrack } from './HeartMarks'
 import { marriedWords, perkLineWords, ringGivenWords, STAGE_WORDS, stageOpens, sumWords, unlockWords, weddingWords } from './event-view'
 import { routeTrack } from './hearts-view'
 
-/** Landscape: the card's head (her bust, the title) on the left, what it pays and what's next on the right, which
+/** Landscape: the card's head (her profile picture, the title) on the left, what it pays and what's next on the right, which
  * scrolls on its own. */
 const CARD_ROW = 'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4 sm:flex-row sm:gap-5 sm:overflow-hidden'
 const CARD_SIDE = 'flex min-w-0 flex-1 flex-col gap-3 sm:overflow-y-auto sm:pt-2'
@@ -47,7 +47,7 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
           <span aria-hidden className={reduced ? '' : 'level-sparkle'}>♥</span>{title}<span aria-hidden className={reduced ? '' : 'level-sparkle'}>♥</span>
         </p>
         <div className="flex items-end gap-3">
-          <UmaBust outfitId={id} label={name} size={96} />
+          <span className="w-24 shrink-0"><Avatar id={id} label={name} size={96} /></span>
           {card.line && <p className="max-w-[60%] rounded-md bg-sunken px-3 py-2 text-left text-[15px] italic" data-card-line>“{withFarmer(card.line, farmer)}”</p>}
         </div>
       </div>

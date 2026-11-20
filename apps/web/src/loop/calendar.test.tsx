@@ -112,6 +112,34 @@ afterEach(async () => {
 })
 
 describe('the calendar', () => {
+  it('pages through 12-day seasons by day buttons and swiping, with a fresh detail scroll', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(12) })
+    await render(<p>Farm</p>, '/?sheet=calendar')
+    await find('[data-calendar-grid="spring"]')
+    $('[data-day-scroll]')!.scrollTop = 80
+    await click($('[aria-label="Next day"]'))
+    expect($('[data-calendar-grid="summer"] [data-day="13"]')).not.toBeNull()
+    expect($('[data-day-panel]')?.dataset.dayPanel).toBe('13')
+    expect($('[data-day-scroll]')?.scrollTop).toBe(0)
+    await click($('[aria-label="Previous day"]'))
+    const grid = $('[data-calendar-grid="spring"]')!
+    const touch = (type: string, property: string, clientX: number, clientY: number) => {
+      const event = new Event(type, { bubbles: true })
+      Object.defineProperty(event, property, { value: [{ clientX, clientY }] })
+      grid.dispatchEvent(event)
+    }
+    await act(async () => {
+      touch('touchstart', 'touches', 220, 100)
+      touch('touchend', 'changedTouches', 218, 180)
+    })
+    expect($('[data-calendar-grid="spring"]')).not.toBeNull()
+    await act(async () => {
+      touch('touchstart', 'touches', 220, 100)
+      touch('touchend', 'changedTouches', 135, 100)
+    })
+    expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(12)
+  })
+
   it('opens a spouse’s birthday night from the day panel and plays the loving bedside beat', async () => {
     const married = farm(1, 0, { [ONE]: { stage: 'spouse', wed: 1, house: 0 } })
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...married, calendar: { day: 4 },

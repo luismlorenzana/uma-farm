@@ -11,7 +11,8 @@ import {
   plantableIn, plotCounts, plotName, rowPlan, SEASONS, SEASON_NAMES, TASK_NAMES, type CropId, type FarmSave, type FieldPlan, type Season,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
-import { Button, CloseIcon, HelpButton, LockedIcon } from '@luismlorenzana/uma-kit/ui'
+import { Button, CloseIcon, LockedIcon } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -94,13 +95,13 @@ function useTileSize(arrows: boolean): [React.RefObject<HTMLDivElement | null>, 
 /** How the field works, behind the help button. */
 function FieldHelp() {
   return (
-    <HelpButton title="The field" label="How the field works">
+    <GuideButton topic="fields" title="The field" label="How the field works">
       <p>The field is plots of 8 by 5 tiles, a page each. The dots, the arrows or a swipe across the plot move between them.</p>
       <p>Tap a tile for its action: clear, till, plant, water or harvest, one action each. A watered tile grows a stage at night.</p>
       <p>A row’s tab shows the farmhands who work it, and a droplet once one waters the whole row in one action. Set their tasks, a plot’s rows, on the Book’s work board.</p>
       <p>Use the seasonal row plan to choose the crop and seed grade for the Plant task. Orchard plants stay on their tile and bear once per year. Water them until established.</p>
       <p>A new plot opens at its Farm Rank: clear it for its gold and an action, and it’s yours at once, wild ground to clear and till. Plots cost no upkeep.</p>
-    </HelpButton>
+    </GuideButton>
   )
 }
 

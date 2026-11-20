@@ -1,6 +1,5 @@
-// The Town: `/town`, down the farm map's road, a map you move around in landscape. Going into town takes one of the day's
-// actions (Go into town); the town and its shop then stay open for the rest of the day, and moving between its locations
-// is free. Two views, the second `?view=people`, and the Shop:
+// The Town: `/town`, down the farm map's road. Entering this screen and walking between its locations are free.
+// Two views, the second `?view=people`, and the Shop:
 // - **The map:** its locations in groups (the six spots, the shops and offices, the story's workplaces and homes), each
 //   with how many are there now, their first four faces and "+n" for a crowded one (a spot holds everyone the schedules
 //   put there); you're at one (`?at=<id>`, the Plaza to start), and a tap on
@@ -20,12 +19,14 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { talentsFor } from '../loop/talents'
 import { Avatar } from '../dialogue/Avatar'
+import { GuideContent } from '../guide/Guide'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { storyReady, useStory } from '../story/story'
 import { IntoTown } from '../loop/GoodsSheets'
+import { intoTown } from '../loop/actions'
 import { HerMenu } from './HerMenu'
 
 const ExpeditionSheet = lazy(() => import('./ExpeditionSheet'))
@@ -57,6 +58,14 @@ export default function TownPage() {
   const navigate = useNavigate()
   const leave = useLeave()
   useEffect(() => void storyReady().catch(() => undefined), [])
+  const arrived = save?.today.town
+  const day = save?.calendar.day
+  const [tryArrival, setTryArrival] = useState(false)
+  useEffect(() => {
+    if (arrived !== false) return
+    setTryArrival(false)
+    void intoTown().catch(() => setTryArrival(true))
+  }, [arrived, day])
   if (!save) return null
   const view: View = params.get('view') === 'people' ? 'people' : 'map'
   // The view rides in the URL; replacing keeps Back's way to the farm.
@@ -75,7 +84,9 @@ export default function TownPage() {
         {save.today.town ? (
           <MasterGate>{(master) => (pack ? <Town save={save} pack={pack} master={master} view={view} /> : <p className="p-4 text-ink-soft">Loading…</p>)}</MasterGate>
         ) : (
-          <div className="mx-auto max-w-sm px-4 pt-3"><IntoTown save={save} line="Going into town takes an action. The town and its shop stay open for the rest of the day, and walking between its places is free." /></div>
+          <div className="mx-auto max-w-sm px-4 pt-3">
+            {tryArrival ? <IntoTown line="The town couldn’t open." /> : <p className="text-ink-soft" role="status">Opening town…</p>}
+          </div>
         )}
       </main>
     </div>
@@ -84,11 +95,11 @@ export default function TownPage() {
 
 function About() {
   return (
-    <>
+    <GuideContent topic="town">
       <p>Your cast lives in town: tap a place to walk there, free, and see who’s there now. Each Uma keeps her own days: the story’s home, work and favourite places, or her favourite spot every third day. Her profile and the calendar show them.</p>
       <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, ask her out (two actions, one evening a day), and her event when it’s ready.</p>
       <p>The town’s people are at their posts: the general store sells seeds, the rancher’s animals and fodder, and the mayor’s office takes build orders and lends toward them.</p>
-    </>
+    </GuideContent>
   )
 }
 

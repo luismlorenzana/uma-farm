@@ -298,7 +298,7 @@ export function buildFieldPond(initial: BandState): FieldPondScene {
     }
   }
 
-  const camera = { label: 'Field and Pond', target: BAND_TARGET, elevation: 41, azimuth: -18, distance: 53, fov: 31 }
+  const camera = { label: 'Field and Pond', target: BAND_TARGET, elevation: 41, azimuth: 0, distance: 53, fov: 31 }
   const scene: FieldPondScene = {
     id: 'field-pond', title: 'Field and Pond', root, figures, light: bandLight(initial.dusk),
     cameras: { front: camera, tactics: camera, high: camera }, layers: {},

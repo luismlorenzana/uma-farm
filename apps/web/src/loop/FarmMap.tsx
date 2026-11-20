@@ -22,6 +22,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import type { FieldPondReviewProps } from '../hd2d/FieldPondReview'
+import { GuideContent } from '../guide/Guide'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -123,13 +124,11 @@ function FarmHelp({ onPreview }: { onPreview(): void }) {
     <div className="absolute bottom-3 left-3 z-20">
       <div className="rounded-full border border-hairline-strong bg-panel/95 shadow-3" data-farm-help>
         <HelpButton title="The farm" label="How the farm works">
-          <p>A day holds 10 actions. Each task costs one: clear, till, plant, water or harvest a tile; forage, chop or fish; feed or care for an animal, or collect its building’s goods; work a face at the Mine or the Quarry; start a load; ship a crate; go into town.</p>
-          <p>The field’s sign shows what’s due: tiles to water, ripe ones, empty soil to plant. Tap it for the field, a plot a page.</p>
-          <p>Looking is free, and so is building, and so are the mine’s stairs once found; the shops are free once you’re in town.</p>
-          <p>A fed animal leaves its good by morning; one left hungry loses fondness. Cut grass on a weeds tile for the silo, or buy fodder at the rancher’s.</p>
-          <p>A watered tile grows a stage at night; a dry one doesn’t. A season’s end withers what still grows.</p>
-          <p>When the actions run out, end the day: the night pays the bin and the morning shows what grew.</p>
-          <p>Tap the date for the calendar and the year’s festivals.</p>
+          <GuideContent topic="farm">
+            <p>The field’s sign shows what needs water, what’s ripe and where to plant. Tap it to open the plots.</p>
+            <p>End the day to grow crops, sell goods and settle bills. Tap the date to see the calendar.</p>
+          </GuideContent>
+          <Link to="/guide?topic=actions" state={{ back: true }} className="flex min-h-11 items-center font-semibold text-accent-strong">Daily actions</Link>
           <Button variant="secondary" onClick={onPreview}>Field and Pond preview</Button>
         </HelpButton>
       </div>

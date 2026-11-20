@@ -6,7 +6,7 @@
 // `WorkSide`: her favourite line, the day she joined, where she is, her aptitudes (a level a task, a bar to the next and
 // its tricks), and her nine activities with talent, rank, points and the next challenge. Loaded on demand.
 import { ACTIVITY_NAMES, APTITUDE_NAMES, APTITUDE_POINTS, aptitudesOf, MAX_APTITUDE, TALENT_GRADES, tricksAt, type FarmSave } from '@farm/domain'
-import { HelpButton } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { AlbumChrome, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { emptyStateHint, runAlbumQuery, type AlbumQuery } from '@luismlorenzana/uma-kit/roster'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -102,10 +102,10 @@ function Aptitudes({ row }: { row: LoopUmaRow }) {
     <section aria-label="Aptitudes" data-aptitudes={row.id}>
       <div className="flex items-center justify-between gap-2 pb-1">
         <h3 className="text-micro">Aptitudes{row.farmhand === null ? ' · where she’d start' : ''}</h3>
-        <HelpButton title="Aptitudes" label="About aptitudes">
+        <GuideButton topic="aptitudes" title="Aptitudes" label="About aptitudes">
           <p>Every task on the work board has an aptitude, from 1 to {MAX_APTITUDE}. She starts from her talent in its activity, and her rank points there add a little.</p>
           <p>Each action she spends on a task raises it. A level above 1 means more goods and better stars, and tricks open: two tiles an action, a row watered in one, a bigger haul, two casts, a bigger load.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5" data-aptitude-list>
         {all.map((a) => {

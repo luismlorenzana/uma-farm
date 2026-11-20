@@ -11,7 +11,8 @@
 import { festivalOn, festivalsOf, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
 import type { FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Chip, HelpButton, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
+import { Chip, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useMemo } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -52,7 +53,7 @@ export default function HeartsPage() {
         <Link to="/library" className="flex min-h-11 items-center text-[13px] font-semibold text-accent-strong">Library ›</Link>
         <span className="ml-auto">
           {view === 'hearts' ? (
-            <HelpButton title="Hearts" label="About hearts">
+            <GuideButton topic="relationships" title="Hearts" label="About hearts">
               <p>Her bar fills as you chat (+15), praise her work (+20) and give gifts, and from a day at her favourite line (+10). Points past a full bar are banked, never lost.</p>
               <p>Everyone you’ve met is here. You meet her in town, by introducing yourself: everyone lives there from day one.</p>
               <p>A full bar makes her next event Ready (● Ready). Some also need a setup, such as working a place that day. She must live on the farm: invite her from town when a bed is free.</p>
@@ -60,14 +61,14 @@ export default function HeartsPage() {
               <p>Her story runs in chapters, from meeting her to married life. A chapter may wait for the farm first, such as a place built; her profile says what it needs.</p>
               <p>Gifts: loved +60, liked +30, others +10, disliked 0, and more for more stars. Her loved gift shows from Friendship 1; the rest as you learn them, and all from Friendship 7.</p>
               <p>{EVENING_HELP}</p>
-            </HelpButton>
+            </GuideButton>
           ) : (
-            <HelpButton title="Talents and ranks" label="About talents and ranks">
+            <GuideButton topic="aptitudes" title="Talents and ranks" label="About talents and ranks">
               <p>Each Uma has a talent, G to S, in each activity, from her stats. Talent lifts her yield, her stars and how fast she ranks up.</p>
               <p>She climbs six ranks in each: Novice, Hand, Skilled, Expert, Master, Legend. A day of work earns rank points; a rank comes when its points are reached and its challenge is met, at night.</p>
               <p>Her favourite line (the mark on her face) earns ×1.2 rank points; from Friendship 5 she earns 5% more, from Friendship 10, 10%.</p>
               <p>Everyone you meet lives in town. A farmhand comes to work on her farm days, the days her life in town leaves free; only a spouse moves onto the farm, into her room.</p>
-            </HelpButton>
+            </GuideButton>
           )}
         </span>
       </div>

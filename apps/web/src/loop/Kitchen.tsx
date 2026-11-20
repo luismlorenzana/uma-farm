@@ -7,7 +7,8 @@ import {
   actionCost, actionsLeft, BATCH_GOODS, BATCH_MEALS, batchBlock, batchStars, foodHeld, itemNameOf, MEALS_A_DAY, pantryMeals, plainBatch, tableTonight, TAKEOUT_PRICE,
   goodName, usesReserve, WELL_FED_STARS, type FoodHeld, type SaveV4,
 } from '@farm/domain'
-import { Button, HelpButton } from '@luismlorenzana/uma-kit/ui'
+import { Button } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useMemo, useState } from 'react'
 import { ItemIcon } from '../items/ItemIcon'
 import { useStory } from '../story/story'
@@ -45,13 +46,13 @@ export function Kitchen({ save, busy, onCook, onStove }: { save: SaveV4; busy: b
     <section className="space-y-1.5" aria-label="The kitchen" data-kitchen>
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-micro">Kitchen</h3>
-        <HelpButton title="The kitchen" label="How food works">
+        <GuideButton topic="upkeep" title="The kitchen" label="How food works">
           <p>Everyone who eats on the farm eats twice a day, at night: you, everyone living on the farm, and every farmhand who works that day.</p>
           <p>They eat from the pantry first. Whatever it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep.</p>
           <p>Cook a batch here: one action, two goods of food, {BATCH_MEALS} meals: {gold(BATCH_MEALS * TAKEOUT_PRICE)} of takeout. Meals keep three days. A meal of ★2 or more leaves an Uma who eats it well fed: one more action the next day.</p>
           <p>At the stove, the same batch is a 30-second cooking game: Good makes 8 meals, Fine 9 and a star more, Masterwork 12 and two stars more. Never fewer than the plain batch’s {BATCH_MEALS}.</p>
           <p>A farmhand on Cook cooks for everyone: bigger batches as her Cooking grows.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       <div className="grid grid-cols-2 gap-2 text-[13px]">
         <p data-pantry={stored}><span className="font-semibold">Pantry · </span>{stored > 0 ? plural(stored, 'meal') : 'empty'}</p>

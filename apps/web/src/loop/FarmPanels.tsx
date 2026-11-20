@@ -11,6 +11,7 @@ import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
+import { GuideButton } from '../guide/Guide'
 import { ItemIcon } from '../items/ItemIcon'
 import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, pickFishingMode, planStation, plantAt, removeOrchardAt, tillAt, upgradeAt, waterAt } from './actions'
 import { reachRows, stationView, thinWords, tileView, tileWhere, type TileAction } from './farm-view'
@@ -145,6 +146,7 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
   const out = actionsLeft(save) === 0
   return (
     <div className="space-y-2.5 p-4" data-gather={place}>
+      <div className="flex justify-end"><GuideButton topic="gathering" label="How gathering works" /></div>
       <Notes note={note} error={error} />
       <ul className="space-y-1.5">
         {rows.map((row) => (
@@ -228,9 +230,10 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
   const full = view.loads.length >= view.perDay
   return (
     <div className="space-y-2.5 p-4" data-station={station} data-level={view.level}>
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <p className="font-display text-[18px] font-bold" data-station-level>Level {view.level}</p>
         <p className="text-[13px] text-ink-soft" data-loads={`${view.loads.length}/${view.perDay}`}>{view.loads.length} of {plural(view.perDay, 'load')} today</p>
+        <GuideButton topic="stations" label="How stations work" />
       </div>
       <Notes note={note} error={error} />
       {view.loads.map((load, i) => (

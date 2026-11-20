@@ -11,6 +11,7 @@ import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { GuideContent } from '../guide/Guide'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { reserveGood, saveSeeds, shipPicked } from './actions'
@@ -100,7 +101,9 @@ function Warehouse({ save, picking, initialGood }: { save: FarmSave; picking: bo
       <PlaceHeader
         title={picking ? 'Ship to the bin' : 'Warehouse'}
         onBack={() => leave(picking ? '/?sheet=bin' : '/')}
-        about={<><p>Everything the farm holds, by stars. A good sells for its price × its stars: ★1 ×1 up to ★5 ×2.</p><p>The season’s demand adds 20%. Pick goods for a crate: one action ships it, and the bin pays tonight.</p><p>Past 50 of one good in a night, each 50 more sells 10% lower, down to half, and it stays eased a few days.</p></>}
+        about={<GuideContent topic={picking ? 'economy' : 'warehouse'}>
+          <p>Goods sell at their grade’s price. Seasonal demand adds 20%. Large sales ease the price for a few days.</p>
+        </GuideContent>}
         words={{ back: picking ? 'Back to the bin' : 'Back to the farm', about: 'About the Warehouse' }}
       />
       <main className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain">

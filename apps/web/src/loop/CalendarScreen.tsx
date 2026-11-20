@@ -16,11 +16,12 @@ import {
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
-import { useMemo, useState } from 'react'
+import { Button, ChevronLeftIcon, ChevronRightIcon, CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
+import { useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
+import { GuideButton } from '../guide/Guide'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
@@ -40,6 +41,8 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const planner = request && canPlanWedding(save?.love[request]) ? request : null
   const today = save?.calendar.day ?? 1
   const [picked, setPicked] = useState(() => planner ? save?.love[planner]?.weddingDay ?? today + 1 : today)
+  const swipe = useRef<{ x: number; y: number } | null>(null)
+  const suppressTapUntil = useRef(0)
   const { year, season } = dateOf(picked)
   const pack = useMemo(() => story ?? noPack(), [story])
   const days = useMemo((): SpecialDays => special ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }, [special, story])
@@ -50,6 +53,13 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const pick = (s: Season, y = year) => {
     const now = dateOf(today)
     setPicked(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }))
+  }
+  const shiftSeason = (offset: -1 | 1) => {
+    const index = SEASONS.indexOf(season) + offset
+    const nextYear = year + Math.floor(index / SEASONS.length)
+    if (nextYear < 1) return
+    const nextSeason = SEASONS[(index + SEASONS.length) % SEASONS.length]!
+    pick(nextSeason, nextYear)
   }
   return createPortal(
     <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-50 flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="Calendar" data-calendar>
@@ -62,12 +72,31 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
             <p className="font-display truncate text-[15px] font-bold" data-calendar-year>{SEASON_NAMES[season]} · Year {year}</p>
             <button type="button" className="min-h-11 min-w-11 rounded-sm text-ink-soft" onClick={() => pick(season, year + 1)} aria-label="Next year">›</button>
             <button type="button" className="ml-auto min-h-11 rounded-sm px-2 text-[13px] font-bold text-accent" onClick={() => setPicked(today)} data-action="calendar-today">Today</button>
+            <GuideButton topic="calendar" label="How the calendar works" />
           </div>
-          <ol className="grid min-h-0 min-w-0 flex-1 grid-cols-6 grid-rows-2 gap-1" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}>
+          <ol className="grid min-h-0 min-w-0 flex-1 touch-pan-y auto-rows-[minmax(56px,1fr)] grid-cols-6 gap-1 overflow-y-auto overscroll-contain select-none" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}
+            onTouchStart={(event) => {
+              const finger = event.touches.length === 1 ? event.touches[0] : undefined
+              swipe.current = finger ? { x: finger.clientX, y: finger.clientY } : null
+            }}
+            onTouchCancel={() => { swipe.current = null }}
+            onTouchEnd={(event) => {
+              const from = swipe.current, to = event.changedTouches[0]
+              swipe.current = null
+              if (!from || !to) return
+              const dx = to.clientX - from.x, dy = to.clientY - from.y
+              if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+              suppressTapUntil.current = performance.now() + 250
+              shiftSeason(dx < 0 ? 1 : -1)
+            }}
+            onClickCapture={(event) => {
+              if (event.detail > 0 && performance.now() < suppressTapUntil.current) event.stopPropagation()
+            }}>
             {list.map((d) => <Cell key={d.day} day={d} chosen={d.day === chosen.day} nameOf={nameOf} onPick={() => setPicked(d.day)} />)}
           </ol>
         </section>
-        <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} planner={planner} />
+        <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} planner={planner}
+          previous={() => setPicked((d) => Math.max(1, d - 1))} nextDay={() => setPicked((d) => d + 1)} />
       </div>
     </div>,
     document.body,
@@ -150,8 +179,9 @@ function Cell({ day, chosen, nameOf, onPick }: { day: CalendarDay; chosen: boole
 }
 
 /** The chosen day: what it holds, its event actions, everyone with an event on it (today's to play), and who's in town. */
-function DayPanel({ save, pack, days, day, nameOf, planner }: {
+function DayPanel({ save, pack, days, day, nameOf, planner, previous, nextDay }: {
   save: FarmSave; pack: StoryPack; days: SpecialDays; day: CalendarDay; nameOf: (id: string) => string; planner: string | null
+  previous(): void; nextDay(): void
 }) {
   const today = save.calendar.day
   const next = nextFestival(today, days.festivals)
@@ -164,10 +194,17 @@ function DayPanel({ save, pack, days, day, nameOf, planner }: {
   const empty = !planner && !shifts && !day.festival && !day.newYear && !day.storyDays.length
     && !day.faces.length && !played.length && !town.length && !day.celebrations.length && !day.trips.length
   return (
-    <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-y-auto overscroll-contain rounded-md border border-hairline bg-panel p-3" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
-      <h3 className="font-display text-[17px] font-bold" data-day-heading>{dayHeading(day, today)}
-        {Boolean(pack.town?.professions?.length) && <span className="ml-2 text-[13px] text-ink-soft">{weekdayShort(weekdayOf(day.day))}</span>}
-      </h3>
+    <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-hidden rounded-md border border-hairline bg-panel" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
+      <div className="flex shrink-0 items-center justify-between border-b border-hairline">
+        <button type="button" onClick={previous} disabled={day.day === 1} aria-label="Previous day"
+          className="grid size-11 shrink-0 place-items-center text-ink-soft disabled:opacity-40"><ChevronLeftIcon size={20} /></button>
+        <h3 className="min-w-0 text-center font-display text-[16px] leading-tight font-bold" data-day-heading>{dayHeading(day, today)}
+          {Boolean(pack.town?.professions?.length) && <span className="ml-2 text-[13px] text-ink-soft">{weekdayShort(weekdayOf(day.day))}</span>}
+        </h3>
+        <button type="button" onClick={nextDay} aria-label="Next day"
+          className="grid size-11 shrink-0 place-items-center text-ink-soft"><ChevronRightIcon size={20} /></button>
+      </div>
+      <div key={day.day} className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-3 pb-3" data-day-scroll>
       {planner && <WeddingPlanner save={save} day={day.day} id={planner} name={nameOf(planner)} />}
       {events && <p className="flex items-center gap-1 pt-0.5 text-[13px] font-semibold text-[#c2385e]" data-day-events><HeartIcon size={14} />{events}</p>}
       <ul className="space-y-1.5 pt-2 text-[14px]">
@@ -215,6 +252,7 @@ function DayPanel({ save, pack, days, day, nameOf, planner }: {
         {greater && <p data-greater-date>Greater Festival · {shortDate(greater)} · Year {dateOf(greater).year}</p>}
         <p data-next-festival>Next festival: {next.festival.name} · {shortDate(next.day)} · {whenWords(next.inDays)}</p>
         <p>Day {((today - 1) % DAYS_PER_YEAR) + 1} of {DAYS_PER_YEAR}. Days move only when you end them.</p>
+      </div>
       </div>
     </aside>
   )

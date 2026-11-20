@@ -8,7 +8,8 @@ import {
   daySetState, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, FESTIVAL_PLACE_POINTS, farmRankOf, farmRankOpens, GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, tonightOpens,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { useGame, useLoopSave } from '../save/game'
@@ -110,7 +111,7 @@ function EndDay() {
       }
     >
       <p className="py-1 font-display text-[18px] font-semibold" data-end-line>{set.allSet ? 'Out of actions' : nudgeWords(set)}</p>
-      {set.allSet && <p className="text-[13px] text-ink-soft">Building, the evening and a shop you’re already in take no actions.</p>}
+      {set.allSet && <p className="text-[13px] text-ink-soft">Building, town visits and shopping are free.</p>}
       {error && <p className="text-[13px] text-danger">{error}</p>}
     </Sheet>
   )
@@ -139,10 +140,10 @@ function RankSheet() {
         <div>
           <div className="flex items-baseline justify-between gap-2">
             <p className="font-display text-[20px] font-bold" data-points>{save.farm.points.toLocaleString('en-US')} points</p>
-            <HelpButton title="The Farm Rank" label="About the Farm Rank">
+            <GuideButton topic="rank" title="The Farm Rank" label="About the Farm Rank">
               <p>The farm’s own rank, from what you earn and grow. Points come from shipping, the Diary (each good shipped once, and milestones) and the festivals’ places: 150 for 1st, 75 for 2nd, 25 for 3rd. Decorations add more later.</p>
               <p>Points are counted each night. A new rank offers places to build, with gold and the farm’s goods, and more land, beds and seeds.</p>
-            </HelpButton>
+            </GuideButton>
           </div>
           <div className="mt-1 h-2 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}
             aria-label={next ? `To Farm Rank ${next.rank}` : 'Top rank'}>

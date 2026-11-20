@@ -58,7 +58,7 @@ const FILES = {
   },
 }
 const save = (): SaveV4 => useGame.getState().save as SaveV4
-/** A farm already in town today (going in takes one of the day's actions). */
+/** A farm already in town today. */
 const farm = (day = 5): SaveV4 => {
   const base = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open')
   return { ...base, calendar: { day }, today: { ...base.today, town: true } }
@@ -202,15 +202,14 @@ describe('the town', () => {
     ])
   })
 
-  it('takes one of the day\'s actions to go in, then stays open all day', async () => {
+  it('arrives directly with the full day spent and keeps shopping available', async () => {
     const home = farm()
-    useGame.setState({ uid: 'u1', status: 'ready', save: { ...home, today: { ...home.today, town: false } } })
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...home, today: { ...home.today, actions: 10, town: false } } })
     await render(<TownPage />, '/town')
-    expect($('[data-town-today]')).toBeNull()
-    await click(await find('[data-action="into-town"]'))
     await until(() => save().today.town === true)
-    expect(save().today.actions).toBe(1)
+    expect(save().today.actions).toBe(10)
     await find('[data-town-today]')
+    expect($('[data-action="into-town"]')).toBeNull()
     expect($('[data-action="shop"]')).not.toBeNull()
   })
 

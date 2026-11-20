@@ -3,7 +3,7 @@ import {
   GRADE_NAMES, LAUNCH_CAST, levelWords, libraryEntryName, longGameEnabled, NO_BIRTHDAYS, SEASON_NAMES,
   type FarmSave, type SpecialDays, type StoryPack,
 } from '@farm/domain'
-import { HelpButton } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { lazy, Suspense, useMemo, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -82,10 +82,10 @@ function ShelfView({ save, pack, days, master, params, setShelf }: Base & { para
       <div><h1>Uma Library</h1><p>{met} of {total} met</p></div>
       <div className="lib-actions">
         <Link className={button} to="/hearts" state={{ back: true }}>People &amp; work</Link>
-        <HelpButton title="Uma Library" label="About the Library">
+        <GuideButton topic="library" title="Uma Library" label="About the Library">
           <p>Meet an Uma to place her book on the shelf. Playing her scenes, learning her tastes and reaching milestones fills the book.</p>
           <p>Open a book, read a page or replay a scene for free.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
     </header>
     {met === 0 ? <div className="lib-empty"><p>Meet someone in town.</p><Link className={button} to="/town?view=people">Town ›</Link></div>
