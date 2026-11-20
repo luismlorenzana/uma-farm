@@ -1,0 +1,498 @@
+<style>
+  #farm-depth-review { display: grid; gap: calc(var(--font-size-base, 14px) * .7); color: var(--foreground); }
+  #farm-depth-review .review-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem .75rem; }
+  #farm-depth-review .review-controls label { display: grid; gap: .2rem; }
+  #farm-depth-review .farm-stage { position: relative; width: 100%; max-width: 844px; margin-inline: auto; overflow: hidden; container-type: inline-size; }
+  #farm-depth-review canvas { display: block; width: 100%; height: auto; }
+  #farm-depth-review .map-places { position: absolute; inset: 0; pointer-events: none; }
+  #farm-depth-review .map-places button { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; white-space: nowrap; }
+  #farm-depth-review .compact-places { display: none; }
+  #farm-depth-review .farm-stage:has(canvas[width="667"]) { max-width: 667px; margin-inline: auto; }
+  #farm-depth-review [data-place-status] { min-height: 1.5em; }
+  @container (max-width: 520px) {
+    #farm-depth-review .map-places { display: none; }
+    #farm-depth-review .compact-places { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
+  }
+</style>
+<section id="farm-depth-review" aria-label="Uma Farm HD-2D concept">
+  <div class="review-controls">
+    <label class="form-label">View
+      <select class="form-select" data-setting="view">
+        <option value="depth">Diorama</option><option value="plan">Tile plan</option>
+      </select>
+    </label>
+    <label class="form-label">Season
+      <select class="form-select" data-setting="season">
+        <option value="spring">Spring</option><option value="summer">Summer</option>
+        <option value="autumn">Autumn</option><option value="winter">Winter</option>
+      </select>
+    </label>
+    <label class="form-label">Light
+      <select class="form-select" data-setting="light">
+        <option value="morning">Morning</option><option value="dusk">Dusk</option>
+      </select>
+    </label>
+    <label class="form-label">Farm
+      <select class="form-select" data-setting="farm">
+        <option value="early">Early farm</option><option value="crew">Farmhands at work</option>
+      </select>
+    </label>
+    <label class="form-label">Landscape
+      <select class="form-select" data-setting="size">
+        <option value="wide">844 × 390</option><option value="small">667 × 375</option>
+      </select>
+    </label>
+  </div>
+  <div class="farm-stage">
+    <canvas width="844" height="390" role="img" aria-label="Dimensional farm seen from above with the woods, crop rows, pond, shipping yard and farmhouse."></canvas>
+    <div class="map-places" role="group" aria-label="Places on the farm">
+      <button class="btn" type="button" data-place="woods">Woods</button>
+      <button class="btn" type="button" data-place="fields" aria-pressed="true">Fields</button>
+      <button class="btn" type="button" data-place="pond">Pond</button>
+      <button class="btn" type="button" data-place="bin">Shipping bin</button>
+      <button class="btn" type="button" data-place="home">Farmhouse</button>
+    </div>
+    <div class="compact-places" role="group" aria-label="Places on the farm">
+      <button class="btn" type="button" data-place="woods">Woods</button>
+      <button class="btn" type="button" data-place="fields" aria-pressed="true">Fields</button>
+      <button class="btn" type="button" data-place="pond">Pond</button>
+      <button class="btn" type="button" data-place="bin">Shipping bin</button>
+      <button class="btn" type="button" data-place="home">Farmhouse</button>
+    </div>
+  </div>
+  <p class="tabular-nums" data-place-status aria-live="polite"></p>
+</section>
+<script>
+(() => {
+  const root = document.getElementById('farm-depth-review');
+  const canvas = root.querySelector('canvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const status = root.querySelector('[data-place-status]');
+  const settings = Array.from(root.querySelectorAll('[data-setting]'));
+  const targets = Array.from(root.querySelectorAll('[data-place]'));
+  const model = { view: 'depth', season: 'spring', light: 'morning', farm: 'early', size: 'wide', place: 'fields' };
+  const places = {
+    woods: { x: 5, z: 10, h: 1.6, plan: [9, 48], words: 'Woods · Forage and chop' },
+    fields: { x: 16.7, z: 8, h: 0, plan: [31, 26] },
+    pond: { x: 17.6, z: 17.8, h: 0, plan: [31, 74], words: 'Pond · Fish at the bank' },
+    bin: { x: 28.2, z: 12, h: 0.2, plan: [58, 43], words: 'Shipping bin · Queue goods for tonight' },
+    home: { x: 38.4, z: 8.1, h: 3.8, plan: [82, 31], words: 'Farmhouse · Meals and household' },
+  };
+  const seasons = {
+    spring: { ground: '#879c55', grass: '#b4bd6d', shade: '#4f673a', leaves: '#7f9f43', tip: '#adbd5a', bank: '#d0c382', water: '#377e77', pale: '#a6ce9d', crop: '#ec8d38', name: 'Carrots' },
+    summer: { ground: '#7c9848', grass: '#b3af53', shade: '#405f38', leaves: '#719239', tip: '#a1b34b', bank: '#dbbf83', water: '#387976', pale: '#a9d4af', crop: '#de6651', name: 'Tomatoes' },
+    autumn: { ground: '#b59059', grass: '#d5aa61', shade: '#7d6745', leaves: '#b36536', tip: '#e9ae58', bank: '#e1bc86', water: '#527b72', pale: '#bed5a8', crop: '#f2a54b', name: 'Wheat' },
+    winter: { ground: '#b6c3bd', grass: '#dfdfc8', shade: '#728b94', leaves: '#58786d', tip: '#a8b7ae', bank: '#d3cbb5', water: '#4d7c88', pale: '#c9dfd7', crop: '#ead7aa', name: 'Oats' },
+  };
+  const forest = [
+    [0.8, 2.9, 1.05], [3.4, 2.2, 0.95], [5.8, 1.5, 1.25], [9, 1.6, 0.83],
+    [2.3, 5.7, 1.26], [5.4, 5.3, 1.05], [7.7, 4.2, 0.93], [3.1, 8.1, 0.91],
+    [0.9, 10.4, 1.13], [6.1, 8.6, 1.01], [4.7, 11.1, 0.94], [2.1, 13.1, 1.16],
+    [1.4, 16.7, 0.87], [6.8, 13.9, 0.72], [11, 0.8, 0.71], [22.5, 1.6, 0.8],
+    [39.5, 1.3, 0.72], [43.7, 4.6, 1.01], [45.6, 2.1, 0.75], [45, 9.3, 0.96],
+  ];
+  const plots = {
+    early: ['........', '..gg....', '..gg....', '........', '........'],
+    crew: ['........', '.gggrrr.', '.ggg....', '.gg.....', '.gg.....'],
+  };
+  let palette;
+  let width;
+  let height;
+  let scale;
+  let night;
+  let flat;
+
+  function mix(first, second, amount) {
+    const a = parseInt(first.slice(1), 16);
+    const b = parseInt(second.slice(1), 16);
+    const channel = (shift) => Math.round((a >> shift & 255) * (1 - amount) + (b >> shift & 255) * amount);
+    return '#' + ((channel(16) << 16) | (channel(8) << 8) | channel(0)).toString(16).padStart(6, '0');
+  }
+
+  function lit(color, shade = 0) {
+    const local = shade > 0 ? mix(color, '#ffe4b6', shade) : mix(color, '#253633', -shade);
+    return night ? mix(local, '#233357', 0.52) : local;
+  }
+
+  function random(seed) {
+    let bits = seed;
+    return () => {
+      bits = (Math.imul(1664525, bits) + 1013904223) >>> 0;
+      return bits / 4294967296;
+    };
+  }
+
+  // Fixed oblique camera. Depth comes from X and Z and sprite height is independent of ground position.
+  function project(x, z, h = 0) {
+    return [
+      width * 0.5 + ((x - 23) * 0.94 + (z - 10) * 0.32) * scale,
+      height * 0.54 + ((z - 10) * 0.62 - (x - 23) * 0.23 - h * 1.06) * scale,
+    ];
+  }
+
+  function polygon(points, fill) {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    for (let index = 0; index < points.length; index++) {
+      const [x, y] = points[index];
+      if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function surface(points, fill) {
+    polygon(points.map(([x, z, h]) => project(x, z, h)), fill);
+  }
+
+  function rect(x, z, w, d, fill, h = 0) {
+    surface([[x, z, h], [x + w, z, h], [x + w, z + d, h], [x, z + d, h]], fill);
+  }
+
+  function oval(x, z, rx, rz, fill, h = 0, uneven = 0) {
+    const points = Array.from({ length: 36 }, (_, index) => {
+      const angle = index * Math.PI / 18;
+      const edge = 1 + uneven * (Math.sin(angle * 3 + 0.2) + 0.45 * Math.cos(angle * 5));
+      return [x + Math.cos(angle) * rx * edge, z + Math.sin(angle) * rz * edge, h];
+    });
+    surface(points, fill);
+  }
+
+  function projectedStroke(points, color, thickness) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = thickness * scale;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    points.forEach(([x, z, h], index) => {
+      const [px, py] = project(x, z, h);
+      if (index === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+  }
+
+  function ground() {
+    surface([[0, 21], [47, 21], [47, 21, -1.15], [0, 21, -1.15]], lit('#786749'));
+    surface([[47, 0], [47, 21], [47, 21, -1.15], [47, 0, -1.15]], lit('#5b5843'));
+    rect(0, 0, 47, 21, lit(palette.ground));
+    const rng = random(7828);
+    for (let i = 0; i < 720; i++) {
+      const x = rng() * 46.9;
+      const z = rng() * 20.9;
+      const brush = rng();
+      rect(x, z, 0.08 + rng() * 0.17, 0.07 + rng() * 0.17, lit(brush < 0.45 ? palette.shade : palette.grass, brush < 0.45 ? 0.27 : 0));
+    }
+    oval(4.55, 7, 4.5, 6.85, lit(mix(palette.ground, palette.shade, 0.53)));
+    oval(28.3, 6.4, 4.9, 4.7, lit(mix(palette.ground, palette.grass, 0.22)));
+    rect(23.7, 0.8, 2.15, 18.4, lit(palette.bank));
+    rect(23.9, 9.7, 22.8, 2.05, lit(palette.bank));
+    rect(10.4, 10, 14.2, 1.38, lit(palette.bank));
+    for (let i = 0; i < 90; i++) {
+      const vertical = i < 34;
+      const x = vertical ? 23.8 + rng() * 1.8 : 24 + rng() * 22.3;
+      const z = vertical ? 1 + rng() * 17.7 : 9.8 + rng() * 1.9;
+      rect(x, z, 0.08 + rng() * 0.17, 0.09 + rng() * 0.15, lit(mix(palette.bank, '#7a765c', 0.45)));
+    }
+    oval(16.1, 16.05, 7.25, 4.38, lit(palette.shade), 0, 0.08);
+    oval(16.2, 15.96, 6.94, 4.16, lit(palette.bank, 0.05), 0, 0.08);
+    oval(16.18, 16.08, 6.46, 3.72, lit(palette.water), 0, 0.08);
+    oval(16.3, 16.36, 5.72, 3.2, lit(palette.water, -0.2), 0, 0.08);
+    oval(15.75, 15.1, 5.32, 2.1, lit(palette.water, 0.15), 0, 0.08);
+    for (let i = 0; i < 36; i++) {
+      const angle = rng() * Math.PI * 2;
+      const radius = Math.sqrt(rng()) * 0.92;
+      const x = 16.2 + Math.cos(angle) * 6.15 * radius;
+      const z = 16.04 + Math.sin(angle) * 3.25 * radius;
+      rect(x, z, 0.12 + rng() * 0.65, 0.095, lit(mix(palette.water, palette.pale, i % 5 === 0 ? 0.84 : 0.37)));
+    }
+    const pier = ['#a78353', '#c29a63', '#d0ab73'];
+    for (let i = 0; i < 11; i++) rect(21.6 - i * 0.18, 13.4, 0.17, 0.72, lit(pier[i % 3]), 0.08);
+  }
+
+  function reeds(x, z, seed) {
+    const rng = random(seed);
+    for (let i = 0; i < 7; i++) {
+      const along = rng() * 0.9;
+      const tip = 0.29 + rng() * 0.62;
+      projectedStroke([[x + along, z, 0], [x + along + (rng() - 0.5) * 0.4, z, tip]], lit(i % 3 ? palette.shade : palette.tip), 0.085);
+    }
+  }
+
+  function fence(x, z, posts) {
+    const length = (posts - 1) * 0.87;
+    for (const h of [0.24, 0.49]) projectedStroke([[x, z, h], [x + length, z, h]], lit('#a17d51'), 0.13);
+    for (let i = 0; i < posts; i++) {
+      const sx = x + i * 0.87;
+      projectedStroke([[sx, z, 0], [sx, z, 0.68]], lit('#7c6548'), 0.16);
+    }
+  }
+
+  function groundDetail() {
+    for (const [x, z, seed] of [[9.5, 15.6, 3], [10.1, 17.8, 6], [12.45, 19.8, 3], [19.9, 19.2, 9], [22.65, 17.8, 11], [21.9, 13.3, 6]]) {
+      reeds(x, z, seed);
+    }
+    const rng = random(195);
+    for (const [x, z] of [[27.8, 15.4], [34.7, 15.9], [39.5, 17.7], [43.0, 14.2], [9.4, 12.2], [7.5, 18.4]]) {
+      oval(x, z, 1.38, 0.61, lit(mix(palette.ground, palette.shade, 0.25)));
+      for (let i = 0; i < 8; i++) {
+        const u = x + 2.1 * (rng() - 0.5);
+        const v = z + 0.9 * (rng() - 0.5);
+        const h = 0.1 + rng() * 0.18;
+        projectedStroke([[u, v], [u, v, h]], lit(palette.shade), 0.075);
+        const [px, py] = project(u, v, h);
+        ctx.fillStyle = lit(model.season === 'winter' ? palette.grass : (i % 3 ? '#ebc182' : '#f4b5a1'), 0.1);
+        ctx.fillRect(px - 1, py - 1, 2.3, 2.1);
+      }
+    }
+    fence(32.5, 16.8, 11);
+    fence(26.1, 16.8, 4);
+  }
+
+  function trunkAndCanopy(x, z, size) {
+    const [sx, sy] = project(x, z);
+    const r = scale * size;
+    const wood = lit('#6e4e36');
+    polygon([[sx - r * 0.17, sy], [sx - r * 0.1, sy - r * 2.65], [sx + r * 0.22, sy - r * 2.95], [sx + r * 0.18, sy]], wood);
+    polygon([[sx + r * 0.06, sy - r * 0.04], [sx + r * 0.06, sy - r * 2.45], [sx + r * 0.2, sy - r * 2.4], [sx + r * 0.19, sy]], lit('#97774b'));
+    const lobes = [[-0.7, 2.15, 0.95, -0.24], [0.63, 2.38, 1.1, -0.25], [0.22, 3.2, 1.12, -0.06], [-0.59, 3.04, 0.92, 0.04], [0.5, 3.47, 0.9, 0.06], [-0.18, 3.81, 1.03, 0.17]];
+    for (const [dx, dy, radius, brightness] of lobes) {
+      const cx = sx + dx * r;
+      const cy = sy - dy * r;
+      const rw = radius * r;
+      const faceted = [[-1, 0.12], [-0.83, -0.43], [-0.4, -0.68], [0.31, -0.74], [0.82, -0.49], [1.02, -0.05], [0.88, 0.35], [0.4, 0.58], [-0.32, 0.66], [-0.8, 0.42]];
+      polygon(faceted.map(([u, v]) => [cx + u * rw, cy + v * rw]), lit(palette.leaves, brightness - 0.08));
+      polygon([[-0.9, 0.05], [-0.63, -0.42], [-0.22, -0.63], [0.39, -0.55], [0.63, -0.32], [0.03, -0.4], [-0.39, -0.04]].map(([u, v]) => [cx + u * rw, cy + v * rw]), lit(palette.tip, brightness));
+      if (brightness > 0.04) {
+        ctx.fillStyle = lit(palette.tip, 0.3);
+        ctx.fillRect(cx - rw * 0.28, cy - rw * 0.29, rw * 0.14, rw * 0.07);
+        ctx.fillRect(cx + rw * 0.15, cy - rw * 0.17, rw * 0.12, rw * 0.06);
+      }
+    }
+  }
+
+  function crop(x, z, ripe) {
+    const [px, py] = project(x, z);
+    const stem = scale * 0.36;
+    ctx.fillStyle = lit(palette.shade, -0.24);
+    ctx.fillRect(px - stem * 0.5, py - stem * 0.18, stem, stem * 0.32);
+    ctx.fillStyle = lit(ripe ? palette.crop : palette.leaves, 0.04);
+    ctx.fillRect(px - stem * 0.34, py - stem * 0.78, stem * 0.68, stem * 0.6);
+    ctx.fillStyle = lit(palette.tip, 0.24);
+    ctx.fillRect(px - stem * 0.65, py - stem * 1.05, stem * 0.48, stem * 0.3);
+    ctx.fillRect(px + stem * 0.06, py - stem * 1.27, stem * 0.4, stem * 0.56);
+  }
+
+  function fields() {
+    const visibleRows = plots[model.farm];
+    rect(10.65, 2.65, 12.7, 6.6, lit('#6c503d'));
+    for (let row = 0; row < visibleRows.length; row++) {
+      const z = 2.85 + row * 1.245;
+      rect(10.85, z, 12.28, 1.12, lit(row % 2 ? '#885f46' : '#9d7154'));
+      rect(10.9, z + 0.86, 12.15, 0.12, lit('#4d3d34'));
+      for (let col = 0; col < visibleRows[row].length; col++) {
+        const x = 11.18 + col * 1.47;
+        const plant = visibleRows[row][col];
+        rect(x, z + 0.61, 0.77, 0.09, lit('#b08361'));
+        if (plant !== '.') crop(x + 0.38, z + 0.62, plant === 'r');
+      }
+    }
+    for (let stake = 0; stake < 11; stake++) {
+      const x = 11.05 + stake * 1.18;
+      projectedStroke([[x, 2.55, 0], [x, 2.55, 0.64]], lit('#68654b'), 0.14);
+    }
+    projectedStroke([[10.9, 2.55, 0.49], [23.1, 2.55, 0.49]], lit('#94865f'), 0.09);
+  }
+
+  function house(x, z, w, d, wall, roof, tall) {
+    const f = '#806249';
+    rect(x - 0.15, z - 0.15, w + 0.3, d + 0.3, lit(f, -0.18), 0.12);
+    surface([[x, z + d], [x + w, z + d], [x + w, z + d, tall], [x, z + d, tall]], lit(wall, 0.08));
+    surface([[x + w, z], [x + w, z + d], [x + w, z + d, tall], [x + w, z + d * 0.5, tall + 1.55], [x + w, z, tall]], lit(wall, -0.25));
+    for (let i = 0.4; i < tall; i += 0.38) {
+      projectedStroke([[x, z + d + 0.015, i], [x + w, z + d + 0.015, i]], lit(wall, -0.19), 0.045);
+    }
+    const frontZ = z + d + 0.04;
+    const window = (u, a, b, size) => {
+      if (night) {
+        const [px, py] = project(x + u + size * 0.5, frontZ, (a + b) * 0.5);
+        const glow = ctx.createRadialGradient(px, py, 0, px, py, scale * 1.04);
+        glow.addColorStop(0, 'rgba(255,195,102,.56)');
+        glow.addColorStop(1, 'rgba(255,154,80,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(px - scale * 1.04, py - scale * 1.04, scale * 2.08, scale * 2.08);
+      }
+      surface([[x + u, frontZ, a], [x + u + size, frontZ, a], [x + u + size, frontZ, b], [x + u, frontZ, b]], night ? '#ffca6e' : '#4a6153');
+      projectedStroke([[x + u + size * 0.5, frontZ, a], [x + u + size * 0.5, frontZ, b]], lit(wall, 0.21), 0.065);
+    };
+    const door = x + w * 0.45;
+    surface([[door, frontZ], [door + 1.02, frontZ], [door + 1.02, frontZ, tall * 0.74], [door, frontZ, tall * 0.74]], lit('#73523e', -0.19));
+    window(w * .17, tall * .34, tall * .7, 0.7);
+    window(w * .76, tall * .34, tall * .7, 0.7);
+    const ridge = z + d * 0.5;
+    const eave = tall - 0.12;
+    const top = tall + 1.55;
+    surface([[x - 0.3, z - 0.38, eave], [x + w + 0.3, z - 0.38, eave], [x + w + 0.3, ridge, top], [x - 0.3, ridge, top]], lit(roof, 0.09));
+    surface([[x - 0.3, ridge, top], [x + w + 0.3, ridge, top], [x + w + 0.3, z + d + 0.4, eave], [x - 0.3, z + d + 0.4, eave]], lit(roof, -0.19));
+    for (let p = 0.2; p < 1; p += 0.2) {
+      const zz = ridge + (z + d + 0.4 - ridge) * p;
+      const hh = top + (eave - top) * p;
+      projectedStroke([[x - 0.26, zz, hh], [x + w + 0.26, zz, hh]], lit(roof, -0.3), 0.07);
+      for (let u = 0.35 + (p % 0.4 > 0.1 ? 0.31 : 0); u < w + 0.24; u += 0.61) {
+        const p2 = Math.min(1, p + 0.18);
+        projectedStroke([[x + u, zz, hh], [x + u, ridge + (z + d + 0.4 - ridge) * p2, top + (eave - top) * p2]], lit(roof, -0.32), 0.036);
+      }
+    }
+    projectedStroke([[x - 0.3, ridge, top], [x + w + 0.3, ridge, top]], lit(roof, 0.33), 0.15);
+  }
+
+  function crate(x, z, s = 0.56) {
+    const h = s * 0.7;
+    rect(x, z, s, s, lit('#bd935a'), h);
+    surface([[x, z + s], [x + s, z + s], [x + s, z + s, h], [x, z + s, h]], lit('#9a7146'));
+    surface([[x + s, z], [x + s, z + s], [x + s, z + s, h], [x + s, z, h]], lit('#6c513c'));
+  }
+
+  function worker(x, z, coat, hair) {
+    const [sx, sy] = project(x, z);
+    const unit = scale * 0.145;
+    oval(x + 0.34, z + 0.15, 0.57, 0.29, night ? '#202b47' : '#677b49');
+    const colors = { O: '#352832', H: hair, K: '#f4bf90', T: coat, B: '#564653', L: '#f3dfbd' };
+    const sprite = [
+      '..O....O..', '..H....H..', '..HHHHHH..', '.HHHHHHHH.', '.HHKKHKHH.',
+      '.HKKKKKKH.', '..KKOKOK..', '..HK KKH..', '..HLLLLH..', '.TTTTTTTT.',
+      '.TKT TKTK.', '..TTTTTT..', '..TTTTTT..', '..BBBBBB..', '..BB..BB..', '.LLL..LLL.',
+    ];
+    sprite.forEach((line, row) => {
+      Array.from(line).forEach((key, col) => {
+        if (!colors[key]) return;
+        ctx.fillStyle = night ? mix(colors[key], '#283761', 0.31) : colors[key];
+        ctx.fillRect(Math.round(sx + (col - 5) * unit), Math.round(sy - (16 - row) * unit), Math.ceil(unit), Math.ceil(unit));
+      });
+    });
+  }
+
+  function drawDepth() {
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, night ? '#283a61' : '#c5cc9d');
+    sky.addColorStop(1, night ? '#182337' : '#495c45');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+    polygon([[0, height * 0.35], [width * 0.15, height * 0.21], [width * 0.29, height * 0.31], [width * 0.46, height * 0.16], [width * 0.62, height * 0.24], [width * 0.82, height * 0.11], [width, height * 0.21], [width, height], [0, height]], night ? 'rgba(47,65,97,.24)' : 'rgba(159,177,126,.43)');
+    ground();
+    ctx.save();
+    surface([[0, 0], [47, 0], [47, 21], [0, 21]], 'transparent');
+    ctx.clip();
+    for (const [x, z, size] of forest) {
+      const reach = night ? 2.25 : 1.53;
+      oval(x + size * reach, z + size * 0.7, size * 1.69, size * 0.42, lit(mix(palette.ground, palette.shade, 0.72)));
+    }
+    oval(38.1, 6.25, 6.5, 2.5, lit(mix(palette.ground, palette.shade, 0.66)));
+    ctx.restore();
+    groundDetail();
+    fields();
+    const set = forest.map(([x, z, size]) => ({ depth: z * 0.62 - x * 0.23, draw: () => trunkAndCanopy(x, z, size) }));
+    set.push(
+      { depth: -4.1, draw: () => house(34.3, 2.65, 7.25, 4.8, '#cbaf82', '#a65646', 2.56) },
+      { depth: -1.85, draw: () => house(28.3, 2.65, 4.2, 3.05, '#b28b62', '#66806b', 1.8) },
+      { depth: 0.6, draw: () => { crate(28.25, 10.9, 1.04); crate(29.4, 11.2); crate(28.0, 12.03, 0.59); } },
+    );
+    if (model.farm === 'crew') set.push(
+      { depth: 1.1, draw: () => worker(19.1, 8.85, '#a6425b', '#734331') },
+      { depth: 4.65, draw: () => worker(22.6, 13.6, '#6376a9', '#82563f') },
+      { depth: -0.43, draw: () => worker(30.7, 10.8, '#c68b48', '#554352') },
+    );
+    set.sort((a, b) => a.depth - b.depth);
+    set.forEach((entry) => entry.draw());
+    const fade = ctx.createRadialGradient(width * 0.52, height * 0.49, width * 0.17, width * 0.52, height * 0.49, width * 0.58);
+    fade.addColorStop(0, 'transparent');
+    fade.addColorStop(1, night ? 'rgba(13,17,39,.35)' : 'rgba(36,45,37,.24)');
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  function drawPlan() {
+    ctx.fillStyle = lit(mix(palette.shade, '#273b32', 0.56));
+    ctx.fillRect(0, 0, width, height);
+    const unitX = width / 17;
+    const unitY = height / 7;
+    for (let i = 0; i < 17; i++) {
+      for (let j = 0; j < 7; j++) {
+        const groundTone = i <= 2 ? palette.shade : i === 7 || j === 3 ? palette.bank : palette.ground;
+        ctx.fillStyle = lit(groundTone, (i + j) % 2 ? 0.1 : 0.03);
+        ctx.fillRect(i * unitX + 1, j * unitY + 1, unitX - 2, unitY - 2);
+      }
+    }
+    for (const [x, y, w, h, color] of [[3, 0.36, 3.9, 2.43, '#896447'], [3, 4.17, 4, 2.48, palette.water], [8.2, 1.4, 2.8, 1.7, '#ae8d61'], [12.2, 0.4, 3.6, 2.65, '#ae6750']]) {
+      ctx.fillStyle = lit(color);
+      ctx.fillRect(x * unitX, y * unitY, w * unitX, h * unitY);
+    }
+    plots[model.farm].forEach((row, r) => {
+      Array.from(row).forEach((plant, c) => {
+        ctx.fillStyle = lit(plant === 'r' ? palette.crop : plant === 'g' ? palette.leaves : '#a47b5a');
+        ctx.fillRect((3.22 + c * .439) * unitX, (.53 + r * .375) * unitY, .31 * unitX, .25 * unitY);
+      });
+    });
+  }
+
+  function fieldStatus() {
+    const tiles = Array.from(plots[model.farm].join(''));
+    const growing = tiles.filter((tile) => tile === 'g').length;
+    const ripe = tiles.filter((tile) => tile === 'r').length;
+    return ['Fields', palette.name, `${growing} to water`, ...(ripe ? [`${ripe} ripe`] : [])].join(' · ');
+  }
+
+  function render() {
+    palette = seasons[model.season];
+    night = model.light === 'dusk';
+    flat = model.view === 'plan';
+    [width, height] = model.size === 'small' ? [667, 375] : [844, 390];
+    scale = Math.min(width / 48, height / 25);
+    canvas.width = width;
+    canvas.height = height;
+    canvas.setAttribute('aria-label', flat ? 'Simplified tile plan of the same farm places.' : 'Dimensional farm with the woods, crop rows, pond, shipping yard, and farmhouse.');
+    if (flat) drawPlan(); else drawDepth();
+    settings.forEach((select) => { select.value = model[select.dataset.setting]; });
+    for (const button of targets) {
+      const id = button.dataset.place;
+      if (button.parentElement.classList.contains('map-places')) {
+        const { x, z, h, plan } = places[id];
+        const [left, top] = project(x, z, h);
+        button.style.left = `${flat ? plan[0] : left / width * 100}%`;
+        button.style.top = `${flat ? plan[1] : top / height * 100}%`;
+      }
+      button.setAttribute('aria-pressed', String(id === model.place));
+    }
+    status.textContent = model.place === 'fields' ? fieldStatus() : places[model.place].words;
+  }
+
+  function applyRemembered(state) {
+    if (!state || typeof state !== 'object') return;
+    for (const select of settings) {
+      const key = select.dataset.setting;
+      if (Array.from(select.options).some((option) => option.value === state[key])) model[key] = state[key];
+    }
+    if (Object.hasOwn(places, state.place)) model.place = state.place;
+  }
+
+  function remember() {
+    window.openai?.setWidgetState?.({ modelContent: { ...model }, privateContent: null }).catch(() => {});
+  }
+
+  for (const select of settings) select.addEventListener('change', () => {
+    model[select.dataset.setting] = select.value;
+    render();
+    remember();
+  });
+  for (const button of targets) button.addEventListener('click', () => {
+    model.place = button.dataset.place;
+    render();
+    remember();
+  });
+  window.addEventListener('openai:set_globals', (event) => {
+    applyRemembered(event.detail?.globals?.widgetState);
+    render();
+  });
+  applyRemembered(window.openai?.widgetState);
+  render();
+})();
+</script>

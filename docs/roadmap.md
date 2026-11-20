@@ -58,7 +58,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | **The pacing** | **Checked by simulation** | The domain plays whole years on the game's rules: the farmer alone pays his way and his takeout in the first year, two farmhands pay their upkeep many times over and a cook among them feeds the farm, two years with the Coop and the Mine never run short, and four years at 10, 20 and 50 Umas show who holds a real job ([the pacing](game-mechanics.md#the-pacing)) |
 | **The story** | **Being written** | By the story session, read in the Farm Story Sandbox and shipped with one command at the end of each session. Tier 1's ten are complete and live (release 8, 2026-11-15), and the game plays everything it writes, read by id: every occasion (each festival's day and night, her birthday, her anniversary, the story's days), greetings, small talk and gift lines ([occasion scenes](game-mechanics.md#occasion-scenes), [talk that knows the day](game-mechanics.md#talk-that-knows-the-day)). The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack](story-pack.md) says how it reaches the game and lists what the game reads |
 | **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's. The Umas' faces and busts on cards and lists are master data's, and so are twelve Umas' dialogue portraits and nine illustrations each, from Uma Character Art's Farm Life. Every other Uma plays scenes on the blank bust. [The art brief](design/her-look.md#the-art-brief) says what's drawn next |
-| **The HD-2D farm** | **Retired** | The tile farm is Home. The portrait preview, its stage and its kit are gone; an HD-2D look may come back when uma-platform's look path is ready |
+| **The HD-2D farm** | **Research** | The tile farm is Home. The [landscape Field and Pond study](handoff/tasks/F103-hd2d-farm.md) starts the new look work. |
 | **Expeditions** | **Built** (F97) | The town post opens at Farm Rank 7. Farmhands take supplies to one of seven regions and return with loot, rank points and bonds. The post keeps a return log ([expeditions](game-mechanics.md#expeditions)). |
 | **The Restaurant** | **Deployed** (F98) | From Farm Rank 7, clear eight stages to open 120 recipes. Learn each through exact-grade production. Sell the dishes, cook with them or save them for meals ([the Restaurant](game-mechanics.md#the-restaurant)). |
 | **Sound** | **Deferred** | Music and sound effects are outside the active roadmap. |
@@ -70,7 +70,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 The farm is a full game when all eight of these hold:
 
 1. **One build, one look, no testing tools.** No build flags, no preview switch, no cheats or debug panels. The tile
-   farm is Home, and the HD-2D farm is retired. *This holds today.*
+   farm is Home. The portrait HD-2D preview retired when landscape shipped. *This holds today.*
 2. **Everything live, filled by the story over time.** Every system plays with the default story and the blank bust,
    and each story pack and each Uma's art replace what they bring. *This holds today.*
 3. **The town of everyone.** Every Uma lives in town, and you meet whoever you choose by introducing yourself. *This
@@ -93,7 +93,7 @@ Phase 1  One game, built around the Umas   ── done: one build on v5, the far
                                               her chapters, and the rework (landscape, a day of actions, the Uma loop,
                                               farmhands, upkeep, the calendar, the ranch and the mine)
 Phase 2  The whole farm                    ── festivals and the long game
-Phase 3  Feel and polish                   ── animation, first times, balance, speed, painted maps
+Phase 3  Feel and polish                   ── animation, first times, balance, speed, map appearance
 Phase 4  Steady                            ── error reports, save safety, releases
 Later    Release packs                     ── sets of Umas after the launch cast (the Ranker's Tier 1–5)
 Later    Parcels to the other games        ── parked until the farm's own game is done
@@ -167,7 +167,7 @@ How each workshop is built:
 | 3.2 **Animation** | The farm-work animations from the sprite pipeline, and the items' flights |
 | 3.3 **First times** | Each new place explains itself the first time you open it |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
-| 3.7 **Painted maps** | A painted town map and farm map in landscape, with clickable places as data over the painting, seasons and time of day as tints ([the plan](design/game-design.md#the-maps-2026-11-15)); who paints is the owner's call |
+| 3.7 **Map appearance** | The [painted map plan](design/game-design.md#the-maps-2026-11-15) and the [HD-2D farm pilot](handoff/tasks/F103-hd2d-farm.md) start from the same place targets. F103 is testing the landscape farm's Field and Pond band before wider map authoring. |
 
 ### Phase 4: Steady
 
