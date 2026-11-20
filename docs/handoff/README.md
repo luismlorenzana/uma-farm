@@ -124,7 +124,7 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 
 | Packet | Work | Status |
 |---|---|---|
-| [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Research resumed. Landscape composition study is ready. Shared-renderer pilot and iPhone measurements are open. |
+| [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | The shared-renderer pilot is implemented. The iPhone measurements and look review are open. |
 
 The Forge is [deferred pending a redesign](../roadmap.md#deferred).
 

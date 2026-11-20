@@ -18,9 +18,10 @@ import {
 } from '@farm/domain'
 import { PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, LockedIcon, Sheet } from '@luismlorenzana/uma-kit/ui'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
+import type { FieldPondReviewProps } from '../hd2d/FieldPondReview'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -43,6 +44,26 @@ const HouseAnswer = lazy(() => import('./HouseAnswer'))
 const BuildCard = lazy(() => import('./BuildCard').then((m) => ({ default: m.BuildCard })))
 const RanchPanel = lazy(() => import('./RanchPanels').then((m) => ({ default: m.RanchPanel })))
 const DigPanel = lazy(() => import('./RanchPanels').then((m) => ({ default: m.DigPanel })))
+const FieldPondReview = lazy<ComponentType<FieldPondReviewProps>>(
+  () => import('../hd2d/FieldPondReview').catch(() => ({ default: FieldPondUnavailable })),
+)
+const FIELD_POND = 'farm:field-pond'
+
+function FieldPondUnavailable({ onUnavailable }: FieldPondReviewProps) {
+  useEffect(onUnavailable, [onUnavailable])
+  return null
+}
+
+function storedFieldPond(): boolean {
+  try { return sessionStorage.getItem(FIELD_POND) === '1' } catch { return false }
+}
+
+function rememberFieldPond(on: boolean) {
+  try {
+    if (on) sessionStorage.setItem(FIELD_POND, '1')
+    else sessionStorage.removeItem(FIELD_POND)
+  } catch { /* A private session can play with the view open until it leaves the map. */ }
+}
 
 const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
 const isHome = (id: string): id is RanchHome => id === 'coop' || id === 'barn'
@@ -97,7 +118,7 @@ function useCell(): [React.RefObject<HTMLDivElement | null>, number] {
 const at = (area: Area, cell: number): CSSProperties => ({ left: area.col * cell, top: area.row * cell, width: area.cols * cell, height: area.rows * cell })
 
 /** How the farm works, behind the help button, at the map's foot on the left. */
-function FarmHelp() {
+function FarmHelp({ onPreview }: { onPreview(): void }) {
   return (
     <div className="absolute bottom-3 left-3 z-20">
       <div className="rounded-full border border-hairline-strong bg-panel/95 shadow-3" data-farm-help>
@@ -109,6 +130,7 @@ function FarmHelp() {
           <p>A watered tile grows a stage at night; a dry one doesn’t. A season’s end withers what still grows.</p>
           <p>When the actions run out, end the day: the night pays the bin and the morning shows what grew.</p>
           <p>Tap the date for the calendar and the year’s festivals.</p>
+          <Button variant="secondary" onClick={onPreview}>Field and Pond preview</Button>
         </HelpButton>
       </div>
     </div>
@@ -140,8 +162,30 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   // The night reads master data: load it with the farm, so End the day doesn't wait for it. A failure shows
   // when the day ends, with Try again.
   useEffect(() => void masterReady().catch(() => undefined), [])
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const location = useLocation()
+  const requested = params.get('map') === 'field-pond'
+  const [preview, setPreview] = useState(() => requested || storedFieldPond())
+  const [previewReady, setPreviewReady] = useState(false)
+  const [previewFailed, setPreviewFailed] = useState(false)
+  const choosePreview = useCallback((on: boolean) => {
+    rememberFieldPond(on)
+    setPreview(on)
+    setPreviewFailed(false)
+    if (!on) setPreviewReady(false)
+  }, [])
+  const previewUnavailable = useCallback(() => {
+    choosePreview(false)
+    setPreviewFailed(true)
+  }, [choosePreview])
+  const previewDidLoad = useCallback(() => setPreviewReady(true), [])
+  useEffect(() => {
+    if (!requested) return
+    const next = new URLSearchParams(params)
+    next.delete('map')
+    choosePreview(true)
+    setParams(next, { replace: true, state: location.state as unknown })
+  }, [choosePreview, location.state, params, requested, setParams])
   const leave = useLeave()
   const [scroll, cell] = useCell()
   const readyNow = useReadyNow(save)
@@ -165,7 +209,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const fields = placeWordsOf(story, 'fields')
   return (
     <>
-      <div ref={scroll} className="absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-contain" data-farm-scroll>
+      <div ref={scroll} hidden={previewReady} className="absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-contain" data-farm-scroll>
         <div className="relative" style={{ width: cols * cell, height: MAP_ROWS * cell, background: '#9cc27a' }} data-farm-map data-cell={cell}>
           {/* The woods' edge: forage and chop. */}
           <Link to="/?peek=forest" {...hop} aria-label={`${woods.name}: forage or chop`} className="absolute" style={at(WOODS, cell)} data-place="forest">
@@ -231,7 +275,20 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           </Link>
         </div>
       </div>
-      <FarmHelp />
+      {preview && (
+        <div className={`absolute inset-0 ${previewReady ? '' : 'invisible'}`}>
+          <Suspense fallback={null}>
+            <FieldPondReview save={save} story={story} covered={covered || save.summary !== null} hop={hop}
+              onReady={previewDidLoad} onUnavailable={previewUnavailable} onClose={() => choosePreview(false)} />
+          </Suspense>
+        </div>
+      )}
+      {!previewReady && <FarmHelp onPreview={() => choosePreview(true)} />}
+      {(previewFailed || (preview && !previewReady)) && (
+        <p role="status" className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-panel px-3 py-2 text-[12px] shadow-2">
+          {previewFailed ? 'Field and Pond is unavailable. Tile map restored.' : 'Loading Field and Pond…'}
+        </p>
+      )}
       {peek && peekWords && (
         <PeekPanel
           key={peek.id}
@@ -239,7 +296,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           about={<p>{peekWords.line}</p>}
           onClose={close}
           words={{ close: 'Close', about: `About ${theName(peekWords.name)}`, backTo: 'Back to the farm' }}
-          focusKey={`[data-place="${peek.id}"]`}
+          focusKey={`${previewReady ? '[data-field-pond] ' : ''}[data-place="${peek.id}"]`}
         >
           {peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
             : peek.id === 'forest' || peek.id === 'fishery' ? <GatherPanel save={save} place={peek.id} />

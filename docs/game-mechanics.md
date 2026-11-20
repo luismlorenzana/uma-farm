@@ -631,6 +631,18 @@ farm's places start six columns sooner than when the map held the field's 40 til
   the expedition post, the town itself) are in town, and the Menu lists them.
 - **Opening a place** opens its panel or quick look at the right, the map left as it was.
 
+**Field and Pond preview (F103).** Open **How the farm works** on the tile map, then choose **Field and Pond preview**.
+The 3D view shows the west band, with the woods, fields, fishery, shipping bin and Farmhouse opening their usual screens.
+Drag the ground to pan. **Tile map** brings back the whole farm. The preview stays selected for the session as the
+player moves between pages and ends the day. If the graphics context fails, the tile map comes back automatically.
+
+The scene shows plot 1's ground, crops and watering. The Fields label counts work across all cleared plots. Crew
+labels show the hands expected to do work in the band under the current rota and work board. While the morning
+report is open they reflect work recorded overnight. A few stand-in sprites mark the jobs in the scene. Seasons
+follow the farm date and the light turns to dusk when a quarter or fewer of the day's actions remain.
+**Saver** lowers the render resolution and shadow size. **Phone test** records up to ten foreground minutes,
+showing FPS, the 95th-percentile frame gap, draws and estimated graphics memory.
+
 Each place's building and what opens it (the Boat is moored at the Dock and drawn there):
 
 <!-- live:farm-map -->

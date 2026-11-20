@@ -1,7 +1,8 @@
 # F103 — HD-2D farm
 
-**Status · Landscape research resumed 2026-11-20.** The [Field and Pond study](F103-field-and-pond.html) is ready for
-composition review. The first WebGL farm slice is the next implementation. The live farm still uses the tile map.
+**Status · Shared-renderer pilot implemented 2026-11-20.** Open **How the farm works → Field and Pond preview** in the
+game or open [the preview on the farm](https://uma-farm.web.app/?map=field-pond). The iPhone look and ten-minute
+measurements are open. The [original composition study](F103-field-and-pond.html) is available for comparison.
 
 ## Why
 
@@ -61,7 +62,22 @@ published assets and artwork review are the gates for a player-facing rollout.
   later farm bands get their own layout pass after the Field and Pond review. Keep the existing map available
   as the immediate fallback for renderer load failure, context loss or a low graphics setting.
 
-## Build and review
+## Implemented pilot
+
+- The app mounts `LookStage` from `@luismlorenzana/uma-stage/look` 0.7.0 with Three.js 0.187.0. The published
+  stage loads its two stock scenes through `load()`. The Farm supplies a `LookScene` through its public stage
+  state, with a local instanced kit. The branded sprite and published kit pipeline stays with platform LK2/LK3.
+- The view projects plot 1's tiles and the real aggregate field counts. Daytime assignments use the work board's
+  forecast, and the morning view uses the actual report. The six sprite positions represent work in this band.
+  The worker counts include the other hands doing the same work. Original review sprites show the type of work.
+- The high-resolution app links use the existing destinations. When an open sheet narrows the map, the links
+  move into a compact grid. Context loss and a failed lazy import restore the tile map. The preview choice stays
+  in the session; the renderer is downloaded on first entry and cached separately from the main app.
+- The **Phone test** HUD records up to ten minutes with the map in the foreground. It gives FPS, p95 frame gap,
+  draw calls, and a renderer memory estimate. Record the phone model, quality tier, roster, transferred bytes
+  on first entry and any dimming or heat beside those numbers.
+
+## Review sequence
 
 1. Review the landscape study. **Diorama** and **Tile plan** share the same five spots. Switch between Spring,
    Summer, Autumn and Winter, Morning and Dusk, and Early farm and Farmhands at work. Pick a spot for its label
@@ -89,9 +105,12 @@ published assets and artwork review are the gates for a player-facing rollout.
    below 180 KB gzip** and verify that the map and renderer stay off the entry chunk. Use the draft targets
    to compare quality tiers. The actual device run establishes the production tier.
 
-The desktop review exercised both landscape sizes, all 16 combinations of season, light and crew shown
-in the diorama, and the compact layout. The five place targets fit without overlap in both landscape frames.
-The WebGL and physical iPhone checks belong to the next slice.
+The composition study exercised both landscape sizes, all 16 combinations of season, light and crew, and
+the compact layout. The WebGL pilot passed a Chrome playthrough at 844 × 390 and 667 × 375 with synthetic
+saves. It opened all five normal destinations, panned, displayed a first ripe carrot and a staffed forecast,
+updated after a season boundary and restored the tile map when WebGL context loss was forced. Domain tests cover
+the actual morning report and forecast with 10, 20 and 50 farmhands. A short desktop Saver run reported 51 draws
+and 3.6 MiB of estimated graphics resources. The standalone iPhone run is the performance gate.
 
 ## Done when
 
