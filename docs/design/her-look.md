@@ -96,15 +96,17 @@ with the fallback.
 | `wedding` | Ceremony, vows and player replies | `happy`, `laughing`, `tender`, `loving`, `tearful-joy` | 6 |
 | **`wedding-night`** | The wedding-day scene. Shy opening, flustered realization, quiet affection and the default morning beat. | `shy`, `flustered`, `tender`, `loving`, `sleepy` | **6** |
 | **`pajamas-playful` and pajama slot 1** | A night in, ordinary morning greetings, the first night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
-| **Pajama slots 2–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation. The player requests `tender` for each beat, including the morning. | `tender` | **2 each** |
-| **Wedding Anniversary slots 1–5** (`marriedLife.anniversary`) | Numbered anniversary-night visits. The anniversary host wears this look. A duo guest uses her pajama look. | `tender` | **2 each** |
+| **Pajama slots 2–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation | `tender`, `loving` | **3 each** |
+| **Wedding Anniversary slots 1–5** (`marriedLife.anniversary`) | Numbered anniversary-night visits. The anniversary host wears this look. A duo guest uses her pajama look. | `tender`, `loving` | **3 each** |
 | `swimsuit` | Summer shore dialogue around the beach illustration | `happy`, `laughing`, `tender`, `loving` | 5 |
 
 The matrix uses 50 local authored Farm routes and 76 pair files, checked against the default scenes and scene players.
 The wedding-night routes call for `loving` or `flustered` on 153 of 171 spoken steps. The `a-night-in` scenes call
 for `tender`, `laughing` or `sleepy` on 126 of 164 spoken steps. The baseline pajamas also appear in scenes with more
 emotional range, including nighttime heart events. A named calendar `anniversary` scene normally wears `dinner`.
-The five numbered anniversary-night looks belong to the separate married-life player.
+The five numbered anniversary-night looks belong to the separate married-life player. It currently requests
+`tender` on every spoken beat in both collections, including the morning. The art checklist also includes
+`loving` for future authored beats.
 
 **When a scene calls for more.** Start with the actual fallback. `dreamy` and `sleepy` can use `tender`, `teasing`
 can use `happy`, and `worried` can use `sad`. Approve the exact composition when it supplies the punchline or changes
@@ -118,7 +120,7 @@ expressions remain available in the game when a scene requests them. The matrix 
 Numbered wardrobe art also needs a slot-to-portrait mapping before it appears in the game. The
 [married-life story contract](../story-pack.md#the-household-householdjson) lists the current story keys.
 
-The nine additional pajama looks and five anniversary looks call for **28 previews per Uma**. At the standard 16 states
+The nine additional pajama looks and five anniversary looks call for **42 previews per Uma**. At the standard 16 states
 per outfit, those same 14 looks would call for 224 previews.
 
 ### The expressions
