@@ -1,8 +1,8 @@
 # Her look: outfits, expressions and illustrations
 
-**Built, and the art keeps coming.** Each Uma has a wardrobe of 12 outfits and 22 expressions: the dialogue engine shows
-her portrait in the outfit the moment calls for, with her face changing line by line, and her big moments open onto her
-illustrations, full screen. ChatGPT draws them (character art), and the game composes them. How the game plays them is
+Each Uma has a standard wardrobe of 12 outfits and a dialogue menu of 22 expressions. The engine shows her portrait in
+the outfit the moment calls for, with her face changing line by line. Her big moments open onto full-screen
+illustrations. ChatGPT draws them (character art), and the game composes them. How the game plays them is
 [the dialogue engine](../game-mechanics.md#the-dialogue-engine); what's drawn next is [the art brief](#the-art-brief),
 below. The page view is [her-look.html](../pages/her-look.html).
 
@@ -79,11 +79,53 @@ each) **and all nine of their illustrations**. Master data carries them to the g
   - an Uma with none shows the blank bust in the outfit's colours, with its own 22 faces; her master-data bust stays on
     cards and lists.
 
+### Minimum facial expressions by outfit
+
+Approve a **neutral bust** for each outfit, then preview the listed shared face layers on that bust. The state count
+includes neutral. Reuse a layer across outfits when it lines up with each base. For a specific Uma, read her scenes and
+reachable choice branches before review. Add an exact expression when it carries a beat that would read differently
+with the fallback.
+
+| Outfit or look slots | Scene coverage | Minimum layers to preview after neutral | States per outfit |
+|---|---|---|---:|
+| `spring`, `summer`, `fall`, `winter` | Town greetings, gifts, heart events, ordinary evenings and wedding guests. Spring also covers missing bases. | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `angry`, `worried`, `determined`, `pouting`, `shy`, `tender`, `flustered`, `loving`, `tearful-joy` | 15 each |
+| `farm-work` | Farm help, crafting, work-related heart events and pair conversations | `happy`, `laughing`, `surprised`, `thinking`, `determined`, `shy`, `tender`, `loving`, `tearful-joy` | 10 |
+| `garden-party` | Picnics, teas, Flower Show, blossom viewing and first dates | `happy`, `laughing`, `surprised`, `thinking`, `determined`, `shy`, `tender`, `flustered`, `loving` | 10 |
+| `kimono` | New Year, festival nights and authored confession scenes | `happy`, `laughing`, `thinking`, `determined`, `shy`, `tender`, `flustered`, `loving`, `tearful-joy` | 10 |
+| `dinner` | Dinner dates, birthdays, calendar anniversary scenes and household dinners | `happy`, `laughing`, `surprised`, `thinking`, `shy`, `tender`, `loving`, `tearful-joy` | 9 |
+| `wedding` | Ceremony, vows and player replies | `happy`, `laughing`, `tender`, `loving`, `tearful-joy` | 6 |
+| **`wedding-night`** | The wedding-day scene. Shy opening, flustered realization, quiet affection and the default morning beat. | `shy`, `flustered`, `tender`, `loving`, `sleepy` | **6** |
+| **`pajamas-playful` and pajama slot 1** | A night in, ordinary morning greetings, the first night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
+| **Pajama slots 2–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation. The player requests `tender` for each beat, including the morning. | `tender` | **2 each** |
+| **Wedding Anniversary slots 1–5** (`marriedLife.anniversary`) | Numbered anniversary-night visits. The anniversary host wears this look. A duo guest uses her pajama look. | `tender` | **2 each** |
+| `swimsuit` | Summer shore dialogue around the beach illustration | `happy`, `laughing`, `tender`, `loving` | 5 |
+
+The matrix uses 50 local authored Farm routes and 76 pair files, checked against the default scenes and scene players.
+The wedding-night routes call for `loving` or `flustered` on 153 of 171 spoken steps. The `a-night-in` scenes call
+for `tender`, `laughing` or `sleepy` on 126 of 164 spoken steps. The baseline pajamas also appear in scenes with more
+emotional range, including nighttime heart events. A named calendar `anniversary` scene normally wears `dinner`.
+The five numbered anniversary-night looks belong to the separate married-life player.
+
+**When a scene calls for more.** Start with the actual fallback. `dreamy` and `sleepy` can use `tender`, `teasing`
+can use `happy`, and `worried` can use `sad`. Approve the exact composition when it supplies the punchline or changes
+the mood. Add `sleepy` to a numbered look when a future wake-up scene explicitly asks for it. A splash illustration
+carries its own pose and expression.
+
+**How to apply it in Facial Expressions.** Use the row as the per-base `outputs` approval checklist. Keep at least one
+approved non-neutral composition per new base so the portrait packer has an explicit face position. Carry forward
+existing approvals. The current release packs one shared layer per expression for the character, so other shared
+expressions remain available in the game when a scene requests them. The matrix sets the preview and approval workload.
+Numbered wardrobe art also needs a slot-to-portrait mapping before it appears in the game. The
+[married-life story contract](../story-pack.md#the-household-householdjson) lists the current story keys.
+
+The nine additional pajama looks and five anniversary looks call for **28 previews per Uma**. At the standard 16 states
+per outfit, those same 14 looks would call for 224 previews.
+
 ### The expressions
 
-Twenty-two, in three sets. **Core** is needed for every Uma who speaks; **romance** for every Uma with a route; **extra**
-comes when there's time. [The art brief](#the-art-brief) describes each one for the art. The story's `emote` names them,
-and an unknown or undrawn one shows its fallback.
+The 22 expression IDs are grouped as **core**, **romance** and **extra**. [The matrix](#minimum-facial-expressions-by-outfit)
+sets the approval list for each outfit. [The art brief](#the-art-brief) describes how each face should read. The story's
+`emote` names it, and an unknown or undrawn expression shows its fallback.
 
 | Expression | Set | Falls back to |
 |---|---|---|
@@ -114,8 +156,8 @@ and an unknown or undrawn one shows its fallback.
 
 | Piece | Count |
 |---|---|
-| Portraits | One per outfit: 12 |
-| Faces | 10 core, 6 romance, 6 extra: 22 (neutral is each portrait's own) |
+| Portrait bases | One neutral bust for each outfit used in dialogue, starting with the 12 standard outfits |
+| Shared face layers | One per expression needed by the scenes. Reuse it across outfits and preview the combinations in the matrix. |
 | Illustrations | One per big moment: 9 |
 
 ## What's built
@@ -133,8 +175,7 @@ steps](../story-pack.md#steps)). The owner cross-references the outfits with the
 
 ## The art brief
 
-**For the character-art session (ChatGPT), standing:** what to draw for each Uma, so the farm can show her in every
-outfit, every feeling and every big moment. It changes as the game does. The technical format is worked out together.
+**For the character-art session (ChatGPT), standing guidance for each Uma's dialogue and big moments.**
 
 **Where it stands:** twelve Umas have their portraits (12 outfits and 15 faces each) and all nine of their
 illustrations. Until an Uma has hers, the game plays her on the blank bust, so nothing waits on the art.
@@ -144,7 +185,7 @@ illustrations. Until an Uma has hers, the game plays her on the blank bust, so n
 For each Uma:
 
 - **a bust in each outfit:** head and shoulders, in the style of her full character art, with a calm face;
-- **her face in each expression** (below), so the game can show her feelings on whatever she's wearing;
+- **shared facial expressions** for the outfits and scenes in [the approval matrix](#minimum-facial-expressions-by-outfit);
 - **her illustrations,** one for each big moment (below).
 
 Draw her the same way in every outfit, with the same pose and angle, so her faces can be reused across outfits. Every
@@ -175,7 +216,7 @@ modest, never revealing.
 Each one is a feeling the story will ask for, so each should read at a glance, small on a phone, and stay in her
 character: a reserved Uma's joy is quieter than a bright one's.
 
-**Core: every Uma who speaks**
+**Core expressions**
 
 | Expression | Eyes and brows | Mouth and marks | The story uses it for |
 |---|---|---|---|
@@ -190,7 +231,7 @@ character: a reserved Uma's joy is quieter than a bright one's.
 | **Determined** | Focused, brows set | A firm small smile | Work, training, a promise kept |
 | **Pouting** | Looking away, brows down | Puffed cheek, lips pushed out | Playful annoyance, being teased |
 
-**Romance: every Uma with a route**
+**Romance expressions**
 
 | Expression | Eyes and brows | Mouth and marks | The story uses it for |
 |---|---|---|---|
@@ -201,7 +242,7 @@ character: a reserved Uma's joy is quieter than a bright one's.
 | **Tearful joy** | Bright, wet, tears at the corners | Smiling through them | The proposal, the wedding, a promise come true |
 | **Sleepy** | Half-closed, heavy | A yawn or a drowsy smile | Nights in, early mornings, a nap on your shoulder |
 
-**Extra: when there's time**
+**Extra expressions for specific scenes**
 
 | Expression | Eyes and brows | Mouth and marks | The story uses it for |
 |---|---|---|---|
