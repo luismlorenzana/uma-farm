@@ -1096,11 +1096,11 @@ describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', ()
     expect(last.real).toBeGreaterThanOrEqual(last.today - 1)
     expect(last.unfilled).toBeGreaterThan(0)
     expect(last.work.thin + last.work.idle).toBeLessThan(last.actions / 10)
-    expect(last.plots).toBe(6)
+    expect(last.plots).toBe(8)
   })
 
   it('grows the work with the people: plots and station levels as the Farm Rank comes', () => {
-    expect([year(10, 4).plots, year(20, 4).plots, year(50, 4).plots]).toEqual([2, 4, 6])
+    expect([year(10, 4).plots, year(20, 4).plots, year(50, 4).plots]).toEqual([2, 4, 8])
     expect(year(50, 4).levels).toBe(25)
   })
 
