@@ -87,7 +87,8 @@ export function ShopList({ save, lines }: { save: FarmSave; lines: readonly Shop
     <ExchangeRows
       rows={rows.map((row) => ({
         key: row.line.id, icon: <ItemIcon id={row.line.id} size={32} />, name: row.name, price: { mark: <GoldMark />, amount: row.line.price },
-        ...(row.gate ? { disabled: row.gate } : {}),
+        disabled: row.gate !== null,
+        detail: row.gate ? <><span className="block">{row.season}</span><span className="block">{row.gate}</span></> : row.season ?? undefined,
       }))}
       balance={save.gold}
       onBuy={async (picked, qty) => {

@@ -1,7 +1,7 @@
 // The goods as the loop's screens show them: the Warehouse by stars in its family tabs, the bin's
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
-  binSales, binTotal, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, hasPrice, inDemand, isDishId, lineOpen, refinedOf, restaurantGrade, RING_IDS, SEED_IDS, STARS,
+  binSales, binTotal, CROPS, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, hasPrice, inDemand, isDishId, lineOpen, refinedOf, restaurantGrade, RING_IDS, SEASON_NAMES, seedOf, SEED_IDS, STARS,
   type BinSale, type Good, type Market,
   type GoodFamily, type FarmSave, type ShopLine, type StarCounts,
 } from '@farm/domain'
@@ -144,10 +144,17 @@ export const saleWords = (sale: Pick<BinSale, 'id' | 'stars' | 'count'>): string
 export interface ShopRow {
   line: ShopLine
   name: string
+  season: string | null
   /** "From Farm Rank 2", or null once it's open. */
   gate: string | null
 }
 
 export function shopRows(save: Pick<FarmSave, 'farm'>, lines: readonly ShopLine[]): ShopRow[] {
-  return lines.map((line) => ({ line, name: goodName(line.id), gate: lineOpen(save, line) ? null : `From ${opensWords(line.opens)}` }))
+  return lines.map((line) => {
+    const seed = seedOf(line.id)
+    const crop = seed ? CROPS[seed.crop] : null
+    const seasons = crop?.seasons.map(season => SEASON_NAMES[season]).join(', ')
+    const season = crop?.woody ? `Fruits in ${seasons}` : seasons ?? null
+    return { line, name: goodName(line.id), season, gate: lineOpen(save, line) ? null : `From ${opensWords(line.opens)}` }
+  })
 }

@@ -235,6 +235,9 @@ describe('the shop', () => {
     ])
     expect(($('[data-row="seed-onion"]') as HTMLButtonElement).disabled).toBe(true)
     expect($('[data-row="seed-onion"]')?.textContent).toContain('From Farm Rank 2')
+    expect($('[data-row="seed-onion"]')?.textContent).toContain('Spring, Autumn')
+    expect($('[data-row="seed-cabbage"]')?.textContent).toContain('Spring, Winter')
+    expect($('[data-row="seed-plum"]')?.textContent).toContain('Fruits in Spring')
     expect($('[data-row="seed-asparagus"]')?.textContent).toContain('From Farm Rank 4')
     expect(($('[data-row="seed-potato"]') as HTMLButtonElement).disabled).toBe(false)
   })
@@ -243,6 +246,7 @@ describe('the shop', () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: SPRING() })
     await render(<ShopList save={save()} lines={shopLines(save())} />)
     await click('[data-row="seed-carrot"]')
+    expect($('[data-kit="buy-sheet"]')?.textContent).toContain('Spring')
     const buy = () => [...document.body.querySelectorAll('[data-kit="buy-sheet"]')].at(-1)!.closest('[role="dialog"]')!.querySelectorAll('button')
     const chip = (n: number) => [...buy()].find((b) => b.textContent === `×${n}`)!
     await act(async () => chip(25).click())
