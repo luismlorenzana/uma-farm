@@ -9,7 +9,7 @@
 // day's actions and event actions are counts (the budget is the rules', so an upgrade never breaks a save), and the areas
 // and spots worked today their ids, each once; today's occasion scenes, when any played, the roster Umas who played one.
 // The Diary's Town notes are ids. Her gallery names roster Umas, each with her scenes seen by id.
-import { dateOf, DAYS_PER_SEASON, FESTIVAL_IDS } from '../farm/calendar'
+import { dateDayOf, dateOf, DAYS_PER_SEASON, FESTIVAL_IDS, type FarmClock } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
 import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isShippableId, type CropId } from '../goods/ids'
@@ -143,7 +143,8 @@ function festivalKey(value: unknown, path: string, year: number): string {
  * than today; `friend` only while the confession waits; `ring` only from the proposal on; `wed` and `house` only a
  * spouse's; festivals once each, by year; `morning` only from Romance 2 on, no later than today; `dish` a dish
  * id, only from Friendship 4 on. */
-function parseLove(value: unknown, path: string, today: number, houses: number): Love {
+function parseLove(value: unknown, path: string, clock: FarmClock, houses: number): Love {
+  const today = clock.day
   const o = object(value, path, LOVE_KEYS)
   const stage = oneOf(o.stage, `${path}.stage`, LOVE_STAGES)
   const [low, high] = LEVELS[stage]
@@ -153,7 +154,7 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
     known: unique(list(o.known, `${path}.known`, 0, 2000).map((g, i) => (typeof g === 'string' && (isGoodId(g) || isDishId(g)) ? g : fail(`${path}.known.${i}`, 'unknown good'))), `${path}.known`),
     flags: unique(list(o.flags, `${path}.flags`, 0, 200).map((f, i) => (typeof f === 'string' && KEY.test(f) ? f : fail(`${path}.flags.${i}`, 'expected a flag id'))), `${path}.flags`),
     evening: pastDay(o.evening, `${path}.evening`, today),
-    festivals: unique(list(o.festivals, `${path}.festivals`, 0, 1000).map((f, i) => festivalKey(f, `${path}.festivals.${i}`, dateOf(today).year)), `${path}.festivals`),
+    festivals: unique(list(o.festivals, `${path}.festivals`, 0, 1000).map((f, i) => festivalKey(f, `${path}.festivals.${i}`, dateOf(today, clock).year)), `${path}.festivals`),
   }
   if (o.friend !== undefined) {
     if (o.friend !== true) fail(`${path}.friend`, 'expected true')
@@ -194,11 +195,11 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
   return love
 }
 
-function parseLoveAll(value: unknown, path: string, roster: ReadonlySet<string>, today: number, houses: number): Record<string, Love> {
+function parseLoveAll(value: unknown, path: string, roster: ReadonlySet<string>, clock: FarmClock, houses: number): Record<string, Love> {
   const out: Record<string, Love> = {}
   for (const [id, raw] of Object.entries(record(value, path))) {
     member(id, `${path}.${id}`, roster, 'expected an Uma on the roster')
-    out[id] = parseLove(raw, `${path}.${id}`, today, houses)
+    out[id] = parseLove(raw, `${path}.${id}`, clock, houses)
   }
   for (const id of roster) if (!out[id]) fail(`${path}.${id}`, 'missing for an Uma on the roster')
   return out
@@ -539,19 +540,21 @@ function parseTown(value: unknown, path: string, today: number): Record<string, 
 export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
   const o = object(value, path, SAVE_V5_KEYS)
   if (o.version !== 5) fail(`${path}.version`, 'expected 5')
-  const c = object(o.calendar, `${path}.calendar`, ['day'])
+  const c = object(o.calendar, `${path}.calendar`, ['day', 'start'])
   const today = day(c.day, `${path}.calendar.day`)
+  const start = c.start === undefined ? undefined : int(c.start, `${path}.calendar.start`, 2, Math.min(DAYS_PER_SEASON, today))
+  const clock: FarmClock = { day: today, ...(start === undefined ? {} : { start }) }
   const roster = parseRoster(o.roster, `${path}.roster`, today)
   const ids = new Set(Object.keys(roster))
   const buildings = chapterOpened(parseBuildings(o.buildings, `${path}.buildings`), legacyChapter(o.farm))
   const homestead = parseHomestead(o.homestead, `${path}.homestead`, today, ids)
   const arrivals = unique(list(o.arrivals, `${path}.arrivals`, 0, ids.size).map((v, i) => member(v, `${path}.arrivals.${i}`, ids)), `${path}.arrivals`)
-  const love = parseLoveAll(o.love, `${path}.love`, ids, today, homestead.houses.length)
+  const love = parseLoveAll(o.love, `${path}.love`, ids, clock, homestead.houses.length)
   const save: SaveV5 = {
     version: 5,
     account: parseAccount(o.account, `${path}.account`),
     farmer: parseFarmer(o.farmer, `${path}.farmer`),
-    calendar: { day: today },
+    calendar: clock,
     gold: count(o.gold, `${path}.gold`),
     today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love })),
     roster,
@@ -569,7 +572,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     })(),
     buildings,
     tools: parseTools(o.tools, `${path}.tools`),
-    workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids, today),
+    workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids, clock),
     expeditions: parseExpeditions(o.expeditions, `${path}.expeditions`, ids),
     ...(o.expeditionLog === undefined ? {} : { expeditionLog: list(o.expeditionLog, `${path}.expeditionLog`, 0, 20)
       .map((row, i) => parseExpeditionReturn(row, `${path}.expeditionLog.${i}`, ids)) }),
@@ -619,7 +622,7 @@ function parsePlotTasks(save: SaveV5, path: string): void {
       if (Number(key[0]) >= save.fields.plots.length) fail(`${path}.farm.${field}.${key}`, 'a plot the farm hasn’t cleared')
     }
   }
-  const season = Math.floor((save.calendar.day - 1) / DAYS_PER_SEASON)
+  const season = Math.floor((dateDayOf(save.calendar.day, save.calendar) - 1) / DAYS_PER_SEASON)
   for (const [plot, field] of save.fields.plots.entries()) {
     for (const [index, tile] of field.tiles.entries()) {
       if (tile.fruitSeason !== undefined && tile.fruitSeason > season) fail(`${path}.fields.plots.${plot}.tiles.${index}.fruitSeason`, 'after today')

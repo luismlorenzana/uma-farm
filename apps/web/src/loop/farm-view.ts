@@ -3,7 +3,7 @@
 // season's finds and how thin each is today, and a station's level and loads. Pure, so the panels and the tests read the
 // same.
 import {
-  CLEAR_FINDS, CROPS, cropLook, dateOf, DAYS_PER_SEASON, established, FIELD_COLUMNS, FULL_HAULS, GROUND_NAMES, growsIn, haulsToday, isOvergrown, isSeasonEnd, itemNameOf, levelLock, levelLockWords,
+  CLEAR_FINDS, CROPS, cropLook, dateDayOf, dateOf, DAYS_PER_SEASON, established, FIELD_COLUMNS, FULL_HAULS, GROUND_NAMES, growsIn, haulsToday, isOvergrown, isSeasonEnd, itemNameOf, levelLock, levelLockWords,
   LOAD_SIZE, loadsADay, loadsLeft, loadsToday, nextStationLevel, nightsLeft, plotName, stationLevel, thinToday, type StationLoad,
   plotOf, reachList, SEASON_NAMES, seedsInSeason, sharesOn, stagesOf, stationOptions, tileAt, tileInPlot, type CropLook, type FarmSave, type FieldCounts,
   type GatherPlace, type StationId, type StationOption, type Tile,
@@ -38,8 +38,8 @@ export interface TileView {
 
 /** Whether a growing tile withers tonight: a season's last day, not ripe by morning, out of season next. */
 export function withersTonight(save: Pick<FarmSave, 'calendar'>, tile: Tile): boolean {
-  if (tile.crop === null || tile.ready || CROPS[tile.crop].woody || !isSeasonEnd(save.calendar.day)) return false
-  const next = dateOf(save.calendar.day + 1).season
+  if (tile.crop === null || tile.ready || CROPS[tile.crop].woody || !isSeasonEnd(save.calendar.day, save.calendar)) return false
+  const next = dateOf(save.calendar.day + 1, save.calendar).season
   if (growsIn(tile.crop, next)) return false
   return !(tile.watered && nightsLeft(tile) === 1)
 }
@@ -57,14 +57,14 @@ export function tileView(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, 
   if (tile.ground === 'clear') return { ...base, title: GROUND_NAMES.clear, line: 'Till it to plant it.', actions: [{ kind: 'till' }] }
   if (tile.crop === null) {
     // Too late this season: it can't ripen before the season's last night withers it.
-    const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
-    const next = dateOf(save.calendar.day + daysLeft).season
+    const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day, save.calendar).day + 1
+    const next = dateOf(save.calendar.day + daysLeft, save.calendar).season
     const seeds = seedsInSeason(save).map((s): TileAction => ({
       kind: 'plant', seed: s.id, name: `${itemNameOf(s.crop)}${s.grade ? ` G${s.grade}` : ''}`, count: s.count, own: s.own, stages: stagesOf(s.crop, false),
       late: !CROPS[s.crop].woody && stagesOf(s.crop, false) > daysLeft && !growsIn(s.crop, next),
       ...(CROPS[s.crop].woody ? { bears: SEASON_NAMES[CROPS[s.crop].seasons[0]!] } : {}),
     }))
-    return { ...base, title: GROUND_NAMES.tilled, line: seeds.length > 0 ? 'Plant a seed, then water it.' : `No seeds for ${SEASON_NAMES[dateOf(save.calendar.day).season]}.`, actions: seeds }
+    return { ...base, title: GROUND_NAMES.tilled, line: seeds.length > 0 ? 'Plant a seed, then water it.' : `No seeds for ${SEASON_NAMES[dateOf(save.calendar.day, save.calendar).season]}.`, actions: seeds }
   }
   const name = `${itemNameOf(tile.crop)}${tile.grade ? ` G${tile.grade}` : ''}`
   if (tile.ready) return { ...base, title: name, line: 'Ripe: harvest it.', actions: [{ kind: 'harvest' }] }
@@ -116,7 +116,7 @@ export interface ReachRow {
 export function reachRows(save: Pick<FarmSave, 'farm' | 'buildings' | 'calendar' | 'today'>, place: GatherPlace): ReachRow[] {
   return reachList(save, place).map((r) => ({
     id: r.id, name: r.name.charAt(0).toUpperCase() + r.name.slice(1), lock: r.lock,
-    finds: sharesOn(place, r.id, save.calendar.day).map(([id]) => id), hauls: haulsToday(save, r.id), thin: thinToday(save, r.id),
+    finds: sharesOn(place, r.id, dateDayOf(save.calendar.day, save.calendar)).map(([id]) => id), hauls: haulsToday(save, r.id), thin: thinToday(save, r.id),
   }))
 }
 

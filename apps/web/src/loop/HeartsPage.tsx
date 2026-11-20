@@ -85,7 +85,7 @@ function EveningMarks({ save }: { save: SaveV4 }) {
   const year = festivalsOf(useStory())
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name ?? 'An Uma' : 'An Uma')
   const marks = headerMarks(save, nameOf, year)
-  const festival = festivalOn(save.calendar.day, year)
+  const festival = festivalOn(save.calendar.day, year, save.calendar)
   return (
     <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-ink-soft" data-evening-marks={marks.map((m) => (m.spent ? '●' : '○')).join('')}>
       <UiMark mark="hearts/evening" fallback={<span aria-hidden>☾</span>} />

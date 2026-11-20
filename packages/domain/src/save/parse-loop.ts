@@ -246,7 +246,8 @@ export function parseTools(value: unknown, path: string): Record<ToolId, ToolTie
   return Object.fromEntries(TOOL_IDS.map((t) => [t, int(o[t], `${path}.${t}`, 1, 5) as ToolTier])) as Record<ToolId, ToolTier>
 }
 
-export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>, today: number): SaveV5['workshops'] {
+export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>, clock: SaveV5['calendar']): SaveV5['workshops'] {
+  const { day: today } = clock
   const o = object(value, path, ['played', 'current', 'recipes', 'best', 'restaurant', 'festival'])
   const p = object(o.played, `${path}.played`, WORKSHOP_IDS)
   const played = Object.fromEntries(WORKSHOP_IDS.map((w) => [w, count(p[w], `${path}.played.${w}`)])) as Record<WorkshopId, number>
@@ -254,7 +255,7 @@ export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet
   const recipes = unique(list(o.recipes, `${path}.recipes`, 0, 80).map((v, i) => (typeof v === 'string' && isLegacyDishId(v) ? v : fail(`${path}.recipes.${i}`, 'unknown dish'))), `${path}.recipes`)
   return { played, current, recipes, best: counts(o.best, `${path}.best`, (k) => KEY.test(k), 'expected an id', amount),
     ...(o.restaurant === undefined ? {} : { restaurant: parseRestaurant(o.restaurant, `${path}.restaurant`) }),
-    ...(o.festival === undefined ? {} : { festival: parseFestival(o.festival, `${path}.festival`, today, roster) }) }
+    ...(o.festival === undefined ? {} : { festival: parseFestival(o.festival, `${path}.festival`, clock, roster) }) }
 }
 
 /** A stove's stock key: a good or a dish the Warehouse holds, at its stars. */

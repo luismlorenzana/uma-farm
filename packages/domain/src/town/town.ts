@@ -14,7 +14,7 @@
 //   the posts       the mayor keeps her post. Legacy casts also have static town people.
 //
 // The same absolute farm day always shows the same schedule.
-import { dateOf, DAYS_PER_SEASON, farmDay, type Season } from '../farm/calendar'
+import { dateOf, DAYS_PER_SEASON, farmDay, type FarmClock, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { awayOn } from '../expeditions/presence'
 import { atHome, type SaveV4, type TownTalks } from '../save/v4'
@@ -93,8 +93,8 @@ export function townsfolk(pack: TownPack): string[] {
 }
 
 /** Whether a place in her life holds on a day: its days of the season and its seasons, each every one when left out. */
-export function lifeHolds(when: LifeWhen, day: number): boolean {
-  const date = dateOf(day)
+export function lifeHolds(when: LifeWhen, day: number, clock?: FarmClock): boolean {
+  const date = dateOf(day, clock)
   return (when.days === undefined || when.days.includes(date.day)) && (when.seasons === undefined || when.seasons.includes(date.season))
 }
 
@@ -170,7 +170,7 @@ const holdsIn = (when: LifeWhen, season: Season, day: number): boolean =>
 
 /** Where her schedule puts her on a farm day, and why: its first stop that holds; at null (at home, off the map) when none
  * does. Whether she's on the farm instead is the save's (`onFarmToday`). */
-export function whereOn(pack: SchedulePack, id: string, day: number): { at: string | null; by: HereBy | null } {
+export function whereOn(pack: SchedulePack, id: string, day: number, clock?: FarmClock): { at: string | null; by: HereBy | null } {
   const job = professionOf(pack, id)
   if (job) {
     const shift = professionShift(pack, id, day)
@@ -178,14 +178,14 @@ export function whereOn(pack: SchedulePack, id: string, day: number): { at: stri
     const outing = shift === 'off' ? castEntry(pack, id)?.freeAt : undefined
     if (outing) return { at: outing, by: 'routine' }
   }
-  const stop = scheduleOf(pack, id).stops.find((s) => (!job || s.by !== 'job') && lifeHolds(s, day))
+  const stop = scheduleOf(pack, id).stops.find((s) => (!job || s.by !== 'job') && lifeHolds(s, day, clock))
   return stop ? { at: stop.at, by: stop.by } : { at: null, by: null }
 }
 
 /** The next day after `day` that her schedule puts her out in town, and where; null when none does within a year. */
-export function nextOut(pack: SchedulePack, id: string, day: number): { day: number; at: string } | null {
+export function nextOut(pack: SchedulePack, id: string, day: number, clock?: FarmClock): { day: number; at: string } | null {
   for (let d = day + 1; d <= day + DAYS_PER_SEASON * 4; d++) {
-    const at = whereOn(pack, id, d).at
+    const at = whereOn(pack, id, d, clock).at
     if (at !== null) return { day: d, at }
   }
   return null
@@ -198,13 +198,13 @@ export interface SeasonPlace {
   readonly days: readonly number[]
 }
 /** Her season by place: each place her schedule puts her and its days, in the order of the first. */
-export function seasonSchedule(pack: SchedulePack, id: string, season: Season, year = 1): SeasonPlace[] {
+export function seasonSchedule(pack: SchedulePack, id: string, season: Season, year = 1, clock?: FarmClock): SeasonPlace[] {
   const out: { at: string | null; by: HereBy | null; days: number[] }[] = []
   const { stops } = scheduleOf(pack, id)
   const weekly = professionOf(pack, id)
   for (let day = 1; day <= DAYS_PER_SEASON; day++) {
     const stop = stops.find((s) => holdsIn(s, season, day))
-    const { at, by } = weekly ? whereOn(pack, id, farmDay({ year, season, day })) : { at: stop?.at ?? null, by: stop?.by ?? null }
+    const { at, by } = weekly ? whereOn(pack, id, farmDay({ year, season, day }, clock), clock) : { at: stop?.at ?? null, by: stop?.by ?? null }
     const group = out.find((g) => g.at === at && g.by === by)
     if (group) group.days.push(day)
     else out.push({ at, by, days: [day] })
@@ -227,9 +227,9 @@ const farmDayCache = new WeakMap<object, Map<string, readonly number[]>>()
  * her out in town (`outIn`: her routine, her job or the default schedule's spot), including a day at her `home` in town
  * or at home off the map. A season her schedule leaves without one: the default schedule's other days (8 of 12, by her
  * place in the cast), so every farmhand works. Read once a pack. */
-export function farmDaysIn(pack: SchedulePack, id: string, season: Season, year = 1): readonly number[] {
+export function farmDaysIn(pack: SchedulePack, id: string, season: Season, year = 1, clock?: FarmClock): readonly number[] {
   if (professionOf(pack, id)) return Array.from({ length: DAYS_PER_SEASON }, (_, i) => i + 1)
-    .filter(day => professionShift(pack, id, farmDay({ year, season, day })) === 'farm')
+    .filter(day => professionShift(pack, id, farmDay({ year, season, day }, clock)) === 'farm')
   let known = farmDayCache.get(pack)
   if (!known) farmDayCache.set(pack, (known = new Map()))
   const key = `${id}:${season}`
@@ -245,16 +245,16 @@ export function farmDaysIn(pack: SchedulePack, id: string, season: Season, year 
 }
 
 /** Whether a day is one of her farm days (`farmDaysIn`). Every other day is a town day. */
-export function farmDayOn(pack: SchedulePack, id: string, day: number): boolean {
+export function farmDayOn(pack: SchedulePack, id: string, day: number, clock?: FarmClock): boolean {
   const shift = professionShift(pack, id, day)
   if (shift !== null) return shift === 'farm'
-  const date = dateOf(day)
+  const date = dateOf(day, clock)
   return farmDaysIn(pack, id, date.season).includes(date.day)
 }
 
 /** Her next farm day after `day`; null when none comes within a year (never: every season has one). */
-export function nextFarmDay(pack: SchedulePack, id: string, day: number): number | null {
-  for (let d = day + 1; d <= day + DAYS_PER_SEASON * 4; d++) if (farmDayOn(pack, id, d)) return d
+export function nextFarmDay(pack: SchedulePack, id: string, day: number, clock?: FarmClock): number | null {
+  for (let d = day + 1; d <= day + DAYS_PER_SEASON * 4; d++) if (farmDayOn(pack, id, d, clock)) return d
   return null
 }
 
@@ -263,7 +263,7 @@ export function onFarmToday(save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> &
   const uma = save.roster[id]
   if (!uma || awayOn(save, id, day)) return false
   const shift = professionShift(pack, id, day)
-  if (shift === null) return atHome(save, id) || (uma.farmhand !== undefined && farmDayOn(pack, id, day))
+  if (shift === null) return atHome(save, id) || (uma.farmhand !== undefined && farmDayOn(pack, id, day, save.calendar))
   if (shift === 'town') return false
   if (shift === 'off' && castEntry(pack, id)?.freeAt) return false
   return atHome(save, id) || (shift === 'farm' && uma.farmhand !== undefined)
@@ -298,7 +298,7 @@ export function townDay(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Par
   const by = new Map<string, HereBy>()
   for (const id of townsfolk(pack)) {
     if (awayOn(save, id, day) || onFarmToday(save, pack, id, day)) continue
-    const placed = whereOn(pack, id, day)
+    const placed = whereOn(pack, id, day, save.calendar)
     if (placed.at === null || placed.by === null) continue
     at.get(placed.at)?.push(id)
     where.set(id, placed.at)
@@ -324,7 +324,7 @@ export const livesInTown = (pack: SchedulePack, id: string): boolean => castOrde
 export function whereYouMeet(save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack, id: string): MeetWhere {
   if (awayOn(save, id, save.calendar.day)) return { here: false, farm: false, at: null }
   if (onFarmToday(save, pack, id)) return { here: true, farm: true, at: null }
-  const at = livesInTown(pack, id) ? whereOn(pack, id, save.calendar.day).at : null
+  const at = livesInTown(pack, id) ? whereOn(pack, id, save.calendar.day, save.calendar).at : null
   return { here: at !== null && save.today.town, farm: false, at }
 }
 

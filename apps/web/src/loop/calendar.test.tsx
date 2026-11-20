@@ -112,6 +112,20 @@ afterEach(async () => {
 })
 
 describe('the calendar', () => {
+  it('shows the restarted date in the bar and on the grid, with the previous day disabled at Spring 1', async () => {
+    const prior = farm(10, 6)
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...prior, calendar: { day: 10, start: 10 } } })
+    await render(<p>Farm</p>, '/?sheet=calendar')
+    await find('[data-calendar-grid="spring"] [data-day="10"]')
+    expect($('[aria-label^="Calendar: Spring 1, year 1"]')).not.toBeNull()
+    expect($('[data-calendar-title]')?.textContent).toBe('Spring 1 · Year 1')
+    expect(($('[aria-label="Previous day"]') as HTMLButtonElement).disabled).toBe(true)
+    expect($('[data-next-festival]')?.textContent).toContain('Spring 10 · in 9 days')
+    await click($('[aria-label="Next day"]'))
+    expect($('[data-day-heading]')?.textContent).toContain('Spring 2')
+    expect(save().today.actions).toBe(6)
+  })
+
   it('pages through 12-day seasons by day buttons and swiping, with a fresh detail scroll', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(12) })
     await render(<p>Farm</p>, '/?sheet=calendar')

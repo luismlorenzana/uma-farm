@@ -112,8 +112,8 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
   const [partner, setPartner] = useState('')
   const name = nameIn(master)(id)
   const birthdays = useMemo(() => birthdaysOf(pack, master.birthdays), [pack, master])
-  const birthday = isBirthday(birthdays, id, save.calendar.day)
-  const duos = eveningDuos(save, pack, id, who => isBirthday(birthdays, who, save.calendar.day) && wantsBirthdayAlone(pack, who))
+  const birthday = isBirthday(birthdays, id, save.calendar.day, save.calendar)
+  const duos = eveningDuos(save, pack, id, who => isBirthday(birthdays, who, save.calendar.day, save.calendar) && wantsBirthdayAlone(pack, who))
   const love = save.love[id]
   // Her role as the evening starts: her scene is a hangout's, a date's or a spouse's.
   const [role] = useState<EveningRole | null>(() => (love ? eveningRole(love) : null))

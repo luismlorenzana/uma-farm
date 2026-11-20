@@ -28,8 +28,8 @@ export function daysWords(days: readonly number[]): string {
 /** One line of her season: a place and its days, "The Café · 1, 4, 7, 10", her job's "The Bakery, at work · 1–6", and
  * home "At home · the other days" (or "every day"). */
 export interface SeasonLine { at: string | null; text: string }
-export function seasonLines(pack: Pack, id: string, season: Parameters<typeof seasonSchedule>[2]): SeasonLine[] {
-  const groups = seasonSchedule(pack, id, season)
+export function seasonLines(pack: Pack, id: string, season: Parameters<typeof seasonSchedule>[2], year = 1, clock?: SaveV4['calendar']): SeasonLine[] {
+  const groups = seasonSchedule(pack, id, season, year, clock)
   // Home (off the map, or her home on it) is "the other days" when she's anywhere else that season too.
   const rest = (g: SeasonPlace) => (g.at === null || g.by === 'home') && groups.length > 1
   const sorted = [...groups.filter((g) => !rest(g)), ...groups.filter(rest)]
@@ -42,9 +42,9 @@ export function seasonLines(pack: Pack, id: string, season: Parameters<typeof se
 
 /** A farmhand's season: her farm days first ("On the farm · 2, 3, 5, 6, 8, 9, 11, 12", its `at` `farm`), then her town
  * days by place, as her schedule puts her out ("The Café · 1, 4, 7, 10", "The Bakery, at work · 1–6"). */
-export function farmhandLines(pack: Pack, id: string, season: Parameters<typeof seasonSchedule>[2]): SeasonLine[] {
-  const farm = farmDaysIn(pack, id, season)
-  const town = seasonSchedule(pack, id, season).flatMap((g): SeasonLine[] => {
+export function farmhandLines(pack: Pack, id: string, season: Parameters<typeof seasonSchedule>[2], year = 1, clock?: SaveV4['calendar']): SeasonLine[] {
+  const farm = farmDaysIn(pack, id, season, year, clock)
+  const town = seasonSchedule(pack, id, season, year, clock).flatMap((g): SeasonLine[] => {
     const days = g.days.filter((d) => !farm.includes(d))
     if (g.at === null || days.length === 0) return []
     return [{ at: g.at, text: `${placeName(pack, g.at)}${g.by === 'job' ? ', at work' : ''} · ${daysWords(days)}` }]
@@ -64,7 +64,7 @@ export interface FindHer {
   farm: boolean
 }
 export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
-  const date = dateOf(save.calendar.day)
+  const date = dateOf(save.calendar.day, save.calendar)
   const season = SEASON_NAMES[date.season]
   const away = awayOn(save, id, save.calendar.day)
   const weekly = professionOf(pack, id)
@@ -74,7 +74,7 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
     const shift = professionShift(pack, id, save.calendar.day)
     const here = whereYouMeet(save, pack, id)
     return {
-      today: away ? awayWords(away) : shift === 'off' ? (here.at ? `Day off · ${placeName(pack, here.at)}` : 'Day off')
+      today: away ? awayWords(away, save.calendar) : shift === 'off' ? (here.at ? `Day off · ${placeName(pack, here.at)}` : 'Day off')
         : here.farm ? 'On the farm' : here.at ? `${placeName(pack, here.at)}${shift === 'town' ? ', at work' : ''}` : 'At home',
       at: here.at,
       farm: here.farm,
@@ -86,15 +86,15 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
       ],
     }
   }
-  if (away) return { today: awayWords(away), at: null, season, lines: [], farm: false }
+  if (away) return { today: awayWords(away, save.calendar), at: null, season, lines: [], farm: false }
   if (save.roster[id] && atHome(save, id)) return { today: 'On the farm', at: null, season: 'Every day', lines: [{ at: null, text: 'She lives on the farm' }], farm: true }
   const hand = !!save.roster[id] && isFarmhand(save, id)
-  const lines = hand ? farmhandLines(pack, id, date.season) : seasonLines(pack, id, date.season)
+  const lines = hand ? farmhandLines(pack, id, date.season, date.year, save.calendar) : seasonLines(pack, id, date.season, date.year, save.calendar)
   if (hand && onFarmToday(save, pack, id)) return { today: 'On the farm', at: null, season, lines, farm: true }
   const at = whereYouMeet(save, pack, id).at
-  const next = at ? null : nextOut(pack, id, save.calendar.day)
-  const work = at !== null && whereOn(pack, id, save.calendar.day).by === 'job'
-  const today = at ? `${placeName(pack, at)}${work ? ', at work' : ''}` : next ? `At home · next out ${shortDate(next.day)}` : 'At home'
+  const next = at ? null : nextOut(pack, id, save.calendar.day, save.calendar)
+  const work = at !== null && whereOn(pack, id, save.calendar.day, save.calendar).by === 'job'
+  const today = at ? `${placeName(pack, at)}${work ? ', at work' : ''}` : next ? `At home · next out ${shortDate(next.day, save.calendar)}` : 'At home'
   return { today, at, season, lines, farm: false }
 }
 

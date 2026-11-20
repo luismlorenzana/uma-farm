@@ -1,3 +1,4 @@
+import type { FarmClock } from '@farm/domain'
 import {
   CELEBRATIONS, celebrationDate, celebrationTitle, chooseTradition, COHORTS, dateOf, festivalGiftWindow, giveFestivalGift, householdReady,
   itemNameOf, parseStockKey, pledgeFestivalGift, preparingFestival, workStock, type FarmSave,
@@ -9,7 +10,7 @@ import { Link, useLocation } from 'react-router'
 import { changeHomestead } from './homestead-actions'
 import { shortDate } from './words'
 
-export const longDate = (day: number): string => `${shortDate(day)} · Year ${dateOf(day).year}`
+export const longDate = (day: number, clock?: FarmClock): string => `${shortDate(day, clock)} · Year ${dateOf(day, clock).year}`
 
 export function Celebrations({ save, nameOf }: { save: FarmSave; nameOf: (id: string) => string }) {
   const location = useLocation()
@@ -20,7 +21,7 @@ export function Celebrations({ save, nameOf }: { save: FarmSave; nameOf: (id: st
   const ready = householdReady(save)
   const gifts = save.longGame.gifts ?? []
   const window = festivalGiftWindow(save)
-  const open = window !== null && !gifts.some(gift => festivalGiftWindow({ ...save, calendar: { day: gift.day } }) === window)
+  const open = window !== null && !gifts.some(gift => festivalGiftWindow({ ...save, calendar: { ...save.calendar, day: gift.day } }) === window)
   const stock = Object.entries(workStock(save.items))
   const run = async (rule: (save: FarmSave) => FarmSave) => {
     setBusy(true); setError(null)
@@ -37,7 +38,7 @@ export function Celebrations({ save, nameOf }: { save: FarmSave; nameOf: (id: st
         const play = ready.includes(id)
         return <li key={id} className="rounded-md bg-sunken/40 p-2">
           <p className="font-semibold">{celebrationTitle(id)}</p>
-          <p className="text-[12px] text-ink-soft">{held ? longDate(held) + ' · Held' : day ? longDate(day) : id === 'greater-festival' ? 'One year after the fiftieth wedding' : id.slice(7) + ' spouses'}</p>
+          <p className="text-[12px] text-ink-soft">{held ? longDate(held, save.calendar) + ' · Held' : day ? longDate(day, save.calendar) : id === 'greater-festival' ? 'One year after the fiftieth wedding' : id.slice(7) + ' spouses'}</p>
           {(held || play) && <Link to={withParam(location, 'household', id) + (held ? '&replay=1' : '')} state={{ back: true }}
             className="flex min-h-11 items-center font-semibold text-accent">{play ? 'Celebrate ›' : 'Replay ›'}</Link>}
         </li>
@@ -47,7 +48,7 @@ export function Celebrations({ save, nameOf }: { save: FarmSave; nameOf: (id: st
       <h3 className="font-semibold">Greater Festival preparations</h3>
       <p className="text-[13px]">{gifts.length}/4 contributions</p>
       {gifts.length > 0 && <ul className="text-[13px]">
-        {gifts.map(gift => <li key={gift.day}>{giftName(gift.key)} · {longDate(gift.day)}{gift.crew.length > 0 && ' · ' + gift.crew.map(nameOf).join(', ')}</li>)}
+        {gifts.map(gift => <li key={gift.day}>{giftName(gift.key)} · {longDate(gift.day, save.calendar)}{gift.crew.length > 0 && ' · ' + gift.crew.map(nameOf).join(', ')}</li>)}
       </ul>}
       {preparingFestival(save) && <>
       <div className="flex flex-wrap items-center gap-2">

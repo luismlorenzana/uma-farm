@@ -26,6 +26,15 @@ describe('one sync round', () => {
     expect(reconcile({ revision: 3, save: changed, dirty: true }, { revision: 3, save: base })).toEqual({ kind: 'push', baseRevision: 3, save: changed })
   })
 
+  it('adopts a cloud calendar restart and preserves a newer dirty device in recovery', () => {
+    const prior = { ...base, calendar: { day: 10 } }
+    const restart = { ...touched(prior, T1), calendar: { day: 10, start: 10 } }
+    const local = { revision: 7, save: touched(prior, T2), dirty: true }
+    expect(reconcile(local, { revision: 8, save: restart })).toEqual({
+      kind: 'adopt', envelope: { revision: 8, save: restart }, replacesUnsynced: true,
+    })
+  })
+
   it('keeps the save changed last when both sides moved, and flags only an adopt that replaces unsynced changes', () => {
     const older = touched(base, T1)
     const newer = touched(base, T2)

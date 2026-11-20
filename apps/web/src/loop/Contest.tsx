@@ -60,8 +60,8 @@ export function ContestCard({ save }: { save: SaveV4 }) {
   const days = useSpecialDays() ?? GAME_DAYS
   const navigate = useNavigate()
   const location = useLocation()
-  const today = contestOn(save.calendar.day, year)
-  const tomorrow = contestOn(save.calendar.day + 1, year)
+  const today = contestOn(save.calendar.day, year, save.calendar)
+  const tomorrow = contestOn(save.calendar.day + 1, year, save.calendar)
   if (!today && !tomorrow) return null
   if (!today) {
     return (
@@ -118,7 +118,7 @@ function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   const [chosen, setChosen] = useState<ContestEntry | null>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
-  const festival = contestOn(save.calendar.day, year)
+  const festival = contestOn(save.calendar.day, year, save.calendar)
   const name = festival?.name ?? 'Cooking Contest'
   const result = contestResult(save)
   const entry = chosen ?? contestDefault(save)

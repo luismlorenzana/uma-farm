@@ -3,6 +3,7 @@
 // 1 action). With `?pick=bin` it's the bin's pick mode: a tap on a star puts one in the crate, All puts the good's every
 // star in, and Ship · 1 action ships the crate, then goes back to the bin. Drawn on the kit's Chip, Sheet and Button:
 // the kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
+import { dateDayOf } from '@farm/domain'
 import {
   actionsLeft, availableStock, baseGoodId, binTotal, canSaveCropSeed, CATALOGUE, cropBaseGrade, cropGoodId, cropGradeOf, crateWorth, discovered, goodName,
   goodOf, ingredientSources, isGoodId, itemNameOf, MAX_PRODUCTION_TARGET, SEED_BATCH, seedKnowledge, seedOf, seedOutput, type CropId, type CrateLine, type FarmSave,
@@ -94,7 +95,7 @@ function Warehouse({ save, picking, initialGood }: { save: FarmSave; picking: bo
     shipPicked(toShip).then(after, (err: unknown) => setError(errorWords(err))).finally(() => setBusy(false))
   }
   const shipAll = (row: GoodRow) => ship(row.cells.flatMap((c) => (c.count > 0 ? [{ id: row.id, stars: c.stars, count: c.count }] : [])), () => setOpen(null))
-  const tonight = binTotal(save.bin, save.calendar.day, save.farm.market)
+  const tonight = binTotal(save.bin, dateDayOf(save.calendar.day, save.calendar), save.farm.market)
   const left = actionsLeft(save)
   return (
     <div className="absolute inset-0 flex flex-col" data-page="warehouse" data-pick={picking || undefined}>

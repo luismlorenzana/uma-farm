@@ -6,7 +6,7 @@
 // panel from the right edge. The update prompt keeps clear of the side safe areas too (`clearSides`), where the notch
 // and the home bar sit. Held upright, the "Turn your phone sideways" card covers it (`Upright.tsx`).
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
-import { BootGates, UpdateNotice } from '@luismlorenzana/uma-kit/places'
+import { BootGates } from '@luismlorenzana/uma-kit/places'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Outlet } from 'react-router'
@@ -15,6 +15,7 @@ import { signInEnabled } from './firebase-config'
 import { Upright } from './Upright'
 
 const StartOverCard = lazy(() => import('./StartOverCard').then(module => ({ default: module.StartOverCard })))
+const FarmUpdateNotice = lazy(() => import('./FarmUpdateNotice'))
 
 /** A boot that stopped at a save this build can't play: one from a newer version of the farm. */
 const isNewerSave = (error: unknown): boolean => error instanceof Error && error.message === NEWER_SAVE_WORDS
@@ -51,7 +52,7 @@ export function Root() {
     <>
       <div className="fixed inset-0" data-landscape>
         <KitStage layout="landscape">
-          <UpdateNotice clearSides />
+          <Suspense fallback={null}><FarmUpdateNotice /></Suspense>
           <BootGates auth={auth} boot={bootFor} firstLaunch={(done) => <Suspense fallback={null}><StartOverCard onDone={done} /></Suspense>}
             words={{ name: 'Uma Farm', tagline: 'Gather, process, make.', ...(newer ? { bootFailed: NEWER_SAVE_WORDS } : {}) }}>
             <Outlet />

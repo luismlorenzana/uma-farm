@@ -69,7 +69,7 @@ export const preparingFestival = (save: CalendarSave): boolean =>
 export function giveFestivalGift(save: SaveV4, key: string, providers: readonly string[] = []): SaveV4 {
   const window = festivalGiftWindow(save)
   const gifts = save.longGame?.gifts ?? []
-  if (!save.longGame || !preparingFestival(save) || window === null || gifts.some(gift => festivalGiftWindow({ ...save, calendar: { day: gift.day } }) === window)) {
+  if (!save.longGame || !preparingFestival(save) || window === null || gifts.some(gift => festivalGiftWindow({ ...save, calendar: { ...save.calendar, day: gift.day } }) === window)) {
     throw new SaveRuleError('not-ready', 'This contribution is already covered.')
   }
   const stock = parseStockKey(key)
@@ -85,7 +85,7 @@ export function pledgeFestivalGift(save: SaveV4, key: string | null): SaveV4 {
   if (!save.longGame || !preparingFestival(save) || window === null) throw new SaveRuleError('not-ready', 'The festival is still ahead.')
   const { pledge: _, ...game } = save.longGame
   if (key === null) return { ...save, longGame: game }
-  if (!parseStockKey(key) || game.gifts?.some(gift => festivalGiftWindow({ ...save, calendar: { day: gift.day } }) === window)) {
+  if (!parseStockKey(key) || game.gifts?.some(gift => festivalGiftWindow({ ...save, calendar: { ...save.calendar, day: gift.day } }) === window)) {
     throw new SaveRuleError('not-ready', 'Choose an item for this contribution.')
   }
   return { ...save, longGame: { ...game, pledge: { window, key } } }
@@ -130,8 +130,8 @@ export const anniversaryOffer = (save: CalendarSave, id: string): number | null 
 
 export function birthdayOffer(save: CalendarSave, id: string, birthdays: Birthdays): number | null {
   const day = save.calendar.day
-  const year = dateOf(day).year
-  return save.love[id]?.stage === 'spouse' && isBirthday(birthdays, id, day) && (greaterLoveOf(save, id).birthday ?? 0) < year ? year : null
+  const year = dateOf(day, save.calendar).year
+  return save.love[id]?.stage === 'spouse' && isBirthday(birthdays, id, day, save.calendar) && (greaterLoveOf(save, id).birthday ?? 0) < year ? year : null
 }
 
 export const configuredDuos = (save: Pick<SaveV4, 'longGame'>, pack: Pick<LifePack, 'household'>): Duo[] =>

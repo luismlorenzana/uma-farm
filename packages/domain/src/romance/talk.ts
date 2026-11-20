@@ -66,7 +66,7 @@ export function greetingLines(save: Pick<SaveV4, 'calendar'>, pack: Pick<StoryPa
   if (birthday && (g.birthday?.length ?? 0) > 0) return g.birthday!
   const own = at.place !== null ? g.places?.[at.place] ?? [] : []
   const place = own.length > 0 ? own : at.town ? g.places?.town ?? [] : []
-  return [...place, ...(g.seasons?.[dateOf(save.calendar.day).season] ?? []), ...(g.times?.[at.hour] ?? [])]
+  return [...place, ...(g.seasons?.[dateOf(save.calendar.day, save.calendar).season] ?? []), ...(g.times?.[at.hour] ?? [])]
 }
 
 /** Her greeting for this talk, or null: one of `greetingLines`, drawn by the account, the day and her id. */
@@ -100,7 +100,7 @@ export function talkOf(
   const set = love ? chatSet(love) : null
   const own = set ? chatLinesOf(pack, id, set) : []
   const lines = own.length > 0 ? own : defaultTalksOf(pack, id, talkStageOf(love ?? { stage: 'friendship', level: 0 }, options.farmhand ?? false), temperament)
-  const season = dateOf(save.calendar.day).season
+  const season = dateOf(save.calendar.day, save.calendar).season
   const small = smallTalkOf(pack, id).filter((t) => smallTalkFits(t, at, season, set))
   const drawn = pick<string | SmallTalk>(save, `chat:${id}`, [...lines, ...small])!
   const greeting = greetingOf(save, pack, id, at, options.birthday ?? false)
@@ -114,5 +114,5 @@ export function talkOf(
 export function todaysTalk(
   save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>, id: string, temperament: Temperament, birthdays: Birthdays = NO_BIRTHDAYS,
 ): Talk {
-  return talkOf(save, pack, id, temperament, talkAt(save, pack, id), { farmhand: isFarmhand(save, id), birthday: isBirthday(birthdays, id, save.calendar.day) })
+  return talkOf(save, pack, id, temperament, talkAt(save, pack, id), { farmhand: isFarmhand(save, id), birthday: isBirthday(birthdays, id, save.calendar.day, save.calendar) })
 }

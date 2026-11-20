@@ -6,6 +6,12 @@ export const DAY_MS = 86_400_000
 export const DAYS_PER_SEASON = 12
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
 export type Season = typeof SEASONS[number]
+export interface FarmClock {
+  /** The completed-turn clock used by recorded progress, timers, and the work week. */
+  day: number
+  /** Turn that starts the playable calendar at Spring 1. Earlier records keep their original dates. */
+  start?: number
+}
 export const DAYS_PER_YEAR = DAYS_PER_SEASON * SEASONS.length
 export const SEASON_NAMES: Readonly<Record<Season, string>> = { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter' }
 
@@ -17,11 +23,20 @@ export interface FarmDate {
 }
 
 /** Day d's date: year ⌈d/48⌉, season ⌊((d−1) mod 48)/12⌋, day ((d−1) mod 12) + 1. */
-export function dateOf(day: number): FarmDate {
+export function dateOf(day: number, clock?: FarmClock): FarmDate {
   if (!Number.isSafeInteger(day) || day < 1) throw new RangeError(`No farm day ${day}`)
-  const index = day - 1
+  const index = dateDayOf(day, clock) - 1
   return { year: Math.floor(index / DAYS_PER_YEAR) + 1, season: SEASONS[Math.floor((index % DAYS_PER_YEAR) / DAYS_PER_SEASON)]!, day: (index % DAYS_PER_SEASON) + 1 }
 }
+
+/** The date's ordinal in the playable calendar. Days preceding a restart use their original date. */
+export function dateDayOf(day: number, clock?: FarmClock): number {
+  const start = clock?.start ?? 1
+  return day >= start ? day - start + 1 : day
+}
+
+/** A date ordinal in the playable calendar as a turn on this farm. */
+export const turnOfDateDay = (day: number, clock?: FarmClock): number => day + (clock?.start ?? 1) - 1
 
 /** uma-work's clock on a save's day: its start, (day − 1) × DAY_MS. Every loop work operation runs at this time. */
 export const workNow = (save: { calendar: { day: number } }): number => (save.calendar.day - 1) * DAY_MS
@@ -65,26 +80,26 @@ export const FESTIVALS: readonly Festival[] = [
 ]
 
 /** The farm day of a date: year 1's Spring 1 is day 1. */
-export function farmDay(date: FarmDate): number {
-  return (date.year - 1) * DAYS_PER_YEAR + SEASONS.indexOf(date.season) * DAYS_PER_SEASON + date.day
+export function farmDay(date: FarmDate, clock?: FarmClock): number {
+  return turnOfDateDay((date.year - 1) * DAYS_PER_YEAR + SEASONS.indexOf(date.season) * DAYS_PER_SEASON + date.day, clock)
 }
 
 /** A festival's place in the year: its day of the year, 1–48. */
 export const festivalDayOfYear = (f: Pick<Festival, 'season' | 'day'>): number => farmDay({ year: 1, season: f.season, day: f.day })
 
 /** The festival on a farm day, or null. `year` is the year's festivals: the game's five, or the story's (`festivalsOf`). */
-export function festivalOn(day: number, year: readonly Festival[] = FESTIVALS): Festival | null {
-  const date = dateOf(day)
+export function festivalOn(day: number, year: readonly Festival[] = FESTIVALS, clock?: FarmClock): Festival | null {
+  const date = dateOf(day, clock)
   return year.find((f) => f.season === date.season && f.day === date.day) ?? null
 }
 
 /** The next festival on or after a farm day: the festival, its farm day and the days until it (0 when it's today). */
-export function nextFestival(day: number, year: readonly Festival[] = FESTIVALS): { festival: Festival; day: number; inDays: number } {
-  const { year: y } = dateOf(day)
+export function nextFestival(day: number, year: readonly Festival[] = FESTIVALS, clock?: FarmClock): { festival: Festival; day: number; inDays: number } {
+  const { year: y } = dateOf(day, clock)
   let best: { festival: Festival; day: number } | null = null
   for (const n of [y, y + 1]) {
     for (const festival of year) {
-      const on = farmDay({ year: n, season: festival.season, day: festival.day })
+      const on = farmDay({ year: n, season: festival.season, day: festival.day }, clock)
       if (on >= day && (best === null || on < best.day)) best = { festival, day: on }
     }
     if (best) return { ...best, inDays: best.day - day }
@@ -95,12 +110,12 @@ export function nextFestival(day: number, year: readonly Festival[] = FESTIVALS)
 /** New Year's: each year's Spring 1. Its event actions come every year; its occasion scenes from the second (year 1's is
  * the farm's first morning). */
 export const NEW_YEAR_NAME = 'New Year’s'
-export const isNewYear = (day: number): boolean => {
-  const date = dateOf(day)
+export const isNewYear = (day: number, clock?: FarmClock): boolean => {
+  const date = dateOf(day, clock)
   return date.season === 'spring' && date.day === 1
 }
 
 /** A season's first day: new seeds, fish and demand. */
-export const isSeasonStart = (day: number): boolean => dateOf(day).day === 1
+export const isSeasonStart = (day: number, clock?: FarmClock): boolean => dateOf(day, clock).day === 1
 /** A season's last day: tonight, crops out of season wither. */
-export const isSeasonEnd = (day: number): boolean => dateOf(day).day === DAYS_PER_SEASON
+export const isSeasonEnd = (day: number, clock?: FarmClock): boolean => dateOf(day, clock).day === DAYS_PER_SEASON

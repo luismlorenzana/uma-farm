@@ -129,13 +129,13 @@ export function FarmBar() {
   const year = useStoryYear()
   const save = useLoopSave()
   const set = save ? daySetState(save) : null
-  const date = day === null ? null : dateOf(day)
+  const date = day === null ? null : dateOf(day, save?.calendar)
   const season = date?.season ?? 'spring'
   const chips: CurrencyChip[] = [
     {
       key: 'date', mark: `season/${season}`, fallback: <SeasonDot season={season} />, value: date?.day ?? null,
       extra: date ? ` ${SEASON_NAMES[date.season]}` : undefined,
-      to: withParam(location, 'sheet', 'calendar'), label: day === null ? 'Calendar' : `Calendar: ${dateLabel(day, year)}`,
+      to: withParam(location, 'sheet', 'calendar'), label: day === null ? 'Calendar' : `Calendar: ${dateLabel(day, year, save?.calendar)}`,
     },
     {
       key: 'gold', mark: 'currency/gold', fallback: <GoldCoin />, value: gold,

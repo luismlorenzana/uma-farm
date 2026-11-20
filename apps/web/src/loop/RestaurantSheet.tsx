@@ -257,7 +257,7 @@ const gradeName = (id: string) => {
 
 function sourceHint(save: FarmSave, id: string): string {
   const sources = ingredientSources(id)
-  const { season } = dateOf(save.calendar.day)
+  const { season } = dateOf(save.calendar.day, save.calendar)
   const rank = farmRankOf(save.farm.points)
   return (sources.find((source) => source.rank <= rank && source.seasons.includes(season)) ?? sources[0])?.label ?? 'Cook in the Kitchen'
 }

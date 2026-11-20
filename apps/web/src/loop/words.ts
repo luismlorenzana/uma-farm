@@ -1,19 +1,19 @@
 // The loop's words for the day: dates, festivals, days and the nudge, which the bars read at start. The morning
 // summary's lines are `summary-words.ts`, with the farm map, so they stay out of the initial JS. Pure, so the
 // screens and the tests read the same.
-import { dateOf, nextFestival, SEASON_NAMES, type DaySet, type Festival, type Season } from '@farm/domain'
+import { dateOf, nextFestival, SEASON_NAMES, type DaySet, type FarmClock, type Festival, type Season } from '@farm/domain'
 
 /** Each season's colour: the account bar's dot until uma-art's season marks ship, and the calendar's. */
 export const SEASON_COLOR: Readonly<Record<Season, string>> = { spring: '#7cc46a', summer: '#e8b931', autumn: '#d9762b', winter: '#6aa6d6' }
 
 /** "Spring 3". */
-export function shortDate(day: number): string {
-  const date = dateOf(day)
+export function shortDate(day: number, clock?: FarmClock): string {
+  const date = dateOf(day, clock)
   return `${SEASON_NAMES[date.season]} ${date.day}`
 }
 
 /** "Spring 3, year 1". */
-export const dateWords = (day: number): string => `${shortDate(day)}, year ${dateOf(day).year}`
+export const dateWords = (day: number, clock?: FarmClock): string => `${shortDate(day, clock)}, year ${dateOf(day, clock).year}`
 
 /** "today", "tomorrow", "in 7 days". */
 export const whenWords = (days: number): string => (days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`)
@@ -22,13 +22,13 @@ export const whenWords = (days: number): string => (days === 0 ? 'today' : days 
 export const dayCount = (days: number): string => (days === 1 ? '1 day' : `${days} days`)
 
 /** "Flower Show in 7 days": the next festival from a day, of `year`'s (the story's, `festivalsOf`; else the game's). */
-export function festivalWords(day: number, year?: readonly Festival[]): string {
-  const next = nextFestival(day, year)
+export function festivalWords(day: number, year?: readonly Festival[], clock?: FarmClock): string {
+  const next = nextFestival(day, year, clock)
   return `${next.festival.name} ${whenWords(next.inDays)}`
 }
 
 /** The date chip's accessible name: "Spring 3, year 1 · Flower Show in 7 days". */
-export const dateLabel = (day: number, year?: readonly Festival[]): string => `${dateWords(day)} · ${festivalWords(day, year)}`
+export const dateLabel = (day: number, year?: readonly Festival[], clock?: FarmClock): string => `${dateWords(day, clock)} · ${festivalWords(day, year, clock)}`
 
 /** A place's or a festival's name after "about", "on" or "at": "the Fields", or a name the story gives that brings its own
  * "The". */

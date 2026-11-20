@@ -111,7 +111,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
           <h3 className="text-micro">Opens now</h3>
           <ul className="space-y-1" data-opens>
             {stageOpens(stage, perkLineOf(pack, id), {
-              ring: love.ring ?? null, wed: love.wed ?? null,
+              ring: love.ring ?? null, wed: love.wed ?? null, clock: save?.calendar,
               ...(stage === 'married' && save ? { house: love.house === undefined ? null : save.homestead.houses[love.house]?.name ?? null } : {}),
             }).map((line) => <li key={line}>· {line}</li>)}
           </ul>

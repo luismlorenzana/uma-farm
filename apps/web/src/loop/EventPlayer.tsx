@@ -31,7 +31,7 @@ import {
   actionCost, askSteps, beatOf, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
   mayAsk, mayPlayEvent, mayReplayMemory, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
-  type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
+  dateDayOf, type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -218,7 +218,7 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const beat = beatOf(pack, id, rung)
   // Her illustrations, by the default mapping (her confession, the wedding, a summer date at the shore) unless the story
   // names its own. The shore is where the event plays: her beat's place, else its first place step.
-  const illustrated = eventIllustration({ rung, place: beat?.place ?? firstPlace(script), day: save.calendar.day })
+  const illustrated = eventIllustration({ rung, place: beat?.place ?? firstPlace(script), day: dateDayOf(save.calendar.day, save.calendar) })
   const steps = useMemo((): readonly Step[] => illustrate(illustrated, wedding
     ? [...(mode === 'event' ? [{ narrate: guestsLine(guests.map(nameOf)) } as Step] : []), ...script.filter((s) => !('place' in s))]
     : script), [script]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -300,7 +300,7 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
     return <Shell title={title} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><RingPicker save={save} onPick={setRing} onClose={onClose} /></Shell>
   }
   if (mode === 'event' && wedding && chosenPlace === null) {
-    return <Shell title={eventTitle(null, rung)} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><PlacePicker places={weddingPlaces(pack, id)} day={save.calendar.day} onPick={setChosenPlace} /></Shell>
+    return <Shell title={eventTitle(null, rung)} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><PlacePicker places={weddingPlaces(pack, id)} day={dateDayOf(save.calendar.day, save.calendar)} onPick={setChosenPlace} /></Shell>
   }
   // After the wedding night, moving in, when she took a room (one still waiting moves in the morning a room is free).
   const afterNight = () => setPhase(save.love[id]?.house !== undefined ? 'moving' : 'stage')
@@ -333,10 +333,11 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const context = choiceNow ? [...before].reverse().find((s) => 'say' in s || 'narrate' in s || 'thought' in s) ?? null : null
   const emote = step && 'say' in step ? step.emote ?? null : lastSay(before, bustId)?.emote ?? null
   const day = (mode === 'replay' ? save.library?.[id]?.first[`route:${rung}`] : undefined) ?? save.calendar.day
-  const placed = placeCard(place ?? 'fields', day)
+  const dateDay = dateDayOf(day, save.calendar)
+  const placed = placeCard(place ?? 'fields', dateDay)
   // She wears the event's own outfit when the story names one, else its moment's (her wedding, her work, a picnic, the
   // summer shore), else the day's season. A wedding's guests wear the day's.
-  const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day }), day, leads: [id] }
+  const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day: dateDay }), day, leads: [id] }
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
       {/* Her illustration while it's up; the play's sheet sits over it. */}

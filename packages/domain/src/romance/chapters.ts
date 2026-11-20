@@ -94,8 +94,8 @@ export const chapterBegun = (chapter: Pick<Chapter, 'events'>, love: Pick<Love, 
  * gate's (the reader skips them): they hold. */
 export function gateHolds(save: SaveV4, gate: StoryTrigger, year: readonly Festival[] = FESTIVALS): boolean {
   switch (gate.kind) {
-    case 'season': return dateOf(save.calendar.day).season === gate.season
-    case 'festival': return festivalOn(save.calendar.day, year)?.id === gate.festival
+    case 'season': return dateOf(save.calendar.day, save.calendar).season === gate.season
+    case 'festival': return festivalOn(save.calendar.day, year, save.calendar)?.id === gate.festival
     case 'farm-rank': case 'built': case 'shipped': case 'event': return triggerHolds(save, gate, 0, { at: 'night' })
     default: return true
   }

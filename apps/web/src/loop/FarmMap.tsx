@@ -364,7 +364,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
       open={open}
       onClose={() => void dismissSummary()}
       size="wide"
-      title={`Morning · ${shortDate(summary.day)}`}
+      title={`Morning · ${shortDate(summary.day, save.calendar)}`}
       label="The morning summary"
       footer={<Button className="w-full" onClick={() => void dismissSummary()} data-action="start-day">Start the day</Button>}
     >

@@ -23,9 +23,9 @@ import './library.css'
 const GalleryPage = lazy(() => import('./LibraryScenes'))
 const PER_TIER = 10
 const BOOK_PAGES = [['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story'], ['married', 'Married Life']] as const
-export const libraryDate = (day: number | null) => {
+export const libraryDate = (day: number | null, clock?: FarmSave['calendar']) => {
   if (day === null) return 'Date unknown'
-  const { year, season, day: d } = dateOf(day)
+  const { year, season, day: d } = dateOf(day, clock)
   return `Y${year} · ${SEASON_NAMES[season]} ${d}`
 }
 export const libraryHref = (uma: string, page = 'profile') => `/library?uma=${encodeURIComponent(uma)}&page=${page}`
@@ -182,7 +182,7 @@ function BookProfile({ save, pack, days, id, nameOf, archived }: Omit<Base, 'mas
       <li key={fact.key} data-discovery={fact.value === null ? 'unknown' : 'known'}>
         <span>{fact.title}</span>
         <strong>{fact.value ?? (archived ? 'Previously discovered' : 'Undiscovered')}</strong>
-        {fact.day !== null && <small>{libraryDate(fact.day)}</small>}
+        {fact.day !== null && <small>{libraryDate(fact.day, save.calendar)}</small>}
       </li>)}</ul>
     <ProfileDetails save={save} pack={pack} id={id} nameOf={nameOf} />
   </>
@@ -210,13 +210,13 @@ function History({ save, pack, id, tab }: Pick<Base, 'save' | 'pack'> & { id: st
       <Link to={libraryHref(id, 'history') + '&journal=recent'} className={button} aria-current={recent ? 'page' : undefined} replace>Recent outings</Link>
     </nav>
     {recent ? <>
-      {!history.recent.length && <p>{history.lastEvening ? `Last evening · ${libraryDate(history.lastEvening)}` : 'No outings yet.'}</p>}
+      {!history.recent.length && <p>{history.lastEvening ? `Last evening · ${libraryDate(history.lastEvening, save.calendar)}` : 'No outings yet.'}</p>}
       <ol className="lib-lines">{history.recent.map(([day, entry, score], at) => {
         const [family, kind] = entry.split(':')
         const current = kind && (kind === 'cooking-contest' ? save.calendar.day === day
           : Object.entries(save.workshops.festival?.last ?? {}).some(([id, card]) => id === kind && card.day === day))
         return <li key={`${day}:${entry}:${at}`} data-journal-entry={entry}>
-        <small>{libraryDate(day)}</small><strong>{libraryEntryName(entry, pack)}</strong>
+        <small>{libraryDate(day, save.calendar)}</small><strong>{libraryEntryName(entry, pack)}</strong>
         {score !== null && <span>{entry.startsWith('evening:') ? GRADE_NAMES[gradeOf(score)] : `${score} pts`}</span>}
         {family === 'evening' && <Link className={button} to={libraryHref(id, 'scenes') + `&group=outings&tile=evening:${kind}`}>Scene ›</Link>}
         {family === 'festival' && <Link className={button} to={!current ? '/diary' : kind === 'cooking-contest' ? '/?sheet=kitchen' : `/?sheet=festival&contest=${kind}`}>Result ›</Link>}
@@ -224,12 +224,12 @@ function History({ save, pack, id, tab }: Pick<Base, 'save' | 'pack'> & { id: st
       </li>})}</ol>
       {Object.keys(history.totals).length > 0 && <><h3>Lifetime</h3><ul className="lib-lines">
         {Object.entries(history.totals).map(([kind, [count, first, latest, best]]) => <li key={kind}>
-          <strong>{libraryEntryName(kind, pack)}</strong><span>{count} · First {libraryDate(first)} · Latest {libraryDate(latest)}</span>
+          <strong>{libraryEntryName(kind, pack)}</strong><span>{count} · First {libraryDate(first, save.calendar)} · Latest {libraryDate(latest, save.calendar)}</span>
           {best !== null && <span>Best {kind.startsWith('evening:') ? GRADE_NAMES[gradeOf(best)] : `${best} pts`}</span>}
         </li>)}
       </ul></>}
     </> : <ol className="lib-lines">{moments.map(moment => <li key={moment.key} data-milestone={moment.key}>
-      <small>{libraryDate(moment.day)}</small><strong>{moment.title}</strong>
+      <small>{libraryDate(moment.day, save.calendar)}</small><strong>{moment.title}</strong>
       {moment.key === 'proposal' || moment.key === 'wedding' || moment.key === 'confession' || moment.key === 'met'
         ? <Link className={button} to={libraryHref(id, 'scenes') + `&group=route&tile=route:${moment.key === 'met' ? 'arrival' : moment.key}`}>Scene ›</Link> : null}
     </li>)}</ol>}

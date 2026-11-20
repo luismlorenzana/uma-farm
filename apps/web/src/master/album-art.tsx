@@ -44,7 +44,7 @@ function useUrl(kind: UmaArtKind, id: string) {
 }
 
 /** Today's season, the save's (spring before there is one): every picture wears it. */
-export const useSeasonToday = (): Season => useGame((s) => dateOf(Math.max(1, s.save?.calendar.day ?? 1)).season)
+export const useSeasonToday = (): Season => useGame((s) => dateOf(Math.max(1, s.save?.calendar.day ?? 1), s.save?.calendar).season)
 
 /** Her blank profile, filling its box: the silhouette of an Uma in the season's outfit on the season's colour, her
  * hair her theme colour's, with her letters (`blank-profile.tsx`): her name's as given, else master data's. Her picture

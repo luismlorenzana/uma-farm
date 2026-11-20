@@ -119,7 +119,7 @@ export function giftPoints(save: Pick<SaveV4, 'calendar' | 'love'>, id: string, 
 export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, good: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): number | null {
   const love = save.love[id]
   if (!love || !tasteKnown(pack, love, id, good)) return null
-  return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day))
+  return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day, save.calendar))
 }
 
 /** A gift: one action, and one good (or a dish) from the Warehouse at the stars you choose, once a day each, on the farm or in town.
@@ -134,7 +134,7 @@ export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string
   const learnt: Love = love.known.includes(item) ? love : { ...love, known: [...love.known, item] }
   const spent = markDay(spend(save, 'gift'), id, 'gift')
   const given: SaveV4 = { ...spent, items, today: { ...spent.today, gifts: [...spent.today.gifts, id] }, love: { ...spent.love, [id]: learnt } }
-  const paid = addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day))
+  const paid = addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day, save.calendar))
   return { ...paid, save: learnt === love || taste === 'neutral' ? paid.save : recordLibrary(paid.save, id, `fact:gift:${item}`), taste }
 }
 

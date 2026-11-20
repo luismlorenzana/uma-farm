@@ -49,6 +49,18 @@ describe('the Firestore save store', () => {
     expect(store.has('saveBackups/u-v5')).toBe(false)
   })
 
+  it('keeps a cloud calendar restart when an older client tries to overwrite it', async () => {
+    const repo = new FirestoreSaveRepository('farm')
+    const prior = { ...newSave('u', NOW), calendar: { day: 10 } }
+    const restarted = { ...prior, calendar: { day: 10, start: 10 } }
+    await repo.put('u', 0, prior)
+    await expect(repo.put('u', 1, restarted)).rejects.toBeInstanceOf(RevisionConflict)
+    store.set('saves/u', { revision: 2, save: JSON.stringify(restarted) })
+    await expect(repo.put('u', 2, prior)).rejects.toBeInstanceOf(RevisionConflict)
+    expect(await repo.load('u')).toEqual({ revision: 2, save: restarted })
+    expect((await repo.put('u', 2, { ...restarted, gold: 501 })).save).toMatchObject({ calendar: restarted.calendar, gold: 501 })
+  })
+
   it('reads a stored v1, v2 or v4 as its version and account, and backs it up whole before the first v5', async () => {
     for (const version of [1, 2, 4] as const) {
       store.clear()

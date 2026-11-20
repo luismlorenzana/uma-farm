@@ -215,7 +215,7 @@ export function chooseCompanion(save: SaveV4, id: string, alone = false, birthda
   const love = save.love[id]
   if (!save.roster[id] || love?.stage !== 'spouse' || love.house === undefined) throw new SaveRuleError('locked', 'Only a spouse with a room.')
   if (!homeForNight(save, id)) throw new SaveRuleError('busy', 'She’s in an expedition party.')
-  if (alone && birthdays !== null && !isBirthday(birthdays, id, save.calendar.day)) throw new SaveRuleError('bad-job', 'Her room is hers on her birthday.')
+  if (alone && birthdays !== null && !isBirthday(birthdays, id, save.calendar.day, save.calendar)) throw new SaveRuleError('bad-job', 'Her room is hers on her birthday.')
   const h = save.homestead
   if (h.companion === id && h.tonight === love.house && h.alone === (alone ? id : null)) return save
   return { ...save, homestead: { ...h, tonight: love.house, alone: alone ? id : null, companion: id } }

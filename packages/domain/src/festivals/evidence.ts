@@ -50,7 +50,7 @@ export function flowerHarvested<S extends FarmSave>(save: S, tile: number, crop:
   const mark = state?.mark
   if (!mark || mark.tile !== tile) return save
   const day = save.calendar.day
-  if (mark.crop !== crop || state.box || dateOf(day).year !== mark.year) return clearFlowerMark(save, tile)
+  if (mark.crop !== crop || state.box || dateOf(day, save.calendar).year !== mark.year) return clearFlowerMark(save, tile)
   const best = [...lots].sort((a, b) => b.stars - a.stars || goodOf(b.id)!.grade - goodOf(a.id)!.grade)[0]
   if (!best) return clearFlowerMark(save, tile)
   const next = clearFlowerMark(save, tile)

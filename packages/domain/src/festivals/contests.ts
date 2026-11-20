@@ -2,7 +2,7 @@ import { recordLibrary } from '../library/receipts'
 import { availableDishes } from '../expeditions/stock'
 import { bookedForExpedition } from '../expeditions/presence'
 import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
-import { dateOf, farmDay, festivalOn } from '../farm/calendar'
+import { dateDayOf, dateOf, farmDay, festivalOn } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { aptitudeOf, gatherer, handDay } from '../farm/farmhands'
@@ -49,9 +49,9 @@ export const ANIMAL_TURNS = 4
 export const CUE_WORDS = { stand: 'Hold for inspection.', walk: 'Take a lap by the fence.', brush: 'Smooth the coat.' }
 
 export const festivalResult = (save: Pick<FarmSave, 'workshops'>, id: FarmContest) => save.workshops.festival?.last?.[id]
-export function contestDate(id: FarmContest, year: number, days: SpecialDays): number | null {
+export function contestDate(id: FarmContest, year: number, days: SpecialDays, clock?: FarmSave['calendar']): number | null {
   const festival = days.festivals.find((festival) => festival.rule === id)
-  return festival ? farmDay({ year, season: festival.season, day: festival.day }) : null
+  return festival ? farmDay({ year, season: festival.season, day: festival.day }, clock) : null
 }
 
 export function contestCutoffs(id: FarmContest, rank: number): [number, number] {
@@ -69,10 +69,10 @@ export interface ContestContext { days: SpecialDays; story?: PerkPack | null; ta
 
 export function festivalEntryLock(save: FarmSave, id: FarmContest, days: SpecialDays): string | null {
   const day = save.calendar.day
-  const year = dateOf(day).year
+  const year = dateOf(day, save.calendar).year
   const last = festivalResult(save, id)
-  if (festivalOn(day, days.festivals)?.rule !== id) return 'The contest is on its festival day.'
-  if (last && dateOf(last.day).year === year || save.farm.festivals.some((r) => r.id === id && dateOf(r.day).year === year)) return 'Already entered this year.'
+  if (festivalOn(day, days.festivals, save.calendar)?.rule !== id) return 'The contest is on its festival day.'
+  if (last && dateOf(last.day, save.calendar).year === year || save.farm.festivals.some((r) => r.id === id && dateOf(r.day, save.calendar).year === year)) return 'Already entered this year.'
   if (CONTESTS.some((rule) => festivalResult(save, rule)?.day === day)) return 'Already entered a contest today.'
   if (activeContest(save) || save.workshops.current || save.workshops.restaurant?.shift) return 'A play is under way.'
   if (!canSpendForEvent(save, FESTIVAL_ACTION_COST, days)) return 'Entering takes 3 actions.'
@@ -93,7 +93,7 @@ const dayRank = (save: FarmSave) => ({ day: save.calendar.day, rank: farmRankOf(
 
 function judge<S extends FarmSave>(save: S, id: FarmContest, entry: Omit<ContestCard, 'place' | 'gold' | 'credit'>,
   present: readonly string[], nominated: readonly string[]): S {
-  const year = dateOf(entry.day).year
+  const year = dateOf(entry.day, save.calendar).year
   const place = entry.score === null ? null : (1 + contestCutoffs(id, entry.rank).filter((score) => score > entry.score!).length) as 1 | 2 | 3
   const gold = place ? festivalPrize(id, entry.rank, year, place) : 0
   const credit = place === 1 ? [...nominated] : []
@@ -121,11 +121,11 @@ function judge<S extends FarmSave>(save: S, id: FarmContest, entry: Omit<Contest
 
 export function flowerMarkLock(save: FarmSave, tile: number, crop: CropId, days: SpecialDays): string | null {
   const day = save.calendar.day
-  const year = dateOf(day).year
-  const show = contestDate('flower-show', year, days)
+  const year = dateOf(day, save.calendar).year
+  const show = contestDate('flower-show', year, days, save.calendar)
   if (show === null || day > show || day <= show - FLOWER_WINDOW) return 'Mark a tile in the ten days through the show.'
   const last = festivalResult(save, 'flower-show')
-  if (last && dateOf(last.day).year === year) return 'Already entered this year.'
+  if (last && dateOf(last.day, save.calendar).year === year) return 'Already entered this year.'
   if (save.workshops.festival?.box) return 'Return the boxed crop first.'
   const at = Number.isInteger(tile) && tile >= 0 ? tileOf(save, tile) : undefined
   if (!isCropId(crop) || !at || at.ground !== 'tilled' || (at.crop !== null && at.crop !== crop)) return 'Choose a tilled tile for this crop.'
@@ -137,7 +137,7 @@ export function markFlowerTile<S extends FarmSave>(save: S, tile: number, crop: 
   const state = save.workshops.festival
   if (state?.mark?.tile === tile && state.mark.crop === crop) return save
   const day = save.calendar.day
-  return withFestival(save, { ...state, mark: { day, year: dateOf(day).year, tile, crop, dates: [] } })
+  return withFestival(save, { ...state, mark: { day, year: dateOf(day, save.calendar).year, tile, crop, dates: [] } })
 }
 
 export function releaseFlower<S extends FarmSave>(save: S): S {
@@ -153,15 +153,15 @@ export function closeFlowerWindow<S extends FarmSave>(save: S, days: SpecialDays
   const state = save.workshops.festival
   const year = state?.box?.year ?? state?.mark?.year
   if (!year) return save
-  const show = contestDate('flower-show', year, days)
+  const show = contestDate('flower-show', year, days, save.calendar)
   return show === null || save.calendar.day >= show ? releaseFlower(save) : save
 }
 
 export function flowerPreview(save: FarmSave, key: string | null, grower: string | null, days = GAME_DAYS) {
   const box = key === null ? save.workshops.festival?.box : undefined
   const at = parseStockKey(key ?? box?.key ?? '')
-  if (!at || !cropGradeOf(at.id) || (box ? box.year !== dateOf(save.calendar.day).year : !save.items[at.id]?.[at.stars - 1])) return null
-  const show = box ? contestDate('flower-show', box.year, days) : null
+  if (!at || !cropGradeOf(at.id) || (box ? box.year !== dateOf(save.calendar.day, save.calendar).year : !save.items[at.id]?.[at.stars - 1])) return null
+  const show = box ? contestDate('flower-show', box.year, days, save.calendar) : null
   const dates = show !== null && box ? box.dates.filter(({ day }) => day > show - FLOWER_WINDOW && day <= show) : []
   const hands = [...new Set(dates.flatMap((date) => date.hands))]
   const parts = [10 * at.stars, 2 * goodOf(at.id)!.grade, 6 * Math.min(5, dates.length)]
@@ -250,7 +250,7 @@ export function castDerby<S extends FarmSave>(save: S, slot: number, elapsed: nu
   let next = save
   let caught: DerbyPlay['catches'][number] = null
   if (timing > 0) {
-    const species = pickShare(sharesOn('fishery', play.spot, play.day), seeded(play, slot * 3))
+    const species = pickShare(sharesOn('fishery', play.spot, dateDayOf(play.day, save.calendar)), seeded(play, slot * 3))
     const stars = drawStars(caster.q, seeded(play, slot * 3 + 1))
     const u = seeded(play, slot * 3 + 2)
     const cm = fishSize(species, caster.skill, u + (1 - u) * .65 * timing / 100)

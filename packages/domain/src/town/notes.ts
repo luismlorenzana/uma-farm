@@ -22,8 +22,8 @@ import { festivalsOf, townNotesOf } from '../story/placeholders'
 export function noteHolds(save: SaveV4, unlock: StoryTrigger, how: MeetHow, year: readonly Festival[]): boolean {
   switch (unlock.kind) {
     case 'spot': return how.at === 'town' && how.place === unlock.spot
-    case 'season': return dateOf(save.calendar.day).season === unlock.season
-    case 'festival': return festivalOn(save.calendar.day, year)?.id === unlock.festival
+    case 'season': return dateOf(save.calendar.day, save.calendar).season === unlock.season
+    case 'festival': return festivalOn(save.calendar.day, year, save.calendar)?.id === unlock.festival
     case 'talks': case 'gift': return false
     default: return triggerHolds(save, unlock, 0, { at: 'night' })
   }

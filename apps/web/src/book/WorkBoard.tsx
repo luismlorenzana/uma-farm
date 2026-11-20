@@ -102,12 +102,12 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
   // On a town day she's in town: she doesn't work tonight, and she's back on her next farm day.
   const working = worksOn(save, pack, id)
   const away = awayOn(save, id, save.calendar.day)
-  const back = !working && pack ? nextFarmDay(pack, id, save.calendar.day) : null
+  const back = !working && pack ? nextFarmDay(pack, id, save.calendar.day, save.calendar) : null
   const chips = working ? dayChips(day) : []
   const weekly = pack ? professionOf(pack, id) : null
-  const { season, year } = dateOf(save.calendar.day)
+  const { season, year } = dateOf(save.calendar.day, save.calendar)
   const farmDays = weekly ? weekly.farm.map(weekdayShort).join(', ')
-    : !pack ? null : atHome(save, id) ? 'every day' : daysList(farmDaysIn(pack, id, season, year))
+    : !pack ? null : atHome(save, id) ? 'every day' : daysList(farmDaysIn(pack, id, season, year, save.calendar))
   const offToday = pack && professionShift(pack, id, save.calendar.day) === 'off'
   const offTomorrow = pack && professionShift(pack, id, save.calendar.day + 1) === 'off'
   const plots = save.fields.plots.length
@@ -119,7 +119,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
         <Avatar id={id} size={44} label={name} />
         <span className="min-w-0 flex-1">
           <Link to={`/hearts?view=work&uma=${id}`} state={{ back: true }} className="block truncate text-[15px] font-semibold text-ink">{name}</Link>
-          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{weekly ? weekly.profession.name : pack ? jobWords(pack, id) : 'A job in town'}</span>
+          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!, save.calendar)}`}>{weekly ? weekly.profession.name : pack ? jobWords(pack, id) : 'A job in town'}</span>
           {farmDays && <span className="block truncate text-[12px] text-ink-soft" data-farm-days>Farm days · {farmDays}</span>}
         </span>
         {working && (
@@ -136,8 +136,8 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
       )}
       {working
         ? <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
-        : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away)}</p>
-        : <p className="text-[13px] font-semibold" data-in-town={!offToday || undefined} data-day-off={offToday || undefined}>{offToday ? 'Day off' : 'In town today'}{back ? ` · back ${shortDate(back)}` : ''}</p>}
+        : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away, save.calendar)}</p>
+        : <p className="text-[13px] font-semibold" data-in-town={!offToday || undefined} data-day-off={offToday || undefined}>{offToday ? 'Day off' : 'In town today'}{back ? ` · back ${shortDate(back, save.calendar)}` : ''}</p>}
       {working && !worksOn(save, pack, id, save.calendar.day + 1) && (
         <p className="text-[12px] text-ink-soft">{awayOn(save, id, save.calendar.day + 1) ? 'Away tomorrow' : offTomorrow ? 'Day off tomorrow' : 'In town tomorrow'}</p>
       )}

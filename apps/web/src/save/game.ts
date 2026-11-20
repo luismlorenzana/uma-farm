@@ -267,7 +267,10 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
     const stored = parseStored(copy.save)
     // A copy from before v5 would only start over again: it isn't restored.
     if (isOlderSave(stored)) return false
-    restored = stored
+    const { start } = save.calendar
+    if (start !== undefined && stored.calendar.day < start) return false
+    // The clock setting belongs to this cloud farm, including when restoring its unsynced progress.
+    restored = { ...stored, calendar: { day: stored.calendar.day, ...(start === undefined ? {} : { start }) } }
   } catch {
     return false
   }

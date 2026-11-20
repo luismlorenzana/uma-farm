@@ -34,7 +34,7 @@
 //   Town notes               none
 //
 // Every read of the pack goes through a function here. Pure; loaded with the story pack.
-import { dateOf, FESTIVAL_IDS, FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
+import { dateOf, FESTIVAL_IDS, FESTIVALS, festivalDayOfYear, isFestivalId, type FarmClock, type Festival, type Season } from '../farm/calendar'
 import type { Activity } from '../farm/ranks'
 import { activityScore, talentScores, type TalentOutfit, type Temperament } from '../farm/talents'
 import { isGoodId } from '../goods/ids'
@@ -764,8 +764,8 @@ export function storyDaysOf(pack: WorldPack): readonly StoryDay[] {
   return out
 }
 /** The story's days on a farm day: holidays first, then minor days, each in world.json's order. */
-export function storyDaysOn(pack: WorldPack, day: number): StoryDay[] {
-  const date = dateOf(day)
+export function storyDaysOn(pack: WorldPack, day: number, clock?: FarmClock): StoryDay[] {
+  const date = dateOf(day, clock)
   const on = storyDaysOf(pack).filter((d) => (d.season === null || d.season === date.season) && d.days.includes(date.day))
   return [...on.filter((d) => d.kind === 'holiday'), ...on.filter((d) => d.kind !== 'holiday')]
 }

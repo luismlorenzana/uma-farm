@@ -33,7 +33,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     if (kind !== 'anniversary' && row.anniversary !== undefined) fail(path, 'expected an anniversary')
     if (kind !== 'birthday' && row.birthday !== undefined) fail(path, 'expected a birthday')
     const anniversary = kind === 'anniversary' ? int(row.anniversary, path, 1, Math.floor((day - save.love[who[0]]!.wed!) / FARM_YEAR)) : undefined
-    const birthday = kind === 'birthday' ? int(row.birthday, path, dateOf(day).year, dateOf(day).year) : undefined
+    const birthday = kind === 'birthday' ? int(row.birthday, path, dateOf(day, save.calendar).year, dateOf(day, save.calendar).year) : undefined
     return { who, day, kind, looks, ...(anniversary === undefined ? {} : { anniversary }), ...(birthday === undefined ? {} : { birthday }) }
   }
   for (const [id, value] of Object.entries(record(raw.love, path))) {
@@ -52,7 +52,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     if (points === TRUE_LOVE) heart.trueDay = int(row.trueDay, path, since, today)
     else if (row.trueDay !== undefined) fail(path, 'True Love requires a full bar')
     if (row.anniversary !== undefined) heart.anniversary = int(row.anniversary, path, 1, Math.floor((today - since) / FARM_YEAR))
-    if (row.birthday !== undefined) heart.birthday = int(row.birthday, path, dateOf(since).year, dateOf(today).year)
+    if (row.birthday !== undefined) heart.birthday = int(row.birthday, path, dateOf(since, save.calendar).year, dateOf(today, save.calendar).year)
     game.love[id] = heart
   }
   if (raw.night !== undefined) {
@@ -88,7 +88,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
       return { day: int(gift.day, path, date, game.celebrations['greater-festival'] ?? today), key: gift.key,
         crew: unique(list(gift.crew, path, 0, ids.size).map(id => member(id, path, ids)), path) }
     })
-    unique(game.gifts.map(gift => String(festivalGiftWindow({ ...withGame, calendar: { day: gift.day } }))), path)
+    unique(game.gifts.map(gift => String(festivalGiftWindow({ ...withGame, calendar: { ...withGame.calendar, day: gift.day } }))), path)
   }
   if (raw.outings !== undefined) {
     game.outings = list(raw.outings, path, 0, 10_000).map(row => {

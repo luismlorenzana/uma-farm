@@ -56,8 +56,8 @@ export function triggerHolds(save: SaveV4, trigger: StoryTrigger, talks: number,
   switch (trigger.kind) {
     case 'talks': return talk && talks >= trigger.days
     case 'spot': return how.at === 'town' && how.place === trigger.spot
-    case 'season': return talk && dateOf(save.calendar.day).season === trigger.season
-    case 'festival': return talk && festivalOn(save.calendar.day, year)?.id === trigger.festival
+    case 'season': return talk && dateOf(save.calendar.day, save.calendar).season === trigger.season
+    case 'festival': return talk && festivalOn(save.calendar.day, year, save.calendar)?.id === trigger.festival
     case 'gift': return how.at === 'gift' && (trigger.good ? how.good === trigger.good : how.taste === 'liked' || how.taste === 'loved')
     case 'farm-rank': return farmRankOf(save.farm.points) >= trigger.rank
     case 'built': return placeBuilt(save, trigger.place)

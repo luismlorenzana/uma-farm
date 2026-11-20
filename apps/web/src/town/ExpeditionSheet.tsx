@@ -153,7 +153,7 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
                 {save.expeditions.map((trip) => <li key={trip.party[0]} className="py-2 text-[14px]">
                   <p className="font-semibold">{EXPEDITION_REGIONS[trip.region].name}</p>
                   <p>{trip.party.map(nameOf).join(', ')}</p>
-                  <p className="text-[12px] text-ink-soft">{trip.left === save.calendar.day ? 'Leaves tonight · ' : 'Away · '}back {shortDate(trip.back)}</p>
+                  <p className="text-[12px] text-ink-soft">{trip.left === save.calendar.day ? 'Leaves tonight · ' : 'Away · '}back {shortDate(trip.back, save.calendar)}</p>
                 </li>)}
               </ul>
             )}
@@ -166,7 +166,7 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
                   <details>
                     <summary className="min-h-11 py-1">
                       <span className="font-semibold">{EXPEDITION_REGIONS[log.region].name} · {EXPEDITION_WORDS[log.result]}</span>
-                      <span className="block text-ink-soft">{shortDate(log.back)} · {plural(log.back - log.left, 'day')} · {plural(Object.values(log.loot).reduce((a, b) => a + b, 0), 'good')}</span>
+                      <span className="block text-ink-soft">{shortDate(log.back, save.calendar)} · {plural(log.back - log.left, 'day')} · {plural(Object.values(log.loot).reduce((a, b) => a + b, 0), 'good')}</span>
                     </summary>
                     <p className="pb-1">{log.party.map(nameOf).join(', ')}</p>
                     <ul>{Object.entries(log.loot).map(([key, count]) => {

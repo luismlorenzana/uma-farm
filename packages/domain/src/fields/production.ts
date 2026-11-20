@@ -32,7 +32,7 @@ export function rowPlan(save: Pick<FarmSave, 'farm'>, plot: number, row: number,
 export function plantingPlan(save: Pick<FarmSave, 'farm' | 'calendar'>, index: number): FieldPlan | null | undefined {
   const plot = Math.floor(index / FIELD_TILES)
   const row = localRow(index)
-  return rowPlan(save, plot, row, dateOf(save.calendar.day).season)
+  return rowPlan(save, plot, row, dateOf(save.calendar.day, save.calendar).season)
     ?? (SEASONS.some((season) => rowPlan(save, plot, row, season)) ? null : undefined)
 }
 
@@ -66,7 +66,7 @@ export function harvestGrade(save: Pick<FarmSave, 'farm' | 'calendar'>, tile: Ti
   if (!cropGoodId(crop, grade + 1)) return undefined
   const plot = Math.floor(index / FIELD_TILES)
   const row = localRow(index)
-  const season = SEASONS.indexOf(dateOf(save.calendar.day).season)
+  const season = SEASONS.indexOf(dateOf(save.calendar.day, save.calendar).season)
   // An unpicked crop can carry into the next season. Use the latest applicable plan.
   let plan: FieldPlan | undefined
   for (let offset = 0; offset < SEASONS.length; offset++) {
@@ -126,7 +126,7 @@ export function saveCropSeeds<S extends FarmSave>(save: S, crop: CropId, grade: 
 /** One seed of each rare crop in its season, renewed each year after Farm Rank 6. */
 export function awardRareSeeds<S extends FarmSave>(save: S): { save: S; crops: CropId[] } {
   if (farmRankOf(save.farm.points) < RARE_SEED_RANK) return { save, crops: [] }
-  const { season, year } = dateOf(save.calendar.day)
+  const { season, year } = dateOf(save.calendar.day, save.calendar)
   const key = (crop: CropId) => `rare-seed:${crop}`
   const crops = RARE_CROPS.filter((crop) => growsIn(crop, season) && (save.farm.counts[key(crop)] ?? 0) < year)
   if (!crops.length) return { save, crops }

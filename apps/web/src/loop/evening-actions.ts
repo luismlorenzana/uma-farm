@@ -21,7 +21,7 @@ export async function spendHerEvening(id: string, kind: EveningKind, score: numb
   const save = current()
   const birthdays = birthdaysOf(pack, view.birthdays)
   if (day !== undefined && day !== save.calendar.day) throw new Error('That evening has passed.')
-  const birthday = (id: string) => isBirthday(birthdays, id, save.calendar.day)
+  const birthday = (id: string) => isBirthday(birthdays, id, save.calendar.day, save.calendar)
   const done = partner ? spendDuoEvening(save, pack, [id, partner], kind, score, birthday(id), id => birthday(id) && wantsBirthdayAlone(pack, id))
     : spendEvening(save, pack, id, kind, score, birthday(id))
   await commit(touched(libraryChange(save, done.save, pack, { birthdays, festivals: festivalsOf(pack) }), new Date().toISOString()))

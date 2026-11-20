@@ -60,7 +60,7 @@ export function fieldPondState(save: FarmSave, story: StoryPack | null, talentOf
     for (const line of plan.lines) add(worker(save, line, locations.get(line.id)))
   }
   return {
-    season: dateOf(save.calendar.day).season,
+    season: dateOf(save.calendar.day, save.calendar).season,
     dusk: actionsLeft(save) <= Math.floor(dayActions(save) / 4),
     tiles: (save.fields.plots[0]?.tiles ?? []).map((tile) => ({
       ground: tile.ground, crop: tile.crop, look: cropLook(tile), watered: tile.watered,

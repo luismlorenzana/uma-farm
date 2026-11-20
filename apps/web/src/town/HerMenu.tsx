@@ -36,10 +36,10 @@ import { hereWords, keeperTies, postMenu } from './town-view'
 type NameOf = (id: string) => string
 
 /** An Uma at home today, and when she's next out: "At home today. Out on Spring 7, at the Library." */
-function atHomeWords(pack: StoryPack, id: string, today: number): string {
-  const next = nextOut(pack, id, today)
+function atHomeWords(pack: StoryPack, id: string, clock: SaveV4['calendar']): string {
+  const next = nextOut(pack, id, clock.day, clock)
   const place = next ? townLocation(pack, next.at)?.name ?? null : null
-  return next ? `At home today. Out on ${shortDate(next.day)}${place ? `, at ${place.replace(/^The /, 'the ')}` : ''}.` : 'At home today.'
+  return next ? `At home today. Out on ${shortDate(next.day, clock)}${place ? `, at ${place.replace(/^The /, 'the ')}` : ''}.` : 'At home today.'
 }
 
 /** Her face at a gift, by her taste; her words are the default story's (`giftLineV4`). */
@@ -97,7 +97,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
   const temperament = talentTable(master).get(outfitFor(id))?.temperament ?? 'steady'
   const fillName = (line: string) => line.split('{name}').join(name)
   const birthdays = birthdaysOf(pack, master.birthdays)
-  const birthday = isBirthday(birthdays, id, save.calendar.day)
+  const birthday = isBirthday(birthdays, id, save.calendar.day, save.calendar)
   // Her last line of today's talk (her line, or a small talk's last of hers): it stays on the stage after the talk.
   const talkLine = () => fillName(lastOfHers(todaysTalk(save, pack, id, temperament, birthdays).steps))
   // The line on the stage: the last act's; once you've talked today, her talk; else her line for the day in town.
@@ -161,7 +161,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       {onFarm ? (
         <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm today, her farm day.'} <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></p>
       ) : !at ? (
-        <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar.day)}{met && <> <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></>}</p>
+        <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar)}{met && <> <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></>}</p>
       ) : null}
       {items.length > 0 && (
         <ul className="grid shrink-0 grid-cols-2 gap-1.5" data-menu={items.map((i) => i.id).join(' ')}>

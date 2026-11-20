@@ -104,18 +104,18 @@ function sceneFor(pack: OccasionPack, id: string, ids: readonly string[]): strin
 export function occasionsOn(save: OccasionSave, pack: OccasionPack, days: SpecialDays, id: string, day = save.calendar.day): Occasion[] {
   if (!save.roster[id]) return []
   const love = save.love[id]
-  const festival = festivalOn(day, days.festivals)
+  const festival = festivalOn(day, days.festivals, save.calendar)
   const rule = festival?.rule ?? null
   type Candidate = Omit<Occasion, 'event'> & { ids: readonly string[] }
   const one = (kind: OccasionKind, occasion: string, ids: readonly string[], name: string, slot: 'day' | 'night' = 'day'): Candidate => ({
     id: occasion, kind, ids, name, slot, moments: occasionMoments(kind, rule),
   })
   const candidates: Candidate[] = [
-    ...(isBirthday(days.birthdays, id, day) ? [one('birthday', 'birthday', ['birthday'], 'Birthday')] : []),
+    ...(isBirthday(days.birthdays, id, day, save.calendar) ? [one('birthday', 'birthday', ['birthday'], 'Birthday')] : []),
     ...(love && isAnniversary(love, day) ? [one('anniversary', 'anniversary', ['anniversary'], 'Anniversary')] : []),
-    ...(isNewYear(day) && dateOf(day).year >= 2 ? [one('new-year', 'new-year', ['new-year'], NEW_YEAR_NAME)] : []),
+    ...(isNewYear(day, save.calendar) && dateOf(day, save.calendar).year >= 2 ? [one('new-year', 'new-year', ['new-year'], NEW_YEAR_NAME)] : []),
     ...(rule ? [one('festival', rule, [rule], festival!.name)] : []),
-    ...storyDaysOn(pack, day).map((d) => one('story-day', d.id, [d.scene], d.name)),
+    ...storyDaysOn(pack, day, save.calendar).map((d) => one('story-day', d.id, [d.scene], d.name)),
   ]
   const played = (c: Candidate | undefined): Occasion[] => {
     if (!c) return []

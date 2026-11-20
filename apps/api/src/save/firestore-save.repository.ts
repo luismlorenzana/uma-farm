@@ -36,6 +36,9 @@ export class FirestoreSaveRepository implements SaveRepository {
       const current = FirestoreSaveRepository.envelope(snapshot)
       const storedVersion = snapshot.exists ? versionOf(storedSave(snapshot.data() as { save?: unknown })) : 0
       if (current.revision !== baseRevision || save.version < storedVersion) throw new RevisionConflict(current)
+      if (current.save && 'calendar' in current.save && save.calendar.start !== current.save.calendar.start) {
+        throw new RevisionConflict(current)
+      }
       if (snapshot.exists && save.version > storedVersion) {
         tx.set(db.collection('saveBackups').doc(`${uid}-v${storedVersion}`), { ...snapshot.data(), backedUpAt: FieldValue.serverTimestamp() })
       }
