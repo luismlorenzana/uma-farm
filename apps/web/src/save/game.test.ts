@@ -1,7 +1,7 @@
 // The store against an in-memory server with the API's revision rules, and a fake IndexedDB: the sync engine on save v4
 // (`start-over.test.ts` has a save from before v4). Invented data only.
 import 'fake-indexeddb/auto'
-import { SAVE_VERSION, newSave, touched, type SaveEnvelope, type SaveV4 } from '@farm/domain'
+import { expandCalendar, SAVE_VERSION, newSave, touched, type SaveEnvelope, type SaveV4, type SaveV5 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const server: { envelope: SaveEnvelope; puts: number; down: boolean } = { envelope: { revision: 0, save: null }, puts: 0, down: false }
@@ -81,6 +81,34 @@ describe('the store', () => {
     server.down = true
     await boot('u1')
     expect(useGame.getState()).toMatchObject({ status: 'ready', revision: 4, save: { account: { createdAt: T0 } } })
+  })
+
+  it('loads a cloud v5 on a new device and uploads the expanded calendar without stamping it', async () => {
+    const legacy: SaveV5 = { ...newSave('u1', T0), version: 5, calendar: { day: 26 }, gold: 812 }
+    server.envelope = { revision: 4, save: legacy }
+    expect(await boot('u1')).toEqual({ startOver: false })
+    await syncNow()
+    expect(server.envelope).toEqual({ revision: 5, save: expandCalendar(legacy) })
+    expect(useGame.getState()).toMatchObject({ sync: 'synced', dirty: false })
+  })
+
+  it('persists an offline conversion and safely adopts a calendar synced first from another device', async () => {
+    const legacy: SaveV5 = { ...newSave('u1', T0), version: 5, calendar: { day: 26 } }
+    const local = touched({ ...expandCalendar(legacy), gold: 832 }, T2)
+    await db.save.put({ id: 'main', uid: 'u1', revision: 7, dirty: true, save: { ...legacy, gold: 832, account: local.account } })
+    server.down = true
+    await boot('u1')
+    await syncNow()
+    expect((await db.save.get('main'))?.save).toEqual(local)
+    expect(useGame.getState().dirty).toBe(true)
+    resetGame()
+    const remote = expandCalendar({ ...legacy, calendar: { day: 27 }, gold: 883 })
+    server.envelope = { revision: 8, save: remote }
+    server.down = false
+    await boot('u1')
+    await syncNow()
+    expect(useGame.getState()).toMatchObject({ revision: 8, dirty: false, save: remote })
+    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'replaced', save: local })
   })
 
   it('refuses to start a new account offline, so a stray save never outranks the real one', async () => {

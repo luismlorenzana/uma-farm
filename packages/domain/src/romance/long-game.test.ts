@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { dateOf, DAYS_PER_YEAR, DAYS_PER_SEASON } from '../farm/calendar'
+import { dateOf, DAYS_PER_YEAR, DAYS_PER_SEASON, FESTIVALS, festivalDayOfYear } from '../farm/calendar'
 import { runNight } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { CELEBRATIONS, celebrationDate, NIGHT_VISITS, TRUE_LOVE } from '../save/long-game'
 import { newLove, newRosterUma, newSave, newTodayV4, roomsOf, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { checkBible, checkHousehold } from '../story/authored'
 import { storyPackFrom } from '../story/pack'
-import { eventOf, householdOf } from '../story/placeholders'
+import { eventOf, householdOf, storyDaysOf } from '../story/placeholders'
 import { professionShift, WEEKDAYS } from '../town/professions'
 import { playEvent } from './events'
 import { birthdaysOf, dayOfYear } from './days'
@@ -49,7 +49,7 @@ function visit(save: SaveV4, id = a): SaveV4 {
 }
 
 describe('marriages and the festival calendar', () => {
-  it('spreads the launch birthdays over all dates and keeps them when more Umas join', () => {
+  it('spreads the launch birthdays through all seasons, keeps quiet dates, and preserves dates as the cast grows', () => {
     const cast = (list: readonly string[]) => storyPackFrom({ cast: { umas: list.map(characterId => ({ characterId })) }, umas: {}, routes: {} })
     const original = new Map(LAUNCH_CAST.map((id, i) => [id, { month: i % 2 ? 3 : 4, day: 18 }]))
     const launch = birthdaysOf(cast(LAUNCH_CAST), original)
@@ -57,9 +57,17 @@ describe('marriages and the festival calendar', () => {
     const load = (dates: ReadonlyMap<string, number>) => Array.from({ length: DAYS_PER_YEAR }, (_, i) =>
       [...dates.values()].filter(day => day === i + 1).length)
     expect(launch.size).toBe(50)
-    expect(new Set(load(launch))).toEqual(new Set([1, 2]))
+    expect(new Set(load(launch))).toEqual(new Set([0, 1]))
+    const publicDays = new Set([1, ...FESTIVALS.map(festivalDayOfYear),
+      ...storyDaysOf(null).flatMap(event => event.days.map(day => festivalDayOfYear({ season: event.season!, day })))])
+    expect([...launch.values()].filter(day => publicDays.has(day))).toEqual([])
+    expect(Array.from({ length: 4 }, (_, i) => load(launch).slice(i * DAYS_PER_SEASON, (i + 1) * DAYS_PER_SEASON)
+      .reduce((count, day) => count + day, 0))).toEqual([13, 13, 12, 12])
+    for (let begin = 1; begin <= DAYS_PER_YEAR; begin += 7) {
+      expect(load(launch).slice(begin - 1, begin + 6).some((count, i) => !count && !publicDays.has(begin + i))).toBe(true)
+    }
     expect(expanded.size).toBe(100)
-    expect(new Set(load(expanded))).toEqual(new Set([2, 3]))
+    expect(Math.max(...load(expanded))).toBeLessThanOrEqual(2)
     for (const [id, date] of launch) expect(expanded.get(id)).toBe(date)
   })
 
@@ -68,7 +76,7 @@ describe('marriages and the festival calendar', () => {
     expect(() => planWedding(base, a, 53)).toThrow('after the confession')
     const accepted = { ...base, love: { ...base.love, [a]: { ...base.love[a]!, stage: 'romance' as const } } }
     const planned = planWedding(accepted, a, 53)
-    expect(parseSaveV5(planned).love[a]?.weddingDay).toBe(53)
+    expect(parseSaveV6(planned).love[a]?.weddingDay).toBe(53)
     expect(planWedding(planned, a, null).love[a]?.weddingDay).toBeUndefined()
     const proposal = moveDay({ ...planned, love: { ...planned.love, [a]: { ...planned.love[a]!, stage: 'proposal', level: 10 } } }, 50)
     const event = await eventOf(pack, a, 'proposal')
@@ -80,7 +88,7 @@ describe('marriages and the festival calendar', () => {
     expect(readiness(moveDay(engaged, 52), pack, a).waits).toEqual({ kind: 'wedding-day', day: 53 })
     expect(readiness(moveDay(engaged, 53), pack, a).ready).toBe(true)
     const married = await wed(moveDay(engaged, 54), a)
-    expect(parseSaveV5(married).love[a]?.wed).toBe(54)
+    expect(parseSaveV6(married).love[a]?.wed).toBe(54)
     expect(married.love[a]?.weddingDay).toBeUndefined()
     expect(anniversaryOffer(moveDay(married, 53 + DAYS_PER_YEAR), a)).toBeNull()
     expect(anniversaryOffer(moveDay(married, 54 + DAYS_PER_YEAR), a)).toBe(1)
@@ -90,7 +98,7 @@ describe('marriages and the festival calendar', () => {
     let save = newFarm()
     const order = [...ids].reverse()
     for (const [i, id] of order.entries()) {
-      const day = i < 48 ? 2 + i : 96
+      const day = i < 48 ? 2 + i : 222
       if (day !== save.calendar.day) save = moveDay(save, day)
       const before = professionShift(pack, id, day)
       save = await wed(save, id)
@@ -102,18 +110,18 @@ describe('marriages and the festival calendar', () => {
     expect(dateOf(save.calendar.day)).toEqual({ year: 2, season: 'winter', day: 12 })
     expect(householdReady(save)).toContain('cohort:50')
     expect(householdReady(save)).not.toContain('greater-festival')
-    expect(celebrationDate(save, 'greater-festival')).toBe(144)
+    expect(celebrationDate(save, 'greater-festival')).toBe(342)
     for (const [i, id] of CELEBRATIONS.slice(0, -1).entries()) {
       const guests = seen(save, id)
       expect(guests).toEqual(order.slice(i * 5, i * 5 + 5))
       expect(readHousehold(save, id, [])).toBe(save)
       save = readHousehold(save, id, guests)
       expect(readHousehold(save, id, guests)).toBe(save)
-      expect(guests.every(who => save.library?.[who]?.first[`shared:${id}`] === 96)).toBe(true)
+      expect(guests.every(who => save.library?.[who]?.first[`shared:${id}`] === 222)).toBe(true)
       expect(order.filter(who => save.library?.[who]?.first[`shared:${id}`])).toHaveLength(5)
     }
     expect(softEndingReached(save)).toBe(true)
-    expect(parseSaveV5(save).longGame).toEqual(save.longGame)
+    expect(parseSaveV6(save).longGame).toEqual(save.longGame)
 
     save = chooseTradition(save, 20)
     const started = save.calendar.day
@@ -138,23 +146,23 @@ describe('marriages and the festival calendar', () => {
     const play = householdPlay(save, householdOf(pack), 'greater-festival')!
     expect(play.spouses).toEqual(order)
     expect(play.parts.filter(part => part.who)).toHaveLength(10)
-    save = moveDay(save, 147)
+    save = moveDay(save, 345)
     const festival = readHousehold(save, 'greater-festival', play.spouses)
-    expect(festival.longGame).toMatchObject({ celebrations: { 'cohort:50': 96, 'greater-festival': 147 }, tradition: 20 })
+    expect(festival.longGame).toMatchObject({ celebrations: { 'cohort:50': 222, 'greater-festival': 345 }, tradition: 20 })
     expect(festival.longGame?.gifts).toHaveLength(4)
-    expect(celebrationDate(festival, 'greater-festival')).toBe(144)
-    expect(order.every(who => festival.library?.[who]?.first['shared:greater-festival'] === 147)).toBe(true)
-    expect(festival.library?.[b]?.first['fact:keepsake:greater-festival']).toBe(147)
+    expect(celebrationDate(festival, 'greater-festival')).toBe(342)
+    expect(order.every(who => festival.library?.[who]?.first['shared:greater-festival'] === 345)).toBe(true)
+    expect(festival.library?.[b]?.first['fact:keepsake:greater-festival']).toBe(345)
     expect(festival.library?.[a]?.first['fact:keepsake:greater-festival']).toBeUndefined()
-    expect(householdVows(moveDay(festival, 192))).toBe(true)
-    expect(householdVows(moveDay(festival, 195))).toBe(false)
-    expect(parseSaveV5(festival).longGame).toEqual(festival.longGame)
+    expect(householdVows(moveDay(festival, 462))).toBe(true)
+    expect(householdVows(moveDay(festival, 465))).toBe(false)
+    expect(parseSaveV6(festival).longGame).toEqual(festival.longGame)
   }, 60_000)
 
   it('keeps earlier saved memories and rooms, and gives a small farm no time-gated ending', async () => {
     const save = await wed(newFarm(), a)
     const legacy = { ...save, longGame: undefined }
-    const old = parseSaveV5(moveDay(legacy, 49 * DAYS_PER_YEAR + 1))
+    const old = parseSaveV6(moveDay(legacy, 49 * DAYS_PER_YEAR + 1))
     expect(old.longGame).toBeUndefined()
     const migrated = activateLongGame(old, pack)
     expect(migrated.love[a]?.house).toBe(0)
@@ -183,7 +191,7 @@ describe('married life', () => {
       expect(greaterLoveOf(morning, a).points).toBe((night + 1) * 6)
       expect(morning.longGame?.morning?.who).toEqual([a])
       expect(nightVisits(morning)).toEqual([])
-      expect(parseSaveV5(morning).longGame).toEqual(morning.longGame)
+      expect(parseSaveV6(morning).longGame).toEqual(morning.longGame)
       save = morning
     }
     expect([...looks].sort((x, y) => x - y)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -216,7 +224,7 @@ describe('married life', () => {
     save = completeVisit(save, pack, anniversary, 1, noBirthday, birthdays)
     expect(nightVisits(save)).toHaveLength(2)
     expect(greaterLoveOf(save, a)).toMatchObject({ birthday: 2, anniversary: 1, points: 2, memories: [birthday, anniversary] })
-    expect(parseSaveV5(JSON.parse(JSON.stringify(save))).longGame).toEqual(save.longGame)
+    expect(parseSaveV6(JSON.parse(JSON.stringify(save))).longGame).toEqual(save.longGame)
     expect(planVisit(moveDay(save, birthdayDay + DAYS_PER_YEAR), pack, [a], 'birthday', noBirthday, birthdays)?.birthday).toBe(3)
   })
 
@@ -247,7 +255,7 @@ describe('married life', () => {
     expect(evening.save.today.actions - save.today.actions).toBe(2)
     expect(evening.save.longGame?.outings).toEqual([{ day: 1, who: [a, b], kind: 'walk' }])
     expect(nightVisits(evening.save)).toEqual([pair])
-    expect(parseSaveV5(evening.save).longGame).toEqual(evening.save.longGame)
+    expect(parseSaveV6(evening.save).longGame).toEqual(evening.save.longGame)
     const anniversary = moveDay(save, 1 + DAYS_PER_YEAR)
     const offered = planVisit(anniversary, pack, [a, b], 'anniversary', noBirthday)!
     expect(offered).toMatchObject({ who: [a, b], looks: [1, 2], anniversary: 1 })
@@ -257,12 +265,12 @@ describe('married life', () => {
     expect(anniversaryOffer(celebrated, a)).toBeNull()
     expect(anniversaryOffer(celebrated, b)).toBe(1)
     expect(planVisit(celebrated, pack, [b, a], 'anniversary', noBirthday)?.who).toEqual([b, a])
-    expect(parseSaveV5(celebrated).longGame).toEqual(celebrated.longGame)
+    expect(parseSaveV6(celebrated).longGame).toEqual(celebrated.longGame)
     save = editDuo(save, pack, [a, b], true)
     expect(planVisit(save, pack, [a, b], 'pajamas', noBirthday)).toBeNull()
     expect(greaterLoveOf(save, a).memories).toEqual([pair])
     expect(greaterLoveOf(save, b).memories).toEqual([pair])
-    expect(parseSaveV5(save).longGame).toEqual(save.longGame)
+    expect(parseSaveV6(save).longGame).toEqual(save.longGame)
     expect(() => setVisitStay(save, pack, 1, noBirthday)).toThrow()
     expect(nightVisits(visit(save))).toHaveLength(2)
   })

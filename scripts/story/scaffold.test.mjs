@@ -135,8 +135,8 @@ test('writes what’s missing, backs up every file it changes first, and a secon
   assert.deepEqual(first.refused, {})
   const cast = await readJson(join(pack, 'cast.json'))
   // Her schedule: the game's default as her routine, marked; no home and no job.
-  assert.deepEqual(cast.umas[0], { characterId: id(1), spot: 'harbour', calling: 'fishing', routine: [{ at: 'harbour', days: [1, 4, 7, 10], draft: 'default' }], chapters: cast.umas[0].chapters })
-  assert.deepEqual(cast.umas[2].routine, [{ at: 'plaza', days: [3, 6, 9, 12], draft: 'default' }], 'by her place in the cast: the third, no spot of her own')
+  assert.deepEqual(cast.umas[0], { characterId: id(1), spot: 'harbour', calling: 'fishing', routine: [{ at: 'harbour', days: [1, 4, 7, 10, 13, 16, 19, 22, 25, 28], draft: 'default' }], chapters: cast.umas[0].chapters })
+  assert.deepEqual(cast.umas[2].routine, [{ at: 'plaza', days: [3, 6, 9, 12, 15, 18, 21, 24, 27, 30], draft: 'default' }], 'by her place in the cast: the third, no spot of her own')
   assert.equal(cast.umas[2].home, undefined)
   assert.equal(cast.umas[2].job, undefined)
   assert.equal(JSON.stringify(cast.umas[1]), JSON.stringify({ characterId: id(2), calling: 'farming' }), 'an Uma not named is untouched')

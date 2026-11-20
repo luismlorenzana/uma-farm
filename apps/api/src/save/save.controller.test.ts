@@ -30,7 +30,7 @@ describe('the save upload', () => {
 
   it('keeps an upload that fails the save rules, as sent, and says why', async () => {
     const { repo, controller } = fake(async () => { throw new Error('never stored') })
-    const body = { baseRevision: 3, save: { version: 5, nonsense: true } }
+    const body = { baseRevision: 3, save: { version: 6, nonsense: true } }
     await expect(controller.put('u', body)).rejects.toBeInstanceOf(BadRequestException)
     expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.any(String))
   })
@@ -46,8 +46,8 @@ describe('the save upload', () => {
     for (const version of [3, 4]) {
       const { repo, controller } = fake(async () => { throw new Error('never stored') })
       const body = { baseRevision: 3, save: { version, account: { uid: 'u', createdAt: NOW, updatedAt: NOW }, gold: 812 } }
-      await expect(controller.put('u', body)).rejects.toThrow('body.save.version: expected 5')
-      expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.stringContaining('expected 5'))
+      await expect(controller.put('u', body)).rejects.toThrow('body.save.version: expected 6')
+      expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.stringContaining('expected 6'))
     }
   })
 
@@ -64,7 +64,7 @@ describe('the save upload', () => {
   })
 
   it('keeps an upload refused as older than what is stored', async () => {
-    const stored = { revision: 5, save: { ...newSave('u', NOW), version: 6 as unknown as 5 } }
+    const stored = { revision: 5, save: { ...newSave('u', NOW), version: 7 as unknown as 6 } }
     const { repo, controller } = fake(async () => { throw new RevisionConflict(stored) })
     const body = upload()
     await expect(controller.put('u', body)).rejects.toBeInstanceOf(ConflictException)

@@ -10,7 +10,7 @@
 //                 bakery sends a cake (one day); every spouse and her two closest friends attend; she's a spouse
 //
 // Every word says spouse, partner, vows, your wedding, you. Pure. Loaded with the events.
-import { DAYS_PER_YEAR } from '../farm/calendar'
+import { yearlyDate, type FarmClock } from '../farm/calendar'
 import { tiesOf } from '../farm/bonds'
 import { SaveRuleError } from '../save/rules'
 import { awayOn } from '../expeditions/presence'
@@ -105,7 +105,7 @@ export function weddingGuests(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties
 // --- After it --------------------------------------------------------------------------------------
 
 /** Her anniversary: her wedding's day a year on (`isAnniversary`). */
-export const anniversaryOf = (wed: number): number => wed + DAYS_PER_YEAR
+export const anniversaryOf = (wed: number, clock?: FarmClock): number => yearlyDate(wed, 1, clock)
 /** The household milestones, by the number married: scenes at 5, 10 and 15, the finale at 20. */
 export const HOUSEHOLD_AT: readonly number[] = [5, 10, 15, 20]
 /** The next household milestone past `married`, or null after the finale's. */

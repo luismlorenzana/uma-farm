@@ -12,7 +12,7 @@ import { runNight } from '../night/end-day'
 import { buyAnimal, buyFodder, careAt, feedAnimal } from '../ranch/ranch'
 import { serverLock, startRestaurantShift } from '../restaurant/restaurant'
 import { shipCrate } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type FarmSave } from '../save/v4'
 import { addGoods, parseStockKey } from '../save/warehouse'
 import { castPack } from '../story/authored.fixture'
@@ -55,11 +55,11 @@ describe('festival dates and entries', () => {
     expect(() => enterFlower(again, 'carrot@1', null, { ...moved, festivals: [{ ...base, day: 12 }] })).toThrow(/already entered/i)
     const nextYear = { ...again, calendar: { day: 11 + DAYS_PER_YEAR } }
     expect(enterFlower(nextYear, 'carrot@1', null, moved).farm.festivals).toHaveLength(2)
-    expect(parseSaveV5(raw(day))).toEqual(day)
+    expect(parseSaveV6(raw(day))).toEqual(day)
   })
 
   it('reserves a real harvest once and returns it if the show is missed', () => {
-    let save = tillTile(fresh(), 0)
+    let save = tillTile(fresh(10), 0)
     save = markFlowerTile(save, 0, 'carrot', GAME_DAYS)
     save = plantTile(save, 0, seedId('carrot'))
     expect(() => plantTile(save, 0, seedId('carrot'))).toThrow()
@@ -73,14 +73,14 @@ describe('festival dates and entries', () => {
     const held = holds(save, id)
     expect(flowerPreview(held, box.key, '101')?.valid).toBe(false)
     expect(flowerPreview(save, null, null)?.parts).toEqual([10 * stars, 2, 30])
-    while (save.calendar.day <= 10) save = runNight(save, {})
+    while (save.calendar.day <= 19) save = runNight(save, {})
     expect(save.items[id]?.[stars - 1]).toBe(1)
     expect(save.workshops.festival?.box).toBeUndefined()
     expect(festivalResult(save, 'flower-show')).toBeUndefined()
   })
 
   it('treats ties as wins and checks the same exact stock again at confirmation', () => {
-    const day: FarmSave = { ...fresh(48), items: { oats: [0, 1, 0, 0, 0], shiitake: [0, 0, 1, 0, 0], 'carp-grade-2': [1, 0, 0, 0, 0] } }
+    const day: FarmSave = { ...fresh(118), items: { oats: [0, 1, 0, 0, 0], shiitake: [0, 0, 1, 0, 0], 'carp-grade-2': [1, 0, 0, 0, 0] } }
     const entries = ['oats@2', 'shiitake@3', 'carp-grade-2@1'].map((key) => ({ key, by: null }))
     const cutoff = contestCutoffs('harvest-cup', 1)[0]
     expect(cupPreview(day, entries).score).toBe(cutoff)
@@ -97,21 +97,21 @@ describe('festival dates and entries', () => {
       world: { festivals: [{ id: 'flower-show', season: 'summer', day: 12 }] },
     })
     const summer = { ...GAME_DAYS, festivals: festivalsOf(story) }
-    let save = plantTile(holds(tillTile(crew(13), 0), seedId('cucumber')), 0, seedId('cucumber'))
+    let save = plantTile(holds(tillTile(crew(31), 0), seedId('cucumber')), 0, seedId('cucumber'))
     for (let i = 0; i < 5; i++) save = runNight(waterTile(save, 0), {})
     save = harvestTile(save, 0).save
     save = markFlowerTile(save, 0, 'cucumber', summer)
     for (let i = 0; i < 3; i++) save = runNight(waterTile(save, 0), { story })
     save = harvestTile(save, 0).save
-    expect(save.workshops.festival?.box?.dates.map(({ day }) => day)).toEqual([18, 19, 20, 21])
+    expect(save.workshops.festival?.box?.dates.map(({ day }) => day)).toEqual([36, 37, 38, 39])
     expect(releaseFlower(save).workshops.festival?.box).toBeUndefined()
 
     const autumn = { ...GAME_DAYS, festivals: [{ ...GAME_DAYS.festivals[0]!, season: 'autumn' as const, day: 12 }] }
-    let orchard = plantTile(holds(tillTile(crew(25), 0), seedId('apple')), 0, seedId('apple'))
+    let orchard = plantTile(holds(tillTile(crew(61), 0), seedId('apple')), 0, seedId('apple'))
     for (let i = 0; i < 6; i++) orchard = runNight(waterTile(orchard, 0), {})
     orchard = markFlowerTile(orchard, 0, 'apple', autumn)
     expect(removeOrchard(orchard, 0).workshops.festival?.mark).toBeUndefined()
-    const show = 36
+    const show = 72
     const cast = castPack(hands)
     const grower = hands.find((id) => !worksOn(orchard, cast, id, show))!
     const picked = reapTile(orchard, 0, null, undefined, grower)
@@ -124,19 +124,19 @@ describe('festival dates and entries', () => {
     const result = festivalResult(entered, 'flower-show')!
     expect(entered.library?.[grower]?.recent).toEqual([[show, `festival:flower-show:grower:${result.place}${result.credit.includes(grower) ? ':won' : ''}`, result.score]])
     for (const spectator of hands.filter(id => id !== grower && worksOn(live, cast, id))) expect(entered.library?.[spectator]).toBeUndefined()
-    expect(parseSaveV5(raw(entered))).toEqual(entered)
+    expect(parseSaveV6(raw(entered))).toEqual(entered)
   })
 })
 
 describe('ticketed turns and exact contributors', () => {
   it('retains one catch on End day after reload, ignores stale taps, and forfeits three misses', () => {
-    const initial = enterDerby(fresh(22), 'pond', [null, null, null], CTX)
+    const initial = enterDerby(fresh(51), 'pond', [null, null, null], CTX)
     const play = activeContest(initial)!
     if (play.id !== 'fishing-derby') throw new Error('Missing derby')
     const one = castDerby(initial, 0, derbyMeet(play, 0))
     expect(one.farm.counts[HOME_COUNT.fishery]).toBeUndefined()
     expect(castDerby(one, 0, 400)).toBe(one)
-    const saved = parseSaveV5(raw(one))
+    const saved = parseSaveV6(raw(one))
     const morning = runNight(saved, {})
     expect(morning.farm.counts[HOME_COUNT.fishery]).toBe(1)
     expect(morning.summary?.work).toContainEqual(expect.objectContaining({ kind: 'festival-result', id: 'fishing-derby' }))
@@ -148,11 +148,11 @@ describe('ticketed turns and exact contributors', () => {
     expect(empty.items).toEqual(initial.items)
     const corrupt = raw(one)
     corrupt.workshops.festival.active.catches[0].slot = 1
-    expect(() => parseSaveV5(corrupt)).toThrow(/match its caster/)
+    expect(() => parseSaveV6(corrupt)).toThrow(/match its caster/)
   })
 
   it('requires dated care on the same animal and a correct cue to judge', () => {
-    let save = buyFodder(crew(44), 10)
+    let save = buyFodder(crew(100), 10)
     const bought = buyAnimal(save, 'chicken')
     const other = buyAnimal(bought.save, 'chicken')
     save = careAt(other.save, bought.animal.id, 0, '101')
@@ -175,7 +175,7 @@ describe('ticketed turns and exact contributors', () => {
   })
 
   it('rechecks both directions of Kitchen, Restaurant and expedition commitments', () => {
-    const stocked = holds(crew(22), 'carrot', 'shiitake', 'dish-fish-1')
+    const stocked = holds(crew(51), 'carrot', 'shiitake', 'dish-fish-1')
     const day = { ...stocked, items: addGoods(stocked.items, 'dish-vegetables-1', 1, 6) }
     const uma = hands.find((id) => worksOn(day, null, id))!
     const booked = enterDerby(day, 'pond', [uma, null, null], CTX)

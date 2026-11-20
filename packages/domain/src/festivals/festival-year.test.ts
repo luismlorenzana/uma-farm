@@ -2,8 +2,8 @@ import { setImmediate } from 'node:timers/promises'
 import { describe, expect, it } from 'vitest'
 import { actionsLeft, GAME_DAYS, goToTown } from '../farm/actions'
 import { buildLock, payBuild } from '../farm/builds'
-import { dateOf, DAYS_PER_YEAR, SEASONS, type Season } from '../farm/calendar'
-import { FARM_RANK_POINTS } from '../farm/farm'
+import { dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR, SEASONS, type Season } from '../farm/calendar'
+import { farmRankOf, FARM_RANK_POINTS } from '../farm/farm'
 import { setTasks } from '../farm/farmhands'
 import { talentsD } from '../farm/talents'
 import { needsWater } from '../fields/crops'
@@ -16,14 +16,14 @@ import { cropBaseGrade, goodOf, seedId, type CropId } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { buyAnimal, buyFodder, careFor, collect, feedAnimal } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, shopLines } from '../save/shop'
 import { bareTile, fieldTiles, newLove, newRosterUma, newSave, START_CLEAR, type FarmSave, type FarmTask } from '../save/v4'
 import { goodCount, stockKey } from '../save/warehouse'
 import { castPack } from '../story/authored.fixture'
 import { worksOn } from '../town/town'
 import {
-  animalPreview, answerAnimal, castDerby, cupCategory, cupPreview, cupWorkDay, derbyMeet, enterAnimal, enterCup, enterDerby, enterFlower,
+  animalPreview, answerAnimal, castDerby, contestCutoffs, cupCategory, cupPreview, cupWorkDay, derbyMeet, enterAnimal, enterCup, enterDerby, enterFlower,
   festivalHandLock, festivalResult, flowerPreview, markFlowerTile, type ContestContext, type CupEntry,
 } from './contests'
 import { activeContest, CONTESTS, type CupCategory } from './state'
@@ -32,7 +32,7 @@ const AT = '2026-11-19T12:00:00.000Z'
 const ROTATION: Record<Season, CropId> = { spring: 'carrot', summer: 'tomato', autumn: 'wheat', winter: 'oats' }
 const TILES = START_CLEAR.slice(0, 7)
 type Crew = 0 | 10 | 20 | 50
-const roundTrip = (save: FarmSave) => parseSaveV5(JSON.parse(JSON.stringify(save)))
+const roundTrip = (save: FarmSave) => parseSaveV6(JSON.parse(JSON.stringify(save)))
 
 function setup(size: Crew) {
   const ids = Array.from({ length: size }, (_, i) => String(9_800_001 + i))
@@ -97,7 +97,7 @@ function soloDay(save: FarmSave) {
   const crop = season === 'autumn' ? 'sweet-potato' : season === 'winter' ? 'leek' : ROTATION[season]
   for (const tile of TILES) if (actionsLeft(save) > reserve && fieldTiles(save)[tile]!.ready) save = harvestTile(save, tile).save
   for (const tile of TILES) if (actionsLeft(save) > reserve && needsWater(fieldTiles(save)[tile]!)) save = waterTile(save, tile)
-  if (stagesOf(crop, false) + day <= 12 && (!save.buildings.coop || save.ranch.animals.length)) {
+  if (stagesOf(crop, false) + day <= DAYS_PER_SEASON && (!save.buildings.coop || save.ranch.animals.length)) {
     save = buySeeds(save, crop, 7)
     for (const index of TILES) {
       if (actionsLeft(save) <= reserve + 1 || !goodCount(save.items, seedId(crop))) break
@@ -142,7 +142,7 @@ function derbyYear(save: FarmSave, ids: string[], context: ContestContext) {
 
 function animalYear(save: FarmSave, ids: string[], context: ContestContext) {
   const animal = save.ranch.animals[0]
-  expect(animal, 'coop built and chicken bought before Winter 10').toBeDefined()
+  expect(animal, 'coop built and chicken bought before the Animal Show').toBeDefined()
   save = feedAnimal(save, animal!.id)
   const entry = animalPreview(save, animal!.id)!
   expect(entry.dates).toBeGreaterThanOrEqual(4)
@@ -160,7 +160,7 @@ function animalYear(save: FarmSave, ids: string[], context: ContestContext) {
     save = answerAnimal(save, slot, play.cues[slot]!)
   }
   const card = festivalResult(save, 'animal-show')!
-  if (ids.length === 20) expect(nominated).toBe(away[0])
+  if (ids.length === 20 && away.length) expect(nominated).toBe(away[0])
   expect(card.animal?.id).toBe(animal!.id)
   expect(card.staff).toEqual(handler ? [nominated] : [])
   expect(card.credit).toEqual(card.place === 1 && nominated ? [nominated] : [])
@@ -169,7 +169,7 @@ function animalYear(save: FarmSave, ids: string[], context: ContestContext) {
 
 function cupYear(save: FarmSave, ids: string[], context: ContestContext) {
   const entries: CupEntry[] = []
-  const categories: CupCategory[] = ids.length === 10 ? ['wild', 'ranch', 'fish'] : ids.length === 20 ? ['workshop', 'ranch', 'fish'] : ids.length ? ['field', 'ranch', 'fish'] : ['field', 'wild', 'fish']
+  const categories: CupCategory[] = ids.length === 20 ? ['workshop', 'ranch', 'fish'] : ids.length ? ['ranch', 'wild', 'fish'] : ['field', 'wild', 'fish']
   for (const category of categories) {
     const choices = Object.entries(save.items).filter(([id]) => cupCategory(id) === category)
       .flatMap(([id, lots]) => lots.flatMap((count, i) => count ? [{ id, key: stockKey(id, i + 1), score: 4 * (i + 1) + goodOf(id)!.grade }] : []))
@@ -202,14 +202,23 @@ describe('a year of farm contests through normal farm actions', () => {
     for (let turn = 0; turn < DAYS_PER_YEAR; turn++) {
       const { day, season } = dateOf(save.calendar.day)
       const event = GAME_DAYS.festivals.find((rule) => rule.season === season && rule.day === day)?.rule
-      if (turn === 0) {
-        if (size === 0) save = tillTile(save, TILES[0]!)
-        save = markFlowerTile(save, TILES[0]!, 'carrot', GAME_DAYS)
-      }
+      if (season === 'spring' && day === 10) save = markFlowerTile(save, TILES[0]!, 'carrot', GAME_DAYS)
       if (size) {
-        if (size === 20 && season === 'winter' && day === 11) {
-          const miller = ids.find((id) => worksOn(save, story, id) && worksOn(save, story, id, save.calendar.day + 1))!
-          save = setTasks(setStationPlan(save, 'mill', [{ output: 'wheat-flour', target: 40 }]), miller, [{ kind: 'load', station: 'mill' }, { kind: 'forage', area: 'woods' }])
+        if (season === 'winter' && day === 27) {
+          const eligible = ids.filter(id => worksOn(save, story, id) && worksOn(save, story, id, save.calendar.day + 1))
+          const [miller] = eligible
+          const caretaker = eligible[1] ?? eligible[0]
+          if (caretaker) {
+            for (const id of ids) {
+              const current = save.roster[id]!.tasks ?? []
+              if (current.some(task => task.kind === 'care')) save = setTasks(save, id, current.filter(task => task.kind !== 'care'))
+            }
+            save = setTasks(save, caretaker, [{ kind: 'care', home: 'coop' }])
+          }
+          if (size === 20 && miller) {
+            save = setStationPlan(save, 'mill', [{ output: 'wheat-flour', target: 40 }])
+            save = setTasks(save, miller, [{ kind: 'load', station: 'mill' }, { kind: 'forage', area: 'woods' }])
+          }
         }
         if (day <= 8) save = buySeeds(save, ROTATION[season], 22)
         if (save.ranch.silo === 0 && save.gold >= 120) save = buyFodder(goToTown(save), 12)
@@ -225,7 +234,8 @@ describe('a year of farm contests through normal farm actions', () => {
           if (grower) expect(flowerPreview(save, preview.key, grower)?.valid ?? false).toBe(false)
           save = enterFlower(save, null, grower, GAME_DAYS)
           const card = festivalResult(save, event)!
-          expect(card.place).toBe(size === 50 ? 2 : 1)
+          const cuts = contestCutoffs('flower-show', farmRankOf(before.farm.points))
+          expect(card.place).toBe(preview.score >= cuts[0] ? 1 : preview.score >= cuts[1] ? 2 : 3)
           expect(card.credit).toEqual(card.place === 1 && grower ? [grower] : [])
         } else if (event === 'fishing-derby') save = derbyYear(save, ids, context)
         else if (event === 'animal-show') save = animalYear(save, ids, context)

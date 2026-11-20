@@ -1,4 +1,4 @@
-import { DAYS_PER_YEAR } from '../farm/calendar'
+import { dateDayOf, DAYS_PER_SEASON, DAYS_PER_YEAR, yearlyDate } from '../farm/calendar'
 import type { EveningKind, SaveV4 } from './v4'
 
 export const COHORTS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50] as const
@@ -80,18 +80,18 @@ export const visitMemoryKey = (visit: Visit): string => [visit.kind, visit.who.j
 export const duoKey = ([a, b]: Duo): string => [a, b].sort((x, y) =>
   Number(x.replace(/^s/, '')) - Number(y.replace(/^s/, '')) || x.localeCompare(y)).join(':')
 
-export function celebrationDate(save: Pick<SaveV4, 'love' | 'longGame'>, id: Celebration): number | null {
+export function celebrationDate(save: Pick<SaveV4, 'love' | 'longGame'> & Partial<Pick<SaveV4, 'calendar'>>, id: Celebration): number | null {
   const count = id === 'greater-festival' ? ENDING_SPOUSES : Number(id.slice(7))
   const person = save.longGame?.weddings[count - 1]
   if (!person) return null
   const wedding = save.love[person]!.wed!
-  return wedding + (id === 'greater-festival' ? FARM_YEAR : count === ENDING_SPOUSES ? 0 : 1)
+  return id === 'greater-festival' ? yearlyDate(wedding, 1, save.calendar) : wedding + (count === ENDING_SPOUSES ? 0 : 1)
 }
 
 /** One contribution per quarter of the waiting year. An overdue festival can still accept its last gift. */
 export function festivalGiftWindow(save: Pick<SaveV4, 'calendar' | 'love' | 'longGame'>): number | null {
-  const due = celebrationDate(save, 'greater-festival')
-  return due === null ? null : Math.min(3, Math.floor((save.calendar.day - due + FARM_YEAR) / 12))
+  const wedding = celebrationDate(save, 'cohort:50')
+  return wedding === null ? null : Math.min(3, Math.floor((dateDayOf(save.calendar.day, save.calendar) - dateDayOf(wedding, save.calendar)) / DAYS_PER_SEASON))
 }
 
 export const unlockedLooks = (points: number, kind: NightKind): number =>

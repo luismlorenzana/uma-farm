@@ -1,8 +1,8 @@
 import { int, list, object, record } from './parse'
-import { dateOf } from '../farm/calendar'
+import { dateOf, yearsSince } from '../farm/calendar'
 import { fail, member, outfit, unique } from './parse-loop'
 import {
-  COHORTS, DUO_LIMIT, FARM_YEAR, NIGHT_VISITS, TRUE_LOVE, celebrationDate, duoKey, festivalGiftWindow, isCelebration, unlockedLooks, visitLookKind, visitMemoryKey,
+  COHORTS, DUO_LIMIT, NIGHT_VISITS, TRUE_LOVE, celebrationDate, duoKey, festivalGiftWindow, isCelebration, unlockedLooks, visitLookKind, visitMemoryKey,
   type Celebration, type Cohort, type Duo, type GreaterLove, type LongGame, type Visit,
 } from './long-game'
 import { EVENING_KINDS, type SaveV4 } from './v4'
@@ -32,7 +32,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     const looks = list(row.looks, path, who.length, who.length).map((look, i) => int(look, path, 1, unlockedLooks(TRUE_LOVE, visitLookKind({ kind }, i))))
     if (kind !== 'anniversary' && row.anniversary !== undefined) fail(path, 'expected an anniversary')
     if (kind !== 'birthday' && row.birthday !== undefined) fail(path, 'expected a birthday')
-    const anniversary = kind === 'anniversary' ? int(row.anniversary, path, 1, Math.floor((day - save.love[who[0]]!.wed!) / FARM_YEAR)) : undefined
+    const anniversary = kind === 'anniversary' ? int(row.anniversary, path, 1, yearsSince(save.love[who[0]]!.wed!, day, save.calendar)) : undefined
     const birthday = kind === 'birthday' ? int(row.birthday, path, dateOf(day, save.calendar).year, dateOf(day, save.calendar).year) : undefined
     return { who, day, kind, looks, ...(anniversary === undefined ? {} : { anniversary }), ...(birthday === undefined ? {} : { birthday }) }
   }
@@ -51,7 +51,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
       anniversaries: int(row.anniversaries, path, 0, unlockedLooks(points, 'anniversary')) }
     if (points === TRUE_LOVE) heart.trueDay = int(row.trueDay, path, since, today)
     else if (row.trueDay !== undefined) fail(path, 'True Love requires a full bar')
-    if (row.anniversary !== undefined) heart.anniversary = int(row.anniversary, path, 1, Math.floor((today - since) / FARM_YEAR))
+    if (row.anniversary !== undefined) heart.anniversary = int(row.anniversary, path, 1, yearsSince(since, today, save.calendar))
     if (row.birthday !== undefined) heart.birthday = int(row.birthday, path, dateOf(since, save.calendar).year, dateOf(today, save.calendar).year)
     game.love[id] = heart
   }

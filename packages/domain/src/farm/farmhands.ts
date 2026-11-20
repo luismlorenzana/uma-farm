@@ -67,7 +67,7 @@ const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 /** A farmhand's actions a day, to start. */
 export const HAND_ACTIONS = 3
 /** Settled in: a season after you invited her, one more. */
-export const SETTLED_AFTER = DAYS_PER_SEASON
+export const SETTLED_AFTER = 12
 export const SETTLED_ACTIONS = 1
 /** Once she's your spouse, two more. */
 export const SPOUSE_ACTIONS = 2

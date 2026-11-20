@@ -3,7 +3,7 @@
 // 9000001–9000003.
 import { describe, expect, it } from 'vitest'
 import { runNight, type NightContext } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
 import { checkBible } from '../story/authored'
 import { STAND_INS } from '../story/authored.fixture'
@@ -106,9 +106,9 @@ describe('the household\'s meals', () => {
     const morning = runNight(fed, context())
     expect([morning.roster[TWO]!.wellFed, morning.roster[THREE]!.wellFed]).toEqual([1, 1])
     expect(morning.today.meals).toBeUndefined()
-    expect(parseSaveV5(json(fed))).toEqual(fed)
-    expect(() => parseSaveV5(json({ ...fed, today: { ...fed.today, meals: ['dinner', 'dinner'] } }))).toThrow()
-    expect(() => parseSaveV5(json({ ...fed, today: { ...fed.today, meals: ['lunch'] } }))).toThrow()
+    expect(parseSaveV6(json(fed))).toEqual(fed)
+    expect(() => parseSaveV6(json({ ...fed, today: { ...fed.today, meals: ['dinner', 'dinner'] } }))).toThrow()
+    expect(() => parseSaveV6(json({ ...fed, today: { ...fed.today, meals: ['lunch'] } }))).toThrow()
   })
 
   it('plays one spouse\'s meal line as you sit down, the same all day', () => {
@@ -141,8 +141,8 @@ describe('the night\'s companion', () => {
     // A move clears her as tonight's pick.
     const moved = moveSpouse(buildHouse(picked, 'Willow House'), TWO, 2)
     expect(moved.homestead.companion).toBeUndefined()
-    expect(parseSaveV5(json(picked))).toEqual(picked)
-    expect(() => parseSaveV5(json({ ...picked, homestead: { ...picked.homestead, tonight: 0 } }))).toThrow('expected a spouse in tonight’s house')
+    expect(parseSaveV6(json(picked))).toEqual(picked)
+    expect(() => parseSaveV6(json({ ...picked, homestead: { ...picked.homestead, tonight: 0 } }))).toThrow('expected a spouse in tonight’s house')
   })
 
   it('the night notes her (her house, her night) and clears the pick; she greets you first in the morning\'s Hearts', () => {
@@ -154,12 +154,12 @@ describe('the night\'s companion', () => {
     const morning = runNight(picked, context())
     expect(morning.summary!.hearts[0]).toEqual({ kind: 'morning', id: TWO })
     expect(morning.homestead.slept).toEqual([0, 30])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
     // The next night with no pick: the house slept in least lately (the Farmhouse) and its resident.
     expect(runNight(morning, context()).summary!.hearts[0]).toEqual({ kind: 'morning', id: ONE })
     // Before the first wedding, no companion and no line.
     expect(runNight(farm(), context()).summary!.hearts.some((h) => h.kind === 'morning')).toBe(false)
-    expect(() => parseSaveV5(json({ ...morning, love: { ...morning.love, [THREE]: { ...morning.love[THREE]!, night: 3 } } }))).toThrow('only a spouse')
+    expect(() => parseSaveV6(json({ ...morning, love: { ...morning.love, [THREE]: { ...morning.love[THREE]!, night: 3 } } }))).toThrow('only a spouse')
   })
 
   it('in two in one house, the one who\'s been your companion least lately', () => {

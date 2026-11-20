@@ -17,7 +17,7 @@ import { botMenu, botTaps } from '../kitchen/stove-bots'
 import { runNight } from '../night/end-day'
 import { buyFodder, setCollectionCap } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, shopLines } from '../save/shop'
 import { bareTile, FIELD_TILES, newLove, newRosterUma, newSave, type Animal, type FarmSave, type FarmTask } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
@@ -207,7 +207,7 @@ describe('Restaurant playthrough on a roster-run farm', () => {
           clears.push(day - START)
           served += result.sales + result.tips
           missed += shift.tickets.length - result.covers
-          expect(parseSaveV5(JSON.parse(JSON.stringify(save)))).toEqual(save)
+          expect(parseSaveV6(JSON.parse(JSON.stringify(save)))).toEqual(save)
         }
       }
       // A component produced by the Kitchen has separate uses without duplicating the lot.

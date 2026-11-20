@@ -10,11 +10,11 @@ import {
 import { eventOf } from './placeholders'
 import { STAND_IN_FILES } from './stand-in'
 
-// Day 1 is Spring 1; a season is 12 days.
+// Day 1 is Spring 1; a season is 30 days.
 const SPRING = 1
-const SUMMER = 13
-const AUTUMN = 25
-const WINTER = 37
+const SUMMER = 31
+const AUTUMN = 61
+const WINTER = 91
 
 describe('outfits by context', () => {
   it('maps every story id to the art’s name: autumn is fall, work farm-work, pajamas pajamas-playful; season the day’s', () => {

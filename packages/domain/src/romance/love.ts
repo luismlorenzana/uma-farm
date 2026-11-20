@@ -11,7 +11,7 @@
 // played. Her arrival scene, "event zero", pays +50 and its one choice: the option with the highest authored gain +30,
 // every other +10, shown on the button before the tap. Loaded with the romance's screens and the night.
 import { recordLibrary } from '../library/receipts'
-import { DAYS_PER_YEAR } from '../farm/calendar'
+import { dateDayOf, DAYS_PER_YEAR, type FarmClock } from '../farm/calendar'
 import { SaveRuleError } from '../save/rules'
 import type { Love, LoveStage, SaveV4 } from '../save/v4'
 import type { ChoiceOption, Step } from '../story/authored'
@@ -144,13 +144,13 @@ export const BIRTHDAY_GIFT = 3
 export const ANNIVERSARY_POINTS = 2
 
 /** Whether a day is her anniversary: her wedding's day of the year, from year 2 of her marriage. */
-export const isAnniversary = (love: Pick<Love, 'wed'>, day: number): boolean =>
-  love.wed !== undefined && day > love.wed && (day - love.wed) % DAYS_PER_YEAR === 0
+export const isAnniversary = (love: Pick<Love, 'wed'>, day: number, clock?: FarmClock): boolean =>
+  love.wed !== undefined && day > love.wed && (dateDayOf(day, clock) - dateDayOf(love.wed, clock)) % DAYS_PER_YEAR === 0
 
 /** The day's factor on an act: a gift ×3 on her birthday; on her anniversary every act ×2 except the evening.
  * Each multiplies once. */
-export function dayFactor(love: Pick<Love, 'wed'>, day: number, source: LoveSource, birthday = false): number {
-  return (source === 'gift' && birthday ? BIRTHDAY_GIFT : 1) * (source !== 'evening' && isAnniversary(love, day) ? ANNIVERSARY_POINTS : 1)
+export function dayFactor(love: Pick<Love, 'wed'>, day: number, source: LoveSource, birthday = false, clock?: FarmClock): number {
+  return (source === 'gift' && birthday ? BIRTHDAY_GIFT : 1) * (source !== 'evening' && isAnniversary(love, day, clock) ? ANNIVERSARY_POINTS : 1)
 }
 
 /** Points are whole: each pay rounds once, half up, after its factors. */
@@ -170,7 +170,7 @@ export function addLove(save: SaveV4, id: string, points: number, source: LoveSo
   if (!love) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   if (!Number.isFinite(points) || points < 0) throw new SaveRuleError('bad-count', 'Points are never taken away.')
   if (nextRung(love) === null) return { save, paid: 0 }
-  const paid = roundPoints(points * dayFactor(love, save.calendar.day, source, birthday))
+  const paid = roundPoints(points * dayFactor(love, save.calendar.day, source, birthday, save.calendar))
   if (paid === 0) return { save, paid }
   return { save: { ...save, love: { ...save.love, [id]: { ...love, points: love.points + paid } } }, paid }
 }

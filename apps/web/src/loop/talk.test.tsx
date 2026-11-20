@@ -177,7 +177,7 @@ describe('talk that knows the day', () => {
 describe('every occasion on its day', () => {
   it('on the Fishing Derby, the calendar plays her day’s scene, then its night’s, each an action', async () => {
     // Summer 10 is her town day: where she is never gates an occasion.
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm(farmDay({ year: 1, season: 'summer', day: 10 })) })
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(farmDay({ year: 1, season: 'summer', day: 21 })) })
     await render(<div />, '/?sheet=calendar')
     const row = () => $(`[data-face="${ONE}"]`)
     await until(() => row() !== null)

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GAME_DAYS } from '../farm/actions'
 import { readHousehold } from '../romance/household'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import type { SavePut } from '../save/save'
 import { newLove, newRosterUma, newSave, type FarmSave } from '../save/v4'
 import { castPack } from '../story/authored.fixture'
@@ -32,13 +32,13 @@ describe('Uma Library evidence', () => {
     expect(old.find(scene => scene.key === 'route:f2')).toMatchObject({ earned: true, variants: [{ day: 40 }] })
     expect(bookHistory(legacy, HER).recent).toEqual([])
     expect(finishLibraryChanges(legacy, legacy, original, GAME_DAYS)).toBe(legacy)
-    expect(parseSaveV5(snapshot)).toEqual(legacy)
+    expect(parseSaveV6(snapshot)).toEqual(legacy)
 
     let save = recordLibrary(legacy, HER, 'occasion:day:flower-show:flower-show:festival', { day: 10, activity: 'occasion:day:flower-show' })
     save = recordLibrary(save, HER, 'occasion:night:flower-show-night:flower-show-night:festival-night', { day: 10, activity: 'occasion:night:flower-show-night' })
     save = recordLibrary(save, HER, 'fact:note:kite', { day: 1 })
     const moved = { ...GAME_DAYS, festivals: festivalsOf(base).map(f => f.rule === 'flower-show' ? { ...f, day: 11, name: 'Bloom Fair' } : f) }
-    const catalogue = bookScenes(parseSaveV5(copy(save)), base, HER, moved)
+    const catalogue = bookScenes(parseSaveV6(copy(save)), base, HER, moved)
     expect(catalogue.find(scene => scene.key === 'occasion:day:flower-show')).toMatchObject({ title: 'Bloom Fair', earned: true, variants: [{ day: 10 }] })
     expect(catalogue.find(scene => scene.group === 'archive')).toMatchObject({ day: 10, earned: true, variants: [] })
     expect(archivedDiscoveries(save, HER, bookDiscoveries(save, base, HER, moved))).toEqual([
@@ -77,14 +77,14 @@ describe('Uma Library evidence', () => {
     const wire = JSON.stringify(upload)
     expect(entries).toBe(1750)
     expect(Buffer.byteLength(wire)).toBeLessThan(250_000)
-    const second = parseSaveV5(JSON.parse(wire).save)
+    const second = parseSaveV6(JSON.parse(wire).save)
     expect(second).toEqual(save)
     expect(bookHistory(second, HER).recent).toHaveLength(32)
     expect(bookHistory(second, HER).totals['occasion:day:flower-show']).toEqual([12, 10, 538, null])
     expect(bookHistory(second, HER).totals['evening:fishing']?.[3]).toBe(96)
-    expect(() => parseSaveV5({ ...copy(save), library: { outsider: save.library![HER] } })).toThrow()
+    expect(() => parseSaveV6({ ...copy(save), library: { outsider: save.library![HER] } })).toThrow()
     const damaged = copy(save)
     damaged.library![HER]!.recent[0]![0] = 578
-    expect(() => parseSaveV5(damaged)).toThrow()
+    expect(() => parseSaveV6(damaged)).toThrow()
   })
 })

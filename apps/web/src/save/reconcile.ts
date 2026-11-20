@@ -12,6 +12,8 @@ export interface LocalState<S extends StoredSave = StoredSave> {
 export interface RemoteState<S extends StoredSave = StoredSave> {
   revision: number
   save: S | null
+  /** A legacy save expanded for comparison, before the device uploads it. */
+  migrated?: boolean
 }
 
 export type SyncStep<S extends StoredSave = StoredSave> =
@@ -27,7 +29,9 @@ export function reconcile<S extends StoredSave>(local: LocalState<S>, remote: Re
   if (!local.dirty) return remote.revision > local.revision ? { kind: 'adopt', envelope: remoteEnvelope, replacesUnsynced: false } : { kind: 'none' }
   // A calendar restart was applied to the cloud save. Keep unsynced work in the usual device recovery copy.
   if (remote.revision > local.revision && 'calendar' in remote.save && 'calendar' in local.save
-    && remote.save.calendar.start !== local.save.calendar.start) {
+    && (remote.save.calendar.start !== local.save.calendar.start
+      || (!remote.migrated && remote.save.version === 6 && local.save.version === 6
+        && remote.save.calendar.expandedAt !== local.save.calendar.expandedAt))) {
     return { kind: 'adopt', envelope: remoteEnvelope, replacesUnsynced: true }
   }
   if (remote.revision === local.revision) return { kind: 'push', baseRevision: local.revision, save: local.save }

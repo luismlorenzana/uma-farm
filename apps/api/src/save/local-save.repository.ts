@@ -50,6 +50,8 @@ export class LocalSaveRepository implements SaveRepository {
       if (current.save && 'calendar' in current.save && save.calendar.start !== current.save.calendar.start) {
         throw new RevisionConflict(current)
       }
+      if (current.save?.version === 6 && (save.calendar.expandedAt !== current.save.calendar.expandedAt
+        || save.calendar.finishingContest !== current.save.calendar.finishingContest)) throw new RevisionConflict(current)
       const next = { revision: baseRevision + 1, save }
       data[uid] = next
       await this.write(data)

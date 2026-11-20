@@ -8,7 +8,7 @@ import { DIARY_ROWS, MILESTONES, ROW_GOLD } from '../farm/milestones'
 import type { Activity, Rank } from '../farm/ranks'
 import { endDay, type NightContext } from '../night/end-day'
 import { GOLD_SHIPPED } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 import type { Calling, CastEntry } from './authored'
 import { STAND_IN_CAST } from './authored.fixture'
@@ -176,14 +176,14 @@ describe('the night\'s goals', () => {
     expect(morning.farm.points).toBe(150)
     expect(morning.buildings.mill).toBeUndefined()
     expect(Object.keys(morning.roster)).toEqual(['1001', '1002', '1003'])
-    expect(morning.summary!.news).toEqual([{ kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'shipped:10000' }, { kind: 'milestone', id: 'rank:hand' }])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(morning.summary!.news).toEqual([{ kind: 'days', ids: ['blossom-viewing'], when: 'today' }, { kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'shipped:10000' }, { kind: 'milestone', id: 'rank:hand' }])
+    expect(parseSaveV6(json(morning))).toEqual(morning)
     expect(checkGoalsNight(morning, []).tonight).toEqual({ paid: [], ranks: [] })
   })
 
   it('reads an older v4\'s "chapter done" line and drops it, and refuses a goal line it does not know', () => {
     const morning = night(ready())
-    const parse = (news: unknown[]) => parseSaveV5(json({ ...morning, summary: { ...morning.summary!, news } }))
+    const parse = (news: unknown[]) => parseSaveV6(json({ ...morning, summary: { ...morning.summary!, news } }))
     expect(parse([{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }]).summary!.news).toEqual([{ kind: 'farm-rank', rank: 2 }])
     expect(() => parse([{ kind: 'milestone', id: 'shipped:5' }])).toThrow('unknown milestone')
     expect(() => parse([{ kind: 'farm-rank', rank: 1 }])).toThrow('expected 2–10')

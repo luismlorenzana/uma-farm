@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_SEASON } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
 import { checkCast, RUNGS, type Cast, type HerChapter, type StoryTrigger, type UmaBible } from '../story/authored'
 import { STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
@@ -153,7 +153,7 @@ describe('a chapter’s gate', () => {
     expect(gateHolds(save, { kind: 'season', season: 'winter' })).toBe(true)
     expect(gateHolds(save, { kind: 'season', season: 'spring' })).toBe(false)
     expect(gateHolds(save, { kind: 'festival', festival: 'harvest-cup' })).toBe(false)
-    expect(gateHolds({ ...save, calendar: { day: DAYS_PER_SEASON * 4 } }, { kind: 'festival', festival: 'harvest-cup' })).toBe(true)
+    expect(gateHolds({ ...save, calendar: { day: DAYS_PER_SEASON * 3 + 28 } }, { kind: 'festival', festival: 'harvest-cup' })).toBe(true)
     expect(gateHolds(save, { kind: 'farm-rank', rank: 2 })).toBe(false)
     expect(gateHolds({ ...save, farm: { ...save.farm, points: 1_000_000 } }, { kind: 'farm-rank', rank: 2 })).toBe(true)
     expect(gateHolds(save, KITCHEN)).toBe(false)
@@ -239,12 +239,12 @@ describe('the morning a chapter opens', () => {
   it('is a morning line the save keeps; an older save without one loads', () => {
     const day = withLove(farm(), ONE, { stage: 'romance', level: 0, last: 5 })
     const morning = runNight({ ...day, today: { ...day.today, events: [ONE] } }, context())
-    expect(parseSaveV5(json(morning)).summary!.hearts).toContainEqual({ kind: 'chapter', id: ONE, chapter: 2 })
+    expect(parseSaveV6(json(morning)).summary!.hearts).toContainEqual({ kind: 'chapter', id: ONE, chapter: 2 })
     const bad = json(morning)
     bad.summary!.hearts = [{ kind: 'chapter', id: ONE, chapter: 28 }]
-    expect(() => parseSaveV5(bad)).toThrow('save.summary.hearts.0.chapter')
+    expect(() => parseSaveV6(bad)).toThrow('save.summary.hearts.0.chapter')
     const old = json(morning)
     old.summary!.hearts = old.summary!.hearts.filter((h) => h.kind !== 'chapter')
-    expect(parseSaveV5(old).summary!.hearts.some((h) => h.kind === 'chapter')).toBe(false)
+    expect(parseSaveV6(old).summary!.hearts.some((h) => h.kind === 'chapter')).toBe(false)
   })
 })

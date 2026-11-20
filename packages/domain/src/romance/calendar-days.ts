@@ -13,7 +13,7 @@
 // anniversaries, and nothing to play. The date's own faces come first (an occasion, a birthday, an anniversary), then
 // those only Ready, each in the cast's order. Pure; loaded with the calendar.
 import { eventActionsOn, type SpecialDays } from '../farm/actions'
-import { DAYS_PER_SEASON, dateOf, farmDay, festivalOn, isNewYear, type FarmDate, type Festival, type Season } from '../farm/calendar'
+import { DAYS_PER_SEASON, dateOf, festivalOn, isNewYear, turnOnDate, type FarmDate, type Festival, type Season } from '../farm/calendar'
 import { newTodayV4, type SaveV4 } from '../save/v4'
 import { CELEBRATIONS, celebrationDate, type Celebration } from '../save/long-game'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -86,7 +86,7 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
   const when: DayWhen = day < today ? 'past' : day === today ? 'today' : 'ahead'
   const met = metInOrder(save, pack)
   const birthdays = met.filter((id) => isBirthday(days.birthdays, id, day, save.calendar))
-  const anniversaries = met.filter((id) => save.love[id] !== undefined && isAnniversary(save.love[id]!, day))
+  const anniversaries = met.filter((id) => save.love[id] !== undefined && isAnniversary(save.love[id]!, day, save.calendar))
   const weddings = met.filter(id => (save.love[id]?.wed ?? save.love[id]?.weddingDay) === day)
   const celebrations = CELEBRATIONS.filter(id => celebrationDate(save, id) === day)
   const trips = [...save.expeditions, ...(save.expeditionLog ?? [])].flatMap((trip): CalendarDay['trips'] => day === trip.left || day === trip.back
@@ -120,8 +120,13 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
   }
 }
 
-/** A season's 12 days of this year (or `year`'s). */
-export function seasonDays(save: SaveV4, pack: DaysPack, days: SpecialDays, season: Season, year = dateOf(save.calendar.day, save.calendar).year): CalendarDay[] {
-  const first = farmDay({ year, season, day: 1 }, save.calendar)
-  return Array.from({ length: DAYS_PER_SEASON }, (_, i) => calendarDay(save, pack, days, first + i))
+export type CalendarSlot = CalendarDay | { date: FarmDate; day: null }
+
+/** This season's 30 dates. New dates in a finished legacy season have no historical turn. */
+export function seasonDays(save: SaveV4, pack: DaysPack, days: SpecialDays, season: Season, year = dateOf(save.calendar.day, save.calendar).year): CalendarSlot[] {
+  return Array.from({ length: DAYS_PER_SEASON }, (_, i) => {
+    const date = { year, season, day: i + 1 }
+    const turn = turnOnDate(date, save.calendar)
+    return turn === null ? { date, day: null } : calendarDay(save, pack, days, turn)
+  })
 }

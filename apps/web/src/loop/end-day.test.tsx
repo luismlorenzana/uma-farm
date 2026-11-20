@@ -17,7 +17,8 @@ vi.mock('../api/client', async () => {
 })
 
 const { useGame, resetGame } = await import('../save/game')
-const { FarmBar, OutOfActions } = await import('../shell/Bars')
+const { FarmBar } = await import('../shell/Bars')
+const { default: OutOfActions } = await import('../shell/OutOfActions')
 const { default: LoopSheets } = await import('./LoopSheets')
 const { endTheDay, dismissSummary } = await import('./actions')
 const { setAskBeforeEnd } = await import('./ask')

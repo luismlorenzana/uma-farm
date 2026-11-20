@@ -15,7 +15,7 @@ import { inviteToWork, mealEaters } from '../romance/loop'
 import { finishArrival } from '../romance/love'
 import { introduce } from '../romance/meeting'
 import { GOLD_SHIPPED } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { bareTile, newLove, newRosterUma, newSave, START_CLEAR, type FarmSave, type FarmTask } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { castPack } from '../story/authored.fixture'
@@ -173,7 +173,7 @@ describe('a full year with staggered farm shifts', () => {
       expect(weekdayOf(50)).toBe('monday')
       expect(dateOf(save.calendar.day)).toEqual({ year: 2, day: 1, season: 'spring' })
       expect(farmDaysIn(PACK, ONE, 'spring', 2)).not.toEqual(farmDaysIn(PACK, ONE, 'spring', 1))
-      expect(parseSaveV5(JSON.parse(JSON.stringify(save)))).toEqual(save)
+      expect(parseSaveV6(JSON.parse(JSON.stringify(save)))).toEqual(save)
       if (process.env.FARM_SHIFT_REPORT) console.log(JSON.stringify({ size, min, max, ...work }))
     }, 30_000)
 })

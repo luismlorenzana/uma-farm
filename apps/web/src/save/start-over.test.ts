@@ -68,12 +68,12 @@ describe('a save from before v5', () => {
     await startOver()
     expect(startingOver()).toBe(false)
     expect(useGame.getState()).toMatchObject({ status: 'ready', revision: 4, dirty: true })
-    expect(farm()).toMatchObject({ version: 5, calendar: { day: 1 }, gold: 500, roster: {}, farmer: { name: '' }, account: ACCOUNT })
+    expect(farm()).toMatchObject({ version: 6, calendar: { day: 1 }, gold: 500, roster: {}, farmer: { name: '' }, account: ACCOUNT })
     const [copy] = await safetyCopies('u1')
     expect(copy).toMatchObject({ reason: 'wiped', revision: 4, save: playedV3(999) })
     expect((await readSaveRow('u1'))?.save).toEqual(farm())
     await syncNow()
-    expect(server.envelope).toMatchObject({ revision: 5, save: { version: 5, account: ACCOUNT } })
+    expect(server.envelope).toMatchObject({ revision: 5, save: { version: 6, account: ACCOUNT } })
     // Once: the next boot plays the v5.
     resetGame()
     await expect(boot('u1')).resolves.toEqual({ startOver: false })
@@ -81,7 +81,7 @@ describe('a save from before v5', () => {
     expect(await safetyCopies('u1')).toHaveLength(1)
     // A copy from before v5 isn't restored: it would only start over again.
     expect(await restoreSafetyCopy(copy!.id!)).toBe(false)
-    expect(farm().version).toBe(5)
+    expect(farm().version).toBe(6)
   })
 
   it('on the device, clean, starts over without a copy', async () => {
@@ -89,7 +89,7 @@ describe('a save from before v5', () => {
     await db.save.put({ id: 'main', uid: 'u1', revision: 4, dirty: false, save: playedV3() as never })
     await expect(boot('u1')).resolves.toEqual({ startOver: true })
     await startOver()
-    expect(farm().version).toBe(5)
+    expect(farm().version).toBe(6)
     expect(await safetyCopies('u1')).toEqual([])
   })
 
@@ -98,11 +98,11 @@ describe('a save from before v5', () => {
     await expect(boot('u1')).resolves.toEqual({ startOver: true })
     expect(await db.save.get('main')).toBeUndefined()
     await startOver()
-    expect(farm()).toMatchObject({ version: 5, account: ACCOUNT })
+    expect(farm()).toMatchObject({ version: 6, account: ACCOUNT })
     expect(useGame.getState()).toMatchObject({ revision: 9, dirty: true })
     await syncNow()
     expect(server.puts).toBe(1)
-    expect(server.envelope).toMatchObject({ revision: 10, save: { version: 5, account: ACCOUNT } })
+    expect(server.envelope).toMatchObject({ revision: 10, save: { version: 6, account: ACCOUNT } })
     await syncNow()
     expect(server.puts).toBe(1)
   })
@@ -111,10 +111,10 @@ describe('a save from before v5', () => {
     server.envelope = { revision: 12, save: { version: 4, account: ACCOUNT } }
     await expect(boot('u1')).resolves.toEqual({ startOver: true })
     await startOver()
-    expect(farm()).toMatchObject({ version: 5, calendar: { day: 1 }, account: ACCOUNT, today: { actions: 0 } })
+    expect(farm()).toMatchObject({ version: 6, calendar: { day: 1 }, account: ACCOUNT, today: { actions: 0 } })
     expect(fieldTiles(farm())).toHaveLength(40)
     await syncNow()
-    expect(server.envelope).toMatchObject({ revision: 13, save: { version: 5, account: ACCOUNT } })
+    expect(server.envelope).toMatchObject({ revision: 13, save: { version: 6, account: ACCOUNT } })
   })
 
   it('met in a sync is made new and pushed over', async () => {
@@ -123,8 +123,8 @@ describe('a save from before v5', () => {
     // Put back by hand, say: the farm never plays it.
     server.envelope = serverV3(9)
     await syncNow()
-    expect(farm()).toMatchObject({ version: 5, calendar: { day: 1 }, account: ACCOUNT })
-    expect(server.envelope).toMatchObject({ revision: 10, save: { version: 5 } })
+    expect(farm()).toMatchObject({ version: 6, calendar: { day: 1 }, account: ACCOUNT })
+    expect(server.envelope).toMatchObject({ revision: 10, save: { version: 6 } })
   })
 
   it("in a 409 is made new before reconciling: the device's later change wins", async () => {
@@ -134,23 +134,23 @@ describe('a save from before v5', () => {
     server.race = serverV3(7)
     await syncNow()
     expect(server.refused).toBe(1)
-    expect(farm()).toMatchObject({ version: 5, gold: 1 })
-    expect(server.envelope).toMatchObject({ revision: 8, save: { version: 5, gold: 1 } })
+    expect(farm()).toMatchObject({ version: 6, gold: 1 })
+    expect(server.envelope).toMatchObject({ revision: 8, save: { version: 6, gold: 1 } })
   })
 })
 
 describe('a new farm', () => {
   it("starts a fresh device with an empty server straight on v5's day 1, the farmer unnamed", async () => {
     await expect(boot('u1')).resolves.toEqual({ startOver: false })
-    expect(farm()).toMatchObject({ version: 5, calendar: { day: 1 }, farmer: { name: '' }, roster: {}, items: { 'seed-carrot': [9, 0, 0, 0, 0] } })
+    expect(farm()).toMatchObject({ version: 6, calendar: { day: 1 }, farmer: { name: '' }, roster: {}, items: { 'seed-carrot': [9, 0, 0, 0, 0] } })
     await syncNow()
-    expect(server.envelope.save?.version).toBe(5)
+    expect(server.envelope.save?.version).toBe(6)
   })
 })
 
 describe('a save from a newer app', () => {
   it('stops boot from the server and never writes over it', async () => {
-    const newer = { ...newSave('u1', T0), version: 6 } as unknown as SaveV4
+    const newer = { ...newSave('u1', T0), version: 7 } as unknown as SaveV4
     server.envelope = { revision: 3, save: newer }
     await expect(boot('u1')).rejects.toThrow(NEWER_SAVE_WORDS)
     expect(useGame.getState().save).toBeNull()
@@ -159,11 +159,11 @@ describe('a save from a newer app', () => {
   })
 
   it('on the device is kept as an unreadable copy, and the server decides', async () => {
-    const newer = { ...newSave('u1', T0), version: 6 }
+    const newer = { ...newSave('u1', T0), version: 7 }
     await db.save.put({ id: 'main', uid: 'u1', revision: 3, dirty: false, save: newer as never })
     server.envelope = { revision: 3, save: newer as unknown as SaveV4 }
     await expect(boot('u1')).rejects.toThrow(NEWER_SAVE_WORDS)
-    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', save: { version: 6 } })
+    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', save: { version: 7 } })
     expect(server.puts).toBe(0)
   })
 
@@ -172,7 +172,7 @@ describe('a save from a newer app', () => {
     await syncNow()
     const puts = server.puts
     await commit(touched({ ...farm(), gold: 7 }, '2026-11-11T15:00:00.000Z'))
-    server.envelope = { revision: 9, save: { ...newSave('u1', T0), version: 6 } as unknown as SaveV4 }
+    server.envelope = { revision: 9, save: { ...newSave('u1', T0), version: 7 } as unknown as SaveV4 }
     await syncNow()
     expect(server.puts).toBe(puts)
     expect(useGame.getState().sync).toBe('error')

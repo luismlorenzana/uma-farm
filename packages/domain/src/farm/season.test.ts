@@ -59,7 +59,7 @@ import { goodOf, LEGACY_CROP_IDS, type CropId } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { animalsIn, ANIMALS, buyAnimal, buyFodder, FODDER_PRICE, siloRoom } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
 import { fieldTiles, FIELD_TILES, isOvergrown, newLove, newRosterUma, newSave, type FarmTask, type SaveV4 } from '../save/v4'
 
@@ -560,16 +560,15 @@ describe('a simulated first year: the farm pays its way', () => {
     expect(end.calendar.day).toBe(DAYS_PER_YEAR + 1)
   })
 
-  it('clears every loan and builds the Mill; the farmer alone reaches Farm Rank 2', () => {
+  it('clears every loan and builds the Mill and two further workshops', () => {
     expect(end.farm.loans).toEqual([])
-    expect(log.flatMap((d) => (d.built ? [d.built.split(' ')[0]] : []))).toEqual(['mill'])
+    expect(log.flatMap((d) => (d.built ? [d.built.split(' ')[0]] : []))).toEqual(['mill', 'sawmill', 'smokehouse'])
     expect(upkeepOf(end).residents).toBe(0)
-    // The Farm Rank 3 stations wait for the farmhands' pace: the farmer alone ships about 9,000g in a year.
-    expect(farmRankOf(end.farm.points)).toBe(2)
+    expect(farmRankOf(end.farm.points)).toBe(3)
   })
 
   it('keeps a save the parse takes, every morning', () => {
-    for (const morning of mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
+    for (const morning of mornings) expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })
 
@@ -622,7 +621,7 @@ describe('a simulated first year with two farmhands: they pay their way', () => 
   })
 
   it('keeps a save the parse takes, every morning', () => {
-    for (const morning of mornings2) expect(parseSaveV5(json(morning))).toEqual(morning)
+    for (const morning of mornings2) expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })
 
@@ -640,7 +639,9 @@ describe('food, the farmer alone: takeout bites from the first night, and never 
 
   it('cooks a batch to bridge a tight night (the Mill\'s, on a loan), and pays takeout while his gold holds: the two end the year alike', () => {
     expect(log.slice(0, DAYS_PER_SEASON).reduce((n, d) => n + d.batches, 0)).toBeGreaterThan(0)
-    expect(aloneTakeout.log.filter((d) => d.short)).toEqual([])
+    expect(log.filter(day => day.short)).toEqual([])
+    expect(aloneTakeout.log.filter(day => day.short).map(day => day.day)).toEqual([12])
+    expect(aloneTakeout.end.farm.owed).toBe(0)
     expect(Math.abs(end.gold - aloneTakeout.end.gold) / aloneTakeout.end.gold).toBeLessThan(0.1)
   })
 
@@ -659,11 +660,11 @@ describe('food with two farmhands, the field hand on Cook: cooking pays for itse
   const { log: days, end: last, books: seasons } = withHands
   const takeout = handsTakeout
 
-  it('pays its takeout and upkeep on takeout alone too: it bites, a fifth of what the farm ships, and never sinks it', () => {
+  it('pays its takeout and upkeep on takeout alone too: takeout costs about a tenth of shipping income', () => {
     expect(takeout.log.filter((d) => d.short)).toEqual([])
     const bought = takeout.books.reduce((n, b) => n + b.takeout, 0)
-    expect(bought / takeout.end.farm.counts[GOLD_SHIPPED]!).toBeGreaterThan(0.15)
-    expect(bought / takeout.end.farm.counts[GOLD_SHIPPED]!).toBeLessThan(0.3)
+    expect(bought / takeout.end.farm.counts[GOLD_SHIPPED]!).toBeGreaterThan(0.09)
+    expect(bought / takeout.end.farm.counts[GOLD_SHIPPED]!).toBeLessThan(0.15)
   })
 
   it('feeds the farm from the pantry once the field yields: a third less takeout in Autumn and Winter', () => {
@@ -702,11 +703,12 @@ describe('the whole farm over three years: the Coop and the Mine pay their way',
     expect(last.farm.loans).toEqual([])
   })
 
-  it('builds the Coop in its first year, the Kitchen in its second and the Mine in its third (Farm Rank 4), and counts them in the upkeep', () => {
+  it('builds the Coop, Kitchen and Mine in progression order and counts them in upkeep', () => {
     expect(builtOn('coop')).toBeLessThanOrEqual(DAYS_PER_YEAR)
-    expect(builtOn('kitchen')).toBeGreaterThan(DAYS_PER_YEAR)
+    expect(builtOn('kitchen')).toBeGreaterThan(builtOn('coop')!)
+    expect(builtOn('kitchen')).toBeLessThan(DAYS_PER_YEAR)
     expect(builtOn('kitchen')).toBeLessThan(builtOn('mine')!)
-    expect(builtOn('mine')).toBeGreaterThan(2 * DAYS_PER_YEAR)
+    expect(builtOn('mine')).toBeLessThan(2 * DAYS_PER_YEAR)
     expect(upkeepOf(last).places).toBe(upkeepOf(withHands.end).places + 3)
     expect(upkeepOf(last).residents).toBe(0)
   })
@@ -732,6 +734,6 @@ describe('the whole farm over three years: the Coop and the Mine pay their way',
   })
 
   it('keeps a save the parse takes, every morning', () => {
-    for (const morning of all) expect(parseSaveV5(json(morning))).toEqual(morning)
+    for (const morning of all) expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })

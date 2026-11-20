@@ -1,5 +1,5 @@
 import { awayForNight } from '../expeditions/presence'
-import { dateOf } from '../farm/calendar'
+import { dateDayOf, dateOf, yearsSince } from '../farm/calendar'
 import { availableDishes } from '../expeditions/stock'
 import { SaveRuleError } from '../save/rules'
 import {
@@ -56,11 +56,11 @@ export const unreadCelebrations = (save: CalendarSave): Celebration[] =>
   CELEBRATIONS.filter(id => celebrationReached(save, id) && save.longGame?.celebrations[id] === undefined)
 
 export function householdVows(save: CalendarSave & Partial<Pick<SaveV4, 'homestead'>>): boolean {
-  if (!save.longGame) return !!save.homestead && vowsOn(save.homestead, save.calendar.day)
+  if (!save.longGame) return !!save.homestead && vowsOn(save.homestead, save.calendar.day, save.calendar)
   const celebrated = save.longGame.celebrations['greater-festival']
-  if (!celebrated) return !!save.homestead && vowsOn(save.homestead, save.calendar.day)
+  if (!celebrated) return !!save.homestead && vowsOn(save.homestead, save.calendar.day, save.calendar)
   const due = celebrationDate(save, 'greater-festival')
-  return due !== null && save.calendar.day > celebrated && (save.calendar.day - due) % FARM_YEAR === 0
+  return due !== null && save.calendar.day > celebrated && (dateDayOf(save.calendar.day, save.calendar) - dateDayOf(due, save.calendar)) % FARM_YEAR === 0
 }
 
 export const preparingFestival = (save: CalendarSave): boolean =>
@@ -124,7 +124,7 @@ export function nightAvailable(save: SaveV4, pack: LifePack, id: string): boolea
 export const anniversaryOffer = (save: CalendarSave, id: string): number | null => {
   const wed = save.love[id]?.wed
   if (!wed) return null
-  const year = Math.floor((save.calendar.day - wed) / FARM_YEAR)
+  const year = yearsSince(wed, save.calendar.day, save.calendar)
   return year > (greaterLoveOf(save, id).anniversary ?? 0) ? year : null
 }
 

@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { farmRankOpens } from '../farm/diary'
 import { meet } from '../romance/meeting'
 import { parseSave, parseStored, type OlderSave } from './save'
-import { parseSaveV5 } from './parse-v4'
-import { FIELD_TILES, fieldTiles, freshV5, newLove, newSave, START_CLEAR, startField, type SaveV4 } from './v4'
+import { parseSaveV6 } from './parse-v4'
+import { FIELD_TILES, fieldTiles, freshV6, newLove, newSave, START_CLEAR, startField, type SaveV4 } from './v4'
 
 const CREATED = '2026-11-08T09:12:44.000Z'
 const UPDATED = '2026-11-10T21:40:03.512Z'
@@ -28,10 +28,10 @@ describe('the new farm over an older save', () => {
   const v4 = { version: 4, account, calendar: { day: 30 }, fields: { blocks: [{ id: 'A', tender: '9000001', plots: [] }] }, work: { 9000001: {} } }
 
   it.each([['v1', v1], ['v2', v2], ['v3', v3], ['v4', v4]] as const)('makes a %s a fresh v5 with the account whole', (_, stored) => {
-    const fresh = freshV5(parseStored(stored))
+    const fresh = freshV6(parseStored(stored))
     expect(fresh.account).toEqual(account)
     expect(fresh).toMatchObject({
-      version: 5, farmer: { name: '' }, calendar: { day: 1 }, gold: 500, roster: {}, love: {}, memories: {}, arrivals: [],
+      version: 6, farmer: { name: '' }, calendar: { day: 1 }, gold: 500, roster: {}, love: {}, memories: {}, arrivals: [],
       items: { 'seed-carrot': [9, 0, 0, 0, 0] }, dorm: { level: 1, home: [], swaps: [] }, buildings: { dorm: 1 }, loads: {},
       today: { actions: 0, eventActions: 0, town: false, gathered: [] },
     })
@@ -41,7 +41,7 @@ describe('the new farm over an older save', () => {
     expect(fresh).not.toHaveProperty('visitors')
     expect(fresh).not.toHaveProperty('work')
     // The fresh farm is a v5 the parse takes as it is.
-    expect(parseSaveV5(json(fresh))).toEqual(fresh)
+    expect(parseSaveV6(json(fresh))).toEqual(fresh)
   })
 
   it('starts the field overgrown but for a cleared patch of nine, the same for the same account', () => {
@@ -55,14 +55,14 @@ describe('the new farm over an older save', () => {
   })
 
   it('a new account is the same day 1, its account at now', () => {
-    expect(freshV5({ account: { uid: 'u1', createdAt: AT, updatedAt: AT } })).toEqual(newSave('u1', AT))
+    expect(freshV6({ account: { uid: 'u1', createdAt: AT, updatedAt: AT } })).toEqual(newSave('u1', AT))
   })
 })
 
 describe('the v5 parse', () => {
   it('round-trips a played v5, through parseSave too', () => {
     const save = farm()
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
     expect(parseSave(json(save))).toEqual(save)
     expect(parseSave(json(newSave('u1', AT)))).toEqual(newSave('u1', AT))
   })
@@ -70,7 +70,7 @@ describe('the v5 parse', () => {
   const refuse = (change: (save: Record<string, any>) => void, message: string | RegExp) => {
     const raw = json(farm()) as Record<string, any>
     change(raw)
-    expect(() => parseSaveV5(raw)).toThrow(message)
+    expect(() => parseSaveV6(raw)).toThrow(message)
   }
 
   it('refuses unknown keys, an older save\'s among them', () => {
@@ -92,7 +92,7 @@ describe('the v5 parse', () => {
     refuse((s) => { s.fields.plots[0].tiles[0] = { ...s.fields.plots[0].tiles[0], ground: 'tilled', crop: 'carrot', ready: true, watered: true } }, `${plot}.0.watered: a ripe crop isn’t watered`)
     const save = farm()
     save.fields.plots[0]!.tiles[0] = { ground: 'tilled', crop: 'carrot', growth: 2, ready: false, regrowing: false, own: true, watered: true }
-    expect(parseSaveV5(json(save)).fields.plots[0]!.tiles[0]).toEqual(fieldTiles(save)[0])
+    expect(parseSaveV6(json(save)).fields.plots[0]!.tiles[0]).toEqual(fieldTiles(save)[0])
   })
 
   it('reads a live save\'s field, from before plots, as plot 1 exactly as it was, and never moves updatedAt', () => {
@@ -105,20 +105,20 @@ describe('the v5 parse', () => {
     live.account = { ...account }
     live.roster['9000001'].farmhand = 3
     live.roster['9000001'].tasks = [{ kind: 'water', tiles: [0, 1, 2, 3, 4, 5, 6, 7] }]
-    const read = parseSaveV5(json(live))
+    const read = parseSaveV6(json(live))
     expect(read.fields).toEqual({ plots: [{ tiles }] })
     expect(read.roster['9000001']!.tasks).toEqual([{ kind: 'water', tiles: [0, 1, 2, 3, 4, 5, 6, 7] }])
     expect(read.account).toEqual(account)
     expect(read.account.updatedAt).toBe(UPDATED)
     // Written back, it's plot 1, and it reads the same.
-    expect(parseSaveV5(json(read))).toEqual(read)
+    expect(parseSaveV6(json(read))).toEqual(read)
   })
 
   it('takes a second plot and a task on it, and refuses a field with no plots, both shapes at once, more plots than the rules hold, or a task on a plot not cleared', () => {
     const save = farm()
     const two: SaveV4 = { ...save, fields: { plots: [save.fields.plots[0]!, { tiles: startField('u2') }] } }
     two.roster['9000001'] = { ...two.roster['9000001']!, farmhand: 3, tasks: [{ kind: 'water', tiles: [0, 1], plot: 1 }] }
-    expect(parseSaveV5(json(two))).toEqual(two)
+    expect(parseSaveV6(json(two))).toEqual(two)
     refuse((s) => { s.fields = {} }, 'save.fields.plots: expected the field’s plots')
     refuse((s) => { s.fields = { plots: [] } }, 'save.fields.plots: expected 1–8 entries')
     refuse((s) => { s.fields = { plots: s.fields.plots, tiles: s.fields.plots[0].tiles } }, 'save.fields.tiles: the field’s tiles are its plots’')
@@ -132,14 +132,14 @@ describe('the v5 parse', () => {
     const save = farm()
     save.today = { ...save.today, actions: 7, eventActions: 1, town: true, gathered: ['woods', 'pond'] }
     save.loads = { mill: [{ item: 'wheat-flour@2', count: 8 }] }
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
     refuse((s) => { s.today.actions = -1 }, 'save.today.actions: expected 0–100')
     refuse((s) => { s.today.gathered = ['woods', 'woods'] }, 'save.today.gathered.1: repeated')
     refuse((s) => { s.today.gathered = ['moon'] }, /save.today.gathered.0: expected one of/)
     refuse((s) => { s.loads = { mill: { item: 'pine-plank@1', count: 2 } } }, 'save.loads.mill.item: expected a good this station makes, at its stars')
     // A farmhand's load can be bigger: up to 12 in, more out at her yield.
     save.loads = { mill: [{ item: 'wheat-flour@2', count: 14 }] }
-    expect(parseSaveV5(json(save)).loads).toEqual(save.loads)
+    expect(parseSaveV6(json(save)).loads).toEqual(save.loads)
     refuse((s) => { s.loads = { mill: { item: 'wheat-flour@1', count: 21 } } }, 'save.loads.mill.count: expected 1–20')
     refuse((s) => { s.loads = { forge: { item: 'wheat-flour@1', count: 1 } } }, /save.loads.forge: expected one of/)
   })
@@ -166,7 +166,7 @@ describe('the v5 parse', () => {
     // A spouse may hold all of them.
     const save = farm()
     save.love['9000001'] = { ...newLove(), stage: 'spouse', level: 2, ring: 7, wed: 2, house: 0 }
-    expect(parseSaveV5(json(save)).love['9000001']).toEqual(save.love['9000001'])
+    expect(parseSaveV6(json(save)).love['9000001']).toEqual(save.love['9000001'])
   })
 
   it('refuses a bad farmer\'s name', () => {
@@ -180,7 +180,7 @@ describe('the v5 parse', () => {
     refuse((s) => { s.buildings.dorm = 8; s.dorm.level = 9 }, 'save.dorm.level: expected 1–8')
     const save = farm()
     save.dorm.home = ['9000001', '9000002', '9000003']
-    expect(parseSaveV5(json(save)).dorm).toEqual({ level: 1, home: [], swaps: [] })
+    expect(parseSaveV6(json(save)).dorm).toEqual({ level: 1, home: [], swaps: [] })
   })
 
   it('refuses memories and arrivals off the roster', () => {
@@ -192,14 +192,14 @@ describe('the v5 parse', () => {
   it('takes the morning\'s Hearts and refuses roster news in §5', () => {
     const save = farm()
     save.summary = { day: 3, bin: [], work: [], ranks: [], hearts: [{ kind: 'arrived', id: '9000002', home: true }], news: [{ kind: 'farm-rank', rank: 2 }], nudges: [] }
-    expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
+    expect(parseSaveV6(json(save)).summary).toEqual(save.summary)
     refuse((s) => { s.summary = { ...json(save.summary), news: [{ kind: 'joined', outfitId: '9000002', home: true }] } }, /save.summary.news.0.kind: expected one of/)
     refuse((s) => { s.summary = { ...json(save.summary), hearts: [{ kind: 'arrived', id: '9000009', home: true }] } }, 'save.summary.hearts.0.id: expected an Uma on the roster')
     refuse((s) => { s.summary = { ...json(save.summary), hearts: [{ kind: 'arrived', id: '9000002', home: true, words: 'Hi' }] } }, 'save.summary.hearts.0: unknown keys words')
     refuse((s) => { s.summary = { ...json(save.summary), bonds: [] } }, 'save.summary: unknown keys bonds')
     // A new story release's line: its ship's number only, never the story's words.
     const story = { ...json(save.summary!), news: [{ kind: 'story', number: 2 }, { kind: 'farm-rank', rank: 2 }] }
-    expect(parseSaveV5(json({ ...save, summary: story })).summary).toEqual(story)
+    expect(parseSaveV6(json({ ...save, summary: story })).summary).toEqual(story)
     refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 0 }] } }, 'save.summary.news.0.number: expected 1–9007199254740991')
     refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 2, note: 'Invented.' }] } }, 'save.summary.news.0: unknown keys note')
     refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 2 }, { kind: 'story', number: 3 }] } }, /save.summary.news/)

@@ -31,9 +31,9 @@ describe('the device save', () => {
 
   it('keeps a row from a newer app as an unreadable safety copy', async () => {
     await db.safety.clear()
-    await db.save.put({ ...row(), save: { ...newSave('u1', NOW), version: 6 } as never })
+    await db.save.put({ ...row(), save: { ...newSave('u1', NOW), version: 7 } as never })
     await expect(readSaveRow('u1')).resolves.toBeNull()
-    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', save: { version: 6 } })
+    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', save: { version: 7 } })
   })
 
   it('keeps the newest five safety copies of an account', async () => {

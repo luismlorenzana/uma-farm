@@ -1,16 +1,16 @@
 // Birthdays and anniversaries.
 //
-// The cast's birthday or master date supplies its order in the year. The launch cast is spread over all 48 dates.
+// The cast's birthday or master date supplies the order for the launch birthdays.
 // Expansion members fill the least occupied dates without changing existing birthdays. A raw date maps by quarters:
 //
 //   March–May Spring · June–August Summer · September–November Autumn · December–February Winter
-//   season day = 4 × (the month's place in its season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4
+//   Ten farm dates per real month. The launch cast is allocated across all four seasons.
 //
 // On her birthday a gift pays ×3 (and an evening ×1.5). Her anniversary is her wedding's day of the year from year 2
 // of her marriage: every act pays ×2 (the evening ×1.5 instead), and that morning she leaves a ★5 item of her line in the
 // Warehouse (`lineGood`). The morning says each the day before and on the day (step 9). Loaded with the night and the
 // romance's screens.
-import { dateDayOf, dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR, type FarmClock } from '../farm/calendar'
+import { dateDayOf, dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR, FESTIVALS, festivalDayOfYear, SEASONS, type FarmClock } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import type { Rank } from '../farm/ranks'
 import { SHOP_SEEDS } from '../fields/crops'
@@ -25,18 +25,18 @@ import { addGoods } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
 import { LAUNCH_CAST } from '../story/launch'
 import { birthdayOf } from '../story/placeholders'
+import { GAME_DAYS_OF_STORY } from '../story/authored'
 import { isAnniversary } from './love'
 import { perkLineOf } from './perks'
 
-/** A day's place in the farm's year, 1–48. */
+/** A day's place in the farm's year, 1–120. */
 export const dayOfYear = (day: number): number => ((day - 1) % DAYS_PER_YEAR) + 1
 
-/** A real date's farm day of the year: 1 March is Spring 1 (1), 14 February Winter 10 (46). */
+/** Ten farm days represent each real month, beginning with March. */
 export function farmBirthday(month: number, day: number): number {
-  const season = month >= 3 && month <= 5 ? 0 : month >= 6 && month <= 8 ? 1 : month >= 9 && month <= 11 ? 2 : 3
-  const place = season < 3 ? month - 3 * (season + 1) : month % 12
-  const quarter = Math.min(4, Math.max(1, Math.ceil(Math.min(day, 31) / 8)))
-  return season * DAYS_PER_SEASON + 4 * place + quarter
+  const monthDays = DAYS_PER_SEASON / 3
+  const date = Math.max(1, Math.ceil(Math.min(day, 31) * monthDays / 31))
+  return ((month + 9) % 12) * monthDays + date
 }
 
 /** A birthday as a calendar date. */
@@ -48,7 +48,18 @@ export interface MonthDay {
 export type Birthdays = ReadonlyMap<string, number>
 export const NO_BIRTHDAYS: Birthdays = new Map()
 
-/** Small story packs retain their written dates. A full cast spreads its birthdays across the farm year. */
+/** Keep a quiet day per seven-day block and reserve the shared public dates. */
+function birthdaySlots(): number[] {
+  const taken = new Set([1, ...FESTIVALS.map(festivalDayOfYear), ...GAME_DAYS_OF_STORY.map(festivalDayOfYear)])
+  for (let first = 1; first <= DAYS_PER_YEAR; first += 7) {
+    for (let quiet = Math.min(first + 6, DAYS_PER_YEAR); quiet >= first; quiet--) {
+      if (!taken.has(quiet)) { taken.add(quiet); break }
+    }
+  }
+  return Array.from({ length: DAYS_PER_YEAR }, (_, i) => i + 1).filter(day => !taken.has(day))
+}
+
+/** Small story packs retain their written dates. The launch cast has 13, 13, 12 and 12 birthdays. */
 export function birthdaysOf(pack: Pick<StoryPack, 'cast'>, master: ReadonlyMap<string, MonthDay>): Birthdays {
   const out = new Map<string, number>()
   const launch = new Map(LAUNCH_CAST.map((id, i) => [id, i]))
@@ -57,29 +68,35 @@ export function birthdaysOf(pack: Pick<StoryPack, 'cast'>, master: ReadonlyMap<s
     const suggested = 1 + Math.floor(rank === undefined ? i * DAYS_PER_YEAR / pack.cast.umas.length : rank * DAYS_PER_YEAR / LAUNCH_CAST.length)
     return { id, date: birthdayOf(pack, id, master), suggested }
   })
-  if (rows.length < DAYS_PER_YEAR) {
+  if (rows.length < LAUNCH_CAST.length) {
     for (const { id, date } of rows) if (date) out.set(id, farmBirthday(date.month, date.day))
     return out
   }
-  const ordinal = (row: typeof rows[number]) => row.date ? ((row.date.month + 9) % 12) * 32 + row.date.day : row.suggested * 8
+  const ordinal = (row: typeof rows[number]) => row.date ? ((row.date.month + 9) % 12) * 32 + row.date.day : row.suggested * 3.2
   const ordered = rows.slice().sort((a, b) => ordinal(a) - ordinal(b) || a.id.localeCompare(b.id))
   const core = ordered.filter(row => launch.has(row.id))
-  const first = core.length === LAUNCH_CAST.length ? core : ordered
-  const load = Array<number>(DAYS_PER_YEAR + 1).fill(0)
-  first.forEach(({ id }, i) => {
-    const day = 1 + Math.floor((i + 0.5) * DAYS_PER_YEAR / first.length)
-    out.set(id, day)
-    load[day]!++
-  })
+  const first = core.length === LAUNCH_CAST.length ? core : ordered.slice(0, LAUNCH_CAST.length)
+  const available = birthdaySlots()
+  const load = new Map(available.map(day => [day, 0]))
+  let assigned = 0
+  for (const [i] of SEASONS.entries()) {
+    const days = available.filter(day => Math.floor((day - 1) / DAYS_PER_SEASON) === i)
+    const count = i < 2 ? 13 : 12
+    for (let index = 0; index < count; index++) {
+      const day = days[Math.floor((index + 0.5) * days.length / count)]!
+      out.set(first[assigned++]!.id, day)
+      load.set(day, 1)
+    }
+  }
   for (const { id, date, suggested } of ordered) {
     if (out.has(id)) continue
     const ideal = date ? farmBirthday(date.month, date.day) : suggested
-    let best = 1
-    for (let day = 2; day <= DAYS_PER_YEAR; day++) {
-      if (load[day]! < load[best]! || (load[day] === load[best] && Math.abs(day - ideal) < Math.abs(best - ideal))) best = day
+    let best = available[0]!
+    for (const day of available) {
+      if (load.get(day)! < load.get(best)! || (load.get(day) === load.get(best) && Math.abs(day - ideal) < Math.abs(best - ideal))) best = day
     }
     out.set(id, best)
-    load[best]!++
+    load.set(best, load.get(best)! + 1)
   }
   return out
 }
@@ -159,7 +176,7 @@ export function heartDays(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>
     for (const id of ids) if (isBirthday(birthdays, id, on, save.calendar)) lines.push({ kind: 'birthday', id, when })
     for (const id of ids) {
       const love = save.love[id]
-      if (!love || !isAnniversary(love, on)) continue
+      if (!love || !isAnniversary(love, on, save.calendar)) continue
       if (when === 'tomorrow') {
         lines.push({ kind: 'anniversary', id, when, item: null })
         continue

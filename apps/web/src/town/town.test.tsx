@@ -47,7 +47,7 @@ const SISTER = 's81002'
  * cast by her own name, on the default schedule: the second in the cast, at the plaza on days 2, 5, 8 and 11. The roles
  * town.json leaves go to master data's others, from the last: Ember (90005) the mayor, Dune the shopkeeper, Cinder the
  * farm's last keeper, Beryl the rancher; the rest stay unplayed. So Aster and the sister live in town. */
-const CAFE_DAYS = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12]
+const CAFE_DAYS = Array.from({ length: 30 }, (_, i) => i + 1).filter(day => day !== 4)
 const FILES = {
   cast: { umas: [{ characterId: '90001', spot: 'cafe', routine: [{ at: 'bakery', days: [4] }, { at: 'cafe', days: CAFE_DAYS }] }, { characterId: SISTER, name: 'Invented Sister' }] },
   ties: { ties: [{ a: '90001', b: '90006', line: 'Invented tie line.' }] },
@@ -265,7 +265,7 @@ describe('the town', () => {
     expect(save().today.actions).toBe(0)
     await until(() => $('[data-mayor-note]')?.textContent === 'The Mill stands tomorrow, on a loan.')
     expect($('[data-order="mill"]')?.textContent).toContain('Builds tonight')
-    expect($('[data-office-loan="mill"]')?.textContent).toContain('440g owed · 45g a night · clears in about 10 nights (Summer 3)')
+    expect($('[data-office-loan="mill"]')?.textContent).toContain('440g owed · 45g a night · clears in about 10 nights (Spring 15)')
     expect($('[data-office-loan="mill"] [data-action="repay"]')?.textContent).toBe('Repay · need 400g more')
     // With the gold, repay it all.
     await act(async () => useGame.setState({ save: { ...save(), gold: 500 } }))
@@ -389,7 +389,7 @@ describe('the town', () => {
     // Where to find her: today's place, and this season's days and places.
     expect($('[data-find-her]')?.dataset.findHer).toBe(at)
     expect($('[data-find-today]')?.textContent).toBe('Today · Invented CaféFind her ›')
-    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · Invented Café · 1–3, 5–12', 'Invented Bakery · 4'])
+    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · Invented Café · 1–3, 5–30', 'Invented Bakery · 4'])
     await click($('[data-action="find-her"]'))
     expect(path).toBe(`/town?at=${at}&uma=90001`)
   })
@@ -428,7 +428,7 @@ describe('the town', () => {
     expect($('[data-stage-name]')?.textContent).toBe('Farmhand')
     expect($('[data-meet]')).toBeNull()
     expect($('[data-find-today]')?.textContent).toBe('Today · On the farm')
-    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12', 'Invented Café · 1, 7, 10', 'Invented Bakery · 4'])
+    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30', 'Invented Café · 1, 7, 10, 13, 16, 19, 22, 25, 28', 'Invented Bakery · 4'])
     expect($('[data-profile-actions] [data-action="evening"]')?.textContent).toContain('Evening · 2 ›')
     // Spring 7, her town day: she's in town at the café, and the town shows her there.
     useGame.setState({ save: { ...save(), calendar: { day: 7 }, today: { ...save().today, town: true } } })

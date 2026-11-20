@@ -11,7 +11,7 @@ import { gradeStepId, goodOf, refinedOf } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { ANIMALS, collect, ranchProduct, setCollectionCap } from '../ranch/ranch'
 import { takeBack } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { ANIMAL_KINDS, newLove, newRosterUma, newSave, newTodayV4, type Animal, type FarmSave } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 
@@ -22,7 +22,7 @@ const C = '303'
 const D = '404'
 const hands = [A, B, C, D]
 const produce = (kind: Animal['kind'], fondness: number): Animal => ({ id: `${kind}-1`, kind, fondness, fed: false, cared: false, ready: true })
-const reload = (s: FarmSave): FarmSave => parseSaveV5(JSON.parse(JSON.stringify(s)))
+const reload = (s: FarmSave): FarmSave => parseSaveV6(JSON.parse(JSON.stringify(s)))
 const night = (s: FarmSave) => reload(runNight(s, { talentOf: () => TALENT_D }))
 
 function farm(): FarmSave {
@@ -134,7 +134,7 @@ describe('F99 targeted catches', () => {
     for (let i = 0; i < 12; i++) save = cast(save)
     expect(save.farm.manualCatches).toBe(12)
     expect(save.farm.fishRemainders).toBeUndefined()
-    for (let i = 0; i < 3; i++) save = cast(save)
+    for (let i = 0; i < 6; i++) save = cast(save)
     expect(discovered(save, 'carp-grade-2')).toBe(true)
     const held = { ...save, farm: { ...save.farm, fishRemainders: { 'carp:1': 2 } } }
     const by = farmerGatherer(held, 'fishery', 2)
@@ -142,15 +142,15 @@ describe('F99 targeted catches', () => {
     const plain = fishAt(held, 'river', by, 'standard', 7)
     expect(grade.caught.map(({ gradeId: _, ...fish }) => fish)).toEqual(plain.caught)
     expect(grade.save.diary.records).toEqual(plain.save.diary.records)
-    expect(grade.save.farm.manualCatches).toBe(15)
+    expect(grade.save.farm.manualCatches).toBe(18)
     expect(() => reload({ ...save, farm: { ...save.farm, fishRemainders: { 'silverfin:2': 1 } } })).toThrow(/fish grade/)
     expect(discovered({ ...farm(), diary: { ...save.diary, records: { 'size:carp': 25 } } }, 'carp')).toBe(true)
     const stars = save.items['carp-grade-2']!.findIndex((n) => n > 0) + 1
     expect(discovered(night(startLoad(save, 'smokehouse', `carp-fillet-grade-2@${stars}`, 1)), 'carp-fillet-grade-2')).toBe(true)
     save = setFishingMode(save, 'pond', 'select')
-    for (let i = 15; i < 40; i++) save = cast(save)
+    for (let i = 18; i < 40; i++) save = cast(save)
     expect(save.farm.fishRemainders?.['carp:2']).toBeUndefined()
-    for (let i = 0; i < 5; i++) save = cast(save)
+    for (let i = 0; i < 24 && !discovered(save, 'carp-grade-3'); i++) save = cast(save)
     expect(discovered(save, 'carp-grade-3')).toBe(true)
   })
 })

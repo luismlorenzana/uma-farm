@@ -8,7 +8,7 @@ import { carrotGood, carrotSeed } from '../goods/ids'
 import { easeOf } from '../goods/market'
 import { runNight } from '../night/end-day'
 import { shipCrate, binSales } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type FarmSave } from '../save/v4'
 import { addGoods, goodCount } from '../save/warehouse'
 import { joinCast } from '../romance/meeting.fixture'
@@ -33,7 +33,7 @@ const saveCarrotSeeds = (save: FarmSave, grade: number, improve: boolean, count:
 
 function advance(save: FarmSave, roster = false): FarmSave {
   const next = runNight(save, roster ? { talentOf, story: PACK } : {})
-  return parseSaveV5(JSON.parse(JSON.stringify(next)))
+  return parseSaveV6(JSON.parse(JSON.stringify(next)))
 }
 
 function rosterFarm(): FarmSave {
@@ -95,7 +95,7 @@ describe('F99 carrot pilot', () => {
       save = advance(save)
     }
     expect(discovered(save, G3)).toBe(false)
-    while (save.calendar.day < 49) save = advance(save)
+    while (save.calendar.day < 121) save = advance(save)
     expect(goodCount(save.items, carrotSeed(3))).toBe(1)
     save = plantTile(save, 0, carrotSeed(3))
     for (let night = 0; night < 4; night++) save = advance(waterTile(save, 0))

@@ -7,7 +7,7 @@ import { plantTile, tillTile, waterTile } from '../fields/fields'
 import { forage } from '../gathering/hauls'
 import { startLoad } from '../gathering/stations'
 import { GOLD_SHIPPED, ship, takeBack } from '../save/bin'
-import { parseSaveV5, SAVE_V5_KEYS } from '../save/parse-v4'
+import { parseSaveV6, SAVE_V5_KEYS } from '../save/parse-v4'
 import { fieldTiles, newLove, newRosterUma, newSave, newTodayV4, START_CLEAR, type SaveV4 } from '../save/v4'
 import { emptyNotes, endDay, NIGHT_STEPS, runNight, type NightContext } from './end-day'
 import { summarySections } from './summary'
@@ -52,7 +52,7 @@ describe('the night', () => {
     vi.setSystemTime(new Date('2030-01-01T00:00:00Z'))
     expect(night(save)).toEqual(once)
     expect(Object.keys(once).sort()).toEqual(SAVE_V5_KEYS.filter((key) => !['expeditionLog', 'library', 'longGame'].includes(key)).sort())
-    expect(parseSaveV5(json(once))).toEqual(once)
+    expect(parseSaveV6(json(once))).toEqual(once)
   })
 
   it('stamps updatedAt once, with real time, after the ninth step', () => {
@@ -80,27 +80,27 @@ describe('the night', () => {
 })
 
 describe('the calendar turns', () => {
-  it('turns Spring into Summer after day 12, and the year after day 48', () => {
-    expect(night(farm(12))).toMatchObject({ calendar: { day: 13 }, summary: { day: 13, news: [{ kind: 'season', season: 'summer' }] } })
-    expect(night(farm(48))).toMatchObject({ calendar: { day: 49 }, summary: { day: 49, news: [{ kind: 'season', season: 'spring' }, { kind: 'new-year', when: 'today' }] } })
-    expect(night(farm(7)).summary!.news).toEqual([])
+  it('turns Spring into Summer after day 30, and the year after day 120', () => {
+    expect(night(farm(30))).toMatchObject({ calendar: { day: 31 }, summary: { day: 31, news: [{ kind: 'season', season: 'summer' }] } })
+    expect(night(farm(120))).toMatchObject({ calendar: { day: 121 }, summary: { day: 121, news: [{ kind: 'season', season: 'spring' }, { kind: 'new-year', when: 'today' }] } })
+    expect(night(farm(5)).summary!.news).toEqual([])
     // The game's own small days are named in the morning, with or without the story.
-    expect(night(farm(5)).summary!.news).toEqual([{ kind: 'days', ids: ['blossom-viewing'], when: 'today' }])
+    expect(night(farm(7)).summary!.news).toEqual([{ kind: 'days', ids: ['blossom-viewing'], when: 'today' }])
   })
 
   it('names a festival tomorrow and today', () => {
-    expect(night(farm(8)).summary!.news).toEqual([{ kind: 'festival', festival: 'flower-show', when: 'tomorrow' }])
-    expect(night(farm(9)).summary!.news).toEqual([{ kind: 'festival', festival: 'flower-show', when: 'today' }])
-    expect(night(farm(46)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'tomorrow' }])
-    expect(night(farm(47)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'today' }, { kind: 'new-year', when: 'tomorrow' }])
+    expect(night(farm(17)).summary!.news).toEqual([{ kind: 'festival', festival: 'flower-show', when: 'tomorrow' }])
+    expect(night(farm(18)).summary!.news).toEqual([{ kind: 'festival', festival: 'flower-show', when: 'today' }])
+    expect(night(farm(116)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'tomorrow' }])
+    expect(night(farm(117)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'today' }])
   })
 
   it('names New Year’s the day before and on the day, and keeps the lines through a save', () => {
-    const eve = night(farm(47))
+    const eve = night(farm(119))
     const morning = night(eve)
     expect(morning.summary!.news).toEqual([{ kind: 'season', season: 'spring' }, { kind: 'new-year', when: 'today' }])
-    expect(parseSaveV5(JSON.parse(JSON.stringify(eve)))).toEqual(eve)
-    expect(parseSaveV5(JSON.parse(JSON.stringify(morning)))).toEqual(morning)
+    expect(parseSaveV6(JSON.parse(JSON.stringify(eve)))).toEqual(eve)
+    expect(parseSaveV6(JSON.parse(JSON.stringify(morning)))).toEqual(morning)
   })
 
   it('clears the whole of today: the actions, the town, chats, gifts and the rest', () => {
@@ -111,13 +111,13 @@ describe('the calendar turns', () => {
 
 describe('the morning summary', () => {
   it('lists the loads and the field\'s growth, the news and the tiles to water, in section order, hiding empty sections', () => {
-    const morning = night(worked(farm(12)))
+    const morning = night(worked(farm(30)))
     expect(morning.summary).toEqual({
       // The Mill: 15g of upkeep a night, after the bin (the three Umas live in town); the farmer alone eats, nothing cooked:
       // 30g of takeout.
-      day: 13, bin: [], money: [{ kind: 'takeout', meals: 2, paid: 30, due: 30 }, { kind: 'upkeep', paid: 15, due: 15 }], ranks: [], hearts: [],
+      day: 31, bin: [], money: [{ kind: 'takeout', meals: 2, paid: 30, due: 30 }, { kind: 'upkeep', paid: 15, due: 15 }], ranks: [], hearts: [],
       // Spring's last night: the watered Carrot grows a stage, then withers out of season.
-      work: [{ kind: 'discovery', id: 'honeycomb' }, { kind: 'discovery', id: 'pine-log' }, { kind: 'discovery', id: 'wheat-flour' },
+      work: [{ kind: 'discovery', id: 'honeycomb' }, { kind: 'discovery', id: 'shiitake' }, { kind: 'discovery', id: 'wheat-flour' },
         { kind: 'load', station: 'mill', item: 'wheat-flour@1', count: 5 }, { kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'withered', crop: 'carrot', tiles: 1 }],
       news: [{ kind: 'season', season: 'summer' }],
       nudges: [],
@@ -130,10 +130,10 @@ describe('the morning summary', () => {
   })
 
   it('says a new story release first in New today, by its number only, when the device brings one', () => {
-    const save = farm(12)
+    const save = farm(30)
     const morning = endDay(save, { ...CONTEXT, release: { number: 3 } }, LATER)
     expect(morning.summary!.news).toEqual([{ kind: 'story', number: 3 }, { kind: 'season', season: 'summer' }])
-    expect(parseSaveV5(json(morning)).summary).toEqual(morning.summary)
+    expect(parseSaveV6(json(morning)).summary).toEqual(morning.summary)
     expect(endDay(save, { ...CONTEXT, release: null }, LATER).summary!.news).toEqual([{ kind: 'season', season: 'summer' }])
     expect(night(morning).summary!.news).toEqual([])
   })
@@ -147,7 +147,7 @@ describe('the bin pays at night (step 1)', () => {
   }
 
   it('pays two stars shipped, after one is taken back, and lists them in the morning', () => {
-    const shipped = takeBack(ship(ship(stocked(15), 'salmon', 1, 2), 'salmon', 2, 1), 'salmon', 1, 1) // Summer 3: fish in demand
+    const shipped = takeBack(ship(ship(stocked(33), 'salmon', 1, 2), 'salmon', 2, 1), 'salmon', 1, 1) // Summer 3: fish in demand
     const morning = night(shipped)
     expect(morning.summary!.bin).toEqual([
       { kind: 'sold', id: 'salmon', stars: 1, count: 1, gold: 130, demand: true },
@@ -161,18 +161,18 @@ describe('the bin pays at night (step 1)', () => {
     expect(morning.diary.shipped).toEqual({ salmon: 2 })
     expect(morning.bin).toEqual({})
     expect(morning.items.salmon).toEqual([1, 1, 0, 0, 0])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('pays at the day it was shipped: a season\'s last night keeps its demand', () => {
-    const lastOfSpring = night(ship(stocked(12), 'carrot', 1, 3))
-    expect(lastOfSpring.calendar.day).toBe(13)
+    const lastOfSpring = night(ship(stocked(30), 'carrot', 1, 3))
+    expect(lastOfSpring.calendar.day).toBe(31)
     expect(lastOfSpring.summary!.bin).toEqual([{ kind: 'sold', id: 'carrot', stars: 1, count: 3, gold: 210, demand: true }])
-    expect(night(ship(stocked(13), 'carrot', 1, 3)).summary!.bin).toEqual([{ kind: 'sold', id: 'carrot', stars: 1, count: 3, gold: 180, demand: false }])
+    expect(night(ship(stocked(31), 'carrot', 1, 3)).summary!.bin).toEqual([{ kind: 'sold', id: 'carrot', stars: 1, count: 3, gold: 180, demand: false }])
   })
 
   it('pays once: the next night\'s bin is empty and its summary has no bin', () => {
-    const morning = night(ship(stocked(15), 'carrot', 1, 1))
+    const morning = night(ship(stocked(33), 'carrot', 1, 1))
     const next = night(morning)
     expect(next.gold).toBe(morning.gold - 30 - 15)
     expect(next.summary!.bin).toEqual([])

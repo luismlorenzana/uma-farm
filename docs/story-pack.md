@@ -281,7 +281,7 @@ What an error skips, by where it is:
 | A town person's role someone already has, a spot's `keeper` who isn't one of the town's people | That field |
 | A town spot whose `id` isn't one of the six, or listed twice | That spot (the later one) |
 | A town location with no `id` (lowercase words joined by `-`), no `name`, an id twice or one of the game's own | That location (the later one) |
-| Her `home`, her job's `at` or a routine stop's `at` that isn't a location of the town map; a `days` or `seasons` that isn't a list of days of the season (1–12) or seasons | That field, or that stop: what plays without it plays |
+| Her `home`, her job's `at` or a routine stop's `at` that isn't a location of the town map; a `days` or `seasons` that isn't a list of days of the season (1–30) or seasons | That field, or that stop: what plays without it plays |
 | A field the game can't use (a calling, place or trigger that isn't on the menu, a birthday that isn't a real date) | That field: what plays without it plays |
 | A chat line, a greeting, a gift line or a house line too long for its screen | That line |
 | A small talk with an error (a speaker who isn't her or `you`, a line too long, a tag the game can't read) | That small talk |
@@ -411,7 +411,7 @@ the map the rest. Days are turns and nothing reads a clock, so "when" is days of
 | Field | Its shape | What it does |
 |---|---|---|
 | `home` | A location id | She's at home on a day nothing else holds: you can visit her there |
-| `job` | `{ "what", "at", "days", "seasons" }`: `what` her job in a few words (60 at most; under her name in town), `at` a location id, `days` days of the season (1–12) and `seasons`, each optional (every day, every season) | She's at work on its days, "at work" on the People list |
+| `job` | `{ "what", "at", "days", "seasons" }`: `what` her job in a few words (60 at most; under her name in town), `at` a location id, `days` days of the season (1–30) and `seasons`, each optional (every day, every season) | She's at work on its days, "at work" on the People list |
 | `routine` | A list of stops, each `{ "at", "days", "seasons" }` | Its first stop that holds today wins. A stop with neither `days` nor `seasons` holds every day, so the stops after it never do (a note) |
 
 - **The order each day:** her routine's first stop that holds, else her job on its days, else her home. With none of
@@ -902,7 +902,11 @@ block nothing. Any other field is kept for the story.
 
 ### The festivals
 
-Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a season and a day of it, 1–12.
+Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a season and a day of it, 1–30.
+Use `"calendarDays": 30` in `world.json` for newly authored calendars. An older pack’s original contest dates follow
+the expanded defaults and keep their names and descriptions. Authored moves to other dates keep those dates.
+The Story Sandbox and game use the same reader. The game also extends the legacy every-third-day town routines
+through day 30.
 
 - **One of the game's five, by its id** (`flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`,
   `harvest-cup`): renamed by its `name`, moved by its `season` and `day` (each defaulting to the game's), and
@@ -929,7 +933,7 @@ Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a seaso
 | `name` | On the calendar's day and in the morning, at most 40 characters | The day is skipped |
 | `kind` | `holiday` (a ribbon on the calendar, listed first) or `minor` (a dot) | `minor` |
 | `season` | `spring`, `summer`, `autumn` or `winter` | Every season |
-| `day` | Its day of the season, 1–12, or a list of them (`[4, 8, 12]` for a weekly market) | The day is skipped |
+| `day` | Its day of the season, 1–30, or a list of them (`[4, 8, 12]` for a weekly market) | The day is skipped |
 | `line` | What happens, under its name on the calendar, at most 160 characters | None |
 | `scene` | The event id it plays with each Uma whose route writes it (lowercase words joined by `-`, at most 40 characters) | Its `id` |
 

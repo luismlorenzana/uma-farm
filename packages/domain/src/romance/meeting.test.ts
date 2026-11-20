@@ -5,9 +5,9 @@
 // cast of eight with a welcome list of two.
 import { describe, expect, it } from 'vitest'
 import { actionsLeft, goToTown } from '../farm/actions'
-import { FESTIVAL_DAY, farmDay } from '../farm/calendar'
+import { FESTIVALS, farmDay } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { newSave, type SaveV4 } from '../save/v4'
 import type { Cast, CastEntry } from '../story/authored'
@@ -58,7 +58,7 @@ describe('introducing yourself', () => {
     expect(townDay(met, PACK).where.get(A)).toBe(at.place)
     expect(sceneDue(met)).toBe(`arrival:${A}`)
     expect(met.account.updatedAt).toBe(AT)
-    expect(parseSaveV5(json(met))).toEqual(met)
+    expect(parseSaveV6(json(met))).toEqual(met)
   })
 
   it('is refused out of town, for one not out now, one met, one of the town\'s people, and with no actions left', () => {
@@ -126,7 +126,7 @@ describe('the trigger menu, for her chapters and the Town notes', () => {
     expect(triggerHolds(s, { kind: 'spot', spot: 'plaza' }, 1, town)).toBe(false)
     expect(triggerHolds(s, { kind: 'season', season: 'spring' }, 1, town)).toBe(true)
     expect(triggerHolds(s, { kind: 'season', season: 'winter' }, 1, town)).toBe(false)
-    const derby = save(farmDay({ year: 2, season: 'summer', day: FESTIVAL_DAY }))
+    const derby = save(farmDay({ year: 2, season: 'summer', day: FESTIVALS.find(f => f.id === 'fishing-derby')!.day }))
     expect(triggerHolds(derby, { kind: 'festival', festival: 'fishing-derby' }, 1, town)).toBe(true)
     expect(triggerHolds(s, { kind: 'festival', festival: 'fishing-derby' }, 1, town)).toBe(false)
     expect(triggerHolds(s, { kind: 'gift' }, 0, { at: 'gift', good: 'carrot', taste: 'liked' })).toBe(true)
@@ -163,7 +163,7 @@ describe('nobody moves to the farm by meeting her', () => {
     expect(outOn(four, A).place).toBeTruthy()
     const out = Array.from({ length: 28 }, (_, i) => i + 2).filter((day) => townDay({ ...four, calendar: { day } }, PACK).where.has(A))
     expect(out.length).toBeGreaterThan(0)
-    expect(parseSaveV5(json(four))).toEqual(four)
+    expect(parseSaveV6(json(four))).toEqual(four)
   })
 })
 
@@ -172,13 +172,13 @@ describe('a sister, and an older save', () => {
     const at = outOn(save(2), SISTER)
     const met = introduce(at.save, PACK, SISTER)
     expect(met.roster[SISTER]).toBeDefined()
-    expect(parseSaveV5(json(met))).toEqual(met)
+    expect(parseSaveV6(json(met))).toEqual(met)
   })
 
   it('an older save\'s roster counts as met, and its town record grows in place: no time moved', () => {
     const older = json(meet(meet(save(9), W1, PACK).save, A, PACK).save) as unknown as Record<string, unknown>
     older.town = { [A]: { talks: 2, last: 8 } }
-    const loaded = parseSaveV5(older)
+    const loaded = parseSaveV6(older)
     expect(Object.keys(loaded.roster)).toEqual([W1, A])
     expect(loaded.town[A]).toEqual({ talks: 2, last: 8, gift: 0 })
     expect(loaded.account.updatedAt).toBe(AT)

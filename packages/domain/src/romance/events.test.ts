@@ -3,7 +3,7 @@
 // event her trigger names, and Memories' replays. Invented ids only: the stand-ins 9000001–9000003 and 9000004 built here.
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_YEAR } from '../farm/calendar'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { addGoods, goodCount } from '../save/warehouse'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
 import { pairKey } from '../save/v4'
@@ -260,10 +260,10 @@ describe('save v4 grows in place', () => {
     const save = playEvent(withLove(farm(5), { stage: 'confession', level: 10, points: 0, last: 4 }), PACK, ONE,
       outcome('confession', [0, 1], [{ kind: 'walk', score: 100 }, { kind: 'pick', score: 90 }])).save
     const asked = askHer(save, ONE, 'not-yet')
-    expect(parseSaveV5(json(asked))).toEqual(asked)
-    expect(() => parseSaveV5(json({ ...asked, today: { ...asked.today, asked: ['9000009'] } }))).toThrow()
+    expect(parseSaveV6(json(asked))).toEqual(asked)
+    expect(() => parseSaveV6(json({ ...asked, today: { ...asked.today, asked: ['9000009'] } }))).toThrow()
     const { asked: _gone, ...today } = asked.today
-    expect(() => parseSaveV5(json({ ...asked, today }))).toThrow()
+    expect(() => parseSaveV6(json({ ...asked, today }))).toThrow()
     expect(asked.today.asked).toEqual([ONE])
   })
   it('plays her F9 with no setup to meet', () => {

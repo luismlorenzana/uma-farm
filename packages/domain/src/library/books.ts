@@ -1,4 +1,4 @@
-import { dateOf, DAYS_PER_YEAR, FESTIVALS, turnOfDateDay } from '../farm/calendar'
+import { dateOf, DAYS_PER_YEAR, FESTIVALS, turnOnDateDay, yearlyDate } from '../farm/calendar'
 import type { SpecialDays } from '../farm/actions'
 import { isGoodId } from '../goods/ids'
 import { goodName } from '../goods/names'
@@ -47,11 +47,13 @@ const words = (slug: string) => slug.replace(/-/g, ' ').replace(/^\w/, c => c.to
 function occasionCatalogue(save: FarmSave, pack: StoryPack, id: string, days: SpecialDays): Map<string, Occasion> {
   // A full repeating year after the first possible anniversary. Use the same priority that offers scenes live.
   const known = save.love[id]!
-  const year = Math.max(2, dateOf(known.wed ?? 1, save.calendar).year + 1)
+  const year = dateOf(save.calendar.day, save.calendar).year + 1
   const allowed = new Map<string, Occasion>()
   function collect(dated: FarmSave) {
     for (let d = 1; d <= DAYS_PER_YEAR; d++) {
-      for (const occasion of occasionsOn(dated, pack, days, id, turnOfDateDay((year - 1) * DAYS_PER_YEAR + d, save.calendar))) {
+      const turn = turnOnDateDay((year - 1) * DAYS_PER_YEAR + d, save.calendar)
+      if (turn === null) continue
+      for (const occasion of occasionsOn(dated, pack, days, id, turn)) {
         allowed.set(`occasion:${occasion.slot}:${occasion.id}`, occasion)
       }
     }
@@ -59,9 +61,10 @@ function occasionCatalogue(save: FarmSave, pack: StoryPack, id: string, days: Sp
   collect(save)
   if (known.wed === undefined && pack.scripted.get(id)?.has('anniversary')) {
     // A future wedding can be held on a free day. Count an anniversary with a reachable day-slot.
-    const wed = Array.from({ length: DAYS_PER_YEAR }, (_, i) => turnOfDateDay(i + 1, save.calendar)).find(d =>
-      !occasionsOn(save, pack, days, id, DAYS_PER_YEAR + d).some(scene => scene.slot === 'day'))
-    if (wed !== undefined) collect({ ...save, love: { ...save.love, [id]: { ...known, stage: 'spouse', wed } } })
+    const start = (year - 2) * DAYS_PER_YEAR
+    const wed = Array.from({ length: DAYS_PER_YEAR }, (_, i) => turnOnDateDay(start + i + 1, save.calendar)).find(d =>
+      d !== null && !occasionsOn(save, pack, days, id, yearlyDate(d, 1, save.calendar)).some(scene => scene.slot === 'day'))
+    if (wed != null) collect({ ...save, love: { ...save.love, [id]: { ...known, stage: 'spouse', wed } } })
   }
   return allowed
 }

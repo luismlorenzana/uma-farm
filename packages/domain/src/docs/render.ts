@@ -804,7 +804,7 @@ function birthdayMap(): string {
   const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const name = (m: number) => names[m - 1]!
   const at = (m: number, d: number) => { const date = dateOf(farmBirthday(m, d)); return `${SEASON_NAMES[date.season]} ${date.day}` }
-  return table(['Month', 'Days 1–8', '9–16', '17–24', '25–31'], months.map((m) => [name(m), at(m, 1), at(m, 9), at(m, 17), at(m, 25)]))
+  return table(['Month', 'First date', 'Last date'], months.map((m) => [name(m), at(m, 1), at(m, 31)]))
 }
 /** The four conditions, and the order `readiness` says what waits. */
 function readyRules(): string {

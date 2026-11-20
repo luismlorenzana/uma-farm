@@ -17,7 +17,7 @@ import { addLove, costOf, finishArrival, pathFlags, walkScene, WAITING_RUNGS } f
 import { readiness } from '../romance/ready'
 import { receptionDishes } from '../romance/wedding'
 import { nameFarmer } from '../romance/farmer'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import type { Step } from './authored'
@@ -127,7 +127,7 @@ describe('a farm with no story pack', () => {
         households.push(hid)
       }
       save = runNight({ ...save, summary: null }, context)
-      expect(parseSaveV5(json(save))).toEqual(save)
+      expect(parseSaveV6(json(save))).toEqual(save)
     }
 
     // Every rung of every Uma played on placeholders, Spouse 2 and 4 at night; all five married by day 60.

@@ -14,7 +14,7 @@ import { runNight } from '../night/end-day'
 import { birthdaysOf } from '../romance/days'
 import { joinCast } from '../romance/meeting.fixture'
 import { occasionPlayed, occasionsOn, playOccasion } from '../romance/occasions'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newSave, type SaveV4 } from '../save/v4'
 import { withOccasions } from '../story/occasions.fixture'
 import { storyPackFrom } from '../story/pack'
@@ -36,9 +36,9 @@ function farm(day: number): SaveV4 {
 }
 
 describe('her farm days', () => {
-  it('are the days her town schedule leaves free: 8 of each season\'s 12 on the default schedule', () => {
-    expect(farmDaysIn(PACK, ONE, 'spring')).toEqual([2, 3, 5, 6, 8, 9, 11, 12])
-    expect(farmDaysIn(PACK, TWO, 'winter')).toEqual([1, 3, 4, 6, 7, 9, 10, 12])
+  it('are the days her town schedule leaves free: 20 of each season’s 30 on the default schedule', () => {
+    expect(farmDaysIn(PACK, ONE, 'spring')).toEqual([2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30])
+    expect(farmDaysIn(PACK, TWO, 'winter')).toEqual([1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 30])
     expect(nextFarmDay(PACK, ONE, on('spring', 3))).toBe(on('spring', 5))
   })
 
@@ -55,7 +55,7 @@ describe('her farm days', () => {
     const morning = runNight(save, { story: PACK })
     expect(morning.summary!.work.filter((w) => w.kind === 'farmhand').map((w) => w.kind === 'farmhand' && w.id)).toEqual([ONE, TWO])
     expect(morning.summary!.money).toContainEqual({ kind: 'takeout', meals: 6, paid: 90, due: 90 })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('on a town day she\'s at her place in town, and doesn\'t work or eat on the farm, or cost anything', () => {
@@ -89,8 +89,8 @@ describe('her farm days', () => {
   })
 
   it('never gates an occasion: a farmhand\'s festival plays on her farm day, and on her town day too', async () => {
-    // Spring 10, the Flower Show: 9000002's farm day, 9000001's town day.
-    const save = farm(on('spring', 10))
+    // Spring 19, the Flower Show: 9000002's farm day, 9000001's town day.
+    const save = farm(on('spring', 19))
     const days = { festivals: FESTIVALS, birthdays: birthdaysOf(PACK, new Map()) }
     expect(onFarmToday(save, PACK, TWO)).toBe(true)
     expect(onFarmToday(save, PACK, ONE)).toBe(false)

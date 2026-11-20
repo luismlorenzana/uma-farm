@@ -146,7 +146,7 @@ describe('scene links: her events, Memories and evenings', () => {
 
 describe('scene links: occasions, the household and night levels', () => {
   it('?occasion=: only on its day, with an Uma you\'ve met, once', () => {
-    const show = farm(10)
+    const show = farm(19)
     expect(mayPlayOccasion(show, PACK, ONE)).toBe(true)
     expect(mayPlayOccasion(farm(11), PACK, ONE)).toBe(false)
     expect(mayPlayOccasion(show, PACK, '9000009')).toBe(false)

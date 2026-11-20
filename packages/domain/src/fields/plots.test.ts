@@ -5,7 +5,7 @@ import { actionsLeft } from '../farm/actions'
 import { upkeepOf } from '../farm/economy'
 import { FARM_RANK_POINTS } from '../farm/farm'
 import { endDay } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import {
   bareTile, FIELD_TILES, fieldIndex, fieldTiles, isOvergrown, MAX_PLOTS, newSave, plotOf, readyTiles, startField, tileInPlot, wildPlot, type SaveV4, type Tile,
@@ -109,7 +109,7 @@ describe('the plots', () => {
     expect(fieldTiles(save)).toHaveLength(320)
     expect(save.gold).toBe(200_000 - 2_500 - 5_000 - 10_000 - 15_000 - 25_000 - 35_000 - 50_000)
     expect(save.fields.plots[7]).toEqual(wildPlot('plots', 7))
-    expect(parseSaveV5(json(save)).fields.plots).toHaveLength(8)
+    expect(parseSaveV6(json(save)).fields.plots).toHaveLength(8)
   })
 
   it('adds no upkeep: a plot is land, not a building', () => {
@@ -118,7 +118,7 @@ describe('the plots', () => {
 
   it('round-trips a save with two plots', () => {
     const two = clearPlot(farm(), 1)
-    expect(parseSaveV5(json(two))).toEqual(two)
+    expect(parseSaveV6(json(two))).toEqual(two)
   })
 })
 

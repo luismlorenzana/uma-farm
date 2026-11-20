@@ -8,7 +8,7 @@ import { DAYS_PER_SEASON, farmDay, SEASONS } from '../farm/calendar'
 import { chatV4, giftV4 } from '../romance/acts'
 import { spendEvening } from '../romance/evening'
 import { introduce, meet } from '../romance/meeting'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type Love, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { CAST_IDS } from '../story/cast'
@@ -140,7 +140,7 @@ describe('her life in town', () => {
     expect(lifeHolds({ days: [3], seasons: ['spring'] }, farmDay({ year: 3, season: 'spring', day: 3 }))).toBe(true)
     // Her season by place, in the order of the first: the profile's and the calendar's.
     expect(seasonSchedule(p, '9200007', 'spring')).toEqual([
-      { at: 'bakery', by: 'job', days: [1, 2, 4, 5, 6] }, { at: 'library', by: 'routine', days: [3] }, { at: 'blue-cottage', by: 'home', days: [7, 8, 9, 10, 11, 12] },
+      { at: 'bakery', by: 'job', days: [1, 2, 4, 5, 6] }, { at: 'library', by: 'routine', days: [3] }, { at: 'blue-cottage', by: 'home', days: Array.from({ length: 24 }, (_, i) => i + 7) },
     ])
     expect(seasonSchedule(p, '9200007', 'summer')).toEqual([{ at: 'old-pier', by: 'routine', days: [...Array(DAYS_PER_SEASON).keys()].map((d) => d + 1) }])
   })
@@ -176,16 +176,16 @@ describe('the default schedule', () => {
   const p = pack({ cast: { umas: CAST }, town: TOWN })
 
   it('every third day of each season, from day 1, 2 or 3 by her place in the cast', () => {
-    expect([0, 1, 2, 3].map(defaultDays)).toEqual([[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12], [1, 4, 7, 10]])
-    expect(scheduleOf(p, '9200001')).toEqual({ own: false, stops: [{ at: 'plaza', days: [1, 4, 7, 10], by: 'default' }] })
-    expect(scheduleOf(p, '9200005')).toEqual({ own: false, stops: [{ at: 'market', days: [2, 5, 8, 11], by: 'default' }] })
+    expect([0, 1, 2, 3].map(defaultDays)).toEqual([[1, 4, 7, 10, 13, 16, 19, 22, 25, 28], [2, 5, 8, 11, 14, 17, 20, 23, 26, 29], [3, 6, 9, 12, 15, 18, 21, 24, 27, 30], [1, 4, 7, 10, 13, 16, 19, 22, 25, 28]])
+    expect(scheduleOf(p, '9200001')).toEqual({ own: false, stops: [{ at: 'plaza', days: [1, 4, 7, 10, 13, 16, 19, 22, 25, 28], by: 'default' }] })
+    expect(scheduleOf(p, '9200005')).toEqual({ own: false, stops: [{ at: 'market', days: [2, 5, 8, 11, 14, 17, 20, 23, 26, 29], by: 'default' }] })
     // The six in turn, three Umas each; the 19th starts again at the first.
     expect(ids(19).map((id) => defaultSpot(p, id))).toEqual([...SPOT_IDS.flatMap((s) => [s, s, s]), SPOT_IDS[0]])
     // Her cast `spot` is her favourite; one the cast doesn't hold comes after it.
     expect(defaultSpot(pack({ cast: { umas: [{ characterId: '9200007', spot: 'library' }] } }), '9200007')).toBe('library')
     expect(castPlace(p, '9200999')).toBe(CAST.length)
     expect(seasonSchedule(p, '9200002', 'winter')).toEqual([
-      { at: null, by: null, days: [1, 3, 4, 6, 7, 9, 10, 12] }, { at: 'plaza', by: 'default', days: [2, 5, 8, 11] },
+      { at: null, by: null, days: [1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 30] }, { at: 'plaza', by: 'default', days: [2, 5, 8, 11, 14, 17, 20, 23, 26, 29] },
     ])
   })
 
@@ -204,8 +204,8 @@ describe('the default schedule', () => {
     // A spot holds everyone the schedules put there.
     const crowd = pack({ cast: { umas: CAST.map((u) => ({ ...u, spot: 'cafe' as const })) }, town: TOWN })
     expect(townDay(save(spring(1)), crowd).at.get('cafe')).toHaveLength(34)
-    // Each Uma is out on four days a season.
-    for (const season of SEASONS) expect(seasonSchedule(p, '9200050', season).find((g) => g.at !== null)!.days).toHaveLength(4)
+    // Each Uma is out on ten days a season.
+    for (const season of SEASONS) expect(seasonSchedule(p, '9200050', season).find((g) => g.at !== null)!.days).toHaveLength(10)
   })
 
   it('leaves a spouse in her room at the farm, and a farmhand there on her farm days; one met who lives in town keeps her days', () => {
@@ -225,7 +225,7 @@ describe('the default schedule', () => {
     // A farmhand who lives in town: her town days are her default schedule's four (the 22nd: 1, 4, 7, 10), her farm days
     // the other eight. Spring 1 is a town day: she's at her spot, and there's where you meet her.
     const hired = { ...farm, roster: { ...farm.roster, 9200022: { ...farm.roster['9200022']!, farmhand: 1 } } }
-    expect(farmDaysIn(p, '9200022', 'spring')).toEqual([2, 3, 5, 6, 8, 9, 11, 12])
+    expect(farmDaysIn(p, '9200022', 'spring')).toEqual([2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30])
     expect(onFarmToday(hired, p, '9200022')).toBe(false)
     expect(townDay(hired, p).where.get('9200022')).toBe(defaultSpot(p, '9200022'))
     expect(whereYouMeet(goToTown(hired), p, '9200022')).toEqual({ here: true, farm: false, at: defaultSpot(p, '9200022') })
@@ -237,7 +237,7 @@ describe('the default schedule', () => {
     expect(townDay({ ...hired, calendar: { day: spring(4) } }, p).where.get('9200022')).toBe(defaultSpot(p, '9200022'))
   })
 
-  it('makes her farm days the days her schedule leaves free: her home and at home count; a season with none, the default\'s other eight', () => {
+  it('makes her farm days the days her schedule leaves free: her home and at home count; a season with none, the default schedule’s other twenty', () => {
     const own = pack({
       town: TOWN,
       cast: {
@@ -251,12 +251,12 @@ describe('the default schedule', () => {
         ],
       },
     })
-    expect(farmDaysIn(own, '9200001', 'spring')).toEqual([5, 6, 7, 8, 9, 10, 11, 12])
-    expect(farmDaysIn(own, '9200002', 'spring')).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    expect(farmDaysIn(own, '9200001', 'spring')).toEqual(Array.from({ length: 26 }, (_, i) => i + 5))
+    expect(farmDaysIn(own, '9200002', 'spring')).toEqual(Array.from({ length: 30 }, (_, i) => i + 1))
     // The 2nd in the cast: her default days are 2, 5, 8 and 11.
-    expect(farmDaysIn(own, '9200002', 'summer')).toEqual([1, 3, 4, 6, 7, 9, 10, 12])
+    expect(farmDaysIn(own, '9200002', 'summer')).toEqual([1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 30])
     // The 3rd: her default days are 3, 6, 9 and 12.
-    expect(farmDaysIn(own, '9200003', 'winter')).toEqual([1, 2, 4, 5, 7, 8, 10, 11])
+    expect(farmDaysIn(own, '9200003', 'winter')).toEqual([1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29])
     for (const season of SEASONS) for (const id of ['9200001', '9200002', '9200003']) expect(farmDaysIn(own, id, season).length, `${id} ${season}`).toBeGreaterThan(0)
   })
 
@@ -301,8 +301,8 @@ describe('her menu', () => {
     expect(() => inviteToWork(met, '9200007')).toThrow('Invite her once she’s a friend: Friendship 3.')
     expect(() => inviteToWork({ ...friend, today: { ...friend.today, actions: 10 } }, '9200007')).toThrow('No actions left today.')
     expect(hired.account.updatedAt).toBe(AT)
-    expect(parseSaveV5(json(hired))).toEqual(hired)
-    expect(() => parseSaveV5(json({ ...hired, roster: { ...hired.roster, 9200007: { ...hired.roster['9200007']!, farmhand: 6 } } }))).toThrow('farmhand')
+    expect(parseSaveV6(json(hired))).toEqual(hired)
+    expect(() => parseSaveV6(json({ ...hired, roster: { ...hired.roster, 9200007: { ...hired.roster['9200007']!, farmhand: 6 } } }))).toThrow('farmhand')
   })
 
   it('meets her where she\'s in front of you: on the farm when she lives there or works it, else in town where she is today, once you\'re there', () => {
@@ -343,7 +343,7 @@ describe('her menu', () => {
     expect(menu.find((i) => i.id === 'gift')).toMatchObject({ open: false, done: true, why: 'Gift given today ✓' })
     expect(() => chatV4(given, '9200007')).toThrow('You’ve talked today.')
     expect(given.account.updatedAt).toBe(AT)
-    expect(parseSaveV5(json(given))).toEqual(given)
+    expect(parseSaveV6(json(given))).toEqual(given)
     // With no actions left, both are refused.
     const spent = { ...met, items: stocked.items, today: { ...met.today, actions: 10 } }
     expect(() => chatV4(spent, '9200007')).toThrow('No actions left today.')

@@ -14,7 +14,7 @@
 //
 // The roster, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
-import { DAYS_PER_YEAR, type FarmClock } from '../farm/calendar'
+import { dateDayOf, DAYS_PER_YEAR, type FarmClock } from '../farm/calendar'
 import { needsWater } from '../fields/plantables'
 import { draw } from '../farm/draw'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
@@ -568,8 +568,8 @@ export function residentsOf(save: Pick<SaveV4, 'love'>, house: number): Characte
 }
 
 /** Whether a day is the Festival of Vows: the finale's day of the year, each later year. */
-export const vowsOn = (homestead: Pick<Homestead, 'finale'>, day: number): boolean =>
-  homestead.finale > 0 && day > homestead.finale && (day - homestead.finale) % DAYS_PER_YEAR === 0
+export const vowsOn = (homestead: Pick<Homestead, 'finale'>, day: number, clock?: FarmClock): boolean =>
+  homestead.finale > 0 && day > homestead.finale && (dateDayOf(day, clock) - dateDayOf(homestead.finale, clock)) % DAYS_PER_YEAR === 0
 
 /** You and her, by day: how many days you've talked with her, the last, and the last day you gave her a gift. Met or not
  * is the roster's. */
@@ -620,8 +620,8 @@ export const HOUSE_LOAN = /^house:([1-6])$/
 export const DORM_LOAN = /^dorm:([2-8])$/
 
 /** Save v5: the farm's one save. */
-export interface SaveV5 {
-  version: 5
+export interface SaveV6 {
+  version: 6
   /** As stored: the wipe never changes it, and only a player's change moves `updatedAt`. */
   account: Account
   /** '' until the name sheet. */
@@ -704,9 +704,10 @@ export interface SaveV5 {
 }
 
 /** The save's old name, kept so the code that reads the save didn't move with the version: the same type. */
-export type SaveV4 = SaveV5
+export type SaveV5 = Omit<SaveV6, 'version' | 'calendar'> & { version: 5; calendar: Pick<FarmClock, 'day' | 'start'> }
+export type SaveV4 = SaveV6
 /** The save the game plays: v5. */
-export type FarmSave = SaveV5
+export type FarmSave = SaveV6
 
 /** Her route the day she joins: Friendship 0, no points. */
 export const newLove = (): Love => ({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
@@ -720,9 +721,9 @@ export function newRosterUma(day: number): RosterUma {
 export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
 /** Day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for a cleared patch of nine, a day of actions, the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines; everyone is in town, to meet by introducing yourself. The retired Dorm keeps its shape: level 1, nobody in it. */
-export function newSave(uid: string, now: string): SaveV5 {
+export function newSave(uid: string, now: string): SaveV6 {
   return {
-    version: 5,
+    version: 6,
     account: { uid, createdAt: now, updatedAt: now },
     farmer: { name: '' },
     calendar: { day: 1 },
@@ -757,6 +758,6 @@ export function newSave(uid: string, now: string): SaveV5 {
 
 /** The new farm over an older save: day 1 on v5, its `account` copied whole (uid, `createdAt`, `updatedAt`), so the
  * conflict rule still sees the player's last change and the first upload isn't stamped. Pure. */
-export function freshV5(older: Pick<OlderSave, 'account'>): SaveV5 {
+export function freshV6(older: Pick<OlderSave, 'account'>): SaveV6 {
   return { ...newSave(older.account.uid, older.account.createdAt), account: { ...older.account } }
 }

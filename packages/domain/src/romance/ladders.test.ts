@@ -12,7 +12,7 @@ import { SHOP_SEEDS } from '../fields/crops'
 import { FOREST } from '../gathering/tables'
 import { goodCount, addGoods } from '../save/warehouse'
 import { endDay, runNight, type NightContext } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newSave, pairKey, type Love, type SaveV4 } from '../save/v4'
 import { checkBible, checkCast, type Cast, type CastEntry, type Trigger, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
@@ -135,7 +135,7 @@ describe('points and banking', () => {
     save = addLove(save, ONE, 87, 'event').save
     expect(bar(save.love[ONE]!)).toEqual({ rung: 'f2', points: 117, cost: 240, banked: 0, full: false })
     expect(levelWords(save.love[ONE]!)).toBe('Friend · F1')
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 
   it('banks points past a full bar, carries them over, never decays, and adds nothing once S5 has played', () => {
@@ -199,8 +199,8 @@ describe('gifts', () => {
     expect(DEFAULT_GIFT_REACTIONS.loved.map((l) => l.replaceAll('{gift}', 'Peach'))).toContain(giftLineV4(save, PACK, TWO, 'loved', 'peach'))
     expect(giftV4(save, PACK, ONE, 'pine-log', 1).paid).toBe(10)
     // Her birthday, Spring 4 in the stand-in cast: ×3.
-    const birthday = give(farm(4), 'golden-carrot', 5)
-    expect(isBirthday(BIRTHDAYS, ONE, 4)).toBe(true)
+    const birthday = give(farm(10), 'golden-carrot', 5)
+    expect(isBirthday(BIRTHDAYS, ONE, 10)).toBe(true)
     expect(giftV4(birthday, PACK, ONE, 'golden-carrot', 5, BIRTHDAYS).paid).toBe(252)
     expect(giftV4(birthday, PACK, ONE, 'golden-carrot', 5).paid).toBe(84)
     // Away, she still takes a gift; seeds aren't gifts, and the Warehouse must hold it.
@@ -224,7 +224,7 @@ describe('gifts', () => {
     save = withLove(save, ONE, { level: 7 })
     expect(giftPreview(save, PACK, ONE, 'limestone', 1)).toBe(0)
     expect(giftPreview(save, PACK, ONE, 'pine-log', 4)).toBe(13)
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 })
 
@@ -255,7 +255,7 @@ describe('praise', () => {
     const morning = runNight(save, context())
     expect(morning.summary!.ranks).toContainEqual({ kind: 'rank-up', outfitId: THREE, activity: 'fishing', rank: 1 })
     expect(morning.today.praise).toEqual([THREE])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })
 
@@ -280,22 +280,22 @@ describe('a festival together', () => {
     expect(once.paid).toEqual([{ id: ONE, points: 50 }, { id: TWO, points: 50 }])
     expect(once.save.love[ONE]!.festivals).toEqual(['flower-show:1'])
     expect(festivalTogether(once.save, [ONE], 'flower-show', 1).paid).toEqual([])
-    expect(parseSaveV5(json(once.save))).toEqual(once.save)
+    expect(parseSaveV6(json(once.save))).toEqual(once.save)
   })
 })
 
 describe('birthdays', () => {
-  it('maps the six dates onto the 48-day year', () => {
+  it('maps the six dates onto the 120-day year', () => {
     const at = (month: number, day: number) => { const d = dateOf(farmBirthday(month, day)); return `${d.season} ${d.day}` }
-    expect([at(3, 1), at(4, 1), at(5, 31), at(2, 14), at(8, 15), at(12, 31)]).toEqual(['spring 1', 'spring 5', 'spring 12', 'winter 10', 'summer 10', 'winter 4'])
-    expect([dayOfYear(1), dayOfYear(48), dayOfYear(49), dayOfYear(100)]).toEqual([1, 48, 1, 4])
+    expect([at(3, 1), at(4, 1), at(5, 31), at(2, 14), at(8, 15), at(12, 31)]).toEqual(['spring 1', 'spring 11', 'spring 30', 'winter 25', 'summer 25', 'winter 10'])
+    expect([dayOfYear(1), dayOfYear(120), dayOfYear(121), dayOfYear(244)]).toEqual([1, 120, 1, 4])
   })
 
   it('reads master data\'s set, the cast\'s own birthday winning; and the format checks a cast birthday', () => {
     const master = new Map([[ONE, { month: 8, day: 15 }], [TWO, { month: 12, day: 31 }]])
-    expect([...birthdaysOf(PACK, master)]).toEqual([[ONE, 4], [TWO, 40]])
-    expect([...birthdaysOf(PACK, new Map())]).toEqual([[ONE, 4]])
-    expect(isBirthday(BIRTHDAYS, ONE, 4 + DAYS_PER_YEAR)).toBe(true)
+    expect([...birthdaysOf(PACK, master)]).toEqual([[ONE, 10], [TWO, 100]])
+    expect([...birthdaysOf(PACK, new Map())]).toEqual([[ONE, 10]])
+    expect(isBirthday(BIRTHDAYS, ONE, 10 + DAYS_PER_YEAR)).toBe(true)
     const cast = json(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
     cast.umas[1]!.birthday = { month: 2, day: 30 }
     cast.umas[2]!.birthday = { month: 13, day: 1 }
@@ -308,15 +308,15 @@ describe('birthdays', () => {
   })
 
   it('writes her ★ line the day before and on the day', () => {
-    const eve = runNight(farm(2), context())
-    expect(eve.calendar.day).toBe(3)
+    const eve = runNight(farm(8), context())
+    expect(eve.calendar.day).toBe(9)
     expect(eve.summary!.hearts).toEqual([{ kind: 'birthday', id: ONE, when: 'tomorrow' }])
     const day = runNight(eve, context())
     expect(day.summary!.hearts).toEqual([{ kind: 'birthday', id: ONE, when: 'today' }])
     expect(runNight(day, context()).summary!.hearts).toEqual([])
-    expect(parseSaveV5(json(day))).toEqual(day)
+    expect(parseSaveV6(json(day))).toEqual(day)
     // Without master data's birthdays (or the cast's), no line.
-    expect(runNight(farm(2), context(NO_BIRTHDAYS)).summary!.hearts).toEqual([])
+    expect(runNight(farm(8), context(NO_BIRTHDAYS)).summary!.hearts).toEqual([])
   })
 })
 
@@ -351,7 +351,7 @@ describe('anniversaries', () => {
     const item = (line as { item: string }).item
     expect(SHOP_SEEDS[dateOf(day.calendar.day).season]).toContain(item) // a farmer's: a crop of the season
     expect(day.items[item]![ANNIVERSARY_STARS - 1]).toBe(1)
-    expect(parseSaveV5(json(day))).toEqual(day)
+    expect(parseSaveV6(json(day))).toEqual(day)
   })
 
   it('picks a forager\'s good from her deepest area, and a ★5 crop when her line\'s place isn\'t open', () => {
@@ -463,8 +463,8 @@ describe('the morning\'s Hearts lines', () => {
       { kind: 'birthday', id: ONE, when: 'today' }, { kind: 'anniversary', id: TWO, when: 'today', item: 'carrot' },
       { kind: 'anniversary', id: THREE, when: 'tomorrow', item: null }, { kind: 'arrived', id: ONE, home: true },
     ] }
-    expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
-    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV5({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
+    expect(parseSaveV6(json(save)).summary).toEqual(save.summary)
+    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV6({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
     refuse([{ kind: 'birthday', id: '9000009', when: 'today' }], 'save.summary.hearts.0.id: expected an Uma on the roster')
     refuse([{ kind: 'birthday', id: ONE, when: 'today' }, { kind: 'birthday', id: ONE, when: 'tomorrow' }], 'save.summary.hearts.1: repeated')
     refuse([{ kind: 'birthday', id: ONE, when: 'today', words: 'Hi' }], 'save.summary.hearts.0: unknown keys words')

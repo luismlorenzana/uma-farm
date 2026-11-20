@@ -7,7 +7,7 @@ import { cropLevelQuality, quality, TENDED_QUALITY } from '../goods/stars'
 import { NIGHT_STEPS, runNight, type NightContext, type NightStep } from '../night/end-day'
 import type { RankLine } from '../night/summary'
 import type { LoopPlaceId } from '../save/parse-v4'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { touched } from '../save/save'
 import { newLove, newRosterUma, newSave, type Love, type RankState, type SaveV4 } from '../save/v4'
 import type { Calling, CastEntry } from '../story/authored'
@@ -120,7 +120,7 @@ describe('rank-ups at night', () => {
     save = night(save)
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 41, rank: 1, challenge: 0 })
     expect(save.summary!.ranks).toEqual([{ kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 }])
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 
   it('takes one rank a night, one challenge at a time, and says when the next one\'s points are already full', () => {

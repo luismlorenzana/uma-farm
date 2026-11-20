@@ -94,7 +94,7 @@ export const TOPICS = {
   },
   calendar: {
     title: 'Calendar', steps: [['book', `${DAYS_PER_SEASON} days`], ['town', 'Swipe seasons'], ['festival', 'Pick a date']],
-    line: 'Swipe the date grid or tap a season. Use the arrows beside a date to move one day at a time.',
+    line: 'Scroll down the grid for later dates. Swipe across or tap a season. The arrows move one day at a time.',
   },
   festivals: {
     title: 'Festivals', steps: [['book', 'Check the date'], ['goods', 'Pick an entry'], ['festival', 'Compete']],

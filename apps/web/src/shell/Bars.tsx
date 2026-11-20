@@ -10,11 +10,10 @@
 import { actionsLeft, dateOf, dayActions, daySetState, eventActionsLeft, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
 import { AccountBar, BottomBar, withParam, type AccountBarProps, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
 import {
-  BookIcon, Button, CarrotIcon, CoinIcon, HeartIcon, MoonIcon, Sheet, StopwatchIcon, useReducedMotionSetting, VenueIcon,
+  BookIcon, CarrotIcon, CoinIcon, HeartIcon, MoonIcon, StopwatchIcon, useReducedMotionSetting, VenueIcon,
   type IconComponent,
 } from '@luismlorenzana/uma-kit/ui'
-import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { dateLabel, nudgeWords, SEASON_COLOR } from '../loop/words'
 import { useGame, useLoopSave, type SyncStatus } from '../save/game'
 import { useSpecialDays, useStoryYear } from '../story/story'
@@ -44,44 +43,6 @@ function ActionsChip({ save }: { save: FarmSave | null }) {
         {events > 0 && <span className="flex items-center gap-0.5 pl-0.5 font-display font-semibold text-[#c2385e] tabular-nums"><HeartIcon size={14} />+{events}</span>}
       </span>
     </span>
-  )
-}
-
-/** When the day's last action is spent, the day's work is done: a card says so over whatever page it was spent on, once,
- * with End the day and Not yet (for what's still free: the shop, a build, the evening). */
-export function OutOfActions() {
-  const save = useLoopSave()
-  const days = useSpecialDays()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [open, setOpen] = useState(false)
-  const seen = useRef<{ day: number; left: number } | null>(null)
-  const day = save?.calendar.day ?? null
-  const left = save ? actionsLeft(save) : null
-  useEffect(() => {
-    if (day === null || left === null) return
-    const before = seen.current
-    seen.current = { day, left }
-    if (before && before.day === day && before.left > 0 && left === 0) setOpen(true)
-    if (before && before.day !== day) setOpen(false)
-  }, [day, left])
-  if (!open) return null
-  return (
-    <Sheet open onClose={() => setOpen(false)} label="Out of actions" title="Out of actions"
-      footer={
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={() => setOpen(false)} data-action="not-yet">Not yet</Button>
-          <Button onClick={() => {
-            setOpen(false)
-            navigate(withParam(location, 'sheet', 'end'), { state: { back: true } })
-          }} data-action="end-the-day">End the day</Button>
-        </div>
-      }>
-      <p className="py-1 text-[15px]" data-out-of-actions>The day’s work is done. You can still build, go into town, shop or choose an evening companion.</p>
-      {save && days && eventActionsLeft(save, days) > 0 && (
-        <p className="text-[14px] text-ink-soft" data-event-actions-left>{eventActionsLeft(save, days)} left for events: the calendar has today’s.</p>
-      )}
-    </Sheet>
   )
 }
 

@@ -11,7 +11,7 @@ import { farmRankOf } from '../farm/farm'
 import { handDay } from '../farm/farmhands'
 import { challengeFor } from '../farm/rank-rules'
 import { runNight } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 import { CAST } from '../story/cast'
 import { CONTEST_SCENE_LINES, contestBeats } from '../story/contest'
@@ -30,8 +30,8 @@ const AT = '2026-11-15T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const row = (n: number, stars = 1): [number, number, number, number, number] => [0, 1, 2, 3, 4].map((s) => (s === stars - 1 ? n : 0)) as [number, number, number, number, number]
 /** Autumn 10: the game's Contest, year 1 and year 2. */
-const CONTEST_DAY = 34
-const CONTEST_DAY_2 = 82
+const CONTEST_DAY = 82
+const CONTEST_DAY_2 = 202
 const HAND = '101'
 const SEEDS = [1234, 2345, 3456, 4567, 5678, 6789, 7890, 8901]
 /** The points at a Farm Rank's threshold. */
@@ -171,7 +171,7 @@ describe('the entry', () => {
     const pack = storyPackFrom({ ...STAND_IN_FILES, world: { festivals: [{ id: 'cooking-contest', name: 'The Harvest Kitchen', season: 'summer', day: 6 }] } })
     const year = festivalsOf(pack)
     const days: SpecialDays = { festivals: year, birthdays: new Map() }
-    const moved = 18 // Summer 6
+    const moved = 36 // Summer 6
     expect(contestOn(moved, year)?.name).toBe('The Harvest Kitchen')
     expect(contestOn(CONTEST_DAY, year)).toBeNull()
     expect(contestBlock(farm(3, 1, CONTEST_DAY), days, salad())).toBe('No contest today.')
@@ -295,16 +295,16 @@ describe('the judging\'s lines', () => {
 describe('the save', () => {
   it('round-trips the Contest\'s dish under way and its cook, refuses a Contest of more than one dish, and reads an older save as before', () => {
     const started = enterContest(withHand(farm()), salad(1, HAND), GAME_DAYS)
-    expect(parseSaveV5(json(started))).toEqual(started)
+    expect(parseSaveV6(json(started))).toEqual(started)
     const two = json({ ...started, workshops: { ...started.workshops, current: { ...started.workshops.current!, menu: [{ ...started.workshops.current!.menu![0]!, count: 2 }] } } })
-    expect(() => parseSaveV5(two)).toThrow('one dish')
+    expect(() => parseSaveV6(two)).toThrow('one dish')
     const ghost = json({ ...started, today: { ...started.today, cook: '999' } })
-    expect(() => parseSaveV5(ghost)).toThrow('cook')
+    expect(() => parseSaveV6(ghost)).toThrow('cook')
     const judged = finishPlay(started, null).save
-    expect(parseSaveV5(json(judged))).toEqual(judged)
+    expect(parseSaveV6(json(judged))).toEqual(judged)
     const older = farm()
-    expect(parseSaveV5(json(older)).today.cook).toBeUndefined()
-    expect(parseSaveV5(json(older))).toEqual(older)
+    expect(parseSaveV6(json(older)).today.cook).toBeUndefined()
+    expect(parseSaveV6(json(older))).toEqual(older)
     // The night clears today's cook with the day; nothing here stamps.
     expect(runNight(started, {}).today.cook).toBeUndefined()
     expect(judged.account.updatedAt).toBe(older.account.updatedAt)
