@@ -22,13 +22,14 @@ import { Outlet, useLocation, useSearchParams } from 'react-router'
 import { useGame } from '../save/game'
 import { playHeld } from '../loop/stove-session'
 import { castIds, useStory } from '../story/story'
-import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
+import { FarmBar, FarmRail, railPageOf } from './Bars'
 
 /** The field's screen: full screen, its own strip at the top, no rail. */
 const FIELD_PATH = '/field'
 
 const MenuSheet = lazy(() => import('./MenuSheet').then((module) => ({ default: module.MenuSheet })))
 const SyncWarning = lazy(() => import('./SyncWarning').then(module => ({ default: module.SyncWarning })))
+const OutOfActions = lazy(() => import('./OutOfActions'))
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
 const ScenePlayer = lazy(() => import('../loop/ScenePlayer'))
 const NameSheet = lazy(() => import('../loop/NameSheet'))
@@ -92,7 +93,7 @@ export function Shell() {
       overlays={
         <>
           {sheet === 'menu' && <Suspense fallback={null}><MenuSheet open onClose={() => leave(withParam(location, 'sheet', null))} /></Suspense>}
-          {free && <OutOfActions />}
+          {free && <Suspense fallback={null}><OutOfActions /></Suspense>}
           {isLoopSheet(sheet) && !naming && !scene && <Suspense fallback={null}><LoopSheets key={sheet} sheet={sheet} /></Suspense>}
           {naming && <Suspense fallback={null}><NameSheet /></Suspense>}
           {scene && <Suspense fallback={null}><ScenePlayer key={scene} scene={scene} /></Suspense>}

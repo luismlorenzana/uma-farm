@@ -19,7 +19,7 @@ upkeep and loans, the calendar, the ranch and the mine, the dialogue engine, the
 [The roadmap](../roadmap.md#where-we-are) says what each one is, and [the game mechanics](../game-mechanics.md) how it
 plays.
 
-**Your farm is kept from here** (the owner, 2026-11-14): save v5 is the farm you play and keep. A later change grows it
+**Your farm is kept from here** (the owner, 2026-11-14): save v6 expands the calendar for the farm you play and keep. A later change grows it
 in place or migrates it, never a start-over, and the game has no testing tools: it's the real game, and you only play.
 
 **Tier 1's complete story packs are in** (F87): `pnpm story:scaffold --tier 1` lays out every piece of story the game
@@ -129,7 +129,6 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 | Packet | Work | Status |
 |---|---|---|
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
-| [F104](tasks/F104-longer-seasons.md) | 30-day seasons, calendar pacing and whole-farm balance | Draft seasonal schedule, system audit and save conversion scope. The 120-day playthroughs and implementation are open. |
 
 The Forge is [deferred pending a redesign](../roadmap.md#deferred).
 

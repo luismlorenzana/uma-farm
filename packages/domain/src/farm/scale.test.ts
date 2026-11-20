@@ -50,7 +50,7 @@ import { setFishingMode } from '../gathering/fishing-grades'
 import { NIGHT_STEPS, runNight } from '../night/end-day'
 import { animalLock, animalsIn, ANIMALS, buyAnimal, buyFodder, collect, feedAnimal, FODDER_PRICE, homeBuilt, readyIn, siloRoom } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
 import { goodCount } from '../save/warehouse'
 import { WEEKDAYS } from '../town/professions'
@@ -858,7 +858,7 @@ describe('expeditions at farm scale', () => {
     expect(shipped).toBeGreaterThan(0)
     expect(missed).toBeGreaterThan(0)
     expect(last.filter((day) => day.short)).toEqual([])
-    for (const morning of run.mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
+    for (const morning of run.mornings) expect(parseSaveV6(json(morning))).toEqual(morning)
   }, 120_000)
 })
 
@@ -966,7 +966,9 @@ async function playBalance(target: 0 | Stage) {
     if (target) save = balanceParty(save, count)
     if (save.calendar.day % 4 === 0) save = chopForBuilds(fishForBuilds(save))
     const kitchen = botKitchen(save, 'casual', BALANCE_PACK)
-    save = balanceManual(kitchen.save, handsWorking(save, BALANCE_PACK).length)
+    const coverage = handsWorking(save, BALANCE_PACK).length
+    const reserveWatering = target === 10 && coverage >= 3
+    save = reserveWatering ? kitchen.save : balanceManual(kitchen.save, coverage)
     const recipe = botRecipe(save, spare(save))
     if (recipe && save.today.town && recipeLock(save, recipe) === null) save = buyRecipe(save, recipe)
     save = assign(save, BALANCE_PACK, true).save
@@ -979,6 +981,7 @@ async function playBalance(target: 0 | Stage) {
         if (needsWater(tile) && remaining[index] && needsWater(remaining[index]!)) save = waterTile(save, index)
       }
     }
+    if (reserveWatering) save = balanceManual(save, coverage)
     save = ship(save, planFor(true), BALANCE_PACK, true)
     const morning = runNight(save, { story: BALANCE_PACK, talentOf: tripTalents }, rank10
       ? NIGHT_STEPS.map(step => step.name === 'growCrops' ? { run: (night: Parameters<typeof step.run>[0]) => {
@@ -1023,7 +1026,7 @@ async function playBalance(target: 0 | Stage) {
 }
 
 describe('Phase 3.5 balance from a fresh farm', () => {
-  it.each([0, ...STAGES] as const)('plays to Rank 10 and 48 more days with %i Umas', async target => {
+  it.each([0, ...STAGES] as const)('plays to Rank 10 and 120 more days with %i Umas', async target => {
     const { save, ...report } = await playBalance(target)
     if (process.env.FARM_BALANCE_REPORT === '1') console.log(JSON.stringify({ target, ...report, end: save.calendar.day, rank: farmRankOf(save.farm.points), rankPoints: save.farm.points, gold: save.gold, buildings: save.buildings }))
     expect(report.rank10).toBeGreaterThan(0)
@@ -1039,7 +1042,7 @@ describe('Phase 3.5 balance from a fresh farm', () => {
       const coverage = { 10: 0.7, 20: 0.78, 50: 0.93 }[target]
       expect(report.late.held).toBeGreaterThanOrEqual(DAYS_PER_YEAR * BALANCE_INGREDIENTS.length * coverage)
     }
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   }, 180_000)
 })
 
@@ -1093,11 +1096,11 @@ describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', ()
     expect(last.real).toBeGreaterThanOrEqual(last.today - 1)
     expect(last.unfilled).toBeGreaterThan(0)
     expect(last.work.thin + last.work.idle).toBeLessThan(last.actions / 10)
-    expect(last.plots).toBe(6)
+    expect(last.plots).toBe(8)
   })
 
   it('grows the work with the people: plots and station levels as the Farm Rank comes', () => {
-    expect([year(10, 4).plots, year(20, 4).plots, year(50, 4).plots]).toEqual([2, 4, 6])
+    expect([year(10, 4).plots, year(20, 4).plots, year(50, 4).plots]).toEqual([2, 4, 8])
     expect(year(50, 4).levels).toBe(25)
   })
 
@@ -1112,7 +1115,7 @@ describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', ()
   })
 
   it('keeps a save the parse takes, every season', () => {
-    for (const stage of STAGES) for (const morning of farms[stage].mornings) expect(parseSaveV5(json(morning))).toEqual(morning)
+    for (const stage of STAGES) for (const morning of farms[stage].mornings) expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })
 

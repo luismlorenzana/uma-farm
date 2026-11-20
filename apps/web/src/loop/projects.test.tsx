@@ -136,8 +136,8 @@ describe("the Diary's projects", () => {
     } })
     await render(<DiaryPage />, '/diary')
     expect($$('[data-project-loan]').map((l) => [l.dataset.projectLoan, l.textContent, l.getAttribute('href')])).toEqual([
-      // Day 7 and ten nights: Summer 5.
-      ['dorm:2', 'Dorm level 2770g owed · 80g a night · clears in about 10 nights (Summer 5)', '/book'],
+      // Day 7 and ten nights: Spring 17.
+      ['dorm:2', 'Dorm level 2770g owed · 80g a night · clears in about 10 nights (Spring 17)', '/book'],
     ])
     // The Mill wants only gold now.
     expect($('[data-project="mill"] [data-state]')?.textContent).toBe('Need 400g more')
@@ -180,7 +180,7 @@ describe('building a place', () => {
     expect(await endTheDay(7)).toBe(true)
     expect(save().buildings.mill).toBe(1)
     expect(save().summary!.news).toContainEqual({ kind: 'built', place: 'mill' })
-    expect(summaryParts(save().summary!).find((p) => p.section === 'news')!.lines[0]).toEqual({ key: 'built:mill', text: 'Built overnight · the Mill', to: '/?peek=mill', tag: 'Built' })
+    expect(summaryParts(save().summary!).find((p) => p.section === 'news')!.lines.find(line => line.key === 'built:mill')).toEqual({ key: 'built:mill', text: 'Built overnight · the Mill', to: '/?peek=mill', tag: 'Built' })
   })
 
   it('shows a place whose game isn\'t built yet as "Not built yet", which can\'t be bought', async () => {

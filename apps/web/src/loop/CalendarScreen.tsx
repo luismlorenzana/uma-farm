@@ -1,6 +1,6 @@
 // The calendar screen (`?sheet=calendar`, from the bar's date): the year at a glance, laid out sideways over the whole
 // screen. On top, the date and year, the four seasons (this one marked, the others a tap away), the day's actions with a
-// special day's event actions, and Close. Below, the season's 12 days as a grid of 6 × 2: each day its number, its marks
+// special day's event actions, and Close. Below, the season’s 30 dates in a scrollable grid: each day its number, its marks
 // (a festival's trophy, New Year's spark, a holiday's ribbon, a minor day's dot), its one label (the festival, New
 // Year's, the story's day) and the faces of the Umas with an event that day (three, or two and "+n"); today in the accent
 // colour, days gone by faded. Beside it, the chosen day's panel: its festival and what happens at it, New Year's, the
@@ -17,7 +17,7 @@ import {
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, ChevronLeftIcon, ChevronRightIcon, CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -42,6 +42,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const today = save?.calendar.day ?? 1
   const [picked, setPicked] = useState(() => planner ? save?.love[planner]?.weddingDay ?? today + 1 : today)
   const swipe = useRef<{ x: number; y: number } | null>(null)
+  const grid = useRef<HTMLOListElement | null>(null)
   const suppressTapUntil = useRef(0)
   const start = save?.calendar.start ?? 1
   const selected = Math.max(start, picked)
@@ -49,9 +50,18 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const pack = useMemo(() => story ?? noPack(), [story])
   const days = useMemo((): SpecialDays => special ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }, [special, story])
   const list = useMemo(() => (save ? seasonDays(save, pack, days, season, year) : []), [save, pack, days, season, year])
+  useEffect(() => {
+    const pane = grid.current
+    const tile = pane?.querySelector(`[data-day="${selected}"]`)
+    if (!pane || !tile) return
+    const area = pane.getBoundingClientRect()
+    const cell = tile.getBoundingClientRect()
+    if (cell.top < area.top) pane.scrollTop -= area.top - cell.top
+    if (cell.bottom > area.bottom) pane.scrollTop += cell.bottom - area.bottom
+  }, [selected, list])
   if (!save) return null
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
-  const chosen = list.find(d => d.day === selected)!
+  const chosen = list.find((d): d is CalendarDay => d.day !== null && d.day === selected)!
   const pick = (s: Season, y = year) => {
     const now = dateOf(today, save.calendar)
     setPicked(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }, save.calendar))
@@ -76,7 +86,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
             <button type="button" className="ml-auto min-h-11 rounded-sm px-2 text-[13px] font-bold text-accent" onClick={() => setPicked(today)} data-action="calendar-today">Today</button>
             <GuideButton topic="calendar" label="How the calendar works" />
           </div>
-          <ol className="grid min-h-0 min-w-0 flex-1 touch-pan-y auto-rows-[minmax(56px,1fr)] grid-cols-6 gap-1 overflow-y-auto overscroll-contain select-none" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}
+          <ol ref={grid} className="grid min-h-0 min-w-0 flex-1 touch-pan-y auto-rows-[minmax(52px,1fr)] grid-cols-6 gap-1 overflow-y-auto overscroll-contain select-none" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}
             onTouchStart={(event) => {
               const finger = event.touches.length === 1 ? event.touches[0] : undefined
               swipe.current = finger ? { x: finger.clientX, y: finger.clientY } : null
@@ -94,7 +104,10 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
             onClickCapture={(event) => {
               if (event.detail > 0 && performance.now() < suppressTapUntil.current) event.stopPropagation()
             }}>
-            {list.map((d) => <Cell key={d.day} day={d} chosen={d.day === chosen.day} nameOf={nameOf} onPick={() => setPicked(d.day)} />)}
+            {list.map((d) => d.day === null
+              ? <li key={d.date.day} className="rounded-md border border-hairline/50 p-1 text-[13px] text-ink-faint"
+                  title="Added after this season" data-calendar-gap>{d.date.day}</li>
+              : <Cell key={d.date.day} day={d} chosen={d.day === chosen.day} nameOf={nameOf} onPick={() => setPicked(d.day)} />)}
           </ol>
         </section>
         <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} planner={planner}
@@ -207,7 +220,7 @@ function DayPanel({ save, pack, days, day, nameOf, planner, previous, nextDay }:
           className="grid size-11 shrink-0 place-items-center text-ink-soft"><ChevronRightIcon size={20} /></button>
       </div>
       <div key={day.day} className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-3 pb-3" data-day-scroll>
-      {planner && <WeddingPlanner save={save} day={day.day} id={planner} name={nameOf(planner)} />}
+      {planner && <WeddingPlanner save={save} date={day} id={planner} nameOf={nameOf} />}
       {events && <p className="flex items-center gap-1 pt-0.5 text-[13px] font-semibold text-[#c2385e]" data-day-events><HeartIcon size={14} />{events}</p>}
       <ul className="space-y-1.5 pt-2 text-[14px]">
         {day.celebrations.map(id => <li key={id}>
@@ -260,10 +273,19 @@ function DayPanel({ save, pack, days, day, nameOf, planner, previous, nextDay }:
   )
 }
 
-function WeddingPlanner({ save, day, id, name }: { save: FarmSave; day: number; id: string; name: string }) {
+function WeddingPlanner({ save, date, id, nameOf }: { save: FarmSave; date: CalendarDay; id: string; nameOf: (id: string) => string }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const planned = save.love[id]?.weddingDay
+  const day = date.day
+  const conflicts = [
+    ...(date.festival ? [date.festival.name] : []),
+    ...(date.newYear && date.date.year > 1 ? ['New Year’s'] : []),
+    ...date.storyDays.map(event => event.name),
+    ...date.birthdays.map(uma => `${nameOf(uma)}’s birthday`),
+    ...date.anniversaries.map(uma => `${nameOf(uma)}’s anniversary`),
+    ...date.weddings.filter(uma => uma !== id).map(uma => `${nameOf(uma)}’s wedding`),
+  ]
   const setDay = async (next: number | null) => {
     setBusy(true)
     setError(null)
@@ -272,9 +294,10 @@ function WeddingPlanner({ save, day, id, name }: { save: FarmSave; day: number; 
     finally { setBusy(false) }
   }
   return <section className="my-2 space-y-1.5 rounded-md border border-hairline bg-sunken/40 p-2" aria-label="Wedding planner" data-wedding-planner>
-    <p className="font-semibold">{name} · Wedding plan</p>
+    <p className="font-semibold">{nameOf(id)} · Wedding plan</p>
     {planned && <p className="text-[13px] text-ink-soft" data-planned-date>{shortDate(planned, save.calendar)} · Year {dateOf(planned, save.calendar).year}</p>}
     <p className="text-[12px] text-ink-soft">{save.love[id]?.stage === 'wedding' ? 'The ceremony opens on the planned day.' : 'Finish the proposal to hold the ceremony.'}</p>
+    {conflicts.length > 0 && <p className="text-[12px] text-warning" data-wedding-conflicts>Also that day · {conflicts.join(' · ')}</p>}
     <div className="flex flex-wrap gap-1">
       <Button disabled={busy || day <= save.calendar.day || day === planned} onClick={() => void setDay(day)} data-action="save-wedding-date">
         {day === planned ? 'Date saved' : 'Save this date'}

@@ -5,7 +5,7 @@ import { actionsLeft, DAY_ACTIONS, goToTown } from '../farm/actions'
 import { upkeepOf, UPKEEP_BUILDING } from '../farm/economy'
 import { goodOf } from '../goods/ids'
 import { runNight } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { fieldTiles, MAX_FONDNESS, newSave, SILO_ROOM, type SaveV4 } from '../save/v4'
 import {
   animalLock, ANIMALS, animalsIn, buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, FODDER_PRICE, GRASS_CUT, heartsOf, readyIn, siloStands, tendNight,
@@ -134,15 +134,15 @@ describe('the night and collecting', () => {
 describe('the save', () => {
   it('keeps a ranch the parse takes, and reads an older ranch leniently: no silo is an empty one, an older animal its fondness', () => {
     const fed = feedAnimal(buyFodder(buyAnimal(farm(), 'chicken').save, 10), 'chicken-1')
-    expect(parseSaveV5(json(fed))).toEqual(fed)
-    expect(parseSaveV5(json(night(fed)))).toEqual(night(fed))
+    expect(parseSaveV6(json(fed))).toEqual(fed)
+    expect(parseSaveV6(json(night(fed)))).toEqual(night(fed))
     const older = json(newSave('older', AT)) as unknown as Record<string, unknown>
     older.ranch = { animals: [] }
-    expect(parseSaveV5(older).ranch).toEqual({ animals: [], silo: 0 })
-    expect(parseSaveV5(older).account.updatedAt).toBe(AT)
+    expect(parseSaveV6(older).ranch).toEqual({ animals: [], silo: 0 })
+    expect(parseSaveV6(older).account.updatedAt).toBe(AT)
     older.ranch = { animals: [{ id: 'a1', kind: 'cow', building: 'barn', affection: 340.5, streak: 2, carer: null, next: 1 }] }
-    expect(parseSaveV5(older).ranch.animals).toEqual([{ id: 'a1', kind: 'cow', fondness: MAX_FONDNESS, fed: false, cared: false, ready: false }])
+    expect(parseSaveV6(older).ranch.animals).toEqual([{ id: 'a1', kind: 'cow', fondness: MAX_FONDNESS, fed: false, cared: false, ready: false }])
     older.places = { mine: { deepest: 4, stairs: 1.25 }, quarry: { deepest: 0, stairs: 0 } }
-    expect(parseSaveV5(older).places.mine).toEqual({ deepest: 4, stairs: 1 })
+    expect(parseSaveV6(older).places.mine).toEqual({ deepest: 4, stairs: 1 })
   })
 })

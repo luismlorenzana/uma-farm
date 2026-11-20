@@ -14,7 +14,7 @@
 //   the posts       the mayor keeps her post. Legacy casts also have static town people.
 //
 // The same absolute farm day always shows the same schedule.
-import { dateOf, DAYS_PER_SEASON, farmDay, type FarmClock, type Season } from '../farm/calendar'
+import { dateOf, DAYS_PER_SEASON, turnOnDate, type FarmClock, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { awayOn } from '../expeditions/presence'
 import { atHome, type SaveV4, type TownTalks } from '../save/v4'
@@ -135,7 +135,7 @@ export function defaultSpot(pack: Pick<StoryPack, 'cast'>, id: string, place = c
   return favouriteSpotOf(pack, id) ?? SPOT_IDS[Math.floor(place / DEFAULT_EVERY) % SPOT_IDS.length]!
 }
 
-export type SchedulePack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>
+export type SchedulePack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master' | 'world'>>
 const schedules = new WeakMap<object, Map<string, Schedule>>()
 
 /** Her schedule: the story's when it's written (her routine's stops, then her job, then her home; a location the map
@@ -149,7 +149,12 @@ export function scheduleOf(pack: SchedulePack, id: string): Schedule {
   const hit = known.get(id)
   if (hit) return hit
   const map = new Set(townLocations(pack).map((l) => l.id))
-  const when = (w: LifeWhen): LifeWhen => ({ ...(w.days ? { days: w.days } : {}), ...(w.seasons ? { seasons: w.seasons } : {}) })
+  const when = (w: LifeWhen): LifeWhen => {
+    const days = w.days
+    const recurring = days?.length === 4 && days[0]! <= DEFAULT_EVERY && days.every((day, index) => day === days[0]! + index * DEFAULT_EVERY)
+    return { ...(days ? { days: recurring && pack.world?.calendarDays === undefined ? defaultDays(days[0]! - 1) : days } : {}),
+      ...(w.seasons ? { seasons: w.seasons } : {}) }
+  }
   const job = herJobOf(pack, id)
   const home = herHomeOf(pack, id)
   const stops: ScheduleStop[] = [
@@ -204,7 +209,8 @@ export function seasonSchedule(pack: SchedulePack, id: string, season: Season, y
   const weekly = professionOf(pack, id)
   for (let day = 1; day <= DAYS_PER_SEASON; day++) {
     const stop = stops.find((s) => holdsIn(s, season, day))
-    const { at, by } = weekly ? whereOn(pack, id, farmDay({ year, season, day }, clock), clock) : { at: stop?.at ?? null, by: stop?.by ?? null }
+    const turn = weekly ? turnOnDate({ year, season, day }, clock) : null
+    const { at, by } = turn === null ? { at: stop?.at ?? null, by: stop?.by ?? null } : whereOn(pack, id, turn, clock)
     const group = out.find((g) => g.at === at && g.by === by)
     if (group) group.days.push(day)
     else out.push({ at, by, days: [day] })
@@ -223,13 +229,16 @@ const outIn = (stops: readonly ScheduleStop[], season: Season, day: number): boo
 
 const farmDayCache = new WeakMap<object, Map<string, readonly number[]>>()
 
-/** Her farm days in a season, the days of the season (1–12) a farmhand comes to work: every day her schedule doesn't put
+/** Her farm days in a season, the days of the season (1–30) a farmhand comes to work: every day her schedule doesn't put
  * her out in town (`outIn`: her routine, her job or the default schedule's spot), including a day at her `home` in town
- * or at home off the map. A season her schedule leaves without one: the default schedule's other days (8 of 12, by her
+ * or at home off the map. A season her schedule leaves without one: the default schedule's other days (20 of 30, by her
  * place in the cast), so every farmhand works. Read once a pack. */
 export function farmDaysIn(pack: SchedulePack, id: string, season: Season, year = 1, clock?: FarmClock): readonly number[] {
   if (professionOf(pack, id)) return Array.from({ length: DAYS_PER_SEASON }, (_, i) => i + 1)
-    .filter(day => professionShift(pack, id, farmDay({ year, season, day }, clock)) === 'farm')
+    .filter(day => {
+      const turn = turnOnDate({ year, season, day }, clock)
+      return turn !== null && professionShift(pack, id, turn) === 'farm'
+    })
   let known = farmDayCache.get(pack)
   if (!known) farmDayCache.set(pack, (known = new Map()))
   const key = `${id}:${season}`

@@ -4,7 +4,7 @@
 // test kinds and no story pack.
 import { describe, expect, it } from 'vitest'
 import { endDay } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { FARMHOUSE, newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 import { buildCostWords, buildLock, buildLockWords, farmProjects, payBuild, pickFor, raiseBuilds, umaMilestones } from './builds'
 import { farmPlace, placeBuilt, type BuildPlace } from './places'
@@ -45,7 +45,7 @@ describe('building a place', () => {
     expect(placeBuilt(morning, 'mill')).toBe(true)
     expect(morning.summary!.news).toContainEqual({ kind: 'built', place: 'mill' })
     expect(buildLock(morning, 'mill')).toEqual({ by: 'built' })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
     expect(raiseBuilds(morning).built).toEqual([])
   })
 
@@ -105,20 +105,20 @@ describe('an older v4, from the global chapters', () => {
   it('loads: its chapter and goals ignored, no builds yet, and what its chapter opened still open', () => {
     const save = farm()
     const older = json({ ...save, farm: { points: 400, chapter: 2, goals: { 'gold-shipped': 1200 }, festivals: [], counts: {} }, buildings: { dorm: 1, mill: 0 } }) as Record<string, unknown>
-    const read = parseSaveV5(older)
+    const read = parseSaveV6(older)
     expect(read.farm).toEqual({ points: 400, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [], pantry: [], market: {} })
     // Chapter 2 had opened the Coop and the Barn: they stay open, built. The Mill's plans are an unbuilt Mill.
     expect(read.buildings).toEqual({ dorm: 1, mill: 0, coop: 1, barn: 1 })
     expect(placeBuilt(read, 'mill')).toBe(false)
-    expect(parseSaveV5(json({ ...save, farm: { points: 0, chapter: 1, goals: {}, festivals: [], counts: {} } })).buildings).toEqual({ dorm: 1 })
-    expect(parseSaveV5(json(read))).toEqual(read)
-    expect(() => parseSaveV5(json({ ...save, farm: { ...save.farm, builds: ['fields'] } }))).toThrow('expected a place you build')
-    expect(() => parseSaveV5(json({ ...save, farm: { ...save.farm, builds: ['mill', 'mill'] } }))).toThrow('repeated')
+    expect(parseSaveV6(json({ ...save, farm: { points: 0, chapter: 1, goals: {}, festivals: [], counts: {} } })).buildings).toEqual({ dorm: 1 })
+    expect(parseSaveV6(json(read))).toEqual(read)
+    expect(() => parseSaveV6(json({ ...save, farm: { ...save.farm, builds: ['fields'] } }))).toThrow('expected a place you build')
+    expect(() => parseSaveV6(json({ ...save, farm: { ...save.farm, builds: ['mill', 'mill'] } }))).toThrow('repeated')
   })
 
   it('keeps houses built under the old rule, and shows the homestead\'s first row from day 1', () => {
     const save = farm()
     const houses = { ...save, homestead: { ...save.homestead, houses: [FARMHOUSE, { name: 'Rose Cottage', extended: false }, { name: 'Wren Hollow', extended: false }], slept: [0, 0, 0] } }
-    expect(parseSaveV5(json(houses)).homestead.houses).toHaveLength(3)
+    expect(parseSaveV6(json(houses)).homestead.houses).toHaveLength(3)
   })
 })

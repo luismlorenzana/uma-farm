@@ -2,7 +2,7 @@
 // the save stored as text, an older save read as its version and account, the backup before a newer version first
 // replaces a stored one, and rescues; and the owner's farm starting over through the controller. Invented data only.
 import { BadRequestException } from '@nestjs/common'
-import { freshV5, nameFarmer, newSave, touched } from '@farm/domain'
+import { expandCalendar, freshV6, nameFarmer, newSave, touched, type SaveV5 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FirestoreSaveRepository } from './firestore-save.repository'
 import { SaveController } from './save.controller'
@@ -70,7 +70,7 @@ describe('the Firestore save store', () => {
       store.set('saves/u', structuredClone(original))
       expect(await repo.load('u')).toEqual({ revision: 3, save: { version, account: older.account } })
       expect(store.get('saves/u')).toEqual(original)
-      await repo.put('u', 3, freshV5(older))
+      await repo.put('u', 3, freshV6(older))
       expect(store.get(`saveBackups/u-v${version}`)).toEqual({ ...original, backedUpAt: SERVER_TIME })
     }
   })
@@ -78,12 +78,27 @@ describe('the Firestore save store', () => {
   it('backs up only the first time a newer version replaces the stored one', async () => {
     const repo = new FirestoreSaveRepository('farm')
     store.set('saves/u', { revision: 1, save: JSON.stringify({ version: 3, account: { uid: 'u', createdAt: NOW, updatedAt: NOW } }), updatedAt: 'kept' })
-    const fresh = freshV5({ account: { uid: 'u', createdAt: NOW, updatedAt: NOW } })
+    const fresh = freshV6({ account: { uid: 'u', createdAt: NOW, updatedAt: NOW } })
     await repo.put('u', 1, fresh)
     store.delete('saveBackups/u-v3')
     await repo.put('u', 2, touched(fresh, '2026-11-08T13:00:00.000Z'))
     expect(store.has('saveBackups/u-v3')).toBe(false)
     expect(store.has('saveBackups/u-v5')).toBe(false)
+  })
+
+  it('backs up the full v5 on the first upload and protects the selected calendar', async () => {
+    const legacy: SaveV5 = { ...newSave('u', NOW), version: 5, calendar: { day: 18 }, gold: 902 }
+    const original = { revision: 7, save: JSON.stringify(legacy), updatedAt: 'kept' }
+    store.set('saves/u', original)
+    const repo = new FirestoreSaveRepository('farm')
+    const controller = new SaveController(repo)
+    expect(await controller.load('u')).toEqual({ revision: 7, save: legacy })
+    const expanded = expandCalendar(legacy)
+    expect(await controller.put('u', { baseRevision: 7, save: expanded })).toEqual({ revision: 8, save: expanded })
+    expect(store.get('saveBackups/u-v5')).toEqual({ ...original, backedUpAt: SERVER_TIME })
+    await expect(controller.put('u', { baseRevision: 8, save: legacy })).rejects.toBeInstanceOf(BadRequestException)
+    await expect(repo.put('u', 8, { ...expanded, calendar: { day: 18 } })).rejects.toBeInstanceOf(RevisionConflict)
+    expect(await controller.load('u')).toEqual({ revision: 8, save: expanded })
   })
 
   it('keeps a refused upload in saveRescues, newest only', async () => {
@@ -110,7 +125,7 @@ describe("the owner's farm starting over", () => {
     expect(loaded).toEqual({ revision: 21, save: { version: 3, account: ACCOUNT } })
     expect(store.get('saves/owner')).toEqual(STORED)
     // The phone's first upload: the new farm itself, its account (updatedAt included) the v3's.
-    const fresh = freshV5(loaded.save!)
+    const fresh = freshV6(loaded.save!)
     expect(fresh.account).toEqual(ACCOUNT)
     await expect(controller.put('owner', { baseRevision: 21, save: JSON.parse(JSON.stringify(fresh)) })).resolves.toEqual({ revision: 22, save: fresh })
     expect(store.get('saveBackups/owner-v3')).toEqual({ ...STORED, backedUpAt: SERVER_TIME })
@@ -120,7 +135,7 @@ describe("the owner's farm starting over", () => {
     // An old cached build, if it ever sent its v3 now, is refused and kept whole; nothing stored moves.
     const old = { baseRevision: 22, save: { ...OWNER, account: { ...ACCOUNT, updatedAt: '2026-11-11T08:00:00.000Z' } } }
     await expect(controller.put('owner', old)).rejects.toBeInstanceOf(BadRequestException)
-    expect(store.get('saveRescues/owner')).toEqual({ upload: JSON.stringify(old), reason: expect.stringContaining('expected 5'), rescuedAt: SERVER_TIME })
+    expect(store.get('saveRescues/owner')).toEqual({ upload: JSON.stringify(old), reason: expect.stringContaining('expected 6'), rescuedAt: SERVER_TIME })
     expect(store.get('saves/owner')).toEqual(saved)
     // The farmer's name is the first stamp; later v5 writes leave the backup as it was.
     const named = touched(nameFarmer(fresh, 'Robin'), '2026-11-11T09:00:00.000Z')

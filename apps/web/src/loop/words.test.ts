@@ -6,10 +6,10 @@ import { dateLabel, dateWords, dayCount, festivalWords, nudgeWords, shortDate } 
 
 describe('the date', () => {
   it('names the day, the season, the year and the next festival', () => {
-    expect([shortDate(3), dateWords(3), dateWords(49)]).toEqual(['Spring 3', 'Spring 3, year 1', 'Spring 1, year 2'])
-    expect(dateLabel(3)).toBe('Spring 3, year 1 · Flower Show in 7 days')
-    expect([festivalWords(9), festivalWords(10), festivalWords(11), festivalWords(47)]).toEqual([
-      'Flower Show tomorrow', 'Flower Show today', 'Fishing Derby in 11 days', 'Harvest Cup tomorrow',
+    expect([shortDate(3), dateWords(3), dateWords(121)]).toEqual(['Spring 3', 'Spring 3, year 1', 'Spring 1, year 2'])
+    expect(dateLabel(3)).toBe('Spring 3, year 1 · Flower Show in 16 days')
+    expect([festivalWords(18), festivalWords(19), festivalWords(20), festivalWords(117)]).toEqual([
+      'Flower Show tomorrow', 'Flower Show today', 'Fishing Derby in 31 days', 'Harvest Cup tomorrow',
     ])
     expect([dayCount(1), dayCount(3)]).toEqual(['1 day', '3 days'])
   })

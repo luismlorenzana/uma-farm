@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { actionsLeft, DAY_ACTIONS } from '../farm/actions'
 import { goodOf } from '../goods/ids'
 import { runNight } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { DEEPEST_FLOOR, newSave, type SaveV4 } from '../save/v4'
 import { digFloor, floorFinds, floorRank, gradeAt, reachFloor, stairsAfter, stairsFound, stairsLock, takeStairs, workFace } from './digs'
 import { startLoad } from './stations'
@@ -104,6 +104,6 @@ describe('the Smelter and the Cutter', () => {
 describe('the save', () => {
   it('keeps the digs the parse takes', () => {
     const { save } = workFace(farm(), 'quarry')
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 })

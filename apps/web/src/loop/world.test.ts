@@ -28,8 +28,8 @@ describe('the opening’s title line', () => {
 describe('the year’s festivals on the date chip', () => {
   it('names the story’s next festival, and the game’s without it', () => {
     expect(dateLabel(3, festivalsOf(PACK))).toBe('Spring 3, year 1 · Lantern Walk tomorrow')
-    expect(dateLabel(5, festivalsOf(PACK))).toBe('Spring 5, year 1 · Bloom Fair in 5 days')
-    expect(dateLabel(3)).toBe('Spring 3, year 1 · Flower Show in 7 days')
+    expect(dateLabel(5, festivalsOf(PACK))).toBe('Spring 5, year 1 · Bloom Fair in 14 days')
+    expect(dateLabel(3)).toBe('Spring 3, year 1 · Flower Show in 16 days')
     expect([theName('Fields'), theName('The Long Run')]).toEqual(['the Fields', 'The Long Run'])
   })
 })

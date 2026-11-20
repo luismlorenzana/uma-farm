@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { meet } from '../romance/meeting'
 import { sceneSteps } from '../romance/love'
 import { lineSteps } from '../romance/loop'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type SaveV4 } from '../save/v4'
 import { checkPair, checkRoute, type Step, type StoryContext } from './authored'
 import { STAND_IN, STAND_IN_BIBLE, STAND_INS } from './authored.fixture'
@@ -17,9 +17,9 @@ import {
   type IllustrationAsk,
 } from './illustrations'
 
-// Day 1 is Spring 1; a season is 12 days.
+// Day 1 is Spring 1; a season is 30 days.
 const SPRING = 1
-const SUMMER = 13
+const SUMMER = 31
 const SCENES = syntheticIllustrations(Number(STAND_IN), [...ILLUSTRATION_MOMENTS]).scenes
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
@@ -157,16 +157,16 @@ describe('her gallery', () => {
   })
   it('the save keeps it: it round-trips, and an older v5 without it reads as none, its updatedAt untouched', () => {
     const save = seeIllustration(met(), STAND_IN, SCENES[1]!.id)
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
     const { gallery: _, ...older } = json(met())
-    const read = parseSaveV5(older)
+    const read = parseSaveV6(older)
     expect(read.gallery).toEqual({})
     expect(read.account.updatedAt).toBe(met().account.updatedAt)
   })
   it('refuses a gallery for someone not met, or an id that isn’t a scene’s, or one twice', () => {
     const save = json(met())
-    expect(() => parseSaveV5({ ...save, gallery: { 9000002: [SCENES[0]!.id] } })).toThrow()
-    expect(() => parseSaveV5({ ...save, gallery: { [STAND_IN]: ['Bad Id'] } })).toThrow()
-    expect(() => parseSaveV5({ ...save, gallery: { [STAND_IN]: [SCENES[0]!.id, SCENES[0]!.id] } })).toThrow()
+    expect(() => parseSaveV6({ ...save, gallery: { 9000002: [SCENES[0]!.id] } })).toThrow()
+    expect(() => parseSaveV6({ ...save, gallery: { [STAND_IN]: ['Bad Id'] } })).toThrow()
+    expect(() => parseSaveV6({ ...save, gallery: { [STAND_IN]: [SCENES[0]!.id, SCENES[0]!.id] } })).toThrow()
   })
 })

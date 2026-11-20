@@ -145,7 +145,7 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
             <p className="font-semibold" style={{ color: colour }} data-evening-role>{roleWords(save, id)} · {levelWords(love)}</p>
             {bonus !== null && <p className="flex items-center gap-1 text-[#c2385e]" data-evening-invite><InviteChip /> She asked you: +{bonus} with the evening</p>}
             {birthday && <p className="text-ink-soft" data-evening-birthday>★ Her birthday: ×1.5 tonight</p>}
-            {isAnniversary(love, save.calendar.day) && <p className="text-ink-soft" data-evening-anniversary>♥ Your anniversary: ×1.5 tonight</p>}
+            {isAnniversary(love, save.calendar.day, save.calendar) && <p className="text-ink-soft" data-evening-anniversary>♥ Your anniversary: ×1.5 tonight</p>}
           </div>
         </div>
         {duos.length > 0 && <label className="flex items-center gap-2 text-[13px]">Who’s joining

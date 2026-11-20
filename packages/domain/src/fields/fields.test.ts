@@ -7,7 +7,7 @@ import { farmDay } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
 import { starShares } from '../goods/stars'
 import { endDay, type NightContext } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { buy, lineOpen, shopLines } from '../save/shop'
 import { bareTile, dryTiles, fieldTiles, newSave, readyTiles, START_CLEAR, type SaveV4, type Tile } from '../save/v4'
@@ -21,7 +21,7 @@ const LATER = '2026-11-09T21:30:00.000Z'
 const CONTEXT: NightContext = {}
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const SUMMER = (d: number) => farmDay({ year: 1, season: 'summer', day: d })
-const SPRING_12 = farmDay({ year: 1, season: 'spring', day: 12 })
+const SPRING_LAST = farmDay({ year: 1, season: 'spring', day: 30 })
 
 /** Day `day` of a new farm, with seeds. */
 function farm(day = 1, seeds: Record<string, number> = { 'seed-carrot': 9 }, uid = 'u1'): SaveV4 {
@@ -143,7 +143,7 @@ describe('growth: a watered tile grows a stage a night', () => {
     save = night(waterAll(save))
     expect(save.summary!.work).toEqual([{ kind: 'grew', tiles: 2, ripe: 1 }])
     expect(save.summary!.nudges).toEqual([{ kind: 'water', tiles: 1 }])
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 
   it('looks like a seed, a sprout, half grown, nearly ripe and ripe', () => {
@@ -163,20 +163,20 @@ describe('growth: a watered tile grows a stage a night', () => {
     for (let n = 0; n < 3; n++) save = night(waterAll(save))
     expect(tileAt(save, a!)).toMatchObject({ growth: 3, ready: true })
     // On Summer's last night a growing Tomato withers; a ripe one waits.
-    let last = withTiles(farm(SUMMER(12), {}), { [a!]: { ...ripe('tomato'), growth: 1, ready: false }, [b!]: ripe('tomato') })
+    let last = withTiles(farm(SUMMER(30), {}), { [a!]: { ...ripe('tomato'), growth: 1, ready: false }, [b!]: ripe('tomato') })
     last = night(last)
     expect(tileAt(last, a!)).toEqual(bareTile('tilled'))
     expect(tileAt(last, b!)).toMatchObject({ crop: 'tomato', ready: true })
     expect(last.summary!.work).toContainEqual({ kind: 'withered', crop: 'tomato', tiles: 1 })
-    expect(parseSaveV5(json(last))).toEqual(last)
+    expect(parseSaveV6(json(last))).toEqual(last)
   })
 
   it('carries a growing Corn into Autumn and a Cabbage into Spring; a growing Onion withers at Spring\'s end', () => {
     const growing = (crop: Tile['crop']): Tile => ({ ...bareTile('tilled'), crop, growth: 1 })
     const tile = START_CLEAR[0]!
-    expect(tileAt(night(withTiles(farm(SUMMER(12), {}), { [tile]: growing('corn') })), tile).crop).toBe('corn')
-    expect(tileAt(night(withTiles(farm(farmDay({ year: 1, season: 'winter', day: 12 }), {}), { [tile]: growing('cabbage') })), tile).crop).toBe('cabbage')
-    expect(tileAt(night(withTiles(farm(SPRING_12, {}), { [tile]: growing('onion') })), tile).crop).toBeNull()
+    expect(tileAt(night(withTiles(farm(SUMMER(30), {}), { [tile]: growing('corn') })), tile).crop).toBe('corn')
+    expect(tileAt(night(withTiles(farm(farmDay({ year: 1, season: 'winter', day: 30 }), {}), { [tile]: growing('cabbage') })), tile).crop).toBe('cabbage')
+    expect(tileAt(night(withTiles(farm(SPRING_LAST, {}), { [tile]: growing('onion') })), tile).crop).toBeNull()
   })
 })
 
@@ -273,17 +273,17 @@ describe('the morning', () => {
     for (const i of START_CLEAR.slice(0, 3)) save = tillTile(save, i)
     const morning = night(save)
     expect(morning.summary!.nudges).toEqual([{ kind: 'seeds', tiles: 3 }])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('refuses a bad line: no tiles, a crop it doesn\'t know, a line twice', () => {
     const morning = night(farm())
     const withWork = (work: unknown[]) => ({ ...json(morning), summary: { ...json(morning).summary, work } })
-    expect(() => parseSaveV5(withWork([{ kind: 'grew', tiles: 0, ripe: 0 }]))).toThrow(/tiles/)
-    expect(() => parseSaveV5(withWork([{ kind: 'grew', tiles: 1, ripe: 2 }]))).toThrow(/more than grew/)
-    expect(() => parseSaveV5(withWork([{ kind: 'withered', crop: 'kale', tiles: 1 }]))).toThrow(/crop/)
-    expect(() => parseSaveV5(withWork([{ kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'grew', tiles: 2, ripe: 0 }]))).toThrow(/repeated/)
+    expect(() => parseSaveV6(withWork([{ kind: 'grew', tiles: 0, ripe: 0 }]))).toThrow(/tiles/)
+    expect(() => parseSaveV6(withWork([{ kind: 'grew', tiles: 1, ripe: 2 }]))).toThrow(/more than grew/)
+    expect(() => parseSaveV6(withWork([{ kind: 'withered', crop: 'kale', tiles: 1 }]))).toThrow(/crop/)
+    expect(() => parseSaveV6(withWork([{ kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'grew', tiles: 2, ripe: 0 }]))).toThrow(/repeated/)
     const withNudge = { ...json(morning), summary: { ...json(morning).summary, nudges: [{ kind: 'seeds', tiles: 0 }] } }
-    expect(() => parseSaveV5(withNudge)).toThrow(/tiles/)
+    expect(() => parseSaveV6(withNudge)).toThrow(/tiles/)
   })
 })

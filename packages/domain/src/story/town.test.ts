@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { closestFriend, seedTies } from '../farm/bonds'
 import { meet } from '../romance/meeting'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, pairKey, type SaveV4 } from '../save/v4'
 import { checkCast, checkTies, checkTown, SPOT_IDS, STORY_ID } from './authored'
 import { readStoryPack } from './pack'
@@ -152,17 +152,17 @@ describe('the save\'s talks in town', () => {
   it('loads an older v4 with none as none, an older v5\'s with no gift day as none, and round-trips them', () => {
     const older = json(day(9)) as Partial<SaveV4>
     delete older.town
-    expect(parseSaveV5(older).town).toEqual({})
-    expect(parseSaveV5(older).account).toEqual(day(9).account)
+    expect(parseSaveV6(older).town).toEqual({})
+    expect(parseSaveV6(older).account).toEqual(day(9).account)
     const older5 = { ...day(9), town: { 9300001: { talks: 3, last: 9 }, [SISTER]: { talks: 1, last: 4 } } }
-    expect(parseSaveV5(json(older5)).town).toEqual({ 9300001: { talks: 3, last: 9, gift: 0 }, [SISTER]: { talks: 1, last: 4, gift: 0 } })
-    expect(parseSaveV5(json(older5)).account).toEqual(day(9).account)
+    expect(parseSaveV6(json(older5)).town).toEqual({ 9300001: { talks: 3, last: 9, gift: 0 }, [SISTER]: { talks: 1, last: 4, gift: 0 } })
+    expect(parseSaveV6(json(older5)).account).toEqual(day(9).account)
     const talked = { ...day(9), town: { 9300001: { talks: 3, last: 9, gift: 8 }, [SISTER]: { talks: 0, last: 0, gift: 4 } } }
-    expect(parseSaveV5(json(talked))).toEqual(talked)
+    expect(parseSaveV6(json(talked))).toEqual(talked)
   })
 
   it('refuses an id off the form, a talk after today, and none counted', () => {
-    const refuse = (town: unknown, message: string) => expect(() => parseSaveV5({ ...json(day(9)), town })).toThrow(message)
+    const refuse = (town: unknown, message: string) => expect(() => parseSaveV6({ ...json(day(9)), town })).toThrow(message)
     refuse({ abc: { talks: 1, last: 2 } }, 'save.town.abc: expected a character id or a sister’s')
     refuse({ 9300001: { talks: 1, last: 10 } }, 'save.town.9300001.last: expected 0–9')
     refuse({ 9300001: { talks: 1, last: 2, gift: 10 } }, 'save.town.9300001.gift: expected 0–9')

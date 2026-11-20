@@ -3,7 +3,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { freshV5, newSave, touched } from '@farm/domain'
+import { freshV6, newSave, touched } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { LocalSaveRepository } from './local-save.repository'
 import { RevisionConflict } from './save.repository'
@@ -35,7 +35,7 @@ describe('the local save store', () => {
       await writeFile(path, JSON.stringify({ u: { revision: 7, save: { version, account: ACCOUNT, gold: 812, roster: { 1001: {} } } } }))
       const repo = new LocalSaveRepository(path)
       expect(await repo.load('u')).toEqual({ revision: 7, save: { version, account: ACCOUNT } })
-      const fresh = freshV5({ account: ACCOUNT })
+      const fresh = freshV6({ account: ACCOUNT })
       await expect(repo.put('u', 7, fresh)).resolves.toEqual({ revision: 8, save: fresh })
       expect(await repo.load('u')).toEqual({ revision: 8, save: fresh })
     }
@@ -46,7 +46,7 @@ describe('the local save store', () => {
     await writeFile(path, JSON.stringify({ u: { revision: 1, save: newSave('u', NOW) } }))
     const repo = new LocalSaveRepository(path)
     // The parse refuses an older upload before it gets here; the store's own check refuses it too.
-    await expect(repo.put('u', 1, { ...newSave('u', NOW), version: 3 as unknown as 5 })).rejects.toBeInstanceOf(RevisionConflict)
+    await expect(repo.put('u', 1, { ...newSave('u', NOW), version: 3 as unknown as 6 })).rejects.toBeInstanceOf(RevisionConflict)
     expect((await repo.load('u')).save).toEqual(newSave('u', NOW))
   })
 

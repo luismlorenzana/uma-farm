@@ -116,7 +116,7 @@ describe('her picture’s source', () => {
 
 describe('the avatar', () => {
   it('is a rounded square with her season’s crop, her badges in its corners outside the picture’s clip', async () => {
-    today(14)
+    today(32)
     await act(async () => root.render(<div style={{ width: 56 }}><Avatar id={ID} size={56} label="Her" badges={{ topLeft: <b data-badge="tl" />, bottomRight: <b data-badge="br" /> }} /></div>))
     await settle()
     const avatar = $(`[data-avatar="${ID}"]`)!
@@ -138,7 +138,7 @@ describe('the avatar', () => {
     expect($('[data-badge="tl"]')!.parentElement!.className).toContain('top-1 left-1')
   })
   it('with profiles, draws her season’s profile picture whole and never loads a base', async () => {
-    today(14)
+    today(32)
     await act(async () => root.render(<Avatar id={PROFILED_ID} size={56} label="Her" badges={{ topRight: <b data-badge="tr" /> }} />))
     await settle()
     expect($('[data-picture]')?.dataset.picture).toBe('summer')
@@ -148,12 +148,12 @@ describe('the avatar', () => {
     expect($('[data-picture-cut="base"]')).toBeNull()
     expect(art.artUrl.mock.calls.map(([path]) => path)).toEqual([PROFILED.bases.summer!.profile!.path])
     expect(basesLoaded()).toBe(0)
-    today(40)
+    today(94)
     await settle()
     expect($('[data-picture-cut="profile"]')?.getAttribute('src')).toBe(`blob:${PROFILED.bases.winter!.profile!.path}`)
   })
   it('changes with the season: her spring base in winter, as she has no winter one', async () => {
-    today(40)
+    today(94)
     await act(async () => root.render(<Avatar id={ID} size={40} label="Her" />))
     await settle()
     expect($('[data-picture]')?.dataset.picture).toBe('spring')
@@ -179,7 +179,7 @@ describe('the avatar', () => {
     expect(basesLoaded()).toBe(0)
   })
   it('without portraits or a face, is her blank profile in the season’s colours, and loads no picture', async () => {
-    today(30)
+    today(66)
     await act(async () => root.render(content(<Avatar id="9000003" size={40} label="Another" />)))
     await settle()
     expect($('[data-picture]')?.dataset.picture).toBe('blank')

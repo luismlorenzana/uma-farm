@@ -13,7 +13,7 @@ import { goodOf, GOODS } from '../goods/ids'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { FISHERY, FOREST } from '../gathering/tables'
 import { runNight } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type MenuLine, type SaveV4 } from '../save/v4'
 import {
   assistantTerm, canMake, cooksDishes, defaultMenu, dishesHeld, finishPlay, kitchenBase, kitchenLevel, kitchenLevelLock, kitchenMakes, kitchenPlayBlock, menuBlock,
@@ -429,24 +429,24 @@ describe('the save', () => {
   it('reads an older save as no play and no staff meal, and a play from before the stove (never written) as none', () => {
     const save = withKitchen(farm())
     const older = json(save) as unknown
-    expect(parseSaveV5(older).workshops.current).toBeNull()
-    expect(parseSaveV5(older).today.staff).toBeUndefined()
+    expect(parseSaveV6(older).workshops.current).toBeNull()
+    expect(parseSaveV6(older).today.staff).toBeUndefined()
     const shape = json({ ...save, roster: { [A]: newRosterUma(1) }, love: { [A]: newLove() }, workshops: { ...save.workshops, current: { workshop: 'kitchen', assistant: A, day: 3 } } })
-    expect(parseSaveV5(shape).workshops.current).toBeNull()
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(shape).workshops.current).toBeNull()
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 
   it('round-trips a play under way, tonight\'s staff meal and the assistant; refuses a broken one', () => {
     const batch = startStoveBatch(farm(500, { carp: row(2) }), ['carp@1', 'carp@1'])
-    expect(parseSaveV5(json(batch))).toEqual(batch)
+    expect(parseSaveV6(json(batch))).toEqual(batch)
     const save = setTasks(hands(withKitchen(farm(500, { carrot: row(12), basil: row(6), 'dish-fish-1': row(4) })), [A]), A, [{ kind: 'forage', area: 'woods' }])
     const started = serveStaffMeal(startKitchenPlay(save, [{ dish: 'dish-vegetables-1', count: 6, main: 'carrot@1', side: 'basil@1' }], A))
     expect(started.today).toMatchObject({ assistant: A, staff: { mouths: 2, days: 1 } })
-    expect(parseSaveV5(json(started))).toEqual(started)
+    expect(parseSaveV6(json(started))).toEqual(started)
     const broken = json({ ...started, workshops: { ...started.workshops, current: { ...started.workshops.current!, seed: 12 } } })
-    expect(() => parseSaveV5(broken)).toThrow('seed')
+    expect(() => parseSaveV6(broken)).toThrow('seed')
     const ghost = json({ ...started, today: { ...started.today, assistant: '999' } })
-    expect(() => parseSaveV5(ghost)).toThrow('assistant')
+    expect(() => parseSaveV6(ghost)).toThrow('assistant')
   })
 })
 

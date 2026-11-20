@@ -285,7 +285,7 @@ export function eveningFactors(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pi
   return {
     kind: !isFestivalNight(k) && favouriteKind(pack, id) === k,
     birthday,
-    anniversary: love !== undefined && isAnniversary(love, save.calendar.day),
+    anniversary: love !== undefined && isAnniversary(love, save.calendar.day, save.calendar),
   }
 }
 const factorOf = (f: EveningFactors): number => (f.kind ? EVENING_FACTOR : 1) * (f.birthday ? EVENING_FACTOR : 1) * (f.anniversary ? EVENING_FACTOR : 1)
@@ -305,7 +305,7 @@ export const inviteDue = (save: Pick<SaveV4, 'today'>, id: string): boolean =>
 /** The +20 as `addLove` pays it: an invitation is its own act, so her anniversary's ×2 applies. */
 export const invitePoints = (save: Pick<SaveV4, 'calendar' | 'love'>, id: string): number => {
   const love = save.love[id]
-  return love ? roundPoints(INVITE_POINTS * dayFactor(love, save.calendar.day, 'invite')) : INVITE_POINTS
+  return love ? roundPoints(INVITE_POINTS * dayFactor(love, save.calendar.day, 'invite', false, save.calendar)) : INVITE_POINTS
 }
 
 // --- Spending one ---------------------------------------------------------------------------------------

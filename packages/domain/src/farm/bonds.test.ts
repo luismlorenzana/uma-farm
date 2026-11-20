@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { runNight, type NightContext } from '../night/end-day'
 import { meet } from '../romance/meeting'
 import { joinCast } from '../romance/meeting.fixture'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { SaveParseError } from '../save/parse'
 import { newSave, pairKey, type Love, type SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
@@ -176,7 +176,7 @@ describe('the ties\' seeds', () => {
     expect(morning.summary!.hearts).toEqual([{ kind: 'bond', a: ONE, b: TWO, hearts: 2 }, { kind: 'bond', a: ONE, b: THREE, hearts: 1 }])
     expect(morning.today.bonds).toEqual({})
     expect(runNight(morning, context()).summary!.hearts).toEqual([])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('seeds an Uma met in town at once; the night meets nobody, whatever her retired trigger', () => {
@@ -271,7 +271,7 @@ describe('pair conversations', () => {
     expect(readPair(withBond(save, ONE, THREE, 300), PACK, ONE, THREE, [1]).diary.read).toContain(pairReadId(ONE, THREE, 1))
     const untied = { ...PACK, ties: { ties: PACK.ties.ties.slice(0, 2) } }
     expect(() => readPair(withBond(save, TWO, THREE, 300), untied, TWO, THREE, [1])).toThrow('They have no conversation there.')
-    expect(parseSaveV5(json(read))).toEqual(read)
+    expect(parseSaveV6(json(read))).toEqual(read)
   })
 
   it('reads a pack\'s pairs: any levels, each once; a file out of numeric order is skipped, an untied pair noted', () => {
@@ -310,11 +310,11 @@ describe('the morning\'s lines and their parse', () => {
     const save = farm(5)
     const summary = { day: 5, bin: [], work: [], ranks: [], hearts: [{ kind: 'side', items: 3 }, { kind: 'bond', a: ONE, b: TWO, hearts: 2 }], news: [], nudges: [] }
     const good = { ...save, summary, today: { ...save.today, bonds: { [pairKey(ONE, TWO)]: 1 } } }
-    expect(parseSaveV5(json(good))).toEqual(good)
+    expect(parseSaveV6(json(good))).toEqual(good)
     const bad = (patch: Record<string, unknown>, path: string) => {
-      expect(() => parseSaveV5(json({ ...good, ...patch }))).toThrow(SaveParseError)
+      expect(() => parseSaveV6(json({ ...good, ...patch }))).toThrow(SaveParseError)
       try {
-        parseSaveV5(json({ ...good, ...patch }))
+        parseSaveV6(json({ ...good, ...patch }))
       } catch (error) {
         expect((error as SaveParseError).path).toBe(path)
       }

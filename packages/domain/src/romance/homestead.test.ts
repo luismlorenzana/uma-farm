@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { bondOf } from '../farm/bonds'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { FINALE_MARRIED, marriedCount, newLove, newRosterUma, newSave, onFarm, residentsOf, roomsOf, vowsOn, type Love, type SaveV4 } from '../save/v4'
 import { checkBible, checkHousehold, type Household, type Step, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_INS } from '../story/authored.fixture'
@@ -96,7 +96,7 @@ describe('the houses', () => {
     expect(nextLot(built)).toEqual({ n: 2, cost: 20000, open: false })
     expect(() => buildHouse(built, 'Wren Hollow')).toThrow('Opens with your second wedding.')
     expect(nextLot(spouse(built, TWO, 3))).toEqual({ n: 2, cost: 20000, open: true })
-    expect(parseSaveV5(json(built))).toEqual(built)
+    expect(parseSaveV6(json(built))).toEqual(built)
   })
 
   it('names a house by the letters rule, 1–20 characters, once; and refuses short gold', () => {
@@ -109,10 +109,10 @@ describe('the houses', () => {
     expect(buildHouse(wed, 'Wren’s Nook').homestead.houses[1]!.name).toBe('Wren’s Nook')
     const bad = json(buildHouse(wed, 'Rose Cottage'))
     bad.homestead.houses[1]!.name = 'Rose Cottage 2'
-    expect(() => parseSaveV5(bad)).toThrow('save.homestead.houses.1.name')
+    expect(() => parseSaveV6(bad)).toThrow('save.homestead.houses.1.name')
     const renamed = json(wed)
     renamed.homestead.houses[0]!.name = 'Big House'
-    expect(() => parseSaveV5(renamed)).toThrow('expected the Farmhouse')
+    expect(() => parseSaveV6(renamed)).toThrow('expected the Farmhouse')
   })
 })
 
@@ -127,7 +127,7 @@ describe('rooms', () => {
     expect(onFarm(wed, ONE)).toBe(true)
     expect(homeTonight(wed, ONE)).toBe(true)
     expect(readiness(wed, PACK, ONE).waits?.kind).not.toBe('away')
-    expect(parseSaveV5(json(wed))).toEqual(wed)
+    expect(parseSaveV6(json(wed))).toEqual(wed)
   })
 
   it('defaults to her closest friend\'s house when it has room, else the first with room, the Farmhouse first', () => {
@@ -173,7 +173,7 @@ describe('rooms', () => {
     expect(next.love[ONE]!.house).toBe(1)
     expect(onFarm(next, ONE)).toBe(true)
     expect(next.summary!.hearts).toContainEqual({ kind: 'moved', id: ONE, house: 1 })
-    expect(parseSaveV5(json(next))).toEqual(next)
+    expect(parseSaveV6(json(next))).toEqual(next)
   })
 
   it('moves a spouse to a free room, and swaps two, at once and free; refuses a full house', () => {
@@ -195,14 +195,14 @@ describe('rooms', () => {
     const save = moveSpouse(moveSpouse(spouse(spouse(spouse(farm(), ONE), TWO, 3), THREE, 4), ONE, 0), TWO, 0)
     const crowded = json(save)
     crowded.love[THREE]!.house = 0
-    expect(() => parseSaveV5(crowded)).toThrow('save.homestead.houses.0: expected at most 2 residents')
+    expect(() => parseSaveV6(crowded)).toThrow('save.homestead.houses.0: expected at most 2 residents')
     // A spouse in her house with a Dorm bed (a save from before the Dorm retired) loads, the bed cleared.
     const bed = json(save)
     bed.dorm.home.push(ONE)
-    expect(parseSaveV5(bed).dorm.home).toEqual([])
+    expect(parseSaveV6(bed).dorm.home).toEqual([])
     const friend = json(farm())
     friend.love[ONE]!.house = 0
-    expect(() => parseSaveV5(friend)).toThrow('save.love.9000001.house: only a spouse')
+    expect(() => parseSaveV6(friend)).toThrow('save.love.9000001.house: only a spouse')
   })
 })
 
@@ -241,7 +241,7 @@ describe('the night', () => {
     expect(readiness(save, PACK, ONE).waits?.kind).toBe('night')
     const morning = runNight(save, context())
     expect(morning.summary!.hearts.filter((h) => h.kind === 'level')).toEqual(levels)
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('plays S2\'s and S4\'s scene from the morning: her route\'s, else the default story\'s, then the card', async () => {
@@ -279,7 +279,7 @@ describe('the house\'s morning', () => {
     const line = next.summary!.hearts.find((h) => h.kind === 'house')
     expect(line).toEqual({ kind: 'house', house: 0, umas: [ONE, TWO], paid: 60, breakfast: 0, items: 0 })
     expect(next.love[ONE]!.points).toBe(save.love[ONE]!.points + HOUSE_POINTS)
-    expect(parseSaveV5(json(next))).toEqual(next)
+    expect(parseSaveV6(json(next))).toEqual(next)
   })
 
   it('serves her breakfast once (S1), only to those with no meal left; ☕ on Sleep at the day before', () => {
@@ -304,7 +304,7 @@ describe('the house\'s morning', () => {
     // Day 31 is an every-2nd morning from day 29: her count's item, then the house's.
     expect(items.map((h) => (h as { items: string[] }).items.length)).toEqual([2, 2])
     for (const line of items) for (const key of (line as { items: string[] }).items) expect(Number(key.split('@')[1])).toBeGreaterThanOrEqual(3)
-    expect(parseSaveV5(json(next))).toEqual(next)
+    expect(parseSaveV6(json(next))).toEqual(next)
   })
 
   it('draws a house line from the pack, else the templates by temperament', () => {
@@ -364,7 +364,7 @@ describe('the household', () => {
     expect(() => placeFurniture(placed, 1, 0)).toThrow('That house has a piece already.')
     expect(() => placeFurniture(one, 0, 0)).toThrow('The furniture comes at 5 married.')
     expect(FURNITURE).toHaveLength(5)
-    expect(parseSaveV5(json(placed))).toEqual(placed)
+    expect(parseSaveV6(json(placed))).toEqual(placed)
   })
 
   it('makes household scenes Ready from the morning after 5, 10 and 15, once each, never auto-played', () => {
@@ -381,7 +381,7 @@ describe('the household', () => {
     expect(readHousehold(read, 'household:5')).toBe(read)
     const fifteen = runNight(more(read, 10, 9000030), context())
     expect(householdReady(fifteen)).toEqual(['household:10', 'household:15'])
-    expect(parseSaveV5(json(fifteen))).toEqual(fifteen)
+    expect(parseSaveV6(json(fifteen))).toEqual(fifteen)
   })
 
   it('plays each spouse\'s beat in wedding order', () => {
@@ -414,7 +414,7 @@ describe('the household', () => {
     expect(line).toEqual({ kind: 'vows', spouses: 20, paid: 20 * VOWS_POINTS })
     expect(eveningSlots(vows)).toMatchObject({ vows: true })
     expect(slotsLeft(vows).festival).toBe(true)
-    expect(parseSaveV5(json(vows))).toEqual(vows)
+    expect(parseSaveV6(json(vows))).toEqual(vows)
     const after = runNight(vows, context())
     expect(after.summary!.hearts.some((h) => h.kind === 'vows')).toBe(false)
   })

@@ -154,7 +154,7 @@ describe('her profile', () => {
   it('shows the track, the Next card, the perks, her gifts and her ties, and switches to Work', async () => {
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await find(`[data-profile="${ONE}"]`)
-    expect($('[data-profile-line]')?.textContent).toBe('Farming · ★ Spring 4')
+    expect($('[data-profile-line]')?.textContent).toBe('Farming · ★ Spring 10')
     expect($$('[data-track] [data-rung]')).toHaveLength(28)
     expect($('[data-track] [data-state="next"]')?.dataset.rung).toBe('f1')
     expect($('[data-next] h3')?.textContent).toBe('Next: Friendship 1')

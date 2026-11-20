@@ -206,7 +206,8 @@ test('releases the town and a sister: town.json as the game reads it, her bible 
 test('releases the world: world.json as the game reads it, a broken part skipped, a cast trigger naming its own festival', async (t) => {
   const world = {
     names: { town: 'Invented Town', farm: 'Invented Farm' },
-    festivals: [{ id: 'harvest-cup', name: 'Invented Race', season: 'winter', day: 10 }, { id: 'kite-day', name: 'Kite Day', season: 'spring', day: 4 }],
+    calendarDays: 30,
+    festivals: [{ id: 'harvest-cup', name: 'Invented Race', season: 'winter', day: 12 }, { id: 'kite-day', name: 'Kite Day', season: 'spring', day: 4 }],
     places: { gate: { line: 'An invented gate.' }, orchard: { name: 'Nowhere' } },
     notes: [{ id: 'first-note', title: 'An invented note', lines: ['A line.'], unlock: { kind: 'event', after: `${id(1)}:arrival` } }],
   }
@@ -217,7 +218,7 @@ test('releases the world: world.json as the game reads it, a broken part skipped
   const out = await temp(t)
   const { index, errors, summary } = await buildRelease({ from, out, builtAt: BUILT_AT })
   assert.deepEqual(errors, [
-    'world.json: Festival harvest-cup: Winter 10 holds another festival; its move is skipped, so it keeps the game’s day, Winter 12',
+    'world.json: Festival harvest-cup: Winter 12 holds another festival; its move is skipped, so it keeps the game’s day, Winter 28',
     'world.json: Place orchard: not one of the farm’s places (fields, mill, coop, forest, sawmill, barn, fishery, smokehouse, kitchen, mine, smelter, restaurant, quarry, cutter, forge, bin, warehouse, board, gate, dock, shop, festival, expeditions, town, boat); skipped',
   ])
   assert.ok(index.files.world, 'world.json is in the release')

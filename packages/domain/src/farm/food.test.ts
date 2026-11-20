@@ -15,7 +15,7 @@ import { GOOD_FAMILIES } from '../goods/ids'
 import { ship } from '../save/bin'
 import { runNight, endDay } from '../night/end-day'
 import { cookMeal } from '../romance/loop'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 
 const AT = '2026-11-14T10:00:00.000Z'
@@ -48,7 +48,7 @@ describe('who eats, and takeout', () => {
     expect(morning.gold).toBe(470)
     expect(money(morning)).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
     expect(morning.farm).toMatchObject({ owed: 0, short: 0, pantry: [] })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('feeds the spouses living on the farm and every farmhand on her farm day, with work or without', () => {
@@ -99,7 +99,7 @@ describe('the farmer\'s batch', () => {
     expect(day4.farm.pantry).toEqual([])
     expect(day4.gold).toBe(500)
     expect(money(night(day4))).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
-    expect(parseSaveV5(json(day3))).toEqual(day3)
+    expect(parseSaveV6(json(day3))).toEqual(day3)
   })
 
   it('saves gold: a ★1 batch of two Button Mushrooms (60g at the bin) is 90g of takeout, three a night or one for three nights', () => {
@@ -211,7 +211,7 @@ describe('the Cook task', () => {
     // With a meal kept from today, she cooks only what's short.
     const kept = { ...save, farm: { ...save.farm, pantry: [{ day: 2, stars: 1, meals: 6 }] } }
     expect(handsTonight(kept, kept, talentsD, null).lines[0]).toMatchObject({ spent: 3, done: { cook: 7, forage: 2 } })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('cooks bigger batches as her Cooking rises, and stops when the food runs out', () => {
@@ -249,15 +249,15 @@ describe('the save', () => {
   it('loads a save from before food with an empty pantry, its updatedAt kept', () => {
     const save = cookBatch(goToTown(farm(500, { carp: [2, 0, 0, 0, 0] })))
     const { pantry: _p, ...older } = save.farm
-    const read = parseSaveV5(json({ ...save, farm: older }))
+    const read = parseSaveV6(json({ ...save, farm: older }))
     expect(read.farm.pantry).toEqual([])
     expect(read.account.updatedAt).toBe(AT)
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 
   it('refuses a pantry lot older than the day before yesterday, after today, out of order or empty', () => {
     const save = farm(500, {}, 5)
-    const bad = (pantry: unknown) => () => parseSaveV5(json({ ...save, farm: { ...save.farm, pantry } }))
+    const bad = (pantry: unknown) => () => parseSaveV6(json({ ...save, farm: { ...save.farm, pantry } }))
     expect(bad([{ day: 3, stars: 1, meals: 1 }, { day: 4, stars: 2, meals: 3 }, { day: 5, stars: 1, meals: 4 }])).not.toThrow()
     expect(bad([{ day: 2, stars: 1, meals: 4 }])).toThrow('expected 3–5')
     expect(bad([{ day: 6, stars: 1, meals: 4 }])).toThrow('expected 3–5')

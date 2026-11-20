@@ -135,7 +135,7 @@ describe('demand', () => {
   })
 
   it('lifts a good once, and follows the year round', () => {
-    expect(priceOf('apple-preserve', 2, SUMMER_3)).toBe(priceOf('apple-preserve', 2, SUMMER_3 + 48))
+    expect(priceOf('apple-preserve', 2, SUMMER_3)).toBe(priceOf('apple-preserve', 2, SUMMER_3 + 120))
     expect(priceOf('apple-preserve', 1, SUMMER_3)).toBe(65) // 55 × 1.2 = 66
   })
 })

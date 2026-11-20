@@ -122,7 +122,7 @@ describe('her profile on v4', () => {
     await act(async () => useGame.setState({ save: hand(farm(), ONE) }))
     await settle()
     expect($('[data-find-today]')?.textContent).toBe('Today · On the farm')
-    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12', 'The Plaza · 1, 4, 7, 10'])
+    expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30', 'The Plaza · 1, 4, 7, 10, 13, 16, 19, 22, 25, 28'])
     // A spouse waiting for a room lives in town until one is free; in her room, the card goes.
     await act(async () => useGame.setState({ save: withLove(farm(), ONE, { stage: 'spouse', level: 0, wed: 1 }) }))
     await settle()
@@ -199,14 +199,15 @@ describe('her profile on v4', () => {
 
 describe('the morning\'s Hearts', () => {
   it('says her birthday the day before and on the day', async () => {
-    await act(async () => { await endTheDay(2) })
-    await until(() => save().calendar.day === 3)
+    useGame.setState({ save: farm(8) })
+    await act(async () => { await endTheDay(8) })
+    await until(() => save().calendar.day === 9)
     const nameOf = (id: string) => fixture.view!.album.get(id)?.name ?? 'An Uma'
     expect(summaryParts(save().summary!, nameOf).find((p) => p.section === 'hearts')?.lines).toEqual([
       { key: `birthday:${ONE}`, to: `/hearts?uma=${ONE}`, text: '★ Tomorrow: Stand-in 1’s birthday' },
     ])
-    await act(async () => { await endTheDay(3) })
-    await until(() => save().calendar.day === 4)
+    await act(async () => { await endTheDay(9) })
+    await until(() => save().calendar.day === 10)
     expect(summaryParts(save().summary!, nameOf).find((p) => p.section === 'hearts')?.lines[0]?.text).toBe('★ Stand-in 1’s birthday today')
     const anniversary = summaryParts({ ...save().summary!, hearts: [{ kind: 'anniversary', id: ONE, when: 'today', item: 'carrot' }] }, nameOf)
     expect(anniversary.find((p) => p.section === 'hearts')?.lines[0]?.text).toBe('♥ Stand-in 1’s anniversary · ★5 Carrot left for you')

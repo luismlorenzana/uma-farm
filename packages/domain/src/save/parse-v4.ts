@@ -9,7 +9,7 @@
 // day's actions and event actions are counts (the budget is the rules', so an upgrade never breaks a save), and the areas
 // and spots worked today their ids, each once; today's occasion scenes, when any played, the roster Umas who played one.
 // The Diary's Town notes are ids. Her gallery names roster Umas, each with her scenes seen by id.
-import { dateDayOf, dateOf, DAYS_PER_SEASON, FESTIVAL_IDS, type FarmClock } from '../farm/calendar'
+import { dateDayOf, dateOf, DAYS_PER_SEASON, FESTIVAL_IDS, LEGACY_SEASON_DAYS, type FarmClock } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
 import { canSaveCropSeed, cropGoodId, isCropId, isGoodId, isShippableId, type CropId } from '../goods/ids'
@@ -27,7 +27,7 @@ import {
 } from './parse-loop'
 import {
   type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, MAX_FIELD_TILES, MAX_PLOTS, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
-  isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type StaffMeal, type TodayV4, type TownTalks,
+  isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type SaveV6, type StaffMeal, type TodayV4, type TownTalks,
   APTITUDE_IDS, DIGS, MAX_TASKS, RANCH_HOMES, TASK_KINDS, type FarmTask,
 } from './v4'
 
@@ -538,20 +538,34 @@ function parseTown(value: unknown, path: string, today: number): Record<string, 
  * digs from before their game read leniently: no silo is an empty one, an animal's older shape its fondness, and a dig's
  * fractional stairs whole (`parseRanch`, `parseDig`). */
 export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
+  const save = parseFarmSave(value, path, 5)
+  const { day, start } = save.calendar
+  return { ...save, version: 5, calendar: { day, ...(start === undefined ? {} : { start }) } }
+}
+
+export const parseSaveV6 = (value: unknown, path = 'save'): SaveV6 => parseFarmSave(value, path, 6)
+
+function parseFarmSave(value: unknown, path: string, version: 5 | 6): SaveV6 {
   const o = object(value, path, SAVE_V5_KEYS)
-  if (o.version !== 5) fail(`${path}.version`, 'expected 5')
-  const c = object(o.calendar, `${path}.calendar`, ['day', 'start'])
+  if (o.version !== version) fail(`${path}.version`, `expected ${version}`)
+  const c = object(o.calendar, `${path}.calendar`, version === 5 ? ['day', 'start'] : ['day', 'start', 'expandedAt', 'finishingContest'])
   const today = day(c.day, `${path}.calendar.day`)
-  const start = c.start === undefined ? undefined : int(c.start, `${path}.calendar.start`, 2, Math.min(DAYS_PER_SEASON, today))
-  const clock: FarmClock = { day: today, ...(start === undefined ? {} : { start }) }
+  const start = c.start === undefined ? undefined : int(c.start, `${path}.calendar.start`, 2, Math.min(version === 5 ? LEGACY_SEASON_DAYS : DAYS_PER_SEASON, today))
+  // Validate legacy receipts in their own timeline. This marker is stripped when returning v5 on the wire.
+  const expandedAt = version === 5 ? Number.MAX_SAFE_INTEGER
+    : c.expandedAt === undefined ? undefined : int(c.expandedAt, `${path}.calendar.expandedAt`, 1, today)
+  if (c.finishingContest !== undefined && expandedAt === undefined) fail(`${path}.calendar.finishingContest`, 'expected an expanded calendar')
+  const finishing = c.finishingContest === undefined ? undefined : oneOf(c.finishingContest, `${path}.calendar.finishingContest`, FESTIVAL_IDS)
+  const clock: FarmClock = { day: today, ...(start === undefined ? {} : { start }), ...(expandedAt === undefined ? {} : { expandedAt }),
+    ...(finishing === undefined ? {} : { finishingContest: finishing }) }
   const roster = parseRoster(o.roster, `${path}.roster`, today)
   const ids = new Set(Object.keys(roster))
   const buildings = chapterOpened(parseBuildings(o.buildings, `${path}.buildings`), legacyChapter(o.farm))
   const homestead = parseHomestead(o.homestead, `${path}.homestead`, today, ids)
   const arrivals = unique(list(o.arrivals, `${path}.arrivals`, 0, ids.size).map((v, i) => member(v, `${path}.arrivals.${i}`, ids)), `${path}.arrivals`)
   const love = parseLoveAll(o.love, `${path}.love`, ids, clock, homestead.houses.length)
-  const save: SaveV5 = {
-    version: 5,
+  const save: SaveV6 = {
+    version: 6,
     account: parseAccount(o.account, `${path}.account`),
     farmer: parseFarmer(o.farmer, `${path}.farmer`),
     calendar: clock,
@@ -616,7 +630,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
 }
 
 /** A field task works a plot the farm has cleared. */
-function parsePlotTasks(save: SaveV5, path: string): void {
+function parsePlotTasks(save: SaveV6, path: string): void {
   for (const field of ['carrotRows', 'fieldPlans'] as const) {
     for (const key of Object.keys(save.farm[field] ?? {})) {
       if (Number(key[0]) >= save.fields.plots.length) fail(`${path}.farm.${field}.${key}`, 'a plot the farm hasn’t cleared')

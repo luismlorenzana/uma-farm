@@ -45,7 +45,7 @@ import { bookDiscoveries, bookHistory, bookMilestones, bookProgress, bookScenes,
 import { recordLibrary } from '../library/receipts'
 import { runNight, type NightContext } from '../night/end-day'
 import { shipCrate, type CrateLine } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
 import { fieldTiles, EVENING_KINDS, FIELD_TILES, isOvergrown, newSave, type EveningKind, type SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
@@ -386,7 +386,7 @@ async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)
     }
     if (library) {
       save = finishLibraryChanges(morning, save, pack, days)
-      if (save.library?.[HER]?.complete !== undefined) {
+      if (save.library?.[HER]?.complete !== undefined && (bookHistory(save, HER).totals['occasion:day:flower-show']?.[0] ?? 0) >= 2) {
         library.onFinish(save)
         r.gold = save.gold
         return r
@@ -399,7 +399,7 @@ async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)
     save = farm(save, pack)
     save = runNight(save, context)
     if (save.summary?.money?.some((m) => m.kind === 'short')) r.shortNights++
-    if (n % 24 === 0) expect(parseSaveV5(json(save))).toEqual(save)
+    if (n % 24 === 0) expect(parseSaveV6(json(save))).toEqual(save)
   }
   r.stuck = library
     ? JSON.stringify({ scenes: bookScenes(save, pack, HER, days).filter(scene => scene.core && !scene.earned).map(scene => scene.key),
@@ -493,13 +493,13 @@ describe('a route to marriage, simulated', () => {
       expect(bookMilestones(save, HER).filter(row => row.core !== false).every(row => row.day !== null)).toBe(true)
       const progress = bookProgress(save, pack, HER, days)
       expect(progress.filled).toBe(progress.available)
-      expect(progress.completeDay).toBe(save.calendar.day)
+      expect(progress.completeDay).toBeLessThanOrEqual(save.calendar.day)
       if (authored) {
         expect(rows.find(row => row.key === 'occasion:day:anniversary')?.earned).toBe(true)
         expect(rows.find(row => row.key === 'occasion:night:flower-show-night')?.earned).toBe(true)
         expect(bookDiscoveries(save, pack, HER, days).find(row => row.key === 'fact:note:kite')?.value).toBe('She mends paper kites.')
       }
-      expect(parseSaveV5(json(save))).toEqual(save)
+      expect(parseSaveV6(json(save))).toEqual(save)
       if (process.env.MARRIAGE) console.log(`Library · ${authored ? 'authored' : 'default'} · ${progress.filled}/${progress.available} · day ${save.calendar.day}`)
     } })
     expect(result.stuck).toBeNull()

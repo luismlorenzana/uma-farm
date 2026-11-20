@@ -19,7 +19,7 @@ import { baseGoodId, cropBaseGrade, goodOf, seedId, seedOf, type CropId } from '
 import { runNight } from '../night/end-day'
 import { buyFodder, careFor, collect, cutGrass, feedAnimal, readyIn, setCollectionCap, siloRoom } from '../ranch/ranch'
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, shopLines } from '../save/shop'
 import { bareTile, FIELD_TILES, fieldTiles, newLove, newRosterUma, newSave, RANCH_HOMES, type Animal, type FarmSave, type FarmTask } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
@@ -244,7 +244,7 @@ export async function playProductionFarm(crew: CrewSize) {
       stock: stash(save),
     })
     if (day === 12) {
-      save = parseSaveV5(JSON.parse(JSON.stringify(save)))
+      save = parseSaveV6(JSON.parse(JSON.stringify(save)))
       await setImmediate()
     }
   }

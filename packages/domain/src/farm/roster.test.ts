@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildSummary, endDay, runNight, type Night, type NightContext } from '../night/end-day'
 import { meet } from '../romance/meeting'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { atHome, farmHome, newLove, newRosterUma, newSave, onFarm, type SaveV4 } from '../save/v4'
 
 const AT = '2026-11-09T10:00:00.000Z'
@@ -33,7 +33,7 @@ describe('a save from before the Dorm retired', () => {
   it('loads with everyone who lived in the Dorm living in town: account.updatedAt unchanged, and nothing else changed', () => {
     for (const stored of [owner, busy]) {
       const raw = json(stored)
-      const loaded = parseSaveV5(raw)
+      const loaded = parseSaveV6(raw)
       expect(loaded.dorm).toEqual({ level: stored.dorm.level, home: [], swaps: [] })
       expect(loaded.account).toEqual(stored.account)
       expect(loaded.account.updatedAt).toBe(AT)
@@ -45,15 +45,15 @@ describe('a save from before the Dorm retired', () => {
   })
 
   it('keeps the Dorm level and the level bought, and still refuses a level above it', () => {
-    const loaded = parseSaveV5(json(busy))
+    const loaded = parseSaveV6(json(busy))
     expect(loaded.dorm.level).toBe(2)
     expect(loaded.buildings.dorm).toBe(2)
-    expect(() => parseSaveV5(json({ ...busy, dorm: { ...busy.dorm, level: 3 } }))).toThrow('save.dorm.level')
-    expect(() => parseSaveV5(json({ ...busy, dorm: { ...busy.dorm, home: 'x' } }))).toThrow('save.dorm.home')
+    expect(() => parseSaveV6(json({ ...busy, dorm: { ...busy.dorm, level: 3 } }))).toThrow('save.dorm.level')
+    expect(() => parseSaveV6(json({ ...busy, dorm: { ...busy.dorm, home: 'x' } }))).toThrow('save.dorm.home')
   })
 
   it('has only the spouse in her room on the farm', () => {
-    const loaded = parseSaveV5(json(busy))
+    const loaded = parseSaveV6(json(busy))
     expect(farmHome(loaded)).toEqual(['1004'])
     expect(['1001', '1002', '1003', '1004'].map((id) => onFarm(loaded, id))).toEqual([false, false, false, true])
   })
@@ -68,14 +68,14 @@ describe('meeting her', () => {
     expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '1030', home: false }, { kind: 'arrived', id: '1031', home: false }])
     expect(farmHome(morning)).toEqual([])
     expect(morning.dorm).toEqual({ level: 1, home: [], swaps: [] })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })
 
 describe('the morning\'s retired Dorm news', () => {
   it('is read strictly and dropped: a level 2–8, Umas on the roster; the old roster kinds are refused', () => {
     const morning = endDay(farm(['1001']), CONTEXT, LATER)
-    const news = (...lines: unknown[]) => () => parseSaveV5(json({ ...morning, summary: { ...morning.summary!, news: lines } }))
+    const news = (...lines: unknown[]) => () => parseSaveV6(json({ ...morning, summary: { ...morning.summary!, news: lines } }))
     expect(news({ kind: 'dorm', level: 1 })).toThrow('save.summary.news.0.level')
     expect(news({ kind: 'dorm', level: 9 })).toThrow('save.summary.news.0.level')
     expect(news({ kind: 'home', umas: ['1002'] })).toThrow('save.summary.news.0.umas.0')

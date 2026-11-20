@@ -2,14 +2,11 @@
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
 // network once a device save exists.
 //
-// The store holds save v5. Boot waits for the story pack, as the farm's screens do. A save older than v5 found at boot
-// (on the device, or the server's on a fresh device) isn't played: boot stops at the start-over card (`olderFound`), and
-// its button (`startOver`) makes a fresh v5 (`freshV5`, the account copied whole), keeping a dirty device save as a
-// safety copy first, and commits it unstamped, so it uploads and the server backs the older save up; the farmer's name
-// is the first stamp. An older save met later (in a sync or a 409) is turned into the same fresh v5 and uploaded. A save
-// from a newer app stops boot and the sync, with the kit's update prompt, and nothing writes over it.
+// The store plays v6. Boot expands v5 on the device and syncs it without stamping player progress.
+// Earlier saves stop at the start-over card. Its button keeps a dirty device copy before starting fresh
+// with the original account. A newer save stops boot and sync and opens the update prompt.
 import {
-  freshV5, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
+  expandCalendar, freshV6, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
 } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
@@ -24,7 +21,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error'
 export interface GameState {
   uid: string | null
   status: GameStatus
-  /** The save the farm plays: v5. */
+  /** The save the farm plays: v6. */
   save: FarmSave | null
   /** The server revision the save is based on (0: never synced). */
   revision: number
@@ -50,11 +47,11 @@ export const useLoopSave = (): FarmSave | null => useGame((s) => s.save)
  * build that can). */
 export const NEWER_SAVE_WORDS = 'This save is from a newer version of the farm.'
 
-/** A stored save as the farm plays it: a v5 as it is, an older one as a fresh v5 (`freshV5`), a newer one refused. The
+/** A stored save as the farm plays it. The
  * same object comes back when nothing changed, so the store knows when to commit. */
 function playable(save: StoredSave): FarmSave {
   if (versionOf(save) > SAVE_VERSION) throw new Error(NEWER_SAVE_WORDS)
-  return isOlderSave(save) ? freshV5(save) : save
+  return isOlderSave(save) ? freshV6(save) : save.version === 5 ? expandCalendar(save) : save
 }
 
 /** A server envelope as the farm plays it, and whether its save changed on the way (an older save made new). */
@@ -109,7 +106,9 @@ export async function boot(uid: string): Promise<{ startOver: boolean }> {
         olderFound = { save: row.save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null, fromDevice: true }
         return { startOver: true }
       }
-      useGame.setState({ status: 'ready', save: prepareStorySave(row.save), revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
+      const save = playable(row.save)
+      useGame.setState({ status: 'ready', save: prepareStorySave(save), revision: row.revision, dirty: row.dirty || save !== row.save, lastSyncedAt: row.lastSyncedAt ?? null })
+      if (save !== row.save) await persist()
       void syncNow()
       return { startOver: false }
     }
@@ -120,8 +119,11 @@ export async function boot(uid: string): Promise<{ startOver: boolean }> {
       return { startOver: true }
     }
     if (remote.save) {
-      useGame.setState({ status: 'ready', save: prepareStorySave(remote.save), revision: remote.revision, dirty: false, sync: 'synced', lastSyncedAt: nowIso() })
+      const save = playable(remote.save)
+      const migrated = save !== remote.save
+      useGame.setState({ status: 'ready', save: prepareStorySave(save), revision: remote.revision, dirty: migrated, sync: migrated ? 'idle' : 'synced', lastSyncedAt: nowIso() })
       await persist()
+      if (migrated) void syncNow()
       return { startOver: false }
     }
     useGame.setState({ status: 'ready', revision: remote.revision })
@@ -137,8 +139,8 @@ export async function boot(uid: string): Promise<{ startOver: boolean }> {
 }
 
 /**
- * The start-over card's button: the older save boot found becomes a fresh v5 on day 1, its account copied whole, and
- * is committed unstamped, so it uploads (the server backs the older save up when the v5 replaces it). A device save with
+ * The start-over card's button: the older save boot found becomes a fresh v6 on day 1, its account copied whole, and
+ * is committed unstamped, so it uploads (the server backs the older save up when the v6 replaces it). A device save with
  * changes the server never got is kept first as a safety copy; if it can't be kept, nothing changes and this throws.
  */
 export async function startOver(): Promise<void> {
@@ -152,7 +154,7 @@ export async function startOver(): Promise<void> {
   olderFound = null
   useGame.setState({ status: 'ready', revision: found.revision, dirty: found.dirty, lastSyncedAt: found.lastSyncedAt })
   forgetArrived()
-  await commit(freshV5(found.save))
+  await commit(freshV6(found.save))
 }
 
 export function resetGame(): void {
@@ -267,10 +269,11 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
     const stored = parseStored(copy.save)
     // A copy from before v5 would only start over again: it isn't restored.
     if (isOlderSave(stored)) return false
-    const { start } = save.calendar
-    if (start !== undefined && stored.calendar.day < start) return false
+    const { start, expandedAt } = save.calendar
+    if (stored.calendar.day < Math.max(start ?? 1, expandedAt ?? 1)) return false
     // The clock setting belongs to this cloud farm, including when restoring its unsynced progress.
-    restored = { ...stored, calendar: { day: stored.calendar.day, ...(start === undefined ? {} : { start }) } }
+    const recovered = playable(stored)
+    restored = { ...recovered, calendar: { ...save.calendar, day: recovered.calendar.day } }
   } catch {
     return false
   }

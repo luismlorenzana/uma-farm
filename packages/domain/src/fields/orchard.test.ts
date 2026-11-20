@@ -8,7 +8,7 @@ import { discovered } from '../goods/discovery'
 import { CROP_IDS, cropBaseGrade, cropGoodId, cropGradeOf, cropSeedId, goodOf, seedId, seedOf, type CropId } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { GOLD_SHIPPED, shipCrate } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
 import { bareTile, fieldTiles, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, newLove, newRosterUma, newSave, type FarmSave, type FarmTask } from '../save/v4'
 import { goodCount } from '../save/warehouse'
@@ -26,7 +26,7 @@ const sampleGrades: readonly CropId[] = ['green-peas', 'zucchini', 'sweet-potato
 const fresh = (uid: string): FarmSave => ({
   ...newSave(uid, NOW), farmer: { name: 'Robin' }, gold: 20_000,
 })
-const reload = (save: FarmSave): FarmSave => parseSaveV5(JSON.parse(JSON.stringify(save)))
+const reload = (save: FarmSave): FarmSave => parseSaveV6(JSON.parse(JSON.stringify(save)))
 
 function coverRank(save: FarmSave): FarmSave {
   const points = FARM_RANK_POINTS[FIXTURE_RANK - 1]!
@@ -181,15 +181,15 @@ describe('F99 fields and orchards', () => {
   })
 
   it('establishes an orchard across a season boundary, holds one pick, and requires deliberate removal', () => {
-    let save = { ...coverRank(fresh('single-fruit')), calendar: { day: 35 } }
+    let save = { ...coverRank(fresh('single-fruit')), calendar: { day: 89 } }
     const line = shopLines(save).find((row) => row.id === seedId('apple'))!
     save = plantTile(tillTile(buy(goToTown(save), line, 1), 0), 0, seedId('apple'))
     for (let i = 0; i < 6; i++) save = reload(runNight(waterTile(save, 0), {}))
     expect(tileAt(save, 0)).toMatchObject({ crop: 'apple', ready: false })
     expect(established(tileAt(save, 0))).toBe(true)
-    while (save.calendar.day < 73) save = reload(runNight(save, {}))
+    while (save.calendar.day < 181) save = reload(runNight(save, {}))
     expect(tileAt(save, 0)).toMatchObject({ crop: 'apple', ready: true, fruitSeason: 6 })
-    while (save.calendar.day < 121) save = reload(runNight(save, {}))
+    while (save.calendar.day < 301) save = reload(runNight(save, {}))
     expect(tileAt(save, 0)).toMatchObject({ crop: 'apple', ready: true, fruitSeason: 10 })
     save = harvestTile(save, 0).save
     expect(goodCount(save.items, 'apple')).toBe(CROPS.apple.yield)

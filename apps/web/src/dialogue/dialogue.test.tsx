@@ -191,11 +191,11 @@ describe('the compositor', () => {
     await settle()
     expect($('[data-portrait]')?.dataset.portrait).toBe('farm-work')
     // Autumn by the calendar (day 25), with no outfit of its own.
-    await act(async () => root.render(look({ day: 25 })))
+    await act(async () => root.render(look({ day: 61 })))
     await settle()
     expect($('[data-portrait]')?.dataset.portrait).toBe('fall')
     // A dinner she has no dress for: spring.
-    await act(async () => root.render(look({ moments: ['dinner'], day: 25 })))
+    await act(async () => root.render(look({ moments: ['dinner'], day: 61 })))
     await settle()
     expect($('[data-portrait]')?.dataset.portrait).toBe('spring')
   })

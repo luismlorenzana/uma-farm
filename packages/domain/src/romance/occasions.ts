@@ -112,7 +112,7 @@ export function occasionsOn(save: OccasionSave, pack: OccasionPack, days: Specia
   })
   const candidates: Candidate[] = [
     ...(isBirthday(days.birthdays, id, day, save.calendar) ? [one('birthday', 'birthday', ['birthday'], 'Birthday')] : []),
-    ...(love && isAnniversary(love, day) ? [one('anniversary', 'anniversary', ['anniversary'], 'Anniversary')] : []),
+    ...(love && isAnniversary(love, day, save.calendar) ? [one('anniversary', 'anniversary', ['anniversary'], 'Anniversary')] : []),
     ...(isNewYear(day, save.calendar) && dateOf(day, save.calendar).year >= 2 ? [one('new-year', 'new-year', ['new-year'], NEW_YEAR_NAME)] : []),
     ...(rule ? [one('festival', rule, [rule], festival!.name)] : []),
     ...storyDaysOn(pack, day, save.calendar).map((d) => one('story-day', d.id, [d.scene], d.name)),

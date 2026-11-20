@@ -13,7 +13,7 @@ import { clearPlot, rowOfPlot } from '../fields/plots'
 import { talentsD, type TalentOf } from './talents'
 import { cookMeal } from '../romance/loop'
 import { runNight, type NightContext } from '../night/end-day'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { bareTile, FIELD_COLUMNS, fieldTiles, newLove, newRosterUma, newSave, START_CLEAR, type AptitudeId, type FarmTask, type SaveV4, type Tile } from '../save/v4'
 
 const AT = '2026-11-14T10:00:00.000Z'
@@ -80,7 +80,7 @@ describe('the work board', () => {
     ])
     expect(save.roster[A]!.tasks).toEqual([{ kind: 'water', tiles: [0, 1, 9] }, { kind: 'load', station: 'mill' }, { kind: 'fish', spot: 'pond' }, { kind: 'forage', area: 'woods' }])
     expect(save.today.actions).toBe(0)
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 
   it('refuses one who isn\'t a farmhand, past six tasks, and a task that can\'t go on the board', () => {
@@ -96,15 +96,15 @@ describe('the work board', () => {
 
   it('keeps the board in the save, and refuses tasks on one who isn\'t a farmhand', () => {
     const raw = json(tasks(farm(), A, [{ kind: 'plant', tiles: [0], crop: 'carrot' }])) as unknown as { roster: Record<string, Record<string, unknown>> }
-    expect(parseSaveV5(json(raw)).roster[A]!.tasks).toEqual([{ kind: 'plant', tiles: [0], crop: 'carrot' }])
+    expect(parseSaveV6(json(raw)).roster[A]!.tasks).toEqual([{ kind: 'plant', tiles: [0], crop: 'carrot' }])
     delete raw.roster[A]!.farmhand
-    expect(() => parseSaveV5(raw)).toThrow('save.roster.101.tasks: only a farmhand’s')
+    expect(() => parseSaveV6(raw)).toThrow('save.roster.101.tasks: only a farmhand’s')
     const bad = json(farm()) as unknown as { roster: Record<string, Record<string, unknown>> }
     bad.roster[A]!.tasks = [{ kind: 'fish', spot: 'moon' }]
-    expect(() => parseSaveV5(bad)).toThrow(/save.roster.101.tasks.0.spot: expected one of/)
+    expect(() => parseSaveV6(bad)).toThrow(/save.roster.101.tasks.0.spot: expected one of/)
     bad.roster[A]!.tasks = []
     bad.roster[A]!.practice = { dance: 3 }
-    expect(() => parseSaveV5(bad)).toThrow('save.roster.101.practice.dance: unknown aptitude')
+    expect(() => parseSaveV6(bad)).toThrow('save.roster.101.practice.dance: unknown aptitude')
   })
 })
 
@@ -161,7 +161,7 @@ describe('her night', () => {
     expect(morning.roster[A]!.ranks.farming.points).toBe(10)
     expect(morning.roster[B]!.ranks.fishing).toMatchObject({ points: 10, challenge: 3 })
     expect(morning.today.actions).toBe(0)
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('takes the field and the loads first, in your order, then shares what\'s left among her gathering, a turn each', () => {
@@ -198,7 +198,7 @@ describe('her night', () => {
     expect(after.save.roster[A]!.ranks.farming.challenge).toBe(1)
     expect(after.tended).toEqual([{ outfitId: A }])
     // On a season's last day, a Carrot can't ripen: she plants nothing.
-    const late = { ...save, calendar: { day: 12 } }
+    const late = { ...save, calendar: { day: 30 } }
     expect(handsTonight(late, late, talentsD, null).lines[0]!.done.plant).toBeUndefined()
   })
 
@@ -290,7 +290,7 @@ describe('her night', () => {
     save = tasks(save, A, [{ kind: 'water', tiles: [...START_CLEAR] }, { kind: 'forage', area: 'woods' }])
     save = tasks(save, B, [{ kind: 'chop', area: 'woods' }, { kind: 'fish', spot: 'pond' }])
     expect(night(json(save))).toEqual(night(save))
-    expect(parseSaveV5(json(night(save)))).toEqual(night(save))
+    expect(parseSaveV6(json(night(save)))).toEqual(night(save))
   })
 })
 
@@ -345,7 +345,7 @@ describe('the ranch and the mine on the board', () => {
     expect(morning.roster[B]!.ranks.mining.points).toBe(10)
     expect(morning.roster[B]!.ranks.mining.challenge).toBeGreaterThanOrEqual(6)
     expect(morning.summary!.work).toContainEqual({ kind: 'ranch', home: 'coop', fed: 2, hungry: 0, ready: 2 })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 })
 
@@ -385,7 +385,7 @@ describe('the plots on the board', () => {
     const after = handsTonight(save, save, talentsD, null).save
     expect(after.fields.plots[1]!.tiles.slice(0, FIELD_COLUMNS).every((t) => t.watered)).toBe(true)
     expect(after.fields.plots[0]!.tiles.every((t) => !t.watered)).toBe(true)
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
   })
 
   it('clears and tills plot 2\'s wild ground, and keeps plot 1\'s tasks on plot 1', () => {

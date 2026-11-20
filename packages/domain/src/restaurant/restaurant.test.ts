@@ -13,7 +13,7 @@ import { giftV4 } from '../romance/acts'
 import { togetherPlay } from '../romance/plays/which'
 import { receptionOf } from '../romance/wedding'
 import { GOLD_SHIPPED, payBin, ship } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type FarmSave, type StarCounts } from '../save/v4'
 import { addGoods, goodCount, parseStockKey, stockKey } from '../save/warehouse'
 import { atHomeInTown, castPack } from '../story/authored.fixture'
@@ -22,7 +22,7 @@ import { exactMenuLine, knowsRestaurantRecipe, RESTAURANT_RECIPES, restaurantRec
 import { platePrice, portionsLeft, saveDishForMeals, serveTicket, serverLock, servingPerk, settleRestaurant, shiftBlock, startRestaurantShift } from './restaurant'
 import { restaurantId, WRONG_PLATE_MS } from './rules'
 
-const DAY = 87 // Winter, year two.
+const DAY = 219 // Winter, year two.
 const AT = '2026-11-19T12:00:00.000Z'
 const NOW = Date.parse(AT)
 const HAND = '9800001'
@@ -33,7 +33,7 @@ const STOCK = restaurantId(15)
 const ROAST = restaurantRecipe(restaurantId(26))!
 const WITH_APPLE = restaurantRecipe(restaurantId(51))!
 const row = (n: number, stars = 1): StarCounts => [1, 2, 3, 4, 5].map((s) => s === stars ? n : 0) as StarCounts
-const read = (save: FarmSave) => parseSaveV5(JSON.parse(JSON.stringify(save)))
+const read = (save: FarmSave) => parseSaveV6(JSON.parse(JSON.stringify(save)))
 const key = (id: string, stars = 1) => stockKey(id, stars)
 
 function farm(items: FarmSave['items'] = {}, cleared = 0): FarmSave {

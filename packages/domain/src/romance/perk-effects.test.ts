@@ -15,7 +15,7 @@ import { FOREST } from '../gathering/tables'
 import { gatherQuality, sharesOn, termsOf, type MadeTonight } from '../gathering/kinds'
 import { NIGHT_STEPS, runNight, type NightContext, type NightStep } from '../night/end-day'
 import type { LoopPlaceId } from '../save/parse-v4'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { fieldTiles, bareTile, newSave, pairKey, type Animal, type Love, type SaveV4, type Tile } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
@@ -303,7 +303,7 @@ describe('morning items', () => {
     const night = runNight(save, context())
     const line = night.summary!.hearts.find((h) => h.kind === 'item')
     expect(line).toMatchObject({ kind: 'item', id: TWO })
-    expect(parseSaveV5(json(night))).toEqual(night)
+    expect(parseSaveV6(json(night))).toEqual(night)
   })
 })
 
@@ -383,7 +383,7 @@ describe('her signature dish', () => {
     expect(card.recipe).toBe('dish-vegetables-6')
     expect(save.workshops.recipes).toEqual(['dish-vegetables-6'])
     expect(save.love[ONE]!.dish).toBe('dish-vegetables-6')
-    expect(parseSaveV5(json(save))).toEqual(save)
+    expect(parseSaveV6(json(save))).toEqual(save)
   })
 })
 
@@ -518,7 +518,7 @@ describe('the ranch\'s and mining\'s perks', () => {
     const night = runNight(coop, context(rancher))
     expect(night.ranch.animals.map((a) => a.fondness)).toEqual([30, 198, 0])
     expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 0, watered: 0, fondness: 10 })
-    expect(parseSaveV5(json(night))).toEqual(night)
+    expect(parseSaveV6(json(night))).toEqual(night)
     // No animals in her building, or away from the farm: none.
     expect(ranchChores(withAnimals(coop, []), rancher).chores).toEqual([])
     expect(ranchChores(away(coop, FOUR), rancher).chores).toEqual([])
@@ -599,8 +599,8 @@ describe('the format\'s keepsake and pet name', () => {
 describe('the save\'s perk fields and lines', () => {
   it('parses love.morning from R2 on and love.dish from F4 on, strictly', () => {
     const save = withLove(withLove(farm(14), TWO, at('romance', 2, { morning: 10 })), ONE, at('friendship', 4, { dish: 'dish-vegetables-6' }))
-    expect(parseSaveV5(json(save))).toEqual(save)
-    const refuse = (id: string, love: Partial<Love>, message: string) => expect(() => parseSaveV5(json(withLove(farm(14), id, love)))).toThrow(message)
+    expect(parseSaveV6(json(save))).toEqual(save)
+    const refuse = (id: string, love: Partial<Love>, message: string) => expect(() => parseSaveV6(json(withLove(farm(14), id, love)))).toThrow(message)
     refuse(TWO, at('romance', 1, { morning: 10 }), `save.love.${TWO}.morning: only from Romance 2 on`)
     refuse(TWO, at('romance', 2, { morning: 15 }), `save.love.${TWO}.morning: after today`)
     refuse(ONE, at('friendship', 3, { dish: 'dish-vegetables-6' }), `save.love.${ONE}.dish: only from Friendship 4 on`)
@@ -612,11 +612,11 @@ describe('the save\'s perk fields and lines', () => {
     save.summary = { day: 3, bin: [], work: [], ranks: [], news: [], nudges: [], hearts: [
       { kind: 'item', id: TWO, items: ['shiitake@3'] }, { kind: 'chores', items: 2, watered: 1 }, { kind: 'perks', items: 4 }, { kind: 'side', items: 1 },
     ] }
-    expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
+    expect(parseSaveV6(json(save)).summary).toEqual(save.summary)
     // A rancher's chores add their fondness; a line from before has none.
     const ranch = { ...save, summary: { ...save.summary, hearts: [{ kind: 'chores' as const, items: 0, watered: 0, fondness: 10 }] } }
-    expect(parseSaveV5(json(ranch)).summary).toEqual(ranch.summary)
-    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV5({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
+    expect(parseSaveV6(json(ranch)).summary).toEqual(ranch.summary)
+    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV6({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
     refuse([{ kind: 'chores', items: 1, watered: 0, fondness: 0 }], 'save.summary.hearts.0.fondness')
     refuse([{ kind: 'item', id: TWO, items: [] }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'item', id: TWO, items: ['nope@3'] }], 'save.summary.hearts.0.items.0: expected <good>@<stars>')

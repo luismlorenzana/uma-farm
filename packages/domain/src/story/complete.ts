@@ -276,7 +276,7 @@ function defaultWords(part: Part, piece: string, value: unknown, ctx: { entry?: 
       const v = isObject(value) ? value : {}
       const spot = (x: unknown) => (SPOT_IDS as readonly unknown[]).includes(x)
       const [stop] = Array.isArray(v.routine) ? v.routine as unknown[] : []
-      const routine = v.routine === undefined || (Array.isArray(v.routine) && v.routine.length === 1 && onlyKeys(stop, ['at', 'days']) && spot(stop.at) && ROUTINE_DAYS.some((d) => sameAs(stop.days, d)))
+      const routine = v.routine === undefined || (Array.isArray(v.routine) && v.routine.length === 1 && onlyKeys(stop, ['at', 'days']) && spot(stop.at) && ROUTINE_DAYS.some((days) => sameAs(stop.days, days) || sameAs(stop.days, days.slice(0, 4))))
       return routine && (v.home === undefined || spot(v.home)) && (v.job === undefined || (onlyKeys(v.job, ['at']) && spot(v.job.at)))
     }
     case 'chapters': return sameAs(value, DEFAULT_CHAPTERS)

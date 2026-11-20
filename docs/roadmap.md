@@ -13,7 +13,7 @@ farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 - **The owner's real game, built up in place.** The deployed site is the game the owner plays, never a sandbox: no
   testing tools, cheats, jump-ahead shortcuts or debug panels. Each new piece lands in the game itself, long paths are
   checked by the domain's simulations and local runs, and the owner only plays.
-- **The farm is kept.** Save v5 is the farm the owner plays and keeps. A later change grows v5 in place, or migrates it:
+- **The farm is kept.** Save v6 is the farm the owner plays and keeps. A later change grows the save in place, or migrates it:
   no more start-overs. The server keeps older saves in `saveBackups`.
 - **Built whole, played live.** Every system plays from day one. Where the story hasn't reached yet, the default story
   plays, and where the art hasn't, the blank bust. The story arrives over time in packs, and each pack replaces the
@@ -38,7 +38,7 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | Part | State | What it is |
 |---|---|---|
 | **Landscape** | **Deployed** | The game is played sideways: a thin bar on top (the date, the actions left, the gold, End the day, the Menu), a rail down the left (Farm · Town · People · Book · Diary), sheets as side panels, scenes laid out sideways, and a "Turn your phone sideways" card held upright ([the frame](game-mechanics.md#the-frame-landscape)) |
-| **A day of ten actions, and the tile farm** | **Deployed** (save v5) | Home is the tile farm. Field jobs, gathering, station loads and shipping use actions. Town visits are free. The night settles the day ([a day](game-mechanics.md#a-day-ten-actions), [Home](game-mechanics.md#home-the-farm-map), [the field's screen](game-mechanics.md#the-fields-screen)) |
+| **A day of ten actions, and the tile farm** | **Deployed** (save v6) | Supported phones open Field and Pond with the full tile map one tap away. Field jobs, gathering, station loads and shipping use actions. Town visits are free. The night settles the day ([a day](game-mechanics.md#a-day-ten-actions), [Home](game-mechanics.md#home-the-farm-map), [the field's screen](game-mechanics.md#the-fields-screen)) |
 | **The field's plots** | **Built** (F89, F91) | The field is plots of 8 × 5, a page each: plot 1 is the field the farm always had, and up to seven more are cleared one a Farm Rank from 3 to 9 (2,500g to 50,000g and an action), wild, with no upkeep. Farmhands' field tasks name their plot and rows ([the field's plots](game-mechanics.md#the-fields-plots)) |
 | **Work at scale** | **Built** (F91, F95) | A station's level is a load a day (levels 2–5 bought at the station from Farm Rank 3 to 6); each forest area, fishing spot and dig gives four full hauls a day, then thin ones; a good shipped past a crate of 50 eases its price for a few days. Simulated at 10, 20 and 50 Umas on their farm days: two thirds of them on the farm a day, all in real jobs with real work waiting, 50 included ([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)) |
 | **Roster-run production** | **Deployed** (F99) | The Umas can tend 51 seasonal crops and orchards, collect graded animal products, land graded fish and run processing orders. Exact-grade discoveries record what the farm has produced ([the catalogue](game-mechanics.md#the-catalogue)). |
@@ -90,7 +90,7 @@ The farm is a full game when all eight of these hold:
 
 ```text
 Phase 0  Clean slate                       ── done
-Phase 1  One game, built around the Umas   ── done: one build on v5, the farm by building, the lean start, the town,
+Phase 1  One game, built around the Umas   ── done: one build on v6, the farm by building, the lean start, the town,
                                               her chapters, and the rework (landscape, a day of actions, the Uma loop,
                                               farmhands, upkeep, the calendar, the ranch and the mine)
 Phase 2  The whole farm                    ── festivals and the long game
@@ -158,7 +158,7 @@ How each workshop is built:
 - **Planned fresh, one at a time,** live from its first day, opened by Farm Rank and its build, with the default story
   where the story hasn't reached.
 - **Its art:** the kit's frames and icons drawn in code by Claude; its people drawn by ChatGPT.
-- **The save:** v5 grows in place. A new version comes only when a save shape must change in a way old fields can't
+- **The save:** v6 grows in place. A new version comes only when a save shape must change in a way old fields can't
   carry, and then with a migration, never a start-over: the farm is kept.
 
 ### Phase 3: Feel and polish
@@ -166,7 +166,6 @@ How each workshop is built:
 | Step | What |
 |---|---|
 | 3.2 **Animation** | The farm-work animations from the sprite pipeline, and the items' flights |
-| **F104 · Longer seasons** | [Thirty-day seasons](handoff/tasks/F104-longer-seasons.md), with wider event spacing, live save conversion and balance across the whole farm |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
 | 3.7 **Map appearance** | The [painted map plan](design/game-design.md#the-maps-2026-11-15) and the [HD-2D farm pilot](handoff/tasks/F103-hd2d-farm.md) start from the same place targets. F103 is testing the landscape farm's Field and Pond band before wider map authoring. |
 

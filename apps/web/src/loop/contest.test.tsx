@@ -34,7 +34,7 @@ const { boardWords, prizeWords, theContest } = await import('./Contest')
 
 const AT = '2026-11-15T10:00:00.000Z'
 /** Autumn 10, the game's Contest. */
-const CONTEST_DAY = 34
+const CONTEST_DAY = 82
 const HAND = '9000001'
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 const row = (n: number, stars = 1): [number, number, number, number, number] => [0, 1, 2, 3, 4].map((s) => (s === stars - 1 ? n : 0)) as [number, number, number, number, number]

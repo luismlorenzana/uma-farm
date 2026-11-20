@@ -303,12 +303,12 @@ describe('Tonight', () => {
   })
 
   it('on a festival day, shows festival night beside a spent evening, and the header\'s marks', async () => {
-    // Spring 10 is 9000003's farm day: a farmhand, she's on the farm, in front of you for festival night.
-    const tenth = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } }, 10)
+    // Spring 19 is 9000003's farm day: a farmhand, she's on the farm, in front of you for festival night.
+    const tenth = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } }, 19)
     const day: SaveV4 = { ...tenth, roster: { ...tenth.roster, [THREE]: { ...tenth.roster[THREE]!, farmhand: 1 } } }
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...day, today: { ...day.today, evenings: [{ with: TWO, kind: 'walk' }] } } })
     await render(<p />, '/?sheet=end')
-    await find('[data-tonight="10"]')
+    await find('[data-tonight="19"]')
     expect($$('[data-evening-row]').map((r) => [r.dataset.eveningRow, r.dataset.state])).toEqual([['evening', 'spent'], ['festival', 'free']])
     await render(<HeartsPage />, '/hearts')
     expect((await find('[data-evening-marks]')).dataset.eveningMarks).toBe('●○')

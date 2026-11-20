@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
 import { endDay } from '../night/end-day'
 import { binSales, crateWorth } from '../save/bin'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type SaveV4 } from '../save/v4'
 import { CRATE, cratesPast, EASE_FLOOR, EASE_STEP, easedPrice, easeFactor, marketNight } from './market'
 
@@ -57,7 +57,7 @@ describe('the market feels a flood', () => {
     expect(morning.gold).toBe(before.gold + 2_900 - 30) // less the farmer's takeout
     expect(morning.farm.market).toEqual({ 'pine-log': 2 })
     expect(morning.summary!.bin).toEqual([{ kind: 'sold', id: 'pine-log', stars: 1, count: 120, gold: 2_900, demand: false, eased: 20 }])
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
     // A crate's worth at the market as it stands: ten logs at two steps.
     expect(crateWorth(morning, [{ id: 'pine-log', stars: 1, count: 10 }])).toBe(200)
     const next = endDay(morning, {}, '2026-11-10T21:00:00.000Z')
@@ -68,10 +68,10 @@ describe('the market feels a flood', () => {
     const save = newSave('u1', AT)
     const older = json(save) as unknown as Record<string, Record<string, unknown>>
     delete older.farm!.market
-    expect(parseSaveV5(older).farm.market).toEqual({})
-    expect(parseSaveV5(older).account).toEqual(save.account)
+    expect(parseSaveV6(older).farm.market).toEqual({})
+    expect(parseSaveV6(older).account).toEqual(save.account)
     const past = json(save)
     past.farm.market = { 'pine-log': 6 }
-    expect(() => parseSaveV5(past)).toThrow('save.farm.market.pine-log: expected 1–5')
+    expect(() => parseSaveV6(past)).toThrow('save.farm.market.pine-log: expected 1–5')
   })
 })

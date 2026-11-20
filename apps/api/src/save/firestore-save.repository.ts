@@ -39,6 +39,8 @@ export class FirestoreSaveRepository implements SaveRepository {
       if (current.save && 'calendar' in current.save && save.calendar.start !== current.save.calendar.start) {
         throw new RevisionConflict(current)
       }
+      if (current.save?.version === 6 && (save.calendar.expandedAt !== current.save.calendar.expandedAt
+        || save.calendar.finishingContest !== current.save.calendar.finishingContest)) throw new RevisionConflict(current)
       if (snapshot.exists && save.version > storedVersion) {
         tx.set(db.collection('saveBackups').doc(`${uid}-v${storedVersion}`), { ...snapshot.data(), backedUpAt: FieldValue.serverTimestamp() })
       }

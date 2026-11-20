@@ -7,14 +7,14 @@ import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, RANKS } from './ranks'
 import { countRound, round10, round5 } from './round'
 
 describe('the calendar', () => {
-  it('turns a day into its date: 12-day seasons, 48-day years', () => {
+  it('turns a day into its date: 30-day seasons, 120-day years', () => {
     expect(dateOf(1)).toEqual({ year: 1, season: 'spring', day: 1 })
-    expect(dateOf(12)).toEqual({ year: 1, season: 'spring', day: 12 })
-    expect(dateOf(13)).toEqual({ year: 1, season: 'summer', day: 1 })
-    expect(dateOf(25)).toEqual({ year: 1, season: 'autumn', day: 1 })
-    expect(dateOf(48)).toEqual({ year: 1, season: 'winter', day: 12 })
-    expect(dateOf(49)).toEqual({ year: 2, season: 'spring', day: 1 })
-    expect(dateOf(97)).toEqual({ year: 3, season: 'spring', day: 1 })
+    expect(dateOf(30)).toEqual({ year: 1, season: 'spring', day: 30 })
+    expect(dateOf(31)).toEqual({ year: 1, season: 'summer', day: 1 })
+    expect(dateOf(61)).toEqual({ year: 1, season: 'autumn', day: 1 })
+    expect(dateOf(120)).toEqual({ year: 1, season: 'winter', day: 30 })
+    expect(dateOf(121)).toEqual({ year: 2, season: 'spring', day: 1 })
+    expect(dateOf(241)).toEqual({ year: 3, season: 'spring', day: 1 })
     expect(() => dateOf(0)).toThrow(RangeError)
     expect(() => dateOf(1.5)).toThrow(RangeError)
   })

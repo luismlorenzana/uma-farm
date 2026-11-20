@@ -4,7 +4,7 @@ How uma-farm works today, as the code runs it. This is the one description of th
 the same commit, and where it and the code ever differ, the code wins and this document is fixed. The page view is
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
-**What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
+**What's live and what isn't.** The deployed game is one game on **save v6**: a day of ten actions on a tile farm the
 farmer works by hand, the ranch's animals and the Mine's and the Quarry's floors (see [the ranch](#the-ranch) and
 [the Mine and the Quarry](#the-mine-and-the-quarry)), and the **farmhands** who work it with him overnight on the tasks he
 sets (see [Farmhands](#farmhands)), its places, the farm growing by building, food (everyone eats, from the first
@@ -13,8 +13,8 @@ office's loans, the calendar
 with its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
-laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). **The farm on v5 is kept:**
-it's the owner's real game, so every later change grows v5 in place or migrates it, and never starts it over. Only a save
+laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). **The farm is kept.**
+The phone brings an existing v5 farm into v6 with its progress and current date intact. Only a save
 from before v5 still meets the start-over card (see [Save versions](#save-versions)).
 
 **The tables are generated.** Every table between `<!-- live:… -->` markers is written from the rules by
@@ -92,10 +92,10 @@ card of what the night brought, and ten actions again.
 
 #### Seasons, days and the year
 
-Four seasons of 12 days make a 48-day year. Day 1 is Spring 1 of year 1, and day *d* falls in:
-- **its year:** ⌈*d* ÷ 48⌉;
-- **its season:** ⌊((*d* − 1) mod 48) ÷ 12⌋, counting Spring 0, Summer 1, Autumn 2 and Winter 3;
-- **its day of the season:** ((*d* − 1) mod 12) + 1.
+Four 30-day seasons make a 120-day year. A fresh farm begins on Spring 1, Year 1. Season and year always
+come from the displayed date. Work shifts, crop growth, meals, loan installments, and expedition returns count
+actual farm turns. A v5 farm keeps the day of its upgrade and the dates of earlier records. Dates added to a
+season already over appear as inactive cells in the calendar.
 
 The season sets:
 - **what you can plant** and which seeds the shop sells (the field);
@@ -108,30 +108,30 @@ The year's seasons, with their days in year 1 and their festivals:
 <!-- live:calendar -->
 | Season | Days (year 1) | Festival |
 |---|---|---|
-| Spring | 1–12 | Flower Show, Spring 10 (day 10) |
-| Summer | 13–24 | Fishing Derby, Summer 10 (day 22) |
-| Autumn | 25–36 | Cooking Contest, Autumn 10 (day 34) |
-| Winter | 37–48 | Animal Show, Winter 10 (day 46); Harvest Cup, Winter 12 (day 48) |
+| Spring | 1–30 | Flower Show, Spring 19 (day 19) |
+| Summer | 31–60 | Fishing Derby, Summer 21 (day 51) |
+| Autumn | 61–90 | Cooking Contest, Autumn 22 (day 82) |
+| Winter | 91–120 | Animal Show, Winter 12 (day 102); Harvest Cup, Winter 28 (day 118) |
 <!-- /live -->
 
 - **The date chip** in the bar shows the season's mark and the date ("Spring 3"); without the mark it draws a dot in
   the season's colour (Spring green, Summer gold, Autumn orange, Winter blue). Its spoken name is the whole date and the
-  next festival: "Calendar: Spring 3, year 1 · Flower Show in 7 days". A tap opens the calendar.
+  next festival: "Calendar: Spring 3, year 1 · Flower Show in 16 days". A tap opens the calendar.
 - **The calendar** is a screen of its own: the year at a glance, each day with what it holds and the faces of the Umas
   who have an event on it ([the calendar screen](#the-calendar-screen)).
-- **The next festival** is the first one on or after today, running on into the next year: on Spring 10 it's the Flower
-  Show, today; on Spring 11 it's the Fishing Derby on Summer 10, in 11 days.
+- **The next festival** is the first one on or after today, running on into the next year: on Spring 19 it’s the Flower
+  Show. On Spring 20, the Fishing Derby is 31 days away on Summer 21.
 - **New Year's** is each year's Spring 1. From the second year it's a special day: three actions for events, and her
   New Year's scene with each Uma you've met. Year 1's is the farm's first morning, and nothing more.
 
 #### Festivals
 
-Each season's 10th day holds its festival, and Winter 12, the year's last day, also holds the Harvest Cup. A festival
+The year holds one contest in Spring, Summer, and Autumn and two in Winter. A festival
 is a special day: the calendar marks it, the morning says "Flower Show tomorrow" the day before and "Flower Show today ·
 +3 for events" on the day, it gives three actions for events, and its day and its night play their occasion scenes
 with each Uma you've met who has them ([occasion scenes](#occasion-scenes)).
 
-- **The Cooking Contest is played** (Autumn 10, or wherever the story puts it): at the Kitchen, **Enter the Cooking
+- **The Cooking Contest is played** (Autumn 22, or wherever the story puts it): at the Kitchen, **Enter the Cooking
   Contest · 3** spends the day's three event actions on one dish cooked live at the stove; the town's cook judges it
   against the two rival farms, and the places pay gold and Farm Rank points ([the Cooking
   Contest](#the-cooking-contest)). Its morning lines, "Cooking Contest tomorrow" and "Cooking Contest today · +3 for
@@ -160,10 +160,10 @@ the rival scores and prize when the entry starts. A tie goes to the player.
 
 | Contest | Default day | First rival score at Farm Rank R | Base first prize |
 |---|---|---|---:|
-| Flower Show | Spring 10 | The orchard · min(88, 36 + 5 × (R − 1)) | 500g |
-| Fishing Derby | Summer 10 | The river team · min(82, 34 + 5 × (R − 1)) | 700g |
-| Animal Show | Winter 10 | The ranch · min(88, 42 + 5 × (R − 1)) | 900g |
-| Harvest Cup | Winter 12 | The valley growers · min(88, 30 + 6 × (R − 1)) | 1,200g |
+| Flower Show | Spring 19 | The orchard · min(88, 36 + 5 × (R − 1)) | 500g |
+| Fishing Derby | Summer 21 | The river team · min(82, 34 + 5 × (R − 1)) | 700g |
+| Animal Show | Winter 12 | The ranch · min(88, 42 + 5 × (R − 1)) | 900g |
+| Harvest Cup | Winter 28 | The valley growers · min(88, 30 + 6 × (R − 1)) | 1,200g |
 
 The second rival scores ten points fewer. First prize scales by `(1 + 0.06 × (R − 1)) × min(2, 1 + 0.15 × (year − 1))`
 and rounds to 5g. Second and third pay half and one fifth, rounded to 5g. A judged entry pays immediately
@@ -204,25 +204,22 @@ entry earns +50 hearts once per contest per year. Naming a grower or caretaker f
 
 ###### Festival year playthroughs
 
-The first-year solo run started with the day-one save and used hand work throughout. It built the Coop using the
-farm's logs and vegetables and bought and tended a chicken before Winter 10. The roster runs started in Year 2
-with established workers and a Coop and Mill, and produced their contest goods during the run. All four farms
-played all 48 days and entered all four contests. Each table cell gives place, score and gold.
+The solo run started on Spring 1 of Year 1, built its own Coop and raised the chicken it showed. The staffed
+runs started in Year 2 with established workers, a Coop and a Mill. Each farm played 120 days and produced its
+own entries. Each contest result shows place, score, and gold. The staffed runs each assigned six Uma contest actions and
+verified that contribution credit followed the dated work and the judges’ results.
 
-| Farm | Farm Ranks at entry | Flower Show | Fishing Derby | Animal Show | Harvest Cup | Uma work actions / booked for contests |
+| Farm | Farm Ranks at entry | Flower Show | Fishing Derby | Animal Show | Harvest Cup | Uma work actions / contest bookings |
 |---|---|---|---|---|---|---:|
-| First-year solo | 1, 2, 3, 3 | 1st · 42 · 500g | 2nd · 33 · 370g | 1st · 82 · 1,010g | 3rd · 27 · 270g | 0 / 0 |
-| 10 Umas | 3, 4, 4, 4 | 1st · 72 · 645g | 1st · 62 · 950g | 1st · 100 · 1,220g | 1st · 66 · 1,630g | 1,274 / 6 |
-| 20 Umas | 6, 6, 6, 6 | 1st · 72 · 750g | 1st · 80 · 1,045g | 1st · 100 · 1,345g | 1st · 78 · 1,795g | 2,555 / 5 |
-| 50 Umas | 10, 10, 10, 10 | 2nd · 72 · 445g | 3rd · 64 · 250g | 1st · 100 · 1,595g | 2nd · 81 · 1,065g | 6,394 / 6 |
+| First-year solo | 1, 1, 3, 3 | 3rd · 18 · 100g | 1st · 41 · 700g | 1st · 100 · 1,010g | 2nd · 33 · 675g | 0 / 0 |
+| 10 Umas | 3, 4, 5, 6 | 1st · 60 · 645g | 1st · 82 · 950g | 1st · 100 · 1,285g | 1st · 70 · 1,795g | 3,191 / 6 |
+| 20 Umas | 6, 6, 7, 7 | 1st · 66 · 750g | 1st · 77 · 1,045g | 1st · 100 · 1,410g | 1st · 85 · 1,875g | 6,392 / 6 |
+| 50 Umas | 10, 10, 10, 10 | 3rd · 66 · 175g | 3rd · 64 · 250g | 1st · 100 · 1,595g | 3rd · 70 · 425g | 15,991 / 6 |
 
-The solo farm grew a G1 ★1 Carrot, cast at the Pond, showed its only chicken and donated sweet potato, shiitake
-and rainbow koi. The roster farms grew G1 ★4 Carrots and sent two Umas to cast alongside the farmer. The
-20-Uma farm's caretaker earned the Ranch challenge while she was in town. Its Workshop presenter had worked a
-Mill load. The 10-Uma Cup used Wild, Ranch and Fish after its Field presenters were unavailable. The 50-Uma Cup
-used a summer tomato from storage, an egg and a fish. The roster farms each used 22 routine farmer actions,
-plus the festival event actions, and met winter's meal costs with takeout. Zero entries stalled. Farm Rank 10 still
-rewarded selective exhibits and stronger catches, even with a full roster working.
+The 20-Uma Cup included flour and a presenter who worked the Mill. The 10- and 50-Uma runs used Ranch, Wild
+and Fish entries with a recent farm shift for each presenter. The solo run boxed a carrot that was already
+growing, so it had fewer dated care points for its Flower Show. The staffed runs each used 41 routine farmer
+actions, plus the contest actions.
 
 #### The calendar screen
 
@@ -235,19 +232,19 @@ it. The days are read live from the save as it stands and the story's year, neve
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │ Spring 3 · Year 1     [Spring] Summer  Autumn  Winter                   ⏱7 ♥+3    ✕ │
-│ ‹  Spring · Year 1  ›   Today   │ Spring 10 · in 7 days                           │ │
+│ ‹  Spring · Year 1  ›   Today   │ Spring 19 · in 16 days                           │ │
 │ ┌────┬────┬────┬────┬────┬────┐  ┌─────────────────────────────────────────────────┐ │
-│ │1 ✦ │2   │3   │4  •│5   │6   │  │ Spring 10 · in 7 days                           │ │
+│ │1 ✦ │2   │3   │4  •│5   │6   │  │ Spring 19 · in 16 days                           │ │
 │ │New │    │    │Mkt │    │    │  │ ♥ +3 actions for events                         │ │
 │ │Yr  │    │ ●  │ ●● │    │    │  │ 🏆 Flower Show                                  │ │
 │ ├────┼────┼────┼────┼────┼────┤  │    (what happens at it, the story's line)       │ │
-│ │7   │8  •│9   │10🏆│11  │12 •│  │ With an event, as things stand                  │ │
-│ │    │Mkt │    │Flwr│    │Mkt │  │ (face) Name · Flower Show                       │ │
-│ │    │    │    │●●+3│    │    │  │ (face) Name · Flower Show · Likely ready        │ │
+│ │19🏆│20  │21  │22  │23  │24  │  │ With an event, as things stand                  │ │
+│ │Flwr│    │    │    │    │    │  │ (face) Name · Flower Show                       │ │
+│ │●●+3│    │    │    │    │    │  │ (face) Name · Flower Show · Likely ready        │ │
 │ └────┴────┴────┴────┴────┴────┘  │ In town · 34                                    │ │
 │                                  │ The Plaza      (●)(●)(●)(●)(●) +1               │ │
 │                                  │ The Café       (●)(●)(●)                        │ │
-│                                  │ Next festival: … · Day 3 of 48                  │ │
+│                                  │ Next festival: … · Day 3 of 120                  │ │
 │                                  └─────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -255,12 +252,13 @@ it. The days are read live from the save as it stands and the story's year, neve
 - **On top:** the date and the year; the four seasons, this one marked, each a tap away; the day's actions left, with a
   special day's event actions after them (♥+3); and Close.
 - **Year controls** move the selected season to the previous or next year. **Today** returns to the current farm date.
-- **The season's 12 days** as a grid of six by two. Each day shows its number and its marks: a festival's trophy (and a
+- **The season’s 30 days** in a grid of six columns. Scroll vertically for later weeks. Day navigation keeps the selected
+  date in view. Each cell shows its number and its marks: a festival's trophy (and a
   ring in the season's colour), New Year's or a celebration's spark, a holiday's ribbon, a minor day's dot and a wedding
   heart. Under them are a short label for that date and a special day's event actions (♥+3).
   Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
   and days gone by are faded. Swipe the grid left or right to move a season, including over a year boundary.
-- **The chosen day's panel** (today when the calendar opens): its heading ("Spring 10 · in 7 days"); a special day's
+- **The chosen day's panel** (today when the calendar opens): its heading ("Spring 19 · in 16 days"); a special day's
   event actions ("+3 actions for events", today "2 of 3 actions left for events"); New Year's; its festival, with what
   happens at it when the story says; the story's holidays and minor days, each with its line; then everyone with an
   event that day, her face, her name and why. On a day ahead the list is "With an event, as things stand". Then **In
@@ -277,7 +275,8 @@ it. The days are read live from the save as it stands and the story's year, neve
   and the night visit have separate costs and receipts.
 - **Wedding planner.** After accepting the confession, open **Pick a wedding day** on the relationship stage card or
   her profile. Choose a future date and save it. Move or clear it from the same calendar. The proposal and ceremony's
-  usual requirements still apply. A missed plan stays visible until the ceremony or a new choice.
+  usual requirements still apply. The booking panel marks the other scheduled events on the selected date. A missed
+  plan stays visible until the ceremony or a new choice.
 
 **A day holds:**
 
@@ -287,7 +286,7 @@ it. The days are read live from the save as it stands and the story's year, neve
 | Its festival | The game's five on their days, or the story's year | The game's, or `world.json`'s `festivals` |
 | The story's holidays and minor days | The days the story names: in one season, or in every season; and the game's own six small days, wherever the story puts them | `world.json`'s `days` ([the story pack's menu](story-pack.md#the-storys-days)), and the game's ([the story's days](#the-storys-days)) |
 | Her occasion scenes | New Year's from the second year, each festival's day and its night, her birthday, her anniversary, the story's days | Her route's scene for it, else the default story's for three of them ([occasion scenes](#occasion-scenes)) |
-| Birthdays | Each met Uma's balanced farm birthday | The full launch cast's spread across 48 dates ([birthdays](#birthdays-and-anniversaries)) |
+| Birthdays | Each met Uma's balanced farm birthday | The full launch cast's spread across all four seasons ([birthdays](#birthdays-and-anniversaries)) |
 | Anniversaries | Each spouse's wedding day of the year, from the second year | Her wedding's day |
 | Weddings and celebrations | A planned or held wedding, each five-marriage celebration and the Greater Festival | The save |
 | Expedition trips | Departure and return dates from active and recently logged trips | The expedition post |
@@ -3070,7 +3069,7 @@ On Autumn 10, the game’s day. A Contest the story moves takes its new season�
 - **Left unfinished** (✕, or the app left mid-play), the dish is judged as Rough, its play's score 0, at the next open or
   at the night's start (`settleThePlay`), on the Contest's day: a ★1 dish from ★1 goods scores 10, 3rd. The judging's
   scene plays only when the play ends on the stove's screen.
-- **A moved Contest** plays on the story's day under the story's name, every year, and nothing on Autumn 10; its 1st
+- **A moved Contest** plays on the story's day under the story's name, every year, and nothing on Autumn 22; its 1st
   pays by its new season's number.
 - **The stove's bots** (8 seeds of the Contest's 60 s; the careful bot plays 100 on each, the casual 46–67):
 
@@ -3478,7 +3477,7 @@ The mayor keeps her office. Tap a cast member to introduce yourself, including a
 
 #### Town professions and the week
 
-The week runs continuously from Monday on farm day 1, through the four 12-day seasons and the year boundary.
+The week runs continuously from Monday on farm day 1, through the four 30-day seasons and the year boundary.
 The two Umas in each profession share a day off. The early partner works the first three of the other weekdays
 in town. The late partner covers the last three. Each works the other three days on the farm after hiring.
 Before hiring those are personal days. Her profile and Uma Library show town, farm and rest days, the Calendar
@@ -3570,7 +3569,7 @@ presence through `town/town.ts`. Personal time uses the authored outing, routine
 |---|---|
 | Weekly profession | Three town shifts, three farm shifts after hiring and the profession’s day off. The partners alternate town and farm shifts across the six working days |
 | Personal time | A free-day outing, else her routine or home. A hired Uma keeps assigned farm days for farm work |
-| Legacy schedules | An Uma without a weekly profession uses the story’s routine, job and home. The game’s fallback is her favourite spot on 1, 4, 7, 10, 2, 5, 8, 11 or 3, 6, 9, 12 each season, according to cast order |
+| Legacy schedules | An Uma without a weekly profession uses the story’s routine, job and home. The game’s fallback is her favourite spot on 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29 or 3, 6, 9, 12, 15, 18, 21, 24, 27, 30 each season, according to cast order |
 | Her favourite spot | Her cast entry’s `spot`; else the 6 in turn by her place in the cast, 3 Umas each (the 1st to 3rd at `plaza`, the 4th to 6th at `market`…, the 19th starting again) |
 | A spot | Holds everyone the schedules put there, with no cap; nobody is placed at random |
 | On the farm | A spouse with a room lives on the farm and commutes on her assigned town days. Farmhand tasks run on her farm shifts. A spouse with a room joins the household at night after town shifts and days off |
@@ -3689,7 +3688,7 @@ spends on it, bringing more goods, better stars and new tricks. As the farmhands
 actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 
 ```
- her farm days: the days her town schedule leaves free (8 of 12 on the default schedule; a season with none, the
+ her farm days: the days her town schedule leaves free (20 of 30 on the default schedule; a season with none, the
                 default schedule's other eight); a spouse in her room, every day
  your day (10 actions)                 the night, step 2, first: each farmhand on her farm day, in the order you invited her
    invite her to work · 1 (a friend)     (on a town day she's in town: no work, no meals on the farm)
@@ -4368,7 +4367,7 @@ The Phase 3.5 simulation starts with the normal 500g, nine carrot seeds and no f
 the first 12 days solo. Three runs then add invented farmhands in pairs at controlled staffing checkpoints
 to compare production independently of romance pacing. The solo reference continues by hand. Work follows
 the live weekly shifts. Gold, supplies, builds, grades and rank points come from ordinary actions and nightly
-settlement. Each run continues exactly 48 days after reaching Rank 10.
+settlement. Each run continues exactly 120 days after reaching Rank 10.
 
 The tuned trial puts watering, feed and meals ahead of expanding fields, works two rows per staffed plot,
 adds fallback gathering orders and limits expeditions to one party with enough shifts left on the farm.
@@ -4379,22 +4378,22 @@ The nine goods tracked are Carrot, Wheat, Egg, Milk, Carp, Basil, Wheat Flour, i
 
 | Metric | Solo | 10 Umas | 20 Umas | 50 Umas |
 |---|---:|---:|---:|---:|
-| Day Farm Rank 10 opens | 1,413 | 534 | 379 | 285 |
-| Day the trial ends | 1,461 | 582 | 427 | 333 |
+| Turn Farm Rank 10 opens | 1,389 | 576 | 405 | 288 |
+| Turn the trial ends | 1,509 | 696 | 525 | 408 |
 | Farm shifts per day in the final year | 0 | 4.3 | 8.6 | 21.4 |
-| Farmer actions free per day in the final year | 0 | 3 | 3.6 | 3.8 |
-| Meals bought as takeout in the final year | 0 / 96 | 0 / 578 | 0 / 1,014 | 0 / 2,266 |
-| Upkeep in the final year | 1,440g | 9,360g | 9,360g | 9,360g |
+| Farmer actions free per day in the final year | 0 | 3.2 | 3.8 | 3.8 |
+| Meals bought as takeout in the final year | 0 / 240 | 0 / 1,438 | 0 / 2,570 | 0 / 5,654 |
+| Upkeep in the final year | 3,600g | 23,400g | 23,400g | 23,400g |
 | Short nights across the run | 0 | 0 | 0 | 0 |
 | Missed individual animal feeds in the final year | 0 | 0 | 0 | 0 |
-| Growing tiles missed by watering in the final year | 0% | 3.2% | 4.4% | 1.8% |
-| Exact-grade ingredient-days with at least two held, out of 432 | 192 | 322 | 352 | 422 |
+| Growing tiles missed by watering in the final year | 0% | 5.3% | 3.0% | 1.8% |
+| Exact-grade ingredient-days with at least two held, out of 1,080 | 480 | 916 | 860 | 1,015 |
 
 An ingredient-day counts one exact grade on one morning. These are snapshots of the stock available for
 recipes. The separate Restaurant playthrough covers all 120 unlocks and actual dish use. The new benchmark
 covers farmhands living in town. The loan and household tests cover arrears and resident upkeep separately.
 
-In the exploratory runs, which filled available plots and sent the strongest available expeditions, the
+In the earlier 48-day trials, which filled available plots and sent the strongest available expeditions, the
 20-Uma farm had about 4.8 farmhands per day and bought 1,292 of 1,562 meals in the year after Rank 10.
 The 50-Uma farm bought 1,379 of 2,820 meals. The tuned results combine better work orders and stock policies
 with the rule changes above. Seasonal Carrot and Wheat stocks can still be thin on smaller crews. The
@@ -4403,6 +4402,8 @@ solo reference reaches Rank 10 much later and continues to spend its whole day o
 Run `src/farm/scale.test.ts` with `FARM_BALANCE_REPORT=1` and the `Phase 3.5` test filter for the complete totals.
 
 #### The pacing
+
+The older economy examples below were recorded on the original 48-day calendar. The balance table above uses the current calendar.
 
 A test (`packages/domain/src/farm/season.test.ts`) plays the first year on the game's own rules, the farmer working
 alone, by a plain bot, ten actions a day. Each morning it harvests what's ripe, waters what grows, plants the tilled soil
@@ -4989,7 +4990,7 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 
 ## Part 3 — Hearts: the cast and the romance
 
-> **The romance is the game's.** It plays on save v5 from the story pack, and with the default story wherever the pack is
+> **The romance is the game's.** It plays on save v6 from the story pack, and with the default story wherever the pack is
 > silent: anyone in town can be met by introducing yourself there, and **People** is the rail's third page (Farm · Town ·
 > People · Book · Diary), with the
 > roster's album as its Work view. A save from before v5 starts over as a new farm (see
@@ -5688,7 +5689,7 @@ Every other part of the story, and what plays without it:
 | The town’s, the farm’s and the region’s names | “Town” on the map, “The farm” in the Diary, no region; the opening names none |
 | The farm’s history | None |
 | The festivals | The game’s 5: Flower Show, Fishing Derby, Cooking Contest, Animal Show, Harvest Cup, on each season’s 10th day and Winter 12 |
-| The story’s holidays and minor days | The game’s 6 small days: Blossom viewing (Spring 6), The wishing night (Summer 6), The first cold evening (Autumn 4), The first snow (Winter 2), The longest night (Winter 6), The sweets day (Winter 8) |
+| The story’s holidays and minor days | The game’s 6 small days: Blossom viewing (Spring 8), The wishing night (Summer 9), The first cold evening (Autumn 8), The first snow (Winter 4), The longest night (Winter 17), The sweets day (Winter 22) |
 | A place’s name and line | The map’s own name, and its quick look’s line |
 | A season’s line | None: the morning says “Spring begins” alone |
 | Town notes | None |
@@ -6099,32 +6100,33 @@ A disliked gift pays 0 and never takes points away. She says one of the default 
 
 #### Birthdays and anniversaries
 
-**The full cast's farm birthdays are evenly spread.** The 50 launch Umas occupy all 48 dates, with one or two on a date.
-Her cast entry's birthday or master-data birthday sets her place in the March-to-February order. New cast members fill
-the least occupied dates, keeping the launch dates in place. With 100 Umas there are two or three per date. Small story
-packs use the ordinary date-to-quarter conversion below.
+**The launch cast has 50 birthdays across the four seasons.** There are 13 each in Spring and Summer and 12 each
+in Autumn and Winter, with one on each selected date. Base festivals, the six small days, and New Year’s have
+their own dates. Each seven-day block keeps a date free of those occasions and launch birthdays. The cast entry
+or master data supplies the March-to-February order. Additions fill the least occupied dates and the launch
+birthdays stay in place. Small story packs use the straightforward date conversion below.
 
 <!-- live:birthday-map -->
-| Month | Days 1–8 | 9–16 | 17–24 | 25–31 |
-|---|---|---|---|---|
-| March | Spring 1 | Spring 2 | Spring 3 | Spring 4 |
-| April | Spring 5 | Spring 6 | Spring 7 | Spring 8 |
-| May | Spring 9 | Spring 10 | Spring 11 | Spring 12 |
-| June | Summer 1 | Summer 2 | Summer 3 | Summer 4 |
-| July | Summer 5 | Summer 6 | Summer 7 | Summer 8 |
-| August | Summer 9 | Summer 10 | Summer 11 | Summer 12 |
-| September | Autumn 1 | Autumn 2 | Autumn 3 | Autumn 4 |
-| October | Autumn 5 | Autumn 6 | Autumn 7 | Autumn 8 |
-| November | Autumn 9 | Autumn 10 | Autumn 11 | Autumn 12 |
-| December | Winter 1 | Winter 2 | Winter 3 | Winter 4 |
-| January | Winter 5 | Winter 6 | Winter 7 | Winter 8 |
-| February | Winter 9 | Winter 10 | Winter 11 | Winter 12 |
+| Month | First date | Last date |
+|---|---|---|
+| March | Spring 1 | Spring 10 |
+| April | Spring 11 | Spring 20 |
+| May | Spring 21 | Spring 30 |
+| June | Summer 1 | Summer 10 |
+| July | Summer 11 | Summer 20 |
+| August | Summer 21 | Summer 30 |
+| September | Autumn 1 | Autumn 10 |
+| October | Autumn 11 | Autumn 20 |
+| November | Autumn 21 | Autumn 30 |
+| December | Winter 1 | Winter 10 |
+| January | Winter 11 | Winter 20 |
+| February | Winter 21 | Winter 30 |
 <!-- /live -->
 
 - **On her birthday** a gift pays ×3 and an evening ×1.5, and the day gives one action for events. The morning says so
   the day before and on the day, and the calendar shows her face on it. Two Umas may share a birthday; a birthday on a
   festival day is both. Once married and housed, she can also host a **Birthday night** visit on that date.
-- **Her anniversary** is her wedding's day of the year, from a year after the wedding on (every 48 days after it). That
+- **Her anniversary** is her wedding's day of the year, from the first following year on the same season and date. That
   day every act pays ×2 (the evening ×1.5 instead), and that morning **she leaves a ★5 item of her line** in the
   Warehouse, on the farm or in town: a crop of the season for a farmer, a good of her foraging rank's deepest open area this season
   for a forager, a fish of her deepest open spot for a fisher, and a crop of the season for any line whose place isn't
@@ -7025,7 +7027,7 @@ Today's evening slots and this morning's invitations:
 |---|---|---|---|
 | Any day | 1 | — | 1 |
 | From 10 married | 2 on days divisible by 4, else 1 | — | 2 |
-| A festival day (Spring 10, Summer 10, Autumn 10, Winter 10, Winter 12) | As any day | 1 more, its own slot: only festival night fills it | As any day |
+| A festival day (Spring 19, Summer 21, Autumn 22, Winter 12, Winter 28) | As any day | 1 more, its own slot: only festival night fills it | As any day |
 
 An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Friendship 3+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to 14; a second invitation is never the first’s Uma.
 <!-- /live -->
@@ -7401,9 +7403,9 @@ decorations draw them:
 - **The Fiftieth Wedding is the soft ending.** Play it from the wedding card on the day of the 50th marriage,
   including Winter 12. It recalls discoveries, farm milestones and the crew. You can keep playing on the same
   save. New release cast in `world.json`'s `expansionCast` becomes available after the closing scene.
-- **The Greater Festival is 48 farm days after the 50th marriage.** The Calendar keeps its scheduled
+- **The Greater Festival is on the same calendar date the year after the 50th marriage.** The Calendar keeps its scheduled
   date if you hold the ceremony later. All 50 have a place in the festival, represented in ten groups.
-  Select a tradition from a completed celebration or contribute one exact-grade item per 12-day preparation
+  Select a tradition from a completed celebration or contribute one exact-grade item per 30-day preparation
   window. A pledge credits the farmhand or expedition party that delivers the selected item. The festival stays
   available with any number of contributions. Contributors earn a keepsake entry in their Library.
 - **The Festival of Vows** then returns on the Greater Festival's scheduled date in future years. Every spouse
@@ -7647,7 +7649,7 @@ and every page says **"A newer save replaced this device's changes. They're kept
 If the copy can't be kept, nothing is replaced and the sync pauses.
 
 **A refused upload.** The server stores what the app sends and never edits a save. It refuses:
-- a save it can't read (a bad shape, unknown keys, or a version other than v5: an old build's older save);
+- a save it can't read (a bad shape, unknown keys, or a version other than v6);
 - a save belonging to another account;
 - a save of an older version than the one it holds.
 
@@ -7698,22 +7700,28 @@ sits outside the opening screens, so it shows even when the app stopped while op
 
 | Version | What it is | What a player meets |
 |---|---|---|
-| v5 | The farm: the one save, its field a grid of tiles and its day a budget of actions | Every new farm starts on it, and the app plays and writes it. **It's kept:** later changes grow it in place or migrate it, never start it over |
-| v4 | The farm of blocks and Umas' jobs, before the day of actions | **The start-over card,** then a new farm on v5 |
-| v1, v2, v3 | Older formats, from before the farm started over the first time | **The start-over card,** then a new farm on v5 |
-| Newer than v5 | — | Refused: this build doesn't read it |
+| v6 | The farm on the 30-day calendar | The app plays and uploads this version |
+| v5 | The same farm on the 12-day calendar | The phone converts it automatically and uploads through the existing revision check |
+| v4 | The farm of blocks and Umas' jobs, before the day of actions | **The start-over card,** then a new farm on v6 |
+| v1, v2, v3 | Older formats, from before the farm started over the first time | **The start-over card,** then a new farm on v6 |
+| Newer than v6 | — | Refused: this build doesn't read it |
 
 - **Why a new version, not a v4 change.** The field's blocks became tiles, the work board's jobs and the stations'
   multi-day jobs became the day's actions and a station's one load, and `today` counts the actions: a played v4 can't
   be read as a tile farm. A new version lets the rules that already guard an older save do the work: the start-over
-  card, the safety copy, the server's backup, and an older build refusing a v5 rather than misreading it.
-- **v5 is kept from now on.** The owner plays the deployed farm as the real game, so no change starts it over: a new
+  card, the safety copy, the server's backup, and an older build refusing a v6 upload.
+- **The existing farm is kept.** The owner plays the deployed farm as the real game, so no change starts it over: a new
   field is grown in place (an older save reads it as its default, and `updatedAt` never moves for it), and a change a
-  default can't cover migrates the save as it loads. The start-over card stays only for a save from before v5.
+  default cannot cover migrates the save as it loads. The start-over card applies to saves from before v5.
+- **v5 to v6.** The device keeps the current visible date, elapsed farm turns, spent actions, account timestamps,
+  items, and progress. Booked weddings keep their promised dates. Earlier season dates remain readable, and active
+  growth, upkeep, jobs, and expeditions keep their remaining turns. The first successful v6 upload backs up the full
+  v5 record on the server. A second device keeps its unsynced version in a recovery copy if the calendar has already
+  been converted by another device.
 - **The start-over card.** When the phone's save, or on a new phone the server's, is older than v5, the opening stops at
   one card: **"Your farm starts over"**, "This version of the game begins a new farm on day 1.", and **Start the new
   farm**. Nothing changes until the button is tapped.
-- **The new farm** is day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for its cleared patch of nine, no
+- **The new farm** is day 1 on v6: 500g, 9 Carrot seeds, the field overgrown but for its cleared patch of nine, no
   station loads, ten actions, the Farmhouse, nobody on the roster and the farmer's name empty (the retired Dorm kept in
   its shape: level 1, nobody in it).
   Only the account carries over, its "last changed" time with it, so the farmer's name is the new farm's first change.

@@ -8,7 +8,7 @@ import { starPrice } from '../goods/prices'
 import { goodOf } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { occasionPlayed, playOccasion } from '../romance/occasions'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, pairKey, type FarmSave } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { castPack } from '../story/authored.fixture'
@@ -81,8 +81,8 @@ describe('the expedition post', () => {
     expect(back.summary?.work.find((w) => w.kind === 'expedition')).toMatchObject({ result: 'retreat', region: 'echo-cave' })
     expect(back.expeditions).toEqual([])
     expect(awayOn(back, A, 4)).toBeUndefined()
-    expect(parseSaveV5(JSON.parse(JSON.stringify(save)))).toEqual(save)
-    expect(parseSaveV5(JSON.parse(JSON.stringify(back)))).toEqual(back)
+    expect(parseSaveV6(JSON.parse(JSON.stringify(save)))).toEqual(save)
+    expect(parseSaveV6(JSON.parse(JSON.stringify(back)))).toEqual(back)
     expect(back.account.updatedAt).toBe(AT)
   })
 
@@ -148,8 +148,8 @@ describe('the expedition post', () => {
   it('plays a festival occasion while she is away, and reads a return line from the pack', () => {
     const pack = storyPackFrom(withOccasions())
     const days = { festivals: FESTIVALS, birthdays: new Map<string, number>() }
-    const away = runNight(sendExpedition(farm(7, 9), 'echo-cave', [A], []), { story: pack })
-    expect(awayOn(away, A, 10)).toBeDefined()
+    const away = runNight(sendExpedition(farm(7, 18), 'echo-cave', [A], []), { story: pack })
+    expect(awayOn(away, A, 19)).toBeDefined()
     expect(occasionPlayed(playOccasion(away, pack, A, days, 'flower-show'), A, 'flower-show')).toBe(true)
     const log = runNight(away, { story: pack }).expeditionLog![0]!
     const line = 'An invented return line.'

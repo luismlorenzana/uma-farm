@@ -2,7 +2,7 @@ import { recordLibrary } from '../library/receipts'
 import { availableDishes } from '../expeditions/stock'
 import { bookedForExpedition } from '../expeditions/presence'
 import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
-import { dateDayOf, dateOf, farmDay, festivalOn } from '../farm/calendar'
+import { dateDayOf, dateOf, festivalOn, turnOnDate } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { aptitudeOf, gatherer, handDay } from '../farm/farmhands'
@@ -51,7 +51,7 @@ export const CUE_WORDS = { stand: 'Hold for inspection.', walk: 'Take a lap by t
 export const festivalResult = (save: Pick<FarmSave, 'workshops'>, id: FarmContest) => save.workshops.festival?.last?.[id]
 export function contestDate(id: FarmContest, year: number, days: SpecialDays, clock?: FarmSave['calendar']): number | null {
   const festival = days.festivals.find((festival) => festival.rule === id)
-  return festival ? farmDay({ year, season: festival.season, day: festival.day }, clock) : null
+  return festival ? turnOnDate({ year, season: festival.season, day: festival.day }, clock) : null
 }
 
 export function contestCutoffs(id: FarmContest, rank: number): [number, number] {

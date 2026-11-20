@@ -111,7 +111,7 @@ export function tasteKnown(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'st
 export function giftPoints(save: Pick<SaveV4, 'calendar' | 'love'>, id: string, taste: Taste, stars: number, birthday: boolean): number {
   const love = save.love[id]
   if (!love || nextRung(love) === null) return 0
-  return roundPoints(GIFT_POINTS_V4[taste] * giftStars(stars) * dayFactor(love, save.calendar.day, 'gift', birthday))
+  return roundPoints(GIFT_POINTS_V4[taste] * giftStars(stars) * dayFactor(love, save.calendar.day, 'gift', birthday, save.calendar))
 }
 
 /** The gift picker's number: what a good at its stars pays her today, or null ("?") while her taste for it isn't

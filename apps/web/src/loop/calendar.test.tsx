@@ -35,7 +35,7 @@ const { Shell } = await import('../shell/Shell')
 
 const AT = '2026-11-14T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
-const SHOW = farmDay({ year: 1, season: 'spring', day: 10 })
+const SHOW = farmDay({ year: 1, season: 'spring', day: 19 })
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
 /** A named farm on `day`, the stand-in's three home and their arrivals played; `spent` of the day's ten spent; each
@@ -120,20 +120,20 @@ describe('the calendar', () => {
     expect($('[aria-label^="Calendar: Spring 1, year 1"]')).not.toBeNull()
     expect($('[data-calendar-title]')?.textContent).toBe('Spring 1 · Year 1')
     expect(($('[aria-label="Previous day"]') as HTMLButtonElement).disabled).toBe(true)
-    expect($('[data-next-festival]')?.textContent).toContain('Spring 10 · in 9 days')
+    expect($('[data-next-festival]')?.textContent).toContain('Spring 19 · in 18 days')
     await click($('[aria-label="Next day"]'))
     expect($('[data-day-heading]')?.textContent).toContain('Spring 2')
     expect(save().today.actions).toBe(6)
   })
 
-  it('pages through 12-day seasons by day buttons and swiping, with a fresh detail scroll', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm(12) })
+  it('pages through 30-day seasons by day buttons and swiping, with a fresh detail scroll', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(30) })
     await render(<p>Farm</p>, '/?sheet=calendar')
     await find('[data-calendar-grid="spring"]')
     $('[data-day-scroll]')!.scrollTop = 80
     await click($('[aria-label="Next day"]'))
-    expect($('[data-calendar-grid="summer"] [data-day="13"]')).not.toBeNull()
-    expect($('[data-day-panel]')?.dataset.dayPanel).toBe('13')
+    expect($('[data-calendar-grid="summer"] [data-day="31"]')).not.toBeNull()
+    expect($('[data-day-panel]')?.dataset.dayPanel).toBe('31')
     expect($('[data-day-scroll]')?.scrollTop).toBe(0)
     await click($('[aria-label="Previous day"]'))
     const grid = $('[data-calendar-grid="spring"]')!
@@ -151,12 +151,12 @@ describe('the calendar', () => {
       touch('touchstart', 'touches', 220, 100)
       touch('touchend', 'changedTouches', 135, 100)
     })
-    expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(12)
+    expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(30)
   })
 
   it('opens a spouse’s birthday night from the day panel and plays the loving bedside beat', async () => {
     const married = farm(1, 0, { [ONE]: { stage: 'spouse', wed: 1, house: 0 } })
-    useGame.setState({ uid: 'u1', status: 'ready', save: { ...married, calendar: { day: 4 },
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...married, calendar: { day: 10 },
       longGame: { weddings: [ONE], celebrations: {}, love: {} } } })
     await render(<p>Farm</p>, '/?sheet=calendar')
     await click(await find(`[href="/?visits=${ONE}"]`))
@@ -184,24 +184,24 @@ describe('the calendar', () => {
     expect($('[data-day-panel]')?.dataset.dayPanel).toBe('4')
     await click($('[aria-label="Next year"]'))
     expect($('[data-calendar-year]')?.textContent).toBe('Spring · Year 2')
-    await click($('[data-day="53"]'))
+    await click($('[data-day="125"]'))
     await click($('[data-action="save-wedding-date"]'))
-    await until(() => save().love[ONE]?.weddingDay === 53)
-    expect($('[data-day="53"]')?.dataset.weddings).toBe('1')
+    await until(() => save().love[ONE]?.weddingDay === 125)
+    expect($('[data-day="125"]')?.dataset.weddings).toBe('1')
     await click($('[data-action="calendar-today"]'))
     expect($('[data-calendar-year]')?.textContent).toBe('Spring · Year 1')
     expect($('[data-day-panel]')?.dataset.dayPanel).toBe('3')
     expect($('[data-planned-date]')?.textContent).toBe('Spring 5 · Year 2')
   })
 
-  it('opens from the bar’s date over everything: the season’s 12 days, the festival, a birthday and the faces', async () => {
+  it('opens from the bar’s date over everything: the season’s 30 days, the festival, a birthday and the faces', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(3, 0, { [TWO]: f1 }) })
     await render(<p>Farm</p>, '/')
     await click($('[data-kit="account-bar"] a[aria-label^="Calendar"]'))
     expect(path).toBe('/?sheet=calendar')
     await find('[data-calendar]')
     expect($('[data-calendar-title]')?.textContent).toBe('Spring 3 · Year 1')
-    expect($$('[data-calendar-grid="spring"] [data-day]')).toHaveLength(12)
+    expect($$('[data-calendar-grid="spring"] [data-day]')).toHaveLength(30)
     expect($('[data-day][data-today]')?.dataset.day).toBe('3')
     expect($(`[data-day="${SHOW}"]`)?.dataset.festival).toBe('flower-show')
     expect($(`[data-day="${SHOW}"] [data-cell-label]`)?.textContent).toBe('Flower Show')
@@ -216,9 +216,9 @@ describe('the calendar', () => {
     expect($('[data-in-town]')?.dataset.inTown).toBe('1')
     expect($$('[data-town-row]').map((r) => [r.dataset.townRow, r.dataset.count])).toEqual([['plaza', '1']])
     expect($(`[data-town-face="${THREE}"]`)).toBeTruthy()
-    // Spring 4 is One's birthday (the cast's own): her face, and its event action.
-    await click($('[data-day="4"]'))
-    expect($('[data-day-heading]')?.textContent).toBe('Spring 4 · tomorrow')
+    // Spring 10 is One's birthday (the cast's own): her face, and its event action.
+    await click($('[data-day="10"]'))
+    expect($('[data-day-heading]')?.textContent).toBe('Spring 10 · in 7 days')
     expect($$('[data-town-face]').map((f) => f.dataset.townFace)).toEqual([ONE])
     expect($$('[data-day-panel] [data-face]').map((f) => [f.dataset.face, f.dataset.reasons])).toEqual([[ONE, 'birthday'], [TWO, 'ready']])
     expect($('[data-day-events]')?.textContent).toBe('+1 action for events')
@@ -229,8 +229,8 @@ describe('the calendar', () => {
     expect($$('[data-day-panel] [data-face]').map((f) => f.dataset.reasons)).toEqual(['occasion', 'occasion ready', 'occasion'])
     // Another season, a tap away.
     await click($('[data-season="summer"]'))
-    expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(12)
-    expect($(`[data-day="${farmDay({ year: 1, season: 'summer', day: 10 })}"]`)?.dataset.festival).toBe('fishing-derby')
+    expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(30)
+    expect($(`[data-day="${farmDay({ year: 1, season: 'summer', day: 21 })}"]`)?.dataset.festival).toBe('fishing-derby')
     await click($('[data-calendar] [data-action="close"]'))
     expect(path).toBe('/')
   })

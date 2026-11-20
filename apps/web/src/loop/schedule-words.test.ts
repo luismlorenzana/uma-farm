@@ -37,11 +37,11 @@ describe('where to find her', () => {
     expect(daysWords([1, 2, 3, 4, 5, 6, 9, 11, 12])).toBe('1–6, 9, 11, 12')
   })
 
-  it('reads her season: the default schedule\'s four days, or the story\'s places, home the other days', () => {
-    expect(seasonLines(PACK, '9300001', 'spring').map((l) => l.text)).toEqual(['The Café · 1, 4, 7, 10', 'At home · the other days'])
+  it('reads her season: the default schedule\'s ten days, or the story\'s places, home the other days', () => {
+    expect(seasonLines(PACK, '9300001', 'spring').map((l) => l.text)).toEqual(['The Café · 1, 4, 7, 10, 13, 16, 19, 22, 25, 28', 'At home · the other days'])
     expect(seasonLines(PACK, '9300002', 'spring').map((l) => l.text)).toEqual(['The Bakery, at work · 1–6', 'The Library · 9', 'Rose Cottage · the other days'])
     // The third in the cast, no spot of her own: the Plaza, from day 3.
-    expect(seasonLines(PACK, '9300003', 'winter').map((l) => l.text)).toEqual(['The Plaza · 3, 6, 9, 12', 'At home · the other days'])
+    expect(seasonLines(PACK, '9300003', 'winter').map((l) => l.text)).toEqual(['The Plaza · 3, 6, 9, 12, 15, 18, 21, 24, 27, 30', 'At home · the other days'])
   })
 
   it('today: where she is, or when she\'s next out; a farmhand on the farm on her farm days, in town on her town days', () => {
@@ -49,15 +49,15 @@ describe('where to find her', () => {
     expect(findHer(save(2), PACK, '9300001')).toMatchObject({ today: 'At home · next out Spring 4', at: null })
     expect(findHer(save(2), PACK, '9300002')).toMatchObject({ today: 'The Bakery, at work', at: 'bakery' })
     // A farmhand: her farm days are the days her schedule leaves free; her town days, her place in town.
-    const days = [{ at: 'farm', text: 'On the farm · 2, 3, 5, 6, 8, 9, 11, 12' }, { at: 'cafe', text: 'The Café · 1, 4, 7, 10' }]
+    const days = [{ at: 'farm', text: 'On the farm · 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30' }, { at: 'cafe', text: 'The Café · 1, 4, 7, 10, 13, 16, 19, 22, 25, 28' }]
     expect(findHer(hand(2, '9300001'), PACK, '9300001')).toEqual({ today: 'On the farm', at: null, season: 'Spring', lines: days, farm: true })
     expect(findHer(hand(4, '9300001'), PACK, '9300001')).toEqual({ today: 'The Café', at: 'cafe', season: 'Spring', lines: days, farm: false })
     // Her job and her routine are her town days; a day at her home in town is a farm day.
-    expect(farmhandLines(PACK, '9300002', 'spring').map((l) => l.text)).toEqual(['On the farm · 7, 8, 10–12', 'The Bakery, at work · 1–6', 'The Library · 9'])
+    expect(farmhandLines(PACK, '9300002', 'spring').map((l) => l.text)).toEqual(['On the farm · 7, 8, 10–30', 'The Bakery, at work · 1–6', 'The Library · 9'])
     expect(findHer(hand(7, '9300002'), PACK, '9300002')).toMatchObject({ today: 'On the farm', farm: true })
     expect(findHer(hand(9, '9300002'), PACK, '9300002')).toMatchObject({ today: 'The Library', at: 'library', farm: false })
     // A season her schedule leaves without a farm day: the default schedule's other days.
-    expect(farmhandLines(BUSY, '9300004', 'spring').map((l) => l.text)).toEqual(['On the farm · 2, 3, 5, 6, 8, 9, 11, 12', 'The Bakery, at work · 1, 4, 7, 10'])
+    expect(farmhandLines(BUSY, '9300004', 'spring').map((l) => l.text)).toEqual(['On the farm · 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30', 'The Bakery, at work · 1, 4, 7, 10, 13, 16, 19, 22, 25, 28'])
     // A spouse in her room lives on the farm, every day.
     const wed = save(4, { roster: { 9300001: newRosterUma(1) }, love: { 9300001: { ...newLove(), stage: 'spouse', level: 1, wed: 2, house: 0 } } })
     expect(findHer(wed, PACK, '9300001')).toEqual({ today: 'On the farm', at: null, season: 'Every day', lines: [{ at: null, text: 'She lives on the farm' }], farm: true })

@@ -3,12 +3,9 @@ import { parseSavePut, SaveParseError, versionOf, type SaveEnvelope } from '@far
 import { CurrentUid } from '@luismlorenzana/uma-server/auth'
 import { RevisionConflict, SAVE_REPOSITORY, type SaveRepository } from './save.repository'
 
-// GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a). The server stores what the app sent
-// and never edits a save. GET returns the stored save parsed: a v5 whole, an older one as its version and account (the
-// phone starts it over). PUT takes a v5 only: an older version (an old cached build) is refused with a 400 and kept in
-// `saveRescues`, and so is anything the parse refuses. The first v5 over an older stored save backs that one up
-// (`saveBackups`, the Firestore store's). An upload older than what's stored (a v5 after a later version) is refused with
-// a 409 and kept too.
+// GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a).
+// GET reads v5 and v6 in full and v1–v4 as version and account. PUT accepts v6.
+// Refused uploads go to saveRescues. On upgrade the repository backs up the original document.
 @Controller('save')
 export class SaveController {
   private readonly logger = new Logger(SaveController.name)

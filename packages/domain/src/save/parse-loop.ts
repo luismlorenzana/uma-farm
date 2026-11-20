@@ -18,7 +18,7 @@ import {
   MARKET_FLOOR, MAX_FIELD_TILES, MAX_KITCHEN_BASE, MAX_PLOTS, MEAL_KEEPS, MENU_RECIPES, STATION_MAX_LEVEL, STOVE_PLAYS,
   isDishId, isLegacyDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   EXPEDITION_OUTCOMES, REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
-  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV5, type StarCounts,
+  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV6, type StarCounts,
   type StationLoad, type StationTarget, type SurplusPlan, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
@@ -98,7 +98,7 @@ export function parseRanks(value: unknown, path: string): Record<Activity, RankS
 /** The retired Dorm, kept in its shape (v5 grows in place): its level on its eight levels, no higher than the level
  * bought, and read by nothing; who was home and the swaps waiting are cleared, whatever they held, so everyone who lived
  * there lives in town from this load. Pure, so a load never stamps the save. */
-export function parseDorm(value: unknown, path: string, bought: number | undefined): SaveV5['dorm'] {
+export function parseDorm(value: unknown, path: string, bought: number | undefined): SaveV6['dorm'] {
   const o = object(value, path, ['level', 'home', 'swaps'])
   const level = int(o.level, `${path}.level`, 1, DORM_MAX_LEVEL)
   if (bought === undefined || level > bought) fail(`${path}.level`, 'above the level bought (buildings.dorm)')
@@ -160,7 +160,7 @@ const parsePlotTiles = (value: unknown, path: string): Tile[] => list(value, pat
 
 /** The field: its plots, 1 up to the rules' most, each exactly its tiles. A save from before plots holds the one field's
  * tiles (`tiles`) and reads as plot 1, unchanged: grown in place, no migration, and `updatedAt` never moves. */
-export function parseFields(value: unknown, path: string): SaveV5['fields'] {
+export function parseFields(value: unknown, path: string): SaveV6['fields'] {
   const o = object(value, path, ['tiles', 'plots'])
   if (o.plots === undefined) {
     if (o.tiles === undefined) fail(`${path}.plots`, 'expected the field’s plots')
@@ -200,7 +200,7 @@ const OLDER_ANIMAL_KEYS = ['id', 'kind', 'building', 'affection', 'streak', 'car
 
 /** The ranch: each animal once, at most a building's room in each, and the silo's feed (a save from before the ranch's
  * game has none: 0). Grows in place: no migration, and `updatedAt` never moves. */
-export function parseRanch(value: unknown, path: string): SaveV5['ranch'] {
+export function parseRanch(value: unknown, path: string): SaveV6['ranch'] {
   const o = object(value, path, ['animals', 'silo'])
   const animals = list(o.animals, `${path}.animals`, 0, RANCH_HOMES.length * HOME_ROOM).map((v, i): Animal => {
     const at = `${path}.animals.${i}`
@@ -246,7 +246,7 @@ export function parseTools(value: unknown, path: string): Record<ToolId, ToolTie
   return Object.fromEntries(TOOL_IDS.map((t) => [t, int(o[t], `${path}.${t}`, 1, 5) as ToolTier])) as Record<ToolId, ToolTier>
 }
 
-export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>, clock: SaveV5['calendar']): SaveV5['workshops'] {
+export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>, clock: SaveV6['calendar']): SaveV6['workshops'] {
   const { day: today } = clock
   const o = object(value, path, ['played', 'current', 'recipes', 'best', 'restaurant', 'festival'])
   const p = object(o.played, `${path}.played`, WORKSHOP_IDS)
@@ -422,7 +422,7 @@ export function keys(value: unknown, path: string): string[] {
 }
 
 /** The Diary: what's shipped is the catalogue's goods and the rings. */
-export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
+export function parseDiary(value: unknown, path: string): SaveV6['diary'] {
   const o = object(value, path, ['shipped', 'milestones', 'records', 'read', 'notes'])
   return {
     shipped: counts(o.shipped, `${path}.shipped`, (id) => isGoodOrRingId(id) || isDishId(id), 'unknown good'),
@@ -441,8 +441,8 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
 const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
   'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders'] as const
 
-function parseStationPlans(value: unknown, path: string): NonNullable<SaveV5['farm']['stationPlans']> {
-  const plans: NonNullable<SaveV5['farm']['stationPlans']> = {}
+function parseStationPlans(value: unknown, path: string): NonNullable<SaveV6['farm']['stationPlans']> {
+  const plans: NonNullable<SaveV6['farm']['stationPlans']> = {}
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     const station = oneOf(id, at, STATIONS)
@@ -474,8 +474,8 @@ function parseFishRemainders(value: unknown, path: string): Record<string, numbe
   }))
 }
 
-function parseFieldPlans(value: unknown, path: string): NonNullable<SaveV5['farm']['fieldPlans']> {
-  const plans: NonNullable<SaveV5['farm']['fieldPlans']> = {}
+function parseFieldPlans(value: unknown, path: string): NonNullable<SaveV6['farm']['fieldPlans']> {
+  const plans: NonNullable<SaveV6['farm']['fieldPlans']> = {}
   for (const [key, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${key}`
     if (!/^[0-7]:[0-4]:(spring|summer|autumn|winter)$/.test(key)) fail(at, 'unknown plot row and season')
@@ -494,8 +494,8 @@ function parseFieldPlans(value: unknown, path: string): NonNullable<SaveV5['farm
   return plans
 }
 
-function parseCarrotRows(value: unknown, path: string): NonNullable<SaveV5['farm']['carrotRows']> {
-  const plans: NonNullable<SaveV5['farm']['carrotRows']> = {}
+function parseCarrotRows(value: unknown, path: string): NonNullable<SaveV6['farm']['carrotRows']> {
+  const plans: NonNullable<SaveV6['farm']['carrotRows']> = {}
   for (const [key, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${key}`
     if (!/^[0-7]:[0-4]$/.test(key)) fail(at, 'unknown plot row')
@@ -547,7 +547,7 @@ function parsePantry(value: unknown, path: string, today: number): PantryLot[] {
 /** The most meals a lot holds: well past any day's cooking. */
 const MAX_PANTRY_MEALS = 100_000
 
-export function parseFarm(value: unknown, path: string, today: number): SaveV5['farm'] {
+export function parseFarm(value: unknown, path: string, today: number): SaveV6['farm'] {
   const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
     const at = `${path}.festivals.${i}`

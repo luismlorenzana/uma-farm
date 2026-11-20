@@ -8,7 +8,7 @@ import { runNight } from '../night/end-day'
 import { eveningSlots } from '../romance/evening'
 import { meet, triggerHolds } from '../romance/meeting'
 import { gateHolds, gateWords } from '../romance/chapters'
-import { parseSaveV5 } from '../save/parse-v4'
+import { parseSaveV6 } from '../save/parse-v4'
 import { newSave, type SaveV4 } from '../save/v4'
 import { knownNotes, noteHolds, unlockNotes } from '../town/notes'
 import { checkCast, checkWorld, LINE_LIMITS, type World } from './authored'
@@ -106,19 +106,19 @@ describe('world.json’s reader', () => {
   })
 
   it('keeps one festival a day: a move onto a day another holds goes back, and the story’s own on a held day is skipped', () => {
-    const onAnimalShow = checkWorld({ festivals: [{ id: 'harvest-cup', season: 'winter', day: 10 }] })
-    expect(onAnimalShow.errors).toEqual(['Festival harvest-cup: Winter 10 holds another festival; its move is skipped, so it keeps the game’s day, Winter 12'])
-    expect(festivalsOf({ world: onAnimalShow.value }).find((f) => f.id === 'harvest-cup')).toMatchObject({ season: 'winter', day: 12 })
+    const onAnimalShow = checkWorld({ calendarDays: 30, festivals: [{ id: 'harvest-cup', season: 'winter', day: 12 }] })
+    expect(onAnimalShow.errors).toEqual(['Festival harvest-cup: Winter 12 holds another festival; its move is skipped, so it keeps the game’s day, Winter 28'])
+    expect(festivalsOf({ world: onAnimalShow.value }).find((f) => f.id === 'harvest-cup')).toMatchObject({ season: 'winter', day: 28 })
     // Two swap their days: both moves stand.
-    const swapped = checkWorld({ festivals: [{ id: 'harvest-cup', day: 10 }, { id: 'animal-show', day: 12 }] })
+    const swapped = checkWorld({ calendarDays: 30, festivals: [{ id: 'harvest-cup', day: 12 }, { id: 'animal-show', day: 28 }] })
     expect(swapped.errors).toEqual([])
-    expect(festivalsOf({ world: swapped.value }).filter((f) => f.season === 'winter').map((f) => [f.id, f.day])).toEqual([['harvest-cup', 10], ['animal-show', 12]])
+    expect(festivalsOf({ world: swapped.value }).filter((f) => f.season === 'winter').map((f) => [f.id, f.day])).toEqual([['harvest-cup', 12], ['animal-show', 28]])
     // Two moved onto one free day: the first in the year keeps it.
     const both = checkWorld({ festivals: [{ id: 'fishing-derby', season: 'spring', day: 3 }, { id: 'flower-show', day: 3 }] })
-    expect(both.errors).toEqual(['Festival fishing-derby: Spring 3 holds another festival; its move is skipped, so it keeps the game’s day, Summer 10'])
+    expect(both.errors).toEqual(['Festival fishing-derby: Spring 3 holds another festival; its move is skipped, so it keeps the game’s day, Summer 21'])
     // The story's own, on a game festival's day or another of its own.
-    const own = checkWorld({ festivals: [{ id: 'moon-night', name: 'Moon Night', season: 'spring', day: 10 }, { id: 'kite-day', name: 'Kite Day', season: 'spring', day: 4 }, { id: 'sky-day', name: 'Sky Day', season: 'spring', day: 4 }] })
-    expect(own.errors).toEqual(['Festival moon-night: Spring 10 holds another festival; skipped', 'Festival sky-day: Spring 4 holds another festival; skipped'])
+    const own = checkWorld({ festivals: [{ id: 'moon-night', name: 'Moon Night', season: 'spring', day: 19 }, { id: 'kite-day', name: 'Kite Day', season: 'spring', day: 4 }, { id: 'sky-day', name: 'Sky Day', season: 'spring', day: 4 }] })
+    expect(own.errors).toEqual(['Festival moon-night: Spring 19 holds another festival; skipped', 'Festival sky-day: Spring 4 holds another festival; skipped'])
     expect(own.value?.festivals?.map((f) => f.id)).toEqual(['kite-day'])
   })
 
@@ -188,8 +188,8 @@ describe('the story’s days', () => {
     expect(storyDaysOf(null)).toEqual(GAME_STORY_DAYS)
     expect(storyDaysOf(withWorld({ names: { town: 'Fernwick' } }))).toEqual(GAME_STORY_DAYS)
     expect(GAME_STORY_DAYS.map((d) => [d.id, d.season, d.days[0], d.kind, d.scene === d.id])).toEqual([
-      ['blossom-viewing', 'spring', 6, 'minor', true], ['wishing-night', 'summer', 6, 'minor', true], ['first-cold-evening', 'autumn', 4, 'minor', true],
-      ['first-snow', 'winter', 2, 'minor', true], ['longest-night', 'winter', 6, 'minor', true], ['sweets-day', 'winter', 8, 'minor', true],
+      ['blossom-viewing', 'spring', 8, 'minor', true], ['wishing-night', 'summer', 9, 'minor', true], ['first-cold-evening', 'autumn', 8, 'minor', true],
+      ['first-snow', 'winter', 4, 'minor', true], ['longest-night', 'winter', 17, 'minor', true], ['sweets-day', 'winter', 22, 'minor', true],
     ])
   })
 
@@ -207,7 +207,7 @@ describe('the story’s days', () => {
     expect(storyDaysOn(PACK, day('spring', 1)).map((d) => d.id)).toEqual(['first-bell'])
     expect(storyDaysOn(PACK, day('spring', 1, 2)).map((d) => d.id)).toEqual(['first-bell'])
     expect(storyDaysOn(PACK, day('summer', 1))).toEqual([])
-    expect(storyDaysOn(PACK, day('autumn', 8)).map((d) => d.id)).toEqual(['market-day'])
+    expect(storyDaysOn(PACK, day('autumn', 8)).map((d) => d.id)).toEqual(['market-day', 'first-cold-evening'])
     // A minor day may share a festival's day: it's the story's own custom.
     expect(storyDaysOn(PACK, day('spring', 10)).map((d) => d.id)).toEqual(['kite-day'])
     expect(storyDayNameOf(PACK, 'market-day')).toBe('Market day')
@@ -231,9 +231,9 @@ describe('the story’s days', () => {
     expect(read.errors).toEqual([
       'Day 1: no id (lowercase words joined by -, at most 40 characters); skipped',
       'Day no-name: no name; the day is skipped',
-      'Day no-day: day is a day of the season, 1–12, or a list of different ones; the day is skipped',
-      'Day zero: day is a day of the season, 1–12, or a list of different ones; the day is skipped',
-      'Day twice-listed: day is a day of the season, 1–12, or a list of different ones; the day is skipped',
+      'Day no-day: day is a day of the season, 1–30, or a list of different ones; the day is skipped',
+      'Day zero: day is a day of the season, 1–30, or a list of different ones; the day is skipped',
+      'Day twice-listed: day is a day of the season, 1–30, or a list of different ones; the day is skipped',
       'Day loose: kind is one of holiday, minor; skipped',
       'Day loose: season is one of spring, summer, autumn, winter; skipped',
       `Day loose line: its line is ${long.length} characters; the screen shows ${LINE_LIMITS.worldLine}; skipped`,
@@ -248,12 +248,12 @@ describe('the year’s festivals from the story', () => {
 
   it('renames, moves and adds festivals, in the year’s order, each of the game’s keeping its rule', () => {
     expect(year.map((f) => [f.id, f.name, f.season, f.day, f.rule])).toEqual([
-      ['flower-show', 'Bloom Fair', 'spring', 10, 'flower-show'],
+      ['flower-show', 'Bloom Fair', 'spring', 19, 'flower-show'],
       ['lantern-walk', 'Lantern Walk', 'summer', 4, null],
-      ['fishing-derby', 'Fishing Derby', 'summer', 10, 'fishing-derby'],
-      ['cooking-contest', 'Cooking Contest', 'autumn', 10, 'cooking-contest'],
-      ['animal-show', 'Animal Show', 'winter', 10, 'animal-show'],
+      ['fishing-derby', 'Fishing Derby', 'summer', 21, 'fishing-derby'],
+      ['cooking-contest', 'Cooking Contest', 'autumn', 22, 'cooking-contest'],
       ['harvest-cup', 'The Long Run', 'winter', 11, 'harvest-cup'],
+      ['animal-show', 'Animal Show', 'winter', 12, 'animal-show'],
     ])
     expect(festivalsOf(noPack())).toBe(FESTIVALS)
     expect(festivalsOf(PACK)).toBe(year)
@@ -263,18 +263,18 @@ describe('the year’s festivals from the story', () => {
 
   it('falls on the story’s days: the moved one on its new day, never its old, every year', () => {
     expect(festivalOn(day('winter', 11), year)).toMatchObject({ id: 'harvest-cup', name: 'The Long Run' })
-    expect(festivalOn(day('winter', 12), year)).toBeNull()
+    expect(festivalOn(day('winter', 28), year)).toBeNull()
     expect(festivalOn(day('summer', 4, 3), year)?.id).toBe('lantern-walk')
     expect(nextFestival(day('summer', 1), year)).toMatchObject({ festival: { id: 'lantern-walk' }, inDays: 3 })
-    expect(nextFestival(day('winter', 12), year)).toMatchObject({ festival: { id: 'flower-show' }, day: day('spring', 10, 2) })
+    expect(nextFestival(day('winter', 13), year)).toMatchObject({ festival: { id: 'flower-show' }, day: day('spring', 19, 2) })
     // Without the story, the game's own.
-    expect(festivalOn(day('winter', 12))?.id).toBe('harvest-cup')
+    expect(festivalOn(day('winter', 28))?.id).toBe('harvest-cup')
   })
 
   it('opens festival night, holds a festival trigger and a chapter’s gate on the story’s day', () => {
     const cup = farm(day('winter', 11))
     expect(eveningSlots(cup, year).festival?.id).toBe('harvest-cup')
-    expect(eveningSlots({ ...cup, calendar: { day: day('winter', 12) } }, year).festival).toBeNull()
+    expect(eveningSlots({ ...cup, calendar: { day: day('winter', 28) } }, year).festival).toBeNull()
     expect(eveningSlots(farm(day('summer', 4)), year).festival?.name).toBe('Lantern Walk')
     const talk = { at: 'town', place: 'cafe' } as const
     expect(triggerHolds(cup, { kind: 'festival', festival: 'harvest-cup' }, 1, talk, year)).toBe(true)
@@ -289,7 +289,7 @@ describe('the year’s festivals from the story', () => {
     expect(morning.summary!.news).toContainEqual({ kind: 'festival', festival: 'lantern-walk', when: 'today' })
     const eve = runNight(farm(day('winter', 9)), { story: PACK })
     expect(eve.summary!.news).toContainEqual({ kind: 'festival', festival: 'harvest-cup', when: 'tomorrow' })
-    expect(parseSaveV5(json(eve))).toEqual(eve)
+    expect(parseSaveV6(json(eve))).toEqual(eve)
   })
 })
 
@@ -330,7 +330,7 @@ describe('Town notes', () => {
     const morning = runNight(welcomed, { story: PACK })
     expect(morning.diary.notes).toEqual(['first-friend'])
     expect(morning.summary!.news).toContainEqual({ kind: 'notes', ids: ['first-friend'] })
-    expect(parseSaveV5(json(morning))).toEqual(morning)
+    expect(parseSaveV6(json(morning))).toEqual(morning)
     // The next night names nothing new.
     const next: SaveV4 = { ...morning, summary: null }
     expect(runNight(next, { story: PACK }).summary!.news.some((n) => n.kind === 'notes')).toBe(false)
@@ -346,10 +346,10 @@ describe('Town notes', () => {
   it('loads an older v4 with no notes in its Diary, never moving its updatedAt', () => {
     const older = json(farm()) as unknown as { diary: Record<string, unknown>; account: { updatedAt: string } }
     delete older.diary.notes
-    const read = parseSaveV5(older)
+    const read = parseSaveV6(older)
     expect(read.diary.notes).toEqual([])
     expect(read.account.updatedAt).toBe(older.account.updatedAt)
-    expect(() => parseSaveV5({ ...json(farm()), diary: { ...farm().diary, notes: ['Not An Id'] } })).toThrow()
+    expect(() => parseSaveV6({ ...json(farm()), diary: { ...farm().diary, notes: ['Not An Id'] } })).toThrow()
   })
 })
 
