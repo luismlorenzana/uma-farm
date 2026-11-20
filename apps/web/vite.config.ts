@@ -49,7 +49,8 @@ export default defineConfig(({ mode }) => {
         registerType: 'prompt',
         injectRegister: null,
         // The icons are committed PNGs in public/icons. iOS keeps the icon it saw at Add to Home Screen.
-        includeAssets: ['icons/icon-64.png', 'icons/apple-touch-icon.png'],
+        includeAssets: ['icons/uma-farm-64.png', 'icons/uma-farm-touch-180.png'],
+        includeManifestIcons: false,
         manifest: {
           name: 'Uma Farm',
           short_name: 'Uma Farm',
@@ -61,14 +62,15 @@ export default defineConfig(({ mode }) => {
           background_color: '#0f1620',
           theme_color: '#0f1620',
           icons: [
-            { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-            { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: '/icons/uma-farm-192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/icons/uma-farm-512.png', sizes: '512x512', type: 'image/png' },
+            { src: '/icons/uma-farm-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-          globIgnores: ['**/node_modules/**/*'],
+          // The browser can fetch the large install icons on demand, outside the offline game cache.
+          globIgnores: ['**/node_modules/**/*', 'icons/uma-farm-512.png', 'icons/uma-farm-maskable-512.png'],
           // "Work done" notifications (copied from uma-rpg): the handlers live in public/push-sw.js.
           importScripts: ['push-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
