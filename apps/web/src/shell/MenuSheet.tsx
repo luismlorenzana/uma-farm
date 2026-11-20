@@ -10,6 +10,7 @@ import { lockOf, placeLink } from '../loop/farm-map'
 import { useLoopSave } from '../save/game'
 
 const ACCOUNT = { key: 'account', name: 'Account', to: '/account' }
+const GUIDES = { key: 'guide', name: 'Farm guides', to: '/guide' }
 
 export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
@@ -42,7 +43,7 @@ function LoopMenu() {
   const ask = useAskBeforeEnd()
   return (
     <>
-      <PlaceMenu groups={loopMenuGroups(save)} extra={[ACCOUNT]} />
+      <PlaceMenu groups={loopMenuGroups(save)} extra={[GUIDES, ACCOUNT]} />
       <div className="mt-3 flex items-center justify-between gap-3 rounded-md border border-hairline px-3 py-1" data-setting="ask-end-day">
         <span className="text-[14px] font-semibold">Ask before ending the day</span>
         {/* A 44 pt target around the track, as the Notifications switch. */}

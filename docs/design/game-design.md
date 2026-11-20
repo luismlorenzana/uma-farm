@@ -72,7 +72,7 @@ A thin bar is always visible: the day and season, the actions left, and the gold
 | **The mine** | Work a face once; take the stairs | 1 / free |
 | **Stations** | Start a load (flour, planks, fillets, ingots, cut gems) | 1 |
 | **The bin** | Ship what you choose | 1 |
-| **The town** | Go into town | 1 |
+| **The town** | Go into town | 0 |
 | | Shop, order a build, borrow or repay at the mayor's office | Free, once in town |
 | **The Umas** | Introduce yourself, talk, give a gift, invite her to work | 1 each |
 | | A hangout or a date | 2 |

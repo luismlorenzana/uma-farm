@@ -4,7 +4,8 @@ import {
   itemNameOf, MAX_EXPEDITION_PARTY, MAX_EXPEDITION_SUPPLIES, MEALS_A_DAY, placeBuilt, REGION_IDS, type FarmSave, type RegionId,
   type TalentOf,
 } from '@farm/domain'
-import { Button, HelpButton, Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useState } from 'react'
 import { buildPlace, sendParty } from '../loop/actions'
 import { plural, shortDate } from '../loop/words'
@@ -71,10 +72,10 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <Tabs label="Expeditions" value={tab} onChange={setTab}
           options={[{ value: 'regions', label: 'Regions' }, { value: 'party', label: 'Send a party' }, { value: 'log', label: 'Away and log' }]} />
-        <HelpButton title="Expeditions" label="How expeditions work">
+        <GuideButton topic="expeditions" title="Expeditions" label="How expeditions work">
           <p>Farmhands work their usual shift before leaving tonight. Pack two meals per farmhand per day away. Takeout covers any shortage.</p>
           <p>Kitchen dishes add two power per star. Power near the region’s need can mean Success or Retreat.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       {tab === 'regions' && (
         <ul className="grid gap-2 sm:grid-cols-2" aria-label="Regions">

@@ -15,7 +15,8 @@ import {
   availableStock, exactMenuLine, goodName, knownRestaurantRecipes, menuTakes, parseStockKey, restaurantRecipe, type MenuLine, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -238,14 +239,14 @@ function Head({ title, help = false }: { title: string; help?: boolean }) {
     <div className="flex items-center justify-between gap-2">
       <h3 className="text-micro">{title}</h3>
       {help && (
-        <HelpButton title="The Kitchen" label="How the Kitchen works">
+        <GuideButton topic="kitchen" title="The Kitchen" label="How the Kitchen works">
           <p>Once a day, one action: cook a menu of up to three recipes at the stove for 60 seconds. The menu shares the level’s dishes.</p>
           <p>A recipe takes two of its main and one side for each dish, each at one good and one star. The dishes’ stars are their goods’ average, plus the play’s tier.</p>
           <p>Rough makes the dishes as they are; Good a quarter more; Fine half again and a star more; Masterwork twice as many and two stars more.</p>
           <p>An assistant makes more: her Cooking and her cooking rank. One of her actions tonight is the play’s.</p>
           <p>The staff meal, free once a day, feeds tonight’s table from your dishes: one dish for every {MOUTHS_A_DISH} at the table, in place of their {MEALS_A_DAY} meals. Everyone who eats it is well fed: ★1–2 through tomorrow, ★3–4 two days, ★5 three.</p>
           <p>Restaurant dishes can ship. All dishes can be saved for meals or served at the Restaurant.</p>
-        </HelpButton>
+        </GuideButton>
       )}
     </div>
   )

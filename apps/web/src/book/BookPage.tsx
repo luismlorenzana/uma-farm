@@ -12,7 +12,7 @@ import {
   atHome, awayOn, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, knownRestaurantRecipes, loansOwed, onFarmToday, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
-import { HelpButton } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useLoopSave } from '../save/game'
@@ -61,14 +61,14 @@ function Book({ save }: { save: FarmSave }) {
     <main className="@container absolute inset-0 space-y-3 overflow-y-auto overscroll-contain p-4" data-page="book">
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Farm Book</h1>
-        <HelpButton title="The farm’s book" label="About the book">
+        <GuideButton topic="staff" title="The farm’s book" label="About the book">
           <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who’s on it today and what you can build.</p>
           <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, and each spouse living on the farm. A farmhand costs her meals on her farm days.</p>
           <p>Everyone who eats on the farm eats twice a night, from the pantry first. What it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep. Cook in the farmhouse kitchen, or set a farmhand to Cook.</p>
           <p>Short of it, the rest is owed. The first short night warns you; from the second, the farmhands work at half pace until it’s paid. Nobody leaves, and nothing is lost.</p>
           <p>The mayor’s office in town lends toward a build. Each night’s income repays a little, before the upkeep.</p>
           <p>Tap a card to open its place.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       <Money save={save} />
       <WorkBoard save={save} />

@@ -172,7 +172,7 @@ export const faceAt = (dig: DigId): Promise<Face> => act((s) => {
 export const stairsAt = (dig: DigId) => change((s) => takeStairs(s, dig))
 /** Ships what's picked: one action for the crate. */
 export const shipPicked = (lines: readonly CrateLine[]) => change((s) => shipCrate(s, lines))
-/** Goes into town: one action, the town and its shop open for the rest of the day. */
+/** Goes into town for the day without spending an action. */
 export const intoTown = () => change(goToTown)
 
 /** Pays for a place to build: its gold and goods now, standing tomorrow morning. */

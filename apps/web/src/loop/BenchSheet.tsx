@@ -4,7 +4,8 @@
 // Also the Forge's quick look once the bench stands (`BenchPeek`). Loaded on demand.
 import { benchOpen, BENCH_WORDS, goodName, ringName, type BenchInput, type SaveV4 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
@@ -85,9 +86,9 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
             <p className="text-[14px] font-semibold" data-smith>{smith}</p>
             <p className="text-[13px] text-ink-soft">{BENCH_TEXT.rule}</p>
           </div>
-          <HelpButton title="The ring bench" label="About the ring bench">
+          <GuideButton topic="rings" title="The ring bench" label="About the ring bench">
             {BENCH_TEXT.help.map((p) => <p key={p}>{p}</p>)}
-          </HelpButton>
+          </GuideButton>
         </div>
         {note && (
           <p className="flex items-center gap-2 rounded-md bg-sunken px-3 py-2 text-[14px] font-semibold" data-bench-note={note.ring}>

@@ -13,7 +13,8 @@ import {
   BATCH_MEALS, houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, longGameEnabled, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -100,9 +101,9 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
             <div className="space-y-3 pb-2" data-homestead>
               <div className="flex items-center justify-between">
                 <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={view.married}>Married {view.married}{cast !== null ? `/${cast}` : ''} · {view.rooms.taken}/{view.rooms.rooms} rooms</span>
-                <HelpButton title={HOMESTEAD_TEXT.title} label="How the homestead works">
+                <GuideButton topic="household" title={HOMESTEAD_TEXT.title} label="How the homestead works">
                   {HOMESTEAD_TEXT.help.map((line) => <p key={line}>{line}</p>)}
-                </HelpButton>
+                </GuideButton>
               </div>
               {view.married > 0 && longGameEnabled(save, pack) && <Link className="flex min-h-11 items-center rounded-md border border-hairline px-3 font-semibold"
                 to={withParam(location, 'visits', '1')} state={{ back: true }}>Night visits ›</Link>}

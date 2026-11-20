@@ -9,7 +9,8 @@ import {
   buildCostWords, buildOrders, farmRankOf, HOUSE_NAME_MAX, houseNameIssue, LOAN_FEE, loanFee, LOAN_NIGHTS, loanLimit, loanLockWords, loanSlots, TWO_LOANS_FROM, type BuildOrder,
   type FarmSave,
 } from '@farm/domain'
-import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useState } from 'react'
 import { borrowAndBuild, buildPlace, repayTheLoan } from '../loop/actions'
 import { buildHouseNamed } from '../loop/homestead-actions'
@@ -60,11 +61,11 @@ function Orders({ save, names, busy, run }: { save: FarmSave; names: ProjectName
     <section aria-label="Order a build" data-orders={orders.length}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-micro">Order a build</h3>
-        <HelpButton title="Ordering a build" label="How ordering works">
+        <GuideButton topic="builds" title="Ordering a build" label="How ordering works">
           <p>Build anything the Farm Rank offers with your own gold and goods, here or at its place on the farm.</p>
           <p>Short of gold? The office lends what it’s short, rounded up to 100g, with a {Math.round(LOAN_FEE * 100)}% fee, and orders it at once. You bring the goods.</p>
           <p>A place stands tomorrow morning; a house stands at once.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       {orders.length === 0 ? <p className="py-2 text-[14px] text-ink-soft" data-no-orders>Nothing to build at this rank.</p> : (
         <ul className="divide-y divide-hairline rounded-md border border-hairline">
@@ -121,7 +122,10 @@ function Loans({ save, names, busy, run }: { save: FarmSave; names: ProjectNames
   const slots = loanSlots(save)
   return (
     <section aria-label="Loans" data-office-loans={save.farm.loans.length}>
-      <h3 className="text-micro">Loans</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-micro">Loans</h3>
+        <GuideButton topic="loans" label="How loans work" />
+      </div>
       <p className="pb-1 text-[13px] text-ink-soft" data-terms>
         Up to {gold(loanLimit(save))} at Farm Rank {rank} · {slots === 1 ? `one at a time (two from Farm Rank ${TWO_LOANS_FROM})` : 'two at a time'} · {Math.round(LOAN_FEE * 100)}% fee · a
         tenth a night from income, for about {LOAN_NIGHTS} nights

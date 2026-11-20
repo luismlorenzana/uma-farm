@@ -11,7 +11,8 @@ import {
   type ContestBoard, type ContestEntry, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
@@ -152,12 +153,12 @@ function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
           <section className="space-y-2" aria-label="Your dish">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-micro">Your dish</h3>
-              <HelpButton title={name} label={`How ${theContest(name)} works`}>
+              <GuideButton topic="festivals" title={name} label={`How ${theContest(name)} works`}>
                 <p>Cook one dish live at the stove for 60 seconds. Its stars are the Kitchen’s: its goods’ average, plus a star from Fine and two from Masterwork.</p>
                 <p>The town’s cook judges it: 10 a star, plus half your play’s score. The orchard and the ranch cook too, better as your Farm Rank grows. Ties go to you.</p>
                 <p>1st pays 600g × the season’s number × the year and 150 Farm Rank points; 2nd half the gold and 75 points; 3rd a fifth and 25. The points count tonight.</p>
                 <p>A cook, if you pick one, spends one of her actions tonight. A 1st counts toward her cooking Legend.</p>
-              </HelpButton>
+              </GuideButton>
             </div>
             <ul className="grid grid-cols-2 gap-1.5" aria-label="Recipes known">
               {known.map((dish) => {

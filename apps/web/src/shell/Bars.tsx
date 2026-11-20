@@ -77,7 +77,7 @@ export function OutOfActions() {
           }} data-action="end-the-day">End the day</Button>
         </div>
       }>
-      <p className="py-1 text-[15px]" data-out-of-actions>The day’s work is done. Building, the evening and a shop you’re already in take no actions.</p>
+      <p className="py-1 text-[15px]" data-out-of-actions>The day’s work is done. You can still build, go into town, shop or choose an evening companion.</p>
       {save && days && eventActionsLeft(save, days) > 0 && (
         <p className="text-[14px] text-ink-soft" data-event-actions-left>{eventActionsLeft(save, days)} left for events: the calendar has today’s.</p>
       )}

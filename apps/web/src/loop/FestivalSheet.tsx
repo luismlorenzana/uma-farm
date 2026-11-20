@@ -7,7 +7,8 @@ import {
   type CupEntry, type FarmContest, type FarmSave, type FishingSpotId, type ShowCue,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
@@ -91,10 +92,10 @@ export default function FestivalSheet() {
             <select aria-label="Festival contest" className={SELECT} value={id} onChange={(e) => setChosen(e.target.value as FarmContest)}>
               {CONTESTS.map((id) => <option key={id} value={id}>{days.festivals.find((day) => day.rule === id)?.name ?? FESTIVAL_CONTESTS[id].name}</option>)}
             </select>
-            <HelpButton title={name} label="Contest rules">
+            <GuideButton topic="festivals" title={name} label="Contest rules">
               <p>Entries take three actions. Festival event actions go first. Each Uma who helps on the day spends a work action.</p>
               <p>Rival scores follow Farm Rank. Ties go to you.</p>
-            </HelpButton>
+            </GuideButton>
           </div>
           {last && <Result id={id} result={last} nameOf={nameOf} save={save} />}
           {last?.day !== day && <Entry key={id} id={id} save={save} context={context} act={act} nameOf={nameOf} />}

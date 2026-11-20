@@ -114,6 +114,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await act(async () => root.unmount())
   host.remove()
+  setPortraitSource(null)
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
   vi.restoreAllMocks()
@@ -145,6 +146,8 @@ describe('her event from her row', () => {
   })
 
   it('plays a Walk to its grade, then the level-up card: the sum, the perk, the Memory, the unlock and the next rung', async () => {
+    const portraits = syntheticDialoguePortraits(Number(ONE), ['spring'], ['happy'])
+    setPortraitSource({ portraitsOf: async (id) => id === ONE ? portraits : null, art: { artUrl: async (p) => `blob:${p}`, hold: () => () => undefined } })
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(ready('friendship', 4, 'f5', 40)) })
     const before = save().account.updatedAt
     await render(<HeartsPage />, `/hearts?event=${ONE}`)
@@ -163,6 +166,7 @@ describe('her event from her row', () => {
     await click($('[data-action="play-done"]'))
     const card = await tapUntil('[data-level-up]')
     expect(card.dataset.levelUp).toBe('f5')
+    await find(`[data-level-up] [data-avatar="${ONE}"] [data-picture="spring"] img[data-picture-cut]`)
     expect($('[data-sum]')?.textContent).toBe('+50 event · +30 choice · +30 Perfect = +110 toward Friendship 6 (+40 banked)')
     expect($('[data-card-perk]')?.textContent).toBe('Perk×1.05 rank points')
     expect($('[data-card-memory]')?.textContent).toContain('“The long way round.” saved')
@@ -287,7 +291,6 @@ describe('her bust on the dialogue engine', () => {
   // Master data's synthetic family for the farmer stand-in only: four outfits, four faces (fake pictures).
   const PORTRAITS = syntheticDialoguePortraits(Number(ONE), ['spring', 'farm-work', 'fall', 'garden-party'], ['happy', 'determined', 'thinking', 'shy'])
   beforeEach(() => setPortraitSource({ portraitsOf: async (id) => (id === ONE ? PORTRAITS : null), art: { artUrl: async (p) => `blob:${p}`, hold: () => () => undefined } }))
-  afterEach(() => setPortraitSource(null))
 
   it('wears the event’s own outfit, else its moment’s, else the day’s season; her face changes line by line', async () => {
     const played = farm()

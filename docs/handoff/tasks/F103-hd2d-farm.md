@@ -73,6 +73,7 @@ published assets and artwork review are the gates for a player-facing rollout.
 - The high-resolution app links use the existing destinations. When an open sheet narrows the map, the links
   move into a compact grid. Context loss and a failed lazy import restore the tile map. The preview choice stays
   in the session; the renderer is downloaded on first entry and cached separately from the main app.
+- The camera looks down at 41 degrees, facing the yard straight on so the main path reads horizontally.
 - The **Phone test** HUD records up to ten minutes with the map in the foreground. It gives FPS, p95 frame gap,
   draw calls, and a renderer memory estimate. Record the phone model, quality tier, roster, transferred bytes
   on first entry and any dimming or heat beside those numbers.

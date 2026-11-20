@@ -16,7 +16,8 @@ import {
   harvestGrade, HOME_NAMES, loadsLeft, loadsToday, MAX_SURPLUS, needsWater, parseStockKey, seedOutput, stationJobUnits, type FishMode, type FishingSpotId,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, Chip, HelpButton, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { Button, Chip, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { GuideButton } from '../guide/Guide'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
@@ -57,14 +58,14 @@ export function WorkBoard({ save }: { save: FarmSave }) {
     <section aria-label="The work board" className="space-y-2" data-book="board" data-hands={hands.length}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-display text-[18px] font-bold text-ink">Work board</h2>
-        <HelpButton title="The work board" label="About the work board">
+        <GuideButton topic="staff" title="The work board" label="About the work board">
           <p>A friend you invite to work is a farmhand. She keeps her life in town, and comes to the farm on her farm days, the days it leaves free. There she gives the farm 3 actions: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
           <p>She works your tasks overnight, before the crops grow: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The morning says what she did.</p>
           <p>Production tasks train her aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
-        </HelpButton>
+        </GuideButton>
       </div>
       {hands.length > 0 && <>
         <ProductionForecast before={save} after={forecast.save} pack={pack} />
