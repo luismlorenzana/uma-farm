@@ -10,6 +10,10 @@ import { storyPackFrom } from '../story/pack'
 import { eventOf, householdOf } from '../story/placeholders'
 import { professionShift, WEEKDAYS } from '../town/professions'
 import { playEvent } from './events'
+import { birthdaysOf, dayOfYear } from './days'
+import { planWedding } from './wedding'
+import { readiness } from './ready'
+import { LAUNCH_CAST } from '../story/launch'
 import { spendDuoEvening } from './evening'
 import { householdPlay, householdReady, readHousehold } from './household'
 import {
@@ -45,6 +49,43 @@ function visit(save: SaveV4, id = a): SaveV4 {
 }
 
 describe('marriages and the festival calendar', () => {
+  it('spreads the launch birthdays over all dates and keeps them when more Umas join', () => {
+    const cast = (list: readonly string[]) => storyPackFrom({ cast: { umas: list.map(characterId => ({ characterId })) }, umas: {}, routes: {} })
+    const original = new Map(LAUNCH_CAST.map((id, i) => [id, { month: i % 2 ? 3 : 4, day: 18 }]))
+    const launch = birthdaysOf(cast(LAUNCH_CAST), original)
+    const expanded = birthdaysOf(cast([...LAUNCH_CAST, ...ids]), original)
+    const load = (dates: ReadonlyMap<string, number>) => Array.from({ length: DAYS_PER_YEAR }, (_, i) =>
+      [...dates.values()].filter(day => day === i + 1).length)
+    expect(launch.size).toBe(50)
+    expect(new Set(load(launch))).toEqual(new Set([1, 2]))
+    expect(expanded.size).toBe(100)
+    expect(new Set(load(expanded))).toEqual(new Set([2, 3]))
+    for (const [id, date] of launch) expect(expanded.get(id)).toBe(date)
+  })
+
+  it('keeps an early wedding plan through the proposal, opens on the date, and stores the real ceremony date', async () => {
+    const base = newFarm()
+    expect(() => planWedding(base, a, 53)).toThrow('after the confession')
+    const accepted = { ...base, love: { ...base.love, [a]: { ...base.love[a]!, stage: 'romance' as const } } }
+    const planned = planWedding(accepted, a, 53)
+    expect(parseSaveV5(planned).love[a]?.weddingDay).toBe(53)
+    expect(planWedding(planned, a, null).love[a]?.weddingDay).toBeUndefined()
+    const proposal = moveDay({ ...planned, love: { ...planned.love, [a]: { ...planned.love[a]!, stage: 'proposal', level: 10 } } }, 50)
+    const event = await eventOf(pack, a, 'proposal')
+    const paid = playEvent({ ...proposal, items: addGoods(proposal.items, 'ring-g3', 1, 1) }, pack, a, {
+      event, picks: event.steps.flatMap(step => 'choice' in step ? [0] : []), plays: [], ring: 'ring-g3',
+    })
+    const engaged = paid.save
+    expect(engaged.love[a]?.weddingDay).toBe(53)
+    expect(readiness(moveDay(engaged, 52), pack, a).waits).toEqual({ kind: 'wedding-day', day: 53 })
+    expect(readiness(moveDay(engaged, 53), pack, a).ready).toBe(true)
+    const married = await wed(moveDay(engaged, 54), a)
+    expect(parseSaveV5(married).love[a]?.wed).toBe(54)
+    expect(married.love[a]?.weddingDay).toBeUndefined()
+    expect(anniversaryOffer(moveDay(married, 53 + DAYS_PER_YEAR), a)).toBeNull()
+    expect(anniversaryOffer(moveDay(married, 54 + DAYS_PER_YEAR), a)).toBe(1)
+  })
+
   it('houses all fifty after actual weddings and holds the soft ending on Winter 12, with the festival exactly one year later', async () => {
     let save = newFarm()
     const order = [...ids].reverse()
@@ -158,6 +199,27 @@ describe('married life', () => {
     expect(greaterLoveOf(save, a).memories).toHaveLength(15)
   })
 
+  it('celebrates a spouse’s birthday and anniversary separately on the same day, with one shared formal wardrobe', async () => {
+    const birthdayDay = 2 + DAYS_PER_YEAR
+    const birthdays = new Map([[a, dayOfYear(birthdayDay)]])
+    const newlywed = await wed(moveDay(newFarm(), 2), a)
+    let save = moveDay(newlywed, birthdayDay - 1)
+    expect(planVisit(save, pack, [a], 'birthday', noBirthday, birthdays)).toBeNull()
+    save = moveDay(save, birthdayDay)
+    expect(planVisit(save, pack, [b], 'birthday', noBirthday, birthdays)).toBeNull()
+    const birthday = planVisit(save, pack, [a], 'birthday', noBirthday, birthdays)!
+    expect(birthday).toMatchObject({ birthday: 2, looks: [1] })
+    expect(() => completeVisit(save, pack, { ...birthday, birthday: 3 }, 0, noBirthday, birthdays)).toThrow()
+    save = completeVisit(save, pack, birthday, 0, noBirthday, birthdays)
+    expect(planVisit(save, pack, [a], 'birthday', noBirthday, birthdays)).toBeNull()
+    const anniversary = planVisit(save, pack, [a], 'anniversary', noBirthday, birthdays)!
+    save = completeVisit(save, pack, anniversary, 1, noBirthday, birthdays)
+    expect(nightVisits(save)).toHaveLength(2)
+    expect(greaterLoveOf(save, a)).toMatchObject({ birthday: 2, anniversary: 1, points: 2, memories: [birthday, anniversary] })
+    expect(parseSaveV5(JSON.parse(JSON.stringify(save))).longGame).toEqual(save.longGame)
+    expect(planVisit(moveDay(save, birthdayDay + DAYS_PER_YEAR), pack, [a], 'birthday', noBirthday, birthdays)?.birthday).toBe(3)
+  })
+
   it('uses one slot for an eligible pair, keeps both memories after removal, and respects expedition and birthday availability', async () => {
     let save = await wed(await wed(newFarm(), a), b)
     save = editDuo(save, pack, [b, a], false)
@@ -207,17 +269,20 @@ describe('married life', () => {
 
   it('validates story slots and reciprocal duo data, preserving approved art cues and rejecting unknown entries', () => {
     const ctx = { umas: new Set([...ids, 's9800001']) }
-    const script = { sitting: 'The house is quiet tonight.', illustration: 'quiet-room' }
-    const bible = checkBible({ characterId: a, marriedLife: { pajamas: { 1: script, 11: script } } }, a, ctx)
+    const script = { sitting: 'The house is quiet tonight.', illustration: 'quiet-room', emotes: { morning: 'tender' } }
+    const birthday = { bedside: 'Thank you for spending today with me.', emotes: { bedside: 'loving' } }
+    const bible = checkBible({ characterId: a, marriedLife: { pajamas: { 1: script, 11: script }, birthday: { 1: birthday } } }, a, ctx)
     const household = checkHousehold({
       duos: [[b, a], [a, b], [a, a], [a, 's9800001']],
-      duoLines: { [`${a}:${b}`]: { [a]: { sitting: 'The table is set for three.' } } },
+      duoLines: { [`${a}:${b}`]: { [a]: { sitting: 'The table is set for three.', emotes: { sitting: 'loving' } } } },
     }, ctx)
-    expect(bible.value?.marriedLife).toEqual({ pajamas: { 1: script } })
+    expect(bible.value?.marriedLife).toEqual({ pajamas: { 1: script }, birthday: { 1: birthday } })
     expect(bible.errors).toHaveLength(1)
     expect(household.errors).toHaveLength(2)
     expect(household.value?.duos).toEqual([[a, b], [a, 's9800001']])
     const authored = { ...pack, household: household.value, bibles: new Map([[a, bible.value!]]) }
-    expect(visitScript(authored, { day: 1, kind: 'pajamas', who: [a, b], looks: [1, 1] }, 0)).toEqual({ ...script, sitting: 'The table is set for three.' })
+    expect(visitScript(authored, { day: 1, kind: 'pajamas', who: [a, b], looks: [1, 1] }, 0))
+      .toEqual({ ...script, sitting: 'The table is set for three.', emotes: { morning: 'tender', sitting: 'loving' } })
+    expect(visitScript(authored, { day: 1, kind: 'birthday', who: [a], looks: [1], birthday: 1 }, 0)).toEqual(birthday)
   })
 })

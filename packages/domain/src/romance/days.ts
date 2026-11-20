@@ -1,7 +1,7 @@
 // Birthdays and anniversaries.
 //
-// Her birthday is master data's character set (`birthday: { month, day }`), read at runtime and never in git; the cast
-// file's optional `birthday` wins where present. A real date maps onto the 48-day year by quarters of the month:
+// The cast's birthday or master date supplies its order in the year. The launch cast is spread over all 48 dates.
+// Expansion members fill the least occupied dates without changing existing birthdays. A raw date maps by quarters:
 //
 //   March–May Spring · June–August Summer · September–November Autumn · December–February Winter
 //   season day = 4 × (the month's place in its season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4
@@ -23,6 +23,7 @@ import { ANIMALS, keptKinds } from '../ranch/ranch'
 import type { SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
+import { LAUNCH_CAST } from '../story/launch'
 import { birthdayOf } from '../story/placeholders'
 import { isAnniversary } from './love'
 import { perkLineOf } from './perks'
@@ -47,13 +48,38 @@ export interface MonthDay {
 export type Birthdays = ReadonlyMap<string, number>
 export const NO_BIRTHDAYS: Birthdays = new Map()
 
-/** The cast's birthdays: her cast entry's `birthday` where it has one, else master data's character set's;
- * none for someone neither holds. */
+/** Small story packs retain their written dates. A full cast spreads its birthdays across the farm year. */
 export function birthdaysOf(pack: Pick<StoryPack, 'cast'>, master: ReadonlyMap<string, MonthDay>): Birthdays {
   const out = new Map<string, number>()
-  for (const u of pack.cast.umas) {
-    const date = birthdayOf(pack, u.characterId, master)
-    if (date) out.set(u.characterId, farmBirthday(date.month, date.day))
+  const launch = new Map(LAUNCH_CAST.map((id, i) => [id, i]))
+  const rows = pack.cast.umas.map(({ characterId: id }, i) => {
+    const rank = launch.get(id)
+    const suggested = 1 + Math.floor(rank === undefined ? i * DAYS_PER_YEAR / pack.cast.umas.length : rank * DAYS_PER_YEAR / LAUNCH_CAST.length)
+    return { id, date: birthdayOf(pack, id, master), suggested }
+  })
+  if (rows.length < DAYS_PER_YEAR) {
+    for (const { id, date } of rows) if (date) out.set(id, farmBirthday(date.month, date.day))
+    return out
+  }
+  const ordinal = (row: typeof rows[number]) => row.date ? ((row.date.month + 9) % 12) * 32 + row.date.day : row.suggested * 8
+  const ordered = rows.slice().sort((a, b) => ordinal(a) - ordinal(b) || a.id.localeCompare(b.id))
+  const core = ordered.filter(row => launch.has(row.id))
+  const first = core.length === LAUNCH_CAST.length ? core : ordered
+  const load = Array<number>(DAYS_PER_YEAR + 1).fill(0)
+  first.forEach(({ id }, i) => {
+    const day = 1 + Math.floor((i + 0.5) * DAYS_PER_YEAR / first.length)
+    out.set(id, day)
+    load[day]!++
+  })
+  for (const { id, date, suggested } of ordered) {
+    if (out.has(id)) continue
+    const ideal = date ? farmBirthday(date.month, date.day) : suggested
+    let best = 1
+    for (let day = 2; day <= DAYS_PER_YEAR; day++) {
+      if (load[day]! < load[best]! || (load[day] === load[best] && Math.abs(day - ideal) < Math.abs(best - ideal))) best = day
+    }
+    out.set(id, best)
+    load[best]!++
   }
   return out
 }

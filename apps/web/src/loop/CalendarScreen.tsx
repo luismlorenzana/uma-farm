@@ -11,11 +11,12 @@
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
-  actionsLeft, CELEBRATIONS, celebrationDate, celebrationTitle, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
+  actionsLeft, canPlanWedding, celebrationDate, celebrationTitle, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
+  householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, NIGHT_VISITS, nightVisits, planWedding, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
-import { CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
+import { Button, CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router'
@@ -27,34 +28,46 @@ import { useSpecialDays, useStory } from '../story/story'
 import { cellFaces, cellLabel, cellMarks, dayHeading, eventActionWords, faceWords, faintFace } from './calendar-view'
 import { townRows, type TownRow } from './schedule-words'
 import { SEASON_COLOR, shortDate, whenWords } from './words'
+import { changeHomestead } from './homestead-actions'
 
 export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   const story = useStory()
   const special = useSpecialDays()
   const master = useMaster()
+  const location = useLocation()
+  const request = new URLSearchParams(location.search).get('weddingPlan')
+  const planner = request && canPlanWedding(save?.love[request]) ? request : null
   const today = save?.calendar.day ?? 1
-  const [season, setSeason] = useState<Season>(dateOf(today).season)
-  const [picked, setPicked] = useState<number>(today)
+  const [picked, setPicked] = useState(() => planner ? save?.love[planner]?.weddingDay ?? today + 1 : today)
+  const { year, season } = dateOf(picked)
   const pack = useMemo(() => story ?? noPack(), [story])
   const days = useMemo((): SpecialDays => special ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }, [special, story])
-  const list = useMemo(() => (save ? seasonDays(save, pack, days, season) : []), [save, pack, days, season])
+  const list = useMemo(() => (save ? seasonDays(save, pack, days, season, year) : []), [save, pack, days, season, year])
   if (!save) return null
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
-  const chosen = list.find((d) => d.day === picked) ?? list.find((d) => d.when !== 'past') ?? list[0]!
-  const pick = (s: Season) => {
-    setSeason(s)
-    const first = seasonDays(save, pack, days, s)
-    setPicked((first.find((d) => d.day === today) ?? first.find((d) => d.when !== 'past') ?? first[0]!).day)
+  const chosen = list.find(d => d.day === picked)!
+  const pick = (s: Season, y = year) => {
+    const now = dateOf(today)
+    setPicked(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }))
   }
   return createPortal(
     <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-50 flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="Calendar" data-calendar>
       <Header save={save} days={days} season={season} onSeason={pick} onClose={onClose} />
       <div className="flex min-h-0 flex-1 gap-2 px-2 pb-2">
-        <ol className="grid min-w-0 flex-[3] grid-cols-6 grid-rows-2 gap-1" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}>
-          {list.map((d) => <Cell key={d.day} day={d} chosen={d.day === chosen.day} nameOf={nameOf} onPick={() => setPicked(d.day)} />)}
-        </ol>
-        <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} />
+        <section className="flex min-w-0 flex-[3] flex-col rounded-md border border-hairline bg-sunken/40 px-1.5 pb-1.5" aria-label="Season overview"
+          style={{ borderTopColor: SEASON_COLOR[season], borderTopWidth: 3 }}>
+          <div className="flex shrink-0 items-center justify-between gap-1">
+            <button type="button" className="min-h-11 min-w-11 rounded-sm text-ink-soft" onClick={() => pick(season, year - 1)} disabled={year === 1} aria-label="Previous year">‹</button>
+            <p className="font-display truncate text-[15px] font-bold" data-calendar-year>{SEASON_NAMES[season]} · Year {year}</p>
+            <button type="button" className="min-h-11 min-w-11 rounded-sm text-ink-soft" onClick={() => pick(season, year + 1)} aria-label="Next year">›</button>
+            <button type="button" className="ml-auto min-h-11 rounded-sm px-2 text-[13px] font-bold text-accent" onClick={() => setPicked(today)} data-action="calendar-today">Today</button>
+          </div>
+          <ol className="grid min-h-0 min-w-0 flex-1 grid-cols-6 grid-rows-2 gap-1" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}>
+            {list.map((d) => <Cell key={d.day} day={d} chosen={d.day === chosen.day} nameOf={nameOf} onPick={() => setPicked(d.day)} />)}
+          </ol>
+        </section>
+        <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} planner={planner} />
       </div>
     </div>,
     document.body,
@@ -107,15 +120,18 @@ function Cell({ day, chosen, nameOf, onPick }: { day: CalendarDay; chosen: boole
   return (
     <li className="min-h-0 min-w-0">
       <button type="button" onClick={onPick} aria-label={words} aria-pressed={chosen} data-day={day.day} data-today={today || undefined} data-festival={day.festival?.id}
-        data-faces={day.faces.length} data-more={more || undefined}
+        data-faces={day.faces.length} data-more={more || undefined} data-weddings={day.weddings.length || undefined}
         className={`flex h-full w-full min-w-0 flex-col items-stretch gap-0.5 overflow-hidden rounded-sm border p-1 text-left shadow-1 ${tone} ${chosen ? 'border-ink/60 border-2' : 'border-hairline'} ${day.festival ? 'ring-2 ring-inset' : ''}`}
         style={ring}>
         <span className="flex items-center gap-0.5">
           <span className="font-display text-[15px] leading-none font-bold">{day.date.day}</span>
+          <span className="hidden text-[10px] leading-none opacity-70 md:inline">{weekdayShort(weekdayOf(day.day))}</span>
           <span className="min-w-0 flex-1" />
           {marks.newYear && <SparkIcon size={14} aria-hidden />}
           {marks.festival && <TrophyIcon size={14} aria-hidden />}
           {marks.holiday && <RibbonIcon size={14} aria-hidden />}
+          {day.weddings.length > 0 && <HeartIcon size={14} aria-hidden />}
+          {day.celebrations.length > 0 && !marks.newYear && <SparkIcon size={14} aria-hidden />}
           {marks.minor && <span aria-hidden className="size-1.5 rounded-full bg-current opacity-70" />}
         </span>
         {label && <span className="truncate text-[10px] leading-tight font-semibold" data-cell-label>{label}</span>}
@@ -134,24 +150,28 @@ function Cell({ day, chosen, nameOf, onPick }: { day: CalendarDay; chosen: boole
 }
 
 /** The chosen day: what it holds, its event actions, everyone with an event on it (today's to play), and who's in town. */
-function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: StoryPack; days: SpecialDays; day: CalendarDay; nameOf: (id: string) => string }) {
+function DayPanel({ save, pack, days, day, nameOf, planner }: {
+  save: FarmSave; pack: StoryPack; days: SpecialDays; day: CalendarDay; nameOf: (id: string) => string; planner: string | null
+}) {
   const today = save.calendar.day
   const next = nextFestival(today, days.festivals)
   const events = eventActionWords(day, eventActionsLeft(save, days))
   const played = day.when === 'today' ? playedToday(save).filter((id) => save.roster[id]) : []
   const town = useMemo(() => townRows(save, pack, day.day), [save, pack, day.day])
-  const celebrations = CELEBRATIONS.filter(id => celebrationDate(save, id) === day.day)
   const greater = celebrationDate(save, 'greater-festival')
   const ready = householdReady(save)
-  const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0 && town.length === 0 && celebrations.length === 0
+  const shifts = day.when !== 'past' && (day.crew.farm.length > 0 || day.crew.off.length > 0)
+  const empty = !planner && !shifts && !day.festival && !day.newYear && !day.storyDays.length
+    && !day.faces.length && !played.length && !town.length && !day.celebrations.length && !day.trips.length
   return (
     <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-y-auto overscroll-contain rounded-md border border-hairline bg-panel p-3" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
       <h3 className="font-display text-[17px] font-bold" data-day-heading>{dayHeading(day, today)}
         {Boolean(pack.town?.professions?.length) && <span className="ml-2 text-[13px] text-ink-soft">{weekdayShort(weekdayOf(day.day))}</span>}
       </h3>
+      {planner && <WeddingPlanner save={save} day={day.day} id={planner} name={nameOf(planner)} />}
       {events && <p className="flex items-center gap-1 pt-0.5 text-[13px] font-semibold text-[#c2385e]" data-day-events><HeartIcon size={14} />{events}</p>}
       <ul className="space-y-1.5 pt-2 text-[14px]">
-        {celebrations.map(id => <li key={id}>
+        {day.celebrations.map(id => <li key={id}>
           {ready.includes(id) ? <Link className="flex min-h-11 items-center gap-2 font-semibold text-accent" to={`/?household=${id}`} state={{ back: true }}>
             <SparkIcon size={16} />{celebrationTitle(id)} ›
           </Link> : <span className="flex items-center gap-2"><SparkIcon size={16} />{celebrationTitle(id)}</span>}
@@ -161,7 +181,7 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
           <li data-entry="festival" data-festival-row={day.festival.id}>
             <span className="flex items-center gap-2"><TrophyIcon size={16} /> {day.festival.name}</span>
             {day.festival.happens && <span className="block pl-6 text-[13px] text-ink-soft" data-festival-happens>{day.festival.happens}</span>}
-            {day.festival.rule && isFarmContest(day.festival.rule) && <Link className="flex min-h-11 items-center pl-6 font-semibold text-accent"
+            {day.when === 'today' && day.festival.rule && isFarmContest(day.festival.rule) && <Link className="flex min-h-11 items-center pl-6 font-semibold text-accent"
               to={`/?sheet=festival&contest=${day.festival.rule}`}>Contest ›</Link>}
           </li>
         )}
@@ -171,6 +191,10 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
             {d.line && <span className="block pl-6 text-[13px] text-ink-soft">{d.line}</span>}
           </li>
         ))}
+        {day.trips.map(trip => <li key={`${trip.region}:${trip.direction}:${trip.party[0]}`} data-entry="expedition">
+          <span className="font-semibold">{trip.direction === 'returning' ? 'Returns' : 'Departs'} · {EXPEDITION_REGIONS[trip.region].name}</span>
+          <span className="block text-[12px] text-ink-soft">{trip.party.map(nameOf).join(', ')}</span>
+        </li>)}
       </ul>
       {day.faces.length > 0 && (
         <section className="pt-3" aria-label="With an event">
@@ -181,6 +205,10 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
         </section>
       )}
       {played.length > 0 && <p className="pt-2 text-[13px] text-ink-soft" data-played>Played today: {played.map(nameOf).join(', ')}</p>}
+      {shifts && <section className="space-y-1 pt-3" aria-label="Farm and days off">
+        {day.crew.farm.length > 0 && <CrewRow label="Farm shift" ids={day.crew.farm} nameOf={nameOf} />}
+        {day.crew.off.length > 0 && <CrewRow label="Day off" ids={day.crew.off} nameOf={nameOf} />}
+      </section>}
       {town.length > 0 && <InTown rows={town} nameOf={nameOf} />}
       {empty && <p className="pt-2 text-[14px] text-ink-soft" data-day-empty>{day.when === 'past' ? 'A quiet day.' : 'Nothing marked yet.'}</p>}
       <div className="mt-auto space-y-0.5 pt-3 text-[12px] text-ink-faint">
@@ -190,6 +218,38 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
       </div>
     </aside>
   )
+}
+
+function WeddingPlanner({ save, day, id, name }: { save: FarmSave; day: number; id: string; name: string }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const planned = save.love[id]?.weddingDay
+  const setDay = async (next: number | null) => {
+    setBusy(true)
+    setError(null)
+    try { await changeHomestead(current => planWedding(current, id, next)) }
+    catch (err) { setError(err instanceof Error ? err.message : 'Try again.') }
+    finally { setBusy(false) }
+  }
+  return <section className="my-2 space-y-1.5 rounded-md border border-hairline bg-sunken/40 p-2" aria-label="Wedding planner" data-wedding-planner>
+    <p className="font-semibold">{name} · Wedding plan</p>
+    {planned && <p className="text-[13px] text-ink-soft" data-planned-date>{shortDate(planned)} · Year {dateOf(planned).year}</p>}
+    <p className="text-[12px] text-ink-soft">{save.love[id]?.stage === 'wedding' ? 'The ceremony opens on the planned day.' : 'Finish the proposal to hold the ceremony.'}</p>
+    <div className="flex flex-wrap gap-1">
+      <Button disabled={busy || day <= save.calendar.day || day === planned} onClick={() => void setDay(day)} data-action="save-wedding-date">
+        {day === planned ? 'Date saved' : 'Save this date'}
+      </Button>
+      {planned && <Button variant="secondary" disabled={busy} onClick={() => void setDay(null)}>Clear</Button>}
+    </div>
+    {error && <p role="alert" className="text-[13px] text-danger">{error}</p>}
+  </section>
+}
+
+function CrewRow({ label, ids, nameOf }: { label: string; ids: string[]; nameOf: (id: string) => string }) {
+  return <details className="rounded-sm border border-hairline px-2 text-[13px]">
+    <summary className="min-h-11 cursor-pointer py-2.5 font-semibold">{label} · {ids.length}</summary>
+    <p className="pb-2 text-ink-soft">{ids.map(nameOf).join(', ')}</p>
+  </details>
 }
 
 /** How many faces a place's row shows before "+n". */
@@ -232,12 +292,16 @@ function FaceRow({ face, day, save, days, name }: { face: DayFace; day: Calendar
   const next = face.occasions[0] ?? null
   const now = day.when === 'today'
   const can = actionsLeft(save) + eventActionsLeft(save, days) > 0
+  const canVisit = now && face.night && nightVisits(save).length < NIGHT_VISITS
   return (
     <li className="flex min-h-12 items-center gap-2 py-1" data-face={face.id} data-reasons={face.reasons.join(' ')}>
       <span className="block size-9 shrink-0"><Avatar id={face.id} size={36} label={name} /></span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14px] font-semibold">{name}</span>
-        <span className="block truncate text-[12px] text-ink-soft">{why}</span>
+        <span className="block text-[12px] text-ink-soft">{save.love[face.id]?.wed === day.day ? why.replace('Wedding planned', 'Wedding held') : why}</span>
+        {face.night && <span className="block text-[12px] font-semibold text-accent">
+          {[face.night.birthday && 'Birthday night', face.night.anniversary && 'Anniversary night'].filter(Boolean).join(' · ')}
+        </span>}
       </span>
       {now && face.reasons.includes('occasion') && (can
         ? <Link to={withParam(location, 'occasion', face.id)} state={{ back: true }} aria-label={`Play ${next?.name ?? 'the occasion'} with ${name} · 1 action`} data-action="play-occasion" data-occasion={next?.id}
@@ -247,6 +311,8 @@ function FaceRow({ face, day, save, days, name }: { face: DayFace; day: Calendar
         <Link to={withParam(location, 'event', face.id)} state={{ back: true }} aria-label={`Play ${name}’s event · 1 action`} data-action="play-event"
           className="grid min-h-11 shrink-0 place-items-center rounded-sm border-2 border-[#c2385e] px-2 text-[13px] font-bold text-[#c2385e]">Event ›</Link>
       )}
+      {canVisit && <Link to={`/?visits=${face.id}`} state={{ back: true }} aria-label={`Night visits with ${name}`}
+        className="grid min-h-11 shrink-0 place-items-center rounded-sm border border-hairline-strong px-2 text-[13px] font-bold text-accent">Night ›</Link>}
     </li>
   )
 }

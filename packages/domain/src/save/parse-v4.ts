@@ -124,7 +124,7 @@ const pastDay = (value: unknown, path: string, today: number): number => {
   return d
 }
 
-const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals', 'morning', 'dish', 'night'] as const
+const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'weddingDay', 'wed', 'house', 'known', 'flags', 'evening', 'festivals', 'morning', 'dish', 'night'] as const
 
 /** Her level's range on each stage: friendship and romance 0–9 (the tenth event moves her on), 10 while a
  * waiting rung waits, spouse 0–5. */
@@ -164,6 +164,10 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
     // Her ring's grade, set when the proposal plays (her wedding's wait on).
     if (stage !== 'wedding' && stage !== 'spouse') fail(`${path}.ring`, 'only from the proposal on')
     love.ring = int(o.ring, `${path}.ring`, 1, 10)
+  }
+  if (o.weddingDay !== undefined) {
+    if (stage !== 'romance' && stage !== 'proposal' && stage !== 'wedding') fail(`${path}.weddingDay`, 'only after confession and before marriage')
+    love.weddingDay = day(o.weddingDay, `${path}.weddingDay`)
   }
   if (o.wed !== undefined) {
     if (stage !== 'spouse') fail(`${path}.wed`, 'only a spouse')

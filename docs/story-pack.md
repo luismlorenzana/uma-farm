@@ -368,7 +368,7 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `job` | **Her part-time job** and where it is: `{ "what": "Bakes the morning bread", "at": "bakery", "days": [1, 2, 3, 4, 5, 6] }`. She's there on its days | None |
 | `routine` | **Where she is, when:** a list of stops, each `{ "at": "library", "days": [3, 9], "seasons": ["spring"] }`. The first that holds today wins, before her job and her home | With none of `home`, `job` and `routine`: the default schedule, her `spot` every third day |
 | `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
-| `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
+| `birthday` | `{ "month": 1–12, "day": … }` orders her among the balanced dates for the launch cast | Master data's birthday, then cast order when absent |
 | `meet` | **Retired** (no welcome week): you meet her by introducing yourself in town ([meeting her](game-mechanics.md#meeting-her)). A `meet` is still read (an error in it is still an error) and noted once, as retired; it acts on nothing | — |
 | `chapters` | **Her chapters,** below: they frame her route on her profile, the People page and the morning ([her chapters](game-mechanics.md#her-chapters)) | The four default chapters |
 | `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm is retired | — |
@@ -711,15 +711,34 @@ and mornings.
   a sister's `s<outfitId>` if appropriate. Each Uma can have three partners. The Homestead's Night visits sheet
   has a Duo editor with an export you can copy into the household file. In-game edits are local to the save.
 - `duoLines` maps each canonical pair key, such as `9000001:9000002`, to scripts under each participant's ID.
-  Each script can override her `sitting`, `bedside`, `farewell`, `morning`, `outfit` and `illustration`.
+  Each script can override her `sitting`, `bedside`, `farewell`, `morning`, `emotes`, `outfit` and `illustration`.
   Authors can check the input through the regular pack reader and preview it from Night visits on a save where both
   partners have True Love.
 
-Each Uma's bible can add `marriedLife.pajamas` with keys `"1"` through `"10"` and
-`marriedLife.anniversary` with keys `"1"` through `"5"`. Each numbered slot takes the same script fields.
-The lines are up to 160 characters each. `outfit` uses a supported story outfit. `illustration` names the scene
-ID from her private gallery manifest, which can have a distinct image for every look. Missing lines or art use
-the appropriate default. Publish the art through the existing portrait or illustration release path.
+Each Uma's bible can add `marriedLife.pajamas` with keys `"1"` through `"10"`, and `marriedLife.birthday` and
+`marriedLife.anniversary` with keys `"1"` through `"5"`. Birthday and anniversary scripts each read their own
+dialogue for the shared formal look. Each slot takes up to 160 characters per beat. `emotes` maps a beat to a
+[story expression](#steps). A duo override can set one beat without replacing her other faces.
+
+```json
+{
+  "marriedLife": {
+    "birthday": {
+      "1": {
+        "sitting": "I saved a little of my birthday just for us.",
+        "bedside": "I’m glad you’re here.",
+        "emotes": { "sitting": "neutral", "bedside": "loving" }
+      }
+    }
+  }
+}
+```
+
+Without a script outfit override, the portrait resolver tries `pajamas-playful` for pajama slot 1, `pajamas-2`
+through `pajamas-10` for later slots and `wedding-anniversary-1` through `wedding-anniversary-5` for formal slots.
+`outfit` can instead choose a supported story outfit. `illustration` names a scene ID from her private gallery
+manifest. Missing lines and portrait assets use their defaults. Follow the [expression packet](design/her-look.md#approved-expression-authoring-packet)
+when preparing and reviewing the art.
 Use `pnpm story:scaffold --ids <id> --married-life` to generate missing look scripts marked as defaults.
 `pnpm story:status --ids <id> --married-life` reports authored, default and missing slots.
 

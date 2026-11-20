@@ -83,8 +83,8 @@ export function setPortraitSource(next: PortraitSource | null): void {
 /** What a line shows of her portraits: the outfit's base (else her first in Farm Life's order: spring), and the face of
  * the line's emote, else its nearest she has by the expressions' fallbacks, else neutral (the base alone). */
 export type PortraitPick = ReturnType<typeof dialoguePortraitFor>
-export function portraitPick(p: DialoguePortraits, outfit: ArtOutfit, emote: unknown): PortraitPick {
-  return dialoguePortraitFor(p, outfit, faceFor(emote, (e) => p.faces[e] !== undefined))
+export function portraitPick(p: DialoguePortraits, outfit: ArtOutfit, emote: unknown, preferred?: string): PortraitPick {
+  return dialoguePortraitFor(p, preferred && p.bases[preferred] ? preferred : outfit, faceFor(emote, (e) => p.faces[e] !== undefined))
 }
 
 /** Warms these pictures (the next line's base and face): loaded, decoded and held while the line before it shows. */

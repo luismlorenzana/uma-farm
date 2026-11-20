@@ -1,4 +1,4 @@
-import { ANNIVERSARY_LOOK_POINTS, EVENINGS, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitLookKind, visitScript, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
+import { ANNIVERSARY_LOOK_POINTS, EVENINGS, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitLookKind, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
 import { Link } from 'react-router'
 import { libraryDate } from './LibraryPage'
 
@@ -6,7 +6,7 @@ export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: 
   const heart = greaterLoveOf(save, id)
   const collections: readonly { kind: NightKind; title: string; thresholds: readonly number[] }[] = [
     { kind: 'pajamas', title: 'Pajamas', thresholds: PAJAMA_POINTS },
-    { kind: 'anniversary', title: 'Anniversary outfits', thresholds: ANNIVERSARY_LOOK_POINTS },
+    { kind: 'anniversary', title: 'Birthday and anniversary outfits', thresholds: ANNIVERSARY_LOOK_POINTS },
   ]
   return <>
     <h2>Married Life</h2>
@@ -32,11 +32,12 @@ export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: 
       {heart.memories.map((visit, index) => {
         const own = visit.who.indexOf(id)
         const withUma = visit.who.find(who => who !== id)
-        const script = visitScript(pack, visit, own)
-        const label = visit.kind === 'anniversary' ? `Anniversary ${visit.anniversary} · ${own === 0 ? 'Look' : 'Pajamas'} ${visit.looks[own]}` : `Pajamas ${visit.looks[own]}`
+        const occasion = visit.kind === 'anniversary' ? `Anniversary ${visit.anniversary}` : visit.kind === 'birthday' ? 'Birthday night' : null
+        const look = visitLookKind(visit, own) === 'anniversary' ? 'Occasion look' : 'Pajamas'
+        const label = `${occasion ? occasion + ' · ' : ''}${look} ${visit.looks[own]}`
         return <li key={index}>
           <span>{label}{withUma && ` · With ${nameOf(withUma)}`}</span>
-          <small>{libraryDate(visit.day)}{!script.illustration && !script.outfit ? ' · Default look' : ''}</small>
+          <small>{libraryDate(visit.day)}</small>
           <Link className="lib-button" to={`/library?uma=${id}&page=married&visitReplay=${id}:${index}`} state={{ back: true }}>Replay</Link>
         </li>
       })}

@@ -232,6 +232,7 @@ it. The days are read live from the save as it stands and the story's year, neve
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │ Spring 3 · Year 1     [Spring] Summer  Autumn  Winter                   ⏱7 ♥+3    ✕ │
+│ ‹  Spring · Year 1  ›   Today   │ Spring 10 · in 7 days                           │ │
 │ ┌────┬────┬────┬────┬────┬────┐  ┌─────────────────────────────────────────────────┐ │
 │ │1 ✦ │2   │3   │4  •│5   │6   │  │ Spring 10 · in 7 days                           │ │
 │ │New │    │    │Mkt │    │    │  │ ♥ +3 actions for events                         │ │
@@ -250,9 +251,10 @@ it. The days are read live from the save as it stands and the story's year, neve
 
 - **On top:** the date and the year; the four seasons, this one marked, each a tap away; the day's actions left, with a
   special day's event actions after them (♥+3); and Close.
+- **Year controls** move the selected season to the previous or next year. **Today** returns to the current farm date.
 - **The season's 12 days** as a grid of six by two. Each day shows its number and its marks: a festival's trophy (and a
-  ring in the season's colour), New Year's spark, a holiday's ribbon, a minor day's dot. Under them its one label (the
-  festival, else New Year's, else the story's first holiday or minor day) and a special day's event actions (♥+3).
+  ring in the season's colour), New Year's or a celebration's spark, a holiday's ribbon, a minor day's dot and a wedding
+  heart. Under them are a short label for that date and a special day's event actions (♥+3).
   Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
   and days gone by are faded.
 - **The chosen day's panel** (today when the calendar opens): its heading ("Spring 10 · in 7 days"); a special day's
@@ -261,11 +263,16 @@ it. The days are read live from the save as it stands and the story's year, neve
   event that day, her face, her name and why. On a day ahead the list is "With an event, as things stand". Then **In
   town · n**: who's in town that day and where, a row a place in the map's order, its name, its first five faces (met
   first) and "+n", read from every Uma's fixed schedule ([who's where](#whos-where)), so a day ahead shows who'll be
-  there (the save as it stands: one living on the farm, or a farmhand, isn't in town). At its foot, the next festival
-  with its countdown, and the day of the year ("Day 3 of 48. Days move only when you end them.").
+  there. Expand **Farm shift** or **Day off** to see the full names. The panel also lists expedition departures and
+  returns, planned or held weddings, and the household's celebration dates. At its foot, the next festival and countdown.
 - **Today's rows play:** **Play · 1** for her next occasion scene (the day's, then a festival's night; or "No actions"
   with none left of either kind), and **Event ›** for her Ready event. Those who've played an occasion today are listed
   under it ("Played today: …"). Her birthday or her anniversary said by its occasion isn't said twice.
+- **Night ›** opens the spouse's Night visits when a birthday or anniversary visit is available. The daytime occasion
+  and the night visit have separate costs and receipts.
+- **Wedding planner.** After accepting the confession, open **Pick a wedding day** on the relationship stage card or
+  her profile. Choose a future date and save it. Move or clear it from the same calendar. The proposal and ceremony's
+  usual requirements still apply. A missed plan stays visible until the ceremony or a new choice.
 
 **A day holds:**
 
@@ -275,8 +282,10 @@ it. The days are read live from the save as it stands and the story's year, neve
 | Its festival | The game's five on their days, or the story's year | The game's, or `world.json`'s `festivals` |
 | The story's holidays and minor days | The days the story names: in one season, or in every season; and the game's own six small days, wherever the story puts them | `world.json`'s `days` ([the story pack's menu](story-pack.md#the-storys-days)), and the game's ([the story's days](#the-storys-days)) |
 | Her occasion scenes | New Year's from the second year, each festival's day and its night, her birthday, her anniversary, the story's days | Her route's scene for it, else the default story's for three of them ([occasion scenes](#occasion-scenes)) |
-| Birthdays | Each met Uma's birthday | Her cast entry's, else master data's ([birthdays](#birthdays-and-anniversaries)) |
+| Birthdays | Each met Uma's balanced farm birthday | The full launch cast's spread across 48 dates ([birthdays](#birthdays-and-anniversaries)) |
 | Anniversaries | Each spouse's wedding day of the year, from the second year | Her wedding's day |
+| Weddings and celebrations | A planned or held wedding, each five-marriage celebration and the Greater Festival | The save |
+| Expedition trips | Departure and return dates from active and recently logged trips | The expedition post |
 | Event actions | New Year's from the second year, a festival, each met Uma's birthday | [The day's budget](#a-day-ten-actions) |
 
 **The faces: who has an event that day.** Each met Uma once, with every reason she's there:
@@ -286,6 +295,7 @@ it. The days are read live from the save as it stands and the story's year, neve
 | **Her occasions** | Her occasions that day by name (the day's, then a festival's night), until she's played them | Her occasions that day | — |
 | **Her birthday** | Yes | Yes | Yes |
 | **Your anniversary** | Yes | Yes | Yes |
+| **Wedding** | Planned or held | Planned | Planned or held |
 | **Her event** | Ready now ("Ready") | Ready on that date as the save stands, the date moved and nothing played ("Likely ready"), her face faint in the day's cell | — |
 
 - **A day ahead is a best guess.** It reads the save as it stands with the date moved: a bar already full shows on
@@ -5963,8 +5973,8 @@ A friendship or romance heart costs 160 + 40 × its number; a spouse level costs
 - **The moves:** Friendship 10 played leaves her waiting at her confession. Its Yes starts romance at Romance 0. Romance
   10 leaves her waiting for the proposal; the proposal makes her engaged, waiting for the wedding; the wedding makes her a
   spouse at Spouse 0 and marks her wedding day. Spouse 5 completes the route.
-- **The waiting rungs cost nothing.** The confession, the proposal and the wedding are each Ready the day after the rung
-  before; the proposal also needs a ring in the Warehouse.
+- **The waiting rungs cost no points.** Each opens at least one day after the previous rung. The proposal also needs
+  a ring, and a ceremony with a saved wedding date opens on or after that date.
 - **Points never fall, and nothing is lost or locked.** Past a full bar they're **banked** ("+120 banked") and carry into
   the next bar when the event plays. While a waiting rung waits, every point banks into the next ladder.
 - **Points are whole:** each pay rounds once, half up, after its factors. Once Spouse 5 has played nothing more is added.
@@ -6060,9 +6070,10 @@ A disliked gift pays 0 and never takes points away. She says one of the default 
 
 #### Birthdays and anniversaries
 
-**Her birthday** is master data's date for her character, read at runtime; a birthday in her cast entry wins where
-present. A real date maps onto the farm's 48-day year by quarters of its month: season day = 4 × (the month's place in its
-season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4.
+**The full cast's farm birthdays are evenly spread.** The 50 launch Umas occupy all 48 dates, with one or two on a date.
+Her cast entry's birthday or master-data birthday sets her place in the March-to-February order. New cast members fill
+the least occupied dates, keeping the launch dates in place. With 100 Umas there are two or three per date. Small story
+packs use the ordinary date-to-quarter conversion below.
 
 <!-- live:birthday-map -->
 | Month | Days 1–8 | 9–16 | 17–24 | 25–31 |
@@ -6083,7 +6094,7 @@ season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4.
 
 - **On her birthday** a gift pays ×3 and an evening ×1.5, and the day gives one action for events. The morning says so
   the day before and on the day, and the calendar shows her face on it. Two Umas may share a birthday; a birthday on a
-  festival day is both.
+  festival day is both. Once married and housed, she can also host a **Birthday night** visit on that date.
 - **Her anniversary** is her wedding's day of the year, from a year after the wedding on (every 48 days after it). That
   day every act pays ×2 (the evening ×1.5 instead), and that morning **she leaves a ★5 item of her line** in the
   Warehouse, on the farm or in town: a crop of the season for a farmer, a good of her foraging rank's deepest open area this season
@@ -6099,7 +6110,7 @@ profile, an action each:
 <!-- live:ready-rules -->
 | # | Ready needs | Not met |
 |---|---|---|
-| 1 | Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse | `bar`, `day`, `ring` |
+| 1 | Her bar is full for the rung; a waiting rung opens the day after the rung before, the proposal needs a ring, and a planned wedding waits for its date | `bar`, `day`, `ring`, `wedding-day` |
 | 2 | She hasn’t played one of her events today | `today` |
 | 3 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters) |
 | 4 | Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival) | `gate`: “Opens when the Kitchen is built” |
@@ -6117,9 +6128,10 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 | 4 | `gate` | Her next event opens her chapter, and its gate doesn’t hold yet |
 | 5 | `bar` | Her bar isn’t full for the rung |
 | 6 | `day` | A waiting rung, on the day the rung before played |
-| 7 | `ring` | The proposal, with no ring in the Warehouse |
-| 8 | `today` | She played one of her events today |
-| 9 | `setup` | Its day setup isn’t met today |
+| 7 | `wedding-day` | The wedding is scheduled for a later day |
+| 8 | `ring` | The proposal, with no ring in the Warehouse |
+| 9 | `today` | She played one of her events today |
+| 10 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
@@ -7380,15 +7392,18 @@ Regular evenings keep their own costs and slots.
 | Pajamas | 0, 6, 14, 24, 36, 48, 60, 75, 90, 105 |
 | Anniversary outfits | 0, 24, 48, 72, 96 |
 
-Each wardrobe rotates in order through its unlocked looks. Anniversary night opens after a full farm year.
-It can be played later for the most recent anniversary, once for that anniversary. Missing art or dialogue uses
-the default. Married Life in the Uma Library shows the separate collection, earned memories and True Love date.
-Replays preserve the participants and look numbers and cost no slots or points.
+Each wardrobe rotates in order through its unlocked looks. Birthdays and anniversaries share the formal wardrobe
+cursor. A birthday visit opens on the spouse's birthday once per farm year. Anniversary night opens after a full
+farm year and can be played later for the most recent anniversary. If both fall on the same date, each can be played
+once and uses one visit slot. Their default scene beats use neutral, tender and loving. A story can choose the
+expression for each beat. Numbered portraits load by slot, with the standard pajamas or wedding-night portrait as
+fallback. Married Life in the Uma Library shows the looks, earned memories and True Love date. Replays preserve
+participants and look numbers and cost no slots or points.
 
 **True Love** is 120 points. A curated duo opens when both spouses reach it. Use the Duo editor to add or remove
-mutual pairs, up to three partners per Uma. An eligible duo can share a pajama visit, an anniversary or a regular
-evening. A shared anniversary uses one slot. The spouse whose date it is wears and advances her anniversary look,
-and her partner joins in pajamas and keeps her own anniversary offer. A shared evening keeps its original play
+mutual pairs, up to three partners per Uma. An eligible duo can share a pajama visit, a birthday, an anniversary or a
+regular evening. A shared occasion uses one slot. Its host wears and advances her formal look, and her partner joins
+in pajamas. Each spouse keeps her own offer when she joins as a guest. A shared evening keeps its original play
 and payment. Both books link to the shared memory. Removing a pair retires future offers and keeps the memory.
 
 #### Bonds and ties

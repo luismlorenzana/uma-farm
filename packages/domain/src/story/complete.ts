@@ -25,7 +25,7 @@
 // marked, and her schedule while every part of it that's there is.
 import { TEMPERAMENTS, type Temperament } from '../farm/talents'
 import { defaultDays, DEFAULT_EVERY, scheduleOf } from '../town/town'
-import { RUNGS, EVENING_SCENES, SPOT_IDS, ARRIVAL, DEFAULT_NIGHT_SCRIPT, type Step, type StoryPlace, type World } from './authored'
+import { RUNGS, EVENING_SCENES, SPOT_IDS, ARRIVAL, defaultNightScript, type Step, type StoryPlace, type World } from './authored'
 import { ANNIVERSARY_LOOK_POINTS, PAJAMA_POINTS } from '../save/long-game'
 import { DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, HER, type DefaultScene } from './default-story'
 import { readStoryPack, type PackFiles, type StoryPack } from './pack'
@@ -437,14 +437,14 @@ function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefine
       if (b.marriedLife !== undefined && !isObject(b.marriedLife)) refused.push('marriedLife: expected an object')
       else {
         const life = isObject(b.marriedLife) ? b.marriedLife : {}
-        for (const [kind, points] of [['pajamas', PAJAMA_POINTS], ['anniversary', ANNIVERSARY_LOOK_POINTS]] as const) {
+        for (const [kind, points] of [['pajamas', PAJAMA_POINTS], ['anniversary', ANNIVERSARY_LOOK_POINTS], ['birthday', ANNIVERSARY_LOOK_POINTS]] as const) {
           const prior = life[kind]
           if (prior !== undefined && !isObject(prior)) { refused.push(`marriedLife.${kind}: expected an object`); continue }
           const slots = isObject(prior) ? prior : {}
           points.forEach((_, i) => {
             const slot = String(i + 1)
             if (slots[slot] !== undefined) return
-            slots[slot] = { ...DEFAULT_NIGHT_SCRIPT, draft: DRAFT }
+            slots[slot] = { ...defaultNightScript(kind), draft: DRAFT }
             wrote.push({ part: 'bible', piece: `marriedLife.${kind}.${slot}` })
           })
           life[kind] = slots

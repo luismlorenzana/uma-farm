@@ -112,6 +112,46 @@ afterEach(async () => {
 })
 
 describe('the calendar', () => {
+  it('opens a spouse’s birthday night from the day panel and plays the loving bedside beat', async () => {
+    const married = farm(1, 0, { [ONE]: { stage: 'spouse', wed: 1, house: 0 } })
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...married, calendar: { day: 4 },
+      longGame: { weddings: [ONE], celebrations: {}, love: {} } } })
+    await render(<p>Farm</p>, '/?sheet=calendar')
+    await click(await find(`[href="/?visits=${ONE}"]`))
+    const birthday = () => $$('button').find(button => button.textContent === 'Birthday night')
+    await until(() => !!birthday())
+    await click(birthday())
+    const stage = '[data-scene^="visit:birthday:"]'
+    await tapUntil(stage, `${stage} [data-visit-beat="bedside"] [data-expression="loving"][data-portrait="wedding-night"]`)
+    const finish = () => $$('button').find(button => button.textContent === 'Finish')
+    for (let i = 0; i < 20 && !finish(); i++) {
+      const bubble = $(`${stage} button[data-step]:not([disabled])`)
+      if (bubble) await click(bubble)
+      else await settle()
+    }
+    await click(finish())
+    await until(() => save().longGame?.love[ONE]?.birthday === 1)
+    expect(save().longGame?.night?.visits.map(visit => visit.kind)).toEqual(['birthday'])
+    expect(save().today.actions).toBe(0)
+  })
+
+  it('picks a wedding date in a later year and returns to today without losing the plan', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(3, 0, { [ONE]: { stage: 'romance' } }) })
+    await render(<p>Farm</p>, `/?sheet=calendar&weddingPlan=${ONE}`)
+    await find('[data-wedding-planner]')
+    expect($('[data-day-panel]')?.dataset.dayPanel).toBe('4')
+    await click($('[aria-label="Next year"]'))
+    expect($('[data-calendar-year]')?.textContent).toBe('Spring · Year 2')
+    await click($('[data-day="53"]'))
+    await click($('[data-action="save-wedding-date"]'))
+    await until(() => save().love[ONE]?.weddingDay === 53)
+    expect($('[data-day="53"]')?.dataset.weddings).toBe('1')
+    await click($('[data-action="calendar-today"]'))
+    expect($('[data-calendar-year]')?.textContent).toBe('Spring · Year 1')
+    expect($('[data-day-panel]')?.dataset.dayPanel).toBe('3')
+    expect($('[data-planned-date]')?.textContent).toBe('Spring 5 · Year 2')
+  })
+
   it('opens from the bar’s date over everything: the season’s 12 days, the festival, a birthday and the faces', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(3, 0, { [TWO]: f1 }) })
     await render(<p>Farm</p>, '/')

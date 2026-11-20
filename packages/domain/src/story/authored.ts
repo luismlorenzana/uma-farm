@@ -25,7 +25,7 @@ import { CAST_IDS, isCastId } from './cast'
 import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type StoryOutfit } from './look'
 import { EXPEDITION_OUTCOMES, type ExpeditionOutcome } from '../save/v4'
 import { ILLUSTRATION_ID } from '../save/gallery'
-import { ANNIVERSARY_LOOK_POINTS, DUO_LIMIT, PAJAMA_POINTS, duoKey, isCelebration, type Celebration, type Duo, type NightKind } from '../save/long-game'
+import { ANNIVERSARY_LOOK_POINTS, DUO_LIMIT, PAJAMA_POINTS, VISIT_KINDS, duoKey, isCelebration, type Celebration, type Duo, type VisitKind } from '../save/long-game'
 import { NO_ILLUSTRATION } from './illustrations'
 import { WEEKDAYS, type TownProfession } from '../town/professions'
 
@@ -262,11 +262,14 @@ export interface Gifts { loved?: string; liked?: string[]; disliked?: string[]; 
 /** Her bible. Only her id is needed (the file's name gives it); the game reads her favourite line, her gifts, her route's
  * beats, her chats, her keepsake, her pet name, her wedding's places and her wishes. Her profile's texts, season and
  * festival are the story's own. */
+export const NIGHT_BEATS = ['sitting', 'bedside', 'farewell', 'morning'] as const
+export type NightBeat = typeof NIGHT_BEATS[number]
 export interface NightScript {
   sitting?: string
   bedside?: string
   farewell?: string
   morning?: string
+  emotes?: Partial<Record<NightBeat, Emote>>
   outfit?: StoryOutfit
   illustration?: string
   draft?: 'default'
@@ -278,9 +281,24 @@ export const DEFAULT_NIGHT_SCRIPT = {
   morning: 'Good morning, husband. I’m glad you stayed.',
 } as const
 
+export const defaultNightScript = (kind: VisitKind): Required<Pick<NightScript, NightBeat>> => kind === 'pajamas' ? DEFAULT_NIGHT_SCRIPT
+  : kind === 'birthday' ? {
+    sitting: 'I saved a little of my birthday just for us.',
+    bedside: 'I’m glad I get to end this day with you.',
+    farewell: 'Goodnight, husband. Thank you for coming.',
+    morning: 'Good morning, husband. Yesterday still feels close.',
+  } : {
+    sitting: 'Sit with me, husband. I was thinking about our wedding.',
+    bedside: 'I’d choose you again, every year.',
+    farewell: 'Happy anniversary, husband. Sleep well.',
+    morning: 'Good morning, husband. Here’s to another year.',
+  }
+export const nightBeatFace = (kind: VisitKind, beat: NightBeat): Emote =>
+  beat === 'sitting' ? 'neutral' : beat === 'bedside' && kind !== 'pajamas' ? 'loving' : 'tender'
+
 export interface UmaBible {
   characterId: string
-  marriedLife?: Partial<Record<NightKind, Record<string, NightScript>>>
+  marriedLife?: Partial<Record<VisitKind, Record<string, NightScript>>>
   outfitId?: string | null
   now?: string
   whyTheFarm?: string
@@ -1408,9 +1426,16 @@ function nightScript(value: unknown, at: string, f: Findings): NightScript | und
   if (!isObject(value)) { f.errors.push(`${at}: expected a night scene object; skipped`); return undefined }
   const out: NightScript = {}
   if (value.draft === 'default') out.draft = 'default'
-  for (const field of ['sitting', 'bedside', 'farewell', 'morning'] as const) {
+  for (const field of NIGHT_BEATS) {
     const line = value[field]
     if (line !== undefined && shown(line, 160, `${at} ${field}`, f)) out[field] = line
+  }
+  if (value.emotes !== undefined) {
+    if (!isObject(value.emotes)) f.errors.push(`${at}: emotes must be keyed by beat`)
+    else for (const [beat, emote] of Object.entries(value.emotes)) {
+      if (oneOf(NIGHT_BEATS, beat) && oneOf(EMOTES, emote)) (out.emotes ??= {})[beat] = emote
+      else f.notes.push(`${at}: unknown emote or beat; default face used`)
+    }
   }
   const outfit = readOutfit(value.outfit, at, f)
   if (outfit) out.outfit = outfit
@@ -1423,7 +1448,7 @@ function marriedLife(value: unknown, f: Findings): UmaBible['marriedLife'] {
   if (value === undefined) return undefined
   if (!isObject(value)) { f.errors.push('marriedLife is an object; skipped'); return undefined }
   const out: NonNullable<UmaBible['marriedLife']> = {}
-  for (const kind of ['pajamas', 'anniversary'] as const) {
+  for (const kind of VISIT_KINDS) {
     const slots = value[kind]
     if (slots === undefined) continue
     if (!isObject(slots)) { f.errors.push(`marriedLife.${kind} is keyed by look number; skipped`); continue }

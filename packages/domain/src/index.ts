@@ -196,7 +196,7 @@ export * from './save/gallery'
 // The story's one reader: errors only for what the game can't read, each skipping its part; notes for the rest. The
 // menu's defaults (her chapters; the retired welcome list and trigger to meet, still read) are `placeholders.ts`'s.
 export {
-  ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, DEFAULT_NIGHT_SCRIPT, EMOTES, EVENT_LIMITS,
+  ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, DEFAULT_NIGHT_SCRIPT, defaultNightScript, nightBeatFace, EMOTES, EVENT_LIMITS,
   eventNotes, EVENING_SCENES, FARMING_PLAYS, GATE_KINDS, HOUSE_LINE_MAX, LIFE_EVENTS, OCCASIONS, STORY_EVENTS, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
   checkTown, checkWorld, isSister, NOTE_KINDS, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID, WORLD_ID,
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES, FESTIVAL_NIGHTS, GAME_DAYS_OF_STORY, GREETING_TIMES, WEATHERS, YOU, GIFT_LINE_SETS, dayScenesOf,

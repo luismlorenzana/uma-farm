@@ -97,16 +97,16 @@ with the fallback.
 | **`wedding-night`** | The wedding-day scene. Shy opening, flustered realization, quiet affection and the default morning beat. | `shy`, `flustered`, `tender`, `loving`, `sleepy` | **6** |
 | **`pajamas-playful` and pajama slot 1** | A night in, ordinary morning greetings, the first night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
 | **Pajama slots 2–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation | `tender`, `loving` | **3 each** |
-| **Wedding Anniversary slots 1–5** (`marriedLife.anniversary`) | Numbered anniversary-night visits. The anniversary host wears this look. A duo guest uses her pajama look. | `tender`, `loving` | **3 each** |
+| **Wedding Anniversary slots 1–5** (`marriedLife.birthday`, `marriedLife.anniversary`) | Spouse birthdays and anniversary nights. The host wears this look. A duo guest uses her pajamas. | `tender`, `loving` | **3 each** |
 | `swimsuit` | Summer shore dialogue around the beach illustration | `happy`, `laughing`, `tender`, `loving` | 5 |
 
 The matrix uses 50 local authored Farm routes and 76 pair files, checked against the default scenes and scene players.
 The wedding-night routes call for `loving` or `flustered` on 153 of 171 spoken steps. The `a-night-in` scenes call
 for `tender`, `laughing` or `sleepy` on 126 of 164 spoken steps. The baseline pajamas also appear in scenes with more
 emotional range, including nighttime heart events. A named calendar `anniversary` scene normally wears `dinner`.
-The five numbered anniversary-night looks belong to the separate married-life player. It currently requests
-`tender` on every spoken beat in both collections, including the morning. The art checklist also includes
-`loving` for future authored beats.
+The five numbered formal looks belong to the married-life player. It uses neutral as the sitting conversation opens,
+tender at the quiet bedside for a pajama visit, and loving at the bedside for a birthday or anniversary. Farewell
+and morning use tender. An authored beat can choose its own expression.
 
 **When a scene calls for more.** Start with the actual fallback. `dreamy` and `sleepy` can use `tender`, `teasing`
 can use `happy`, and `worried` can use `sad`. Approve the exact composition when it supplies the punchline or changes
@@ -117,11 +117,11 @@ carries its own pose and expression.
 approved non-neutral composition per new base so the portrait packer has an explicit face position. Carry forward
 existing approvals. The current release packs one shared layer per expression for the character, so other shared
 expressions remain available in the game when a scene requests them. The matrix sets the preview and approval workload.
-Numbered wardrobe art also needs a slot-to-portrait mapping before it appears in the game. The
-[married-life story contract](../story-pack.md#the-household-householdjson) lists the current story keys.
+Numbered wardrobe art resolves by the base keys in the [married-life story contract](../story-pack.md#the-household-householdjson).
+Publishing a portrait under its slot key makes it available for scenes and replays.
 
-The nine additional pajama looks and five anniversary looks call for **42 previews per Uma**. At the standard 16 states
-per outfit, those same 14 looks would call for 224 previews.
+The nine additional pajama looks and five anniversary looks call for **42 previews per Uma**. The 12 standard outfits
+use 126 previews, for 168 across all 26 looks. The 15 shared expression layers serve both collections.
 
 ### The expressions
 
@@ -213,38 +213,56 @@ Uma is drawn as an adult, and every picture is tasteful: tender, never explicit.
 She keeps her own look in every outfit: her colours, her accessories, her personality. The dresses and the pajamas are
 modest, never revealing.
 
-### The expressions to draw
+### Approved expression authoring packet
 
-Each one is a feeling the story will ask for, so each should read at a glance, small on a phone, and stay in her
-character: a reserved Uma's joy is quieter than a bright one's.
+Use the portrait the owner approved for that Uma as the reference for her eye shape, iris color, nose, jaw, bangs and
+skin tone. Keep the head angle and scale fixed across the wardrobe so shared face layers align. Let her personality
+shape the intensity of the expression. A reserved Uma can look delighted through a small change in the eyes and mouth.
+Use the [approval matrix](#minimum-facial-expressions-by-outfit) to select the compositions to review.
+
+#### What to produce
+
+1. **One neutral base per outfit.** Keep the approved framing and face placement for the existing portrait family.
+   Neutral belongs to the base and also supplies the face for profile crops.
+2. **One shared overlay for each required expression.** Reuse the approved layer wherever its jaw, hairline, skin tone
+   and alignment agree with the base. Use one face position for every overlay on a given outfit. Keep the existing
+   portrait and face dimensions in the release manifest.
+3. **An approval preview for each required base and expression.** The composition and its image hashes belong in
+   the existing art manifest. For a new base include an approved non-neutral composition to record its face position.
+   Continue to use the existing owner approval and private release workflow.
 
 **Core expressions**
 
 | Expression | Eyes and brows | Mouth and marks | The story uses it for |
 |---|---|---|---|
-| **Neutral** | Open, relaxed | Closed, relaxed | Plain talk; the default |
-| **Happy** | Bright, slightly narrowed by the smile | A warm open smile | Greetings, good news, a gift she likes |
-| **Laughing** | Closed in curves | Wide open, laughing | A joke, festival fun, teasing that lands |
-| **Surprised** | Wide, brows high | A small round "oh" | News, a reveal, a gift she didn't expect |
-| **Thinking** | Looking aside or up, one brow raised | Small, pursed or to one side | Plans, puzzles, choosing |
-| **Sad** | Lowered, brows up and pinched in | Turned down | Bad news, missing someone, a loss |
-| **Angry** | Narrowed, brows down hard | A frown or clenched | A rival, a wrong done, a race lost |
-| **Worried** | Uneasy, brows tilted up | A wobbly line; a small sweat drop | Nerves, a hard day, before a race |
-| **Determined** | Focused, brows set | A firm small smile | Work, training, a promise kept |
-| **Pouting** | Looking away, brows down | Puffed cheek, lips pushed out | Playful annoyance, being teased |
+| **Neutral** `neutral` | Resting lids and brows, attentive gaze | Relaxed mouth with her natural resting shape | Plain talk and the opening of a night visit |
+| **Happy** `happy` | Brighter eyes, a small lift at the lower lids | Clear warm smile | Greetings, a good gift, relief or an ordinary win |
+| **Laughing** `laughing` | Eyes closed in curves and cheeks lifted | Wider, open smile that reads at phone size | A joke, festival fun or a playful vow |
+| **Surprised** `surprised` | Open eyes, brows raised together | Small round mouth | A gift or reveal she didn't expect |
+| **Thinking** `thinking` | Gaze to one side or slightly up, one eyebrow lifted | Small focused mouth | Planning, weighing a choice or puzzling something out |
+| **Sad** `sad` | Eyes lowered, brows pinched gently upward toward the center | Small downturned mouth | Missing someone, disappointment or a quiet loss |
+| **Angry** `angry` | Brows drawn down toward the center, gaze direct | Firm frown or tight mouth | Real frustration, unfairness or a confrontation |
+| **Worried** `worried` | Tense eyes, raised inner brows, gaze seeking reassurance | Uneven or parted mouth | Anticipating trouble or asking if someone is all right |
+| **Determined** `determined` | Level, focused gaze and set brows | Firm mouth or confident small smile | Farm work, training or following through on a promise |
+| **Pouting** `pouting` | Slight brow tension and sidelong gaze | Small pushed-out lip, optional raised cheek | Playful annoyance and affectionate teasing |
 
 **Romance expressions**
 
 | Expression | Eyes and brows | Mouth and marks | The story uses it for |
 |---|---|---|---|
-| **Shy** | Looking down or away | A small smile; light blush | A compliment, a first date, being noticed |
-| **Tender** | Soft, warm, a little lowered | A gentle smile; faint blush | Quiet moments, evenings together |
-| **Flustered** | Darting, wide or squeezed shut | A wavy mouth; deep blush, maybe steam or sweat | The confession, a near kiss, being caught staring |
-| **Loving** | Half-lidded, glowing | A soft smile; blush | Saying yes, married mornings, "I'm glad it's you" |
-| **Tearful joy** | Bright, wet, tears at the corners | Smiling through them | The proposal, the wedding, a promise come true |
-| **Sleepy** | Half-closed, heavy | A yawn or a drowsy smile | Nights in, early mornings, a nap on your shoulder |
+| **Shy** `shy` | Eyes turn down or away, brows soft | Small smile with a light blush | A compliment, a first date or the quiet start of the wedding night |
+| **Tender** `tender` | Relaxed, slightly lowered lids with an attentive gaze | Gentle closed smile, optional faint blush | A quiet bedside talk, farewell or warm good morning |
+| **Flustered** `flustered` | Unsettled gaze or wide eyes, brows lifted unevenly | Hesitant mouth with a stronger blush | Caught off guard by affection, including the wedding-night realization |
+| **Loving** `loving` | Warm, steady eye contact and relaxed brows | A settled affectionate smile, optional blush | Vows and the strongest line at a birthday or anniversary bedside |
+| **Tearful joy** `tearful-joy` | Bright eyes with small visible tears at the corners | Smile that reads through the tears | The proposal, wedding ceremony or long-awaited promise |
+| **Sleepy** `sleepy` | Heavy, half-closed lids and unfocused gaze | Drowsy smile or small yawn | A Night In or a specifically written wake-up beat |
 
-**Extra expressions for specific scenes**
+At phone size, check these pairs together. `happy` reads through a brighter, wider smile. `tender` reads through a
+quiet, attentive gaze. `loving` keeps that softness and adds steady eye contact and an affectionate smile.
+`shy` looks away with composure, while `flustered` visibly loses it. `sad` settles downward, while `worried`
+searches for reassurance. Use the eyes and mouth to carry the distinction even when blush or tears are subtle.
+
+**Extra expressions when a scene needs the exact beat**
 
 | Expression | Eyes and brows | Mouth and marks | The story uses it for |
 |---|---|---|---|
@@ -255,24 +273,31 @@ character: a reserved Uma's joy is quieter than a bright one's.
 | **Startled** | Tiny pupils, wide | Open in a gasp; maybe a jolt mark | A scare, a sudden noise, a ghost story |
 | **Dreamy** | Unfocused, looking up | A faint smile; sparkles | Daydreaming, a wish, the festival lights |
 
-**The range, at a glance**
+#### Night visit review
 
-| Feeling | Light | Strong |
-|---|---|---|
-| Joy | Happy | Laughing, Tearful joy |
-| Affection | Tender, Shy | Loving, Flustered |
-| Sadness | Sad | Crying |
-| Anger | Pouting | Angry |
-| Fear and nerves | Worried | Startled |
-| Surprise | Surprised | Startled |
-| Thought | Thinking | Dreamy |
-| Confidence | Determined | Smug |
-| Play | Teasing | Laughing |
-| Rest | Sleepy | — |
-| Awkwardness | Embarrassed | Flustered |
+| Beat | Pajama visit | Birthday or anniversary host | What to inspect |
+|---|---|---|---|
+| Sitting | `neutral` | `neutral` | Resting face is readable with the evening backdrop |
+| Bedside | `tender` | `loving` | Eye contact and smile carry the difference at a small size |
+| Farewell | `tender` | `tender` | Her face stays warm through the final line |
+| Morning | `tender` | `tender` | The same look reads naturally under the morning backdrop |
 
-If the story asks for a face that isn't drawn yet, the game shows the nearest one, so the expressions can come in any
-order.
+The minimum is neutral, tender and loving for every numbered look. An authored scene can use loving for a pajama
+beat. A duo guest uses her pajama look and pajama defaults, and an authored override can give her a distinct reaction.
+The one-time wedding night has its own row. Use the separate birthday and anniversary script slots for the dialogue
+and the same formal portrait key for the corresponding look.
+
+#### Before approving
+
+1. Check the neutral base, the two required night overlays, and each other expression selected by the matrix.
+   Flip between them on the same pose to spot a slipping jawline, visible crop seam or moving fringe.
+2. Preview a birthday or anniversary scene at **844×390** and **667×375**. Keep the eyes, mouth and body clear around
+   the dialogue panel. Play the sitting, bedside and farewell beats. Use a fifth visit with Stay the night for morning.
+3. Check a solo visit, a duo with the host in the formal look and the guest in pajamas, and the corresponding Library
+   replay. A slot without a published base uses the standard pajama or wedding-night portrait.
+4. Keep the original art and approvals in the private art workspace. Publish the base and shared layers with their
+   recorded placement using the existing portrait workflow. Publish any splash through the illustration release and
+   give the story its scene ID.
 
 ### The illustrations
 

@@ -55,6 +55,8 @@ export const PERSONAL_OUTFITS: readonly StoryOutfit[] = ['wedding', 'wedding-nig
  * moments, the day, and its own Umas (the event's, the pair's, the household's spouses). */
 export interface SceneLook {
   own?: unknown
+  /** A numbered portrait to try before the standard story outfit. */
+  portrait?: string
   moments?: readonly Moment[]
   day: number
   leads?: readonly string[]

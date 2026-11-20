@@ -17,22 +17,30 @@ export const DUO_LIMIT = 3
 
 export type Duo = [string, string]
 export type NightKind = 'pajamas' | 'anniversary'
+export const VISIT_KINDS = ['pajamas', 'anniversary', 'birthday'] as const
+export type VisitKind = typeof VISIT_KINDS[number]
 export interface Visit {
   day: number
-  kind: NightKind
+  kind: VisitKind
   who: [string] | Duo
   looks: number[]
   /** Anniversary number, independent of the night on which it played. */
   anniversary?: number
+  /** Farm year of the birthday, separate from the anniversary receipt. */
+  birthday?: number
 }
-/** In a shared anniversary, the spouse whose date it is wears her anniversary outfit. */
-export const visitLookKind = (visit: Pick<Visit, 'kind'>, index: number): NightKind => index === 0 ? visit.kind : 'pajamas'
+/** The host of a birthday or anniversary wears her formal look. */
+export const visitLookKind = (visit: Pick<Visit, 'kind'>, index: number): NightKind =>
+  index === 0 && visit.kind !== 'pajamas' ? 'anniversary' : 'pajamas'
+export const visitPortraitKey = (kind: NightKind, slot: number): string =>
+  kind === 'pajamas' && slot === 1 ? 'pajamas-playful' : `${kind === 'pajamas' ? 'pajamas' : 'wedding-anniversary'}-${slot}`
 export interface GreaterLove {
   points: number
   pajamas: number
   anniversaries: number
   trueDay?: number
   anniversary?: number
+  birthday?: number
   memories: Visit[]
 }
 export interface FestivalGift {

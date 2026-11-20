@@ -88,7 +88,10 @@ export function advance(love: Love, day: number): Love {
     case 'confession': return { ...next, stage: 'romance', level: 0 }
     case 'romance': return love.level >= 9 ? { ...next, stage: 'proposal', level: 10 } : counted(love.level + 1)
     case 'proposal': return { ...next, stage: 'wedding', level: 10 }
-    case 'wedding': return { ...next, stage: 'spouse', level: 0, wed: day }
+    case 'wedding': {
+      const { weddingDay: _, ...married } = next
+      return { ...married, stage: 'spouse', level: 0, wed: day }
+    }
     case 'spouse': return counted(love.level + 1)
   }
 }

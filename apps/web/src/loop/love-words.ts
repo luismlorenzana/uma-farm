@@ -2,6 +2,7 @@
 // Hearts row says it (`readyWords`, with the rung) and as her profile's Next card says it (`nextWords`, under the rung's
 // name). Pure, so the screens and the tests read the same. Loaded on demand with the Hearts tab.
 import { farmPlace, gateWords, goodName, rungName, type Activity, type Bar, type FarmPlaceId, type Festival, type Readiness } from '@farm/domain'
+import { shortDate } from './words'
 
 /** "Opens when the Kitchen is built": a perk's place, not built yet. */
 export const opensWhenBuilt = (place: FarmPlaceId): string => `Opens when the ${farmPlace(place)?.name ?? place} is built`
@@ -27,6 +28,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
     case 'gate': return at(gateWords(waits.gate, nameOf, year))
     case 'bar': return at(`${(bar.cost - bar.points).toLocaleString('en-US')} to go`)
     case 'day': return at('Ready tomorrow')
+    case 'wedding-day': return at(`Planned for ${shortDate(waits.day)}`)
     case 'ring': return at('Needs a ring')
     case 'today': return at('tomorrow: one event a day')
     case 'setup': {
@@ -50,6 +52,7 @@ export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, n
     case 'gate': return gateWords(waits.gate, nameOf, year)
     case 'bar': return `${(bar.cost - bar.points).toLocaleString('en-US')} to go`
     case 'day': return 'Tomorrow'
+    case 'wedding-day': return `Planned for ${shortDate(waits.day)}`
     case 'ring': return 'Needs a ring'
     case 'today': return 'Tomorrow: one event a day'
     case 'setup': {
