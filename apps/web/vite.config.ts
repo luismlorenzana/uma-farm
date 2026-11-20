@@ -69,8 +69,8 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-          // The browser can fetch the large install icons on demand, outside the offline game cache.
-          globIgnores: ['**/node_modules/**/*', 'icons/uma-farm-512.png', 'icons/uma-farm-maskable-512.png'],
+          // Large install icons and the optional 3D renderer load on demand.
+          globIgnores: ['**/node_modules/**/*', 'icons/uma-farm-512.png', 'icons/uma-farm-maskable-512.png', 'assets/field-pond-renderer-*.js'],
           // "Work done" notifications (copied from uma-rpg): the handlers live in public/push-sw.js.
           importScripts: ['push-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
@@ -78,6 +78,11 @@ export default defineConfig(({ mode }) => {
           // /__/ is Firebase Hosting's reserved space (the redirect sign-in handler): never answer it with the app shell.
           navigateFallbackDenylist: [/^\/api\//, /^\/__\//],
           runtimeCaching: [
+            {
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/assets\/field-pond-renderer-[\w-]+\.js$/.test(url.pathname),
+              handler: 'CacheFirst',
+              options: { cacheName: 'farm-look-renderer', expiration: { maxEntries: 2 } },
+            },
             {
               // Master data files are named by hash: cached for good once downloaded.
               urlPattern: ({ url }) => url.pathname.startsWith('/api/master/files/') || url.pathname.startsWith('/api/master/manifests/'),
@@ -109,6 +114,7 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'es2022',
       manifest: true,
+      rollupOptions: { output: { manualChunks: { 'field-pond-renderer': ['three', '@luismlorenzana/uma-stage/look'] } } },
     },
     // uma-kit is transformed with the app, so its links share the app's router (the bar test renders them). The story pack
     // is the stand-in: no test reads farm-api; the loader's own tests stub this.
