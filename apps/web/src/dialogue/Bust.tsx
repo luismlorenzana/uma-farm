@@ -37,7 +37,7 @@ export function useBustPick(who: string | null, emote: unknown): { id: string | 
   const id = who === null ? null : whoIs(story, who)
   const portraits = usePortraitsState(id && !isCastId(id) ? id : null)
   const ready = portraits !== 'loading' ? portraits : null
-  return { id, pick: ready && id ? portraitPick(ready, dressOf(look, id), emote) : null, loading: portraits === 'loading' }
+  return { id, pick: ready && id ? portraitPick(ready, dressOf(look, id), emote, look.portrait) : null, loading: portraits === 'loading' }
 }
 
 /** Her tint on the blank bust: her character's theme colours from master data (a sister's, her outfit's character's),

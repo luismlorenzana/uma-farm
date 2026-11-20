@@ -452,7 +452,7 @@ describe('Ready', () => {
   })
 
   it('documents every wait, in the order it\'s said', () => {
-    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'gate', 'night', 'ring', 'setup', 'today'])
+    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'gate', 'night', 'ring', 'setup', 'today', 'wedding-day'])
   })
 })
 

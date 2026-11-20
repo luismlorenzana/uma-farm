@@ -96,7 +96,7 @@ export async function status({ from, tier, ids, all = false, marriedLife = false
         const defaults = scripts.filter(script => script.draft === 'default').length
         return `${scripts.length - defaults} · ${defaults} · ${total - scripts.length}`
       }
-      lines.push(`  ${id} ${names.get(id) ?? ''} · Pajamas ${count('pajamas', 10)} · Anniversary ${count('anniversary', 5)}`)
+      lines.push(`  ${id} ${names.get(id) ?? ''} · Pajamas ${count('pajamas', 10)} · Anniversary ${count('anniversary', 5)} · Birthday ${count('birthday', 5)}`)
     }
   }
   return lines

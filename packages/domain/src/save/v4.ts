@@ -344,6 +344,8 @@ export interface Love {
   /** Her ring's grade, 1–10: set at the proposal, raised by a better ring. Every ring is a Rough
    * make until the merge game, so it's also her bonus in % once she's married (+1% a grade, `ringBonus`). */
   ring?: number
+  /** The planned ceremony date after confession and before marriage. */
+  weddingDay?: number
   /** The wedding's day: a spouse's. */
   wed?: number
   /** Her room's house: a spouse's. */

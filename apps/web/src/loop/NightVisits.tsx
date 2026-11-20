@@ -1,7 +1,7 @@
 import {
-  anniversaryOffer, birthdaysOf, completeVisit, configuredDuos, DEFAULT_NIGHT_SCRIPT, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled,
-  NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, visitLookKind, visitScript, wantsBirthdayAlone,
-  type Duo, type FarmSave, type NightKind, type Step, type StoryPack, type Visit,
+  anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, defaultNightScript, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled,
+  NIGHT_VISITS, nightAvailable, nightBeatFace, nightVisits, planVisit, setVisitStay, TRUE_LOVE, visitLookKind, visitPortraitKey, visitScript, wantsBirthdayAlone,
+  type Birthdays, type Duo, type FarmSave, type VisitKind, type Step, type StoryPack, type Visit,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -27,6 +27,7 @@ export default function NightVisits({ replay, morning }: { replay: string | null
   const save = useLoopSave()
   const pack = useStory()
   const location = useLocation()
+  const focus = new URLSearchParams(location.search).get('visits')
   const leave = useLeave()
   const close = () => leave(withParam(location, morning ? 'visitMorning' : replay ? 'visitReplay' : 'visits', null))
   if (!save || !pack || !longGameEnabled(save, pack)) return null
@@ -43,11 +44,13 @@ export default function NightVisits({ replay, morning }: { replay: string | null
     if (replay || morning) return found
       ? <VisitScene save={save} pack={pack} visit={found} morning={morning} nameOf={nameOf} onDone={close} onClose={close} />
       : <Sheet open title="Night memories" onClose={close}><p>That scene hasn’t been seen.</p></Sheet>
-    return <Visits save={save} pack={pack} birthday={birthday} nameOf={nameOf} onClose={close} />
+    return <Visits save={save} pack={pack} birthdays={birthdays} birthday={birthday} focus={focus} nameOf={nameOf} onClose={close} />
   }}</MasterGate>, document.body)
 }
 
-function Visits({ save, pack, birthday, nameOf, onClose }: { save: FarmSave; pack: StoryPack; birthday: BirthdayCheck; nameOf: NameOf; onClose: () => void }) {
+function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
+  save: FarmSave; pack: StoryPack; birthdays: Birthdays; birthday: BirthdayCheck; focus: string | null; nameOf: NameOf; onClose: () => void
+}) {
   const [mode, setMode] = useState<Mode>('solo')
   const [active, setActive] = useState<{ visit: Visit; slot: number } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -57,7 +60,16 @@ function Visits({ save, pack, birthday, nameOf, onClose }: { save: FarmSave; pac
   const full = visits.length === NIGHT_VISITS
   const available = (id: string) => nightAvailable(save, pack, id)
   const availableDuo = (duo: readonly string[]) => duo.every(id => available(id) && !birthday(save, id))
+  const celebrations = (id: string) => {
+    const year = anniversaryOffer(save, id)
+    return [
+      ...(birthdayOffer(save, id, birthdays) ? [{ kind: 'birthday' as const, label: 'Birthday night' }] : []),
+      ...(year ? [{ kind: 'anniversary' as const, label: `Anniversary ${year}` }] : []),
+    ]
+  }
   const spouses = Object.keys(save.love).filter(id => save.love[id]?.stage === 'spouse')
+    .map(id => ({ id, offers: celebrations(id) }))
+    .sort((a, b) => Number(b.id === focus) - Number(a.id === focus) || Number(b.offers.length > 0) - Number(a.offers.length > 0))
   const duos = configuredDuos(save, pack).filter(duo => duoReady(save, duo))
   const last = visits.at(-1)
   const stay = save.longGame?.night?.stay && save.homestead.companion === last?.who[0]
@@ -70,13 +82,13 @@ function Visits({ save, pack, birthday, nameOf, onClose }: { save: FarmSave; pac
     catch (err) { setError(err instanceof Error ? err.message : 'Try again.') }
     finally { setBusy(false); inFlight.current = false }
   }
-  const start = (who: Visit['who'], kind: NightKind) => {
-    const visit = planVisit(save, pack, who, kind, id => birthday(save, id))
+  const start = (who: Visit['who'], kind: VisitKind) => {
+    const visit = planVisit(save, pack, who, kind, id => birthday(save, id), birthdays)
     if (visit) { setError(null); setActive({ visit, slot: visits.length }) }
   }
   if (active) return <VisitScene save={save} pack={pack} visit={active.visit} nameOf={nameOf} busy={busy} error={error}
     onClose={() => setActive(null)}
-    onDone={() => void run(s => completeVisit(s, pack, active.visit, active.slot, id => birthday(s, id)), () => setActive(null))} />
+    onDone={() => void run(s => completeVisit(s, pack, active.visit, active.slot, id => birthday(s, id), birthdays), () => setActive(null))} />
   return <Sheet open onClose={onClose} title={`Night visits · ${visits.length}/${NIGHT_VISITS}`} label="Night visits">
     <div className="space-y-3 pb-2" data-night-visits={visits.length}>
       <div className="flex flex-wrap gap-2" aria-label="Visit type">
@@ -100,17 +112,14 @@ function Visits({ save, pack, birthday, nameOf, onClose }: { save: FarmSave; pac
             const availableNow = availableDuo(duo)
             return <li key={duoKey(duo)} className="space-y-1">
               <Button variant="secondary" className="w-full" disabled={!availableNow} onClick={() => start(duo, 'pajamas')}>{duo.map(nameOf).join(' & ')}</Button>
-              {duo.map((id, i) => {
-                const year = anniversaryOffer(save, id)
-                return year === null ? null : <Button key={id} variant="secondary" className="w-full" disabled={!availableNow}
-                  onClick={() => start([id, duo[1 - i]!], 'anniversary')}>{nameOf(id)} · Anniversary {year}</Button>
-              })}
+              {duo.flatMap((id, i) => celebrations(id).map(({ kind, label }) =>
+                <Button key={`${id}:${kind}`} variant="secondary" className="w-full" disabled={!availableNow}
+                  onClick={() => start([id, duo[1 - i]!], kind)}>{nameOf(id)} · {label}</Button>))}
             </li>
           })}
         </ul> : <ul className="grid gap-2 sm:grid-cols-2">
-          {spouses.map(id => {
+          {spouses.map(({ id, offers }) => {
             const love = greaterLoveOf(save, id)
-            const year = anniversaryOffer(save, id)
             const availableNow = available(id)
             const trip = save.expeditions.find(trip => trip.left <= save.calendar.day && trip.back > save.calendar.day && trip.party.includes(id))
             return <li key={id} className="rounded-md border border-hairline p-2">
@@ -120,7 +129,8 @@ function Visits({ save, pack, birthday, nameOf, onClose }: { save: FarmSave; pac
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" disabled={!availableNow} onClick={() => start([id], 'pajamas')}>Visit</Button>
-                {year && <Button variant="secondary" disabled={!availableNow} onClick={() => start([id], 'anniversary')}>Anniversary {year}</Button>}
+                {offers.map(({ kind, label }) => <Button key={kind} variant="secondary" disabled={!availableNow}
+                  onClick={() => start([id], kind)}>{label}</Button>)}
               </div>
             </li>
           })}
@@ -163,7 +173,7 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
   const [part, setPart] = useState(0)
   const who = visit.who[part % visit.who.length]
   const phase = Math.floor(part / visit.who.length)
-  const title = `${morning ? 'Morning' : visit.kind === 'anniversary' ? 'Anniversary ' + visit.anniversary : 'Night visit'} · ${visit.who.map(nameOf).join(' & ')}`
+  const title = `${morning ? 'Morning' : visit.kind === 'anniversary' ? 'Anniversary ' + visit.anniversary : visit.kind === 'birthday' ? 'Birthday night' : 'Night visit'} · ${visit.who.map(nameOf).join(' & ')}`
   const done = phase >= (morning ? 1 : beats.length)
   if (done || !who) return <Sheet open title={title} onClose={onClose} label={title}>
     {error && <p role="alert" className="text-danger">{error}</p>}
@@ -171,13 +181,16 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
   </Sheet>
   const index = part % visit.who.length
   const script = visitScript(pack, visit, index)
+  const kind = index === 0 ? visit.kind : 'pajamas'
+  const wardrobe = visitLookKind(visit, index)
   const steps: Step[] = []
   if (phase === 0 && script.illustration) steps.push({ illustration: script.illustration })
   if (phase === 1 && part % visit.who.length === 0) steps.push({ narrate: 'You sit by the bedside as the house grows quiet.' })
   const beat = morning ? 'morning' : beats[phase]!
-  steps.push({ say: who, line: script[beat] ?? DEFAULT_NIGHT_SCRIPT[beat], emote: 'tender' })
+  steps.push({ say: who, line: script[beat] ?? defaultNightScript(kind)[beat], emote: script.emotes?.[beat] ?? nightBeatFace(kind, beat) })
   return <Frame title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
-    <SceneLookProvider value={{ day: visit.day, leads: [who], own: script.outfit ?? (visitLookKind(visit, index) === 'anniversary' ? 'wedding-night' : 'pajamas') }}>
+    <SceneLookProvider value={{ day: visit.day, leads: [who], own: script.outfit ?? (wardrobe === 'anniversary' ? 'wedding-night' : 'pajamas'),
+      ...(script.outfit ? {} : { portrait: visitPortraitKey(wardrobe, visit.looks[index]!) }) }}>
       <LifeScene key={part} id={who} steps={steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={morning ? MORNING_BACKDROP : NIGHT_BACKDROP}
         onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': morning ? 'morning' : beats[phase] }} />
     </SceneLookProvider>

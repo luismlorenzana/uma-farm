@@ -1,15 +1,17 @@
 import { awayForNight } from '../expeditions/presence'
+import { dateOf } from '../farm/calendar'
 import { availableDishes } from '../expeditions/stock'
 import { SaveRuleError } from '../save/rules'
 import {
   CELEBRATIONS, COHORTS, DUO_LIMIT, ENDING_SPOUSES, FARM_YEAR, NIGHT_VISITS, TRUE_LOVE,
-  celebrationDate, duoKey, festivalGiftWindow, unlockedLooks, visitLookKind, visitMemoryKey, type Celebration, type Cohort, type Duo, type GreaterLove, type NightKind, type Visit,
+  celebrationDate, duoKey, festivalGiftWindow, unlockedLooks, visitLookKind, visitMemoryKey, type Celebration, type Cohort, type Duo, type GreaterLove, type VisitKind, type Visit,
 } from '../save/long-game'
 import { isDishId, vowsOn, type SaveV4 } from '../save/v4'
 import { parseStockKey, takeGoods } from '../save/warehouse'
 import type { StoryPack } from '../story/pack'
 import type { NightScript } from '../story/authored'
 import { chooseCompanion } from './loop'
+import { isBirthday, NO_BIRTHDAYS, type Birthdays } from './days'
 
 type WeddingSave = Pick<SaveV4, 'love' | 'roster'> & Partial<Pick<SaveV4, 'longGame'>>
 type LifePack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'household'>>
@@ -126,6 +128,12 @@ export const anniversaryOffer = (save: CalendarSave, id: string): number | null 
   return year > (greaterLoveOf(save, id).anniversary ?? 0) ? year : null
 }
 
+export function birthdayOffer(save: CalendarSave, id: string, birthdays: Birthdays): number | null {
+  const day = save.calendar.day
+  const year = dateOf(day).year
+  return save.love[id]?.stage === 'spouse' && isBirthday(birthdays, id, day) && (greaterLoveOf(save, id).birthday ?? 0) < year ? year : null
+}
+
 export const configuredDuos = (save: Pick<SaveV4, 'longGame'>, pack: Pick<LifePack, 'household'>): Duo[] =>
   save.longGame?.duos ?? pack.household?.duos ?? []
 
@@ -150,23 +158,26 @@ export function editDuo(save: SaveV4, pack: LifePack, duo: Duo, remove: boolean)
 
 export function visitScript(pack: LifePack, visit: Visit, index: number): NightScript {
   const id = visit.who[index]!
-  const base = pack.bibles.get(id)?.marriedLife?.[visitLookKind(visit, index)]?.[visit.looks[index]!]
+  const kind = index === 0 ? visit.kind : 'pajamas'
+  const base = pack.bibles.get(id)?.marriedLife?.[kind]?.[visit.looks[index]!]
   const duo = visit.who.length === 2 ? pack.household?.duoLines?.[duoKey(visit.who)]?.[id] : undefined
-  return { ...base, ...duo }
+  return { ...base, ...duo, ...(base?.emotes || duo?.emotes ? { emotes: { ...base?.emotes, ...duo?.emotes } } : {}) }
 }
 
-export function planVisit(save: SaveV4, pack: LifePack, who: Visit['who'], kind: NightKind, birthdayAlone: (id: string) => boolean): Visit | null {
+export function planVisit(save: SaveV4, pack: LifePack, who: Visit['who'], kind: VisitKind, birthdayAlone: (id: string) => boolean, birthdays = NO_BIRTHDAYS): Visit | null {
   if (nightVisits(save).length >= NIGHT_VISITS || who.some(id => !nightAvailable(save, pack, id))) return null
   if (who.length === 2 && (who.some(birthdayAlone) || !duoReady(save, who)
     || !configuredDuos(save, pack).some(duo => duoKey(duo) === duoKey(who)))) return null
   const anniversary = kind === 'anniversary' ? anniversaryOffer(save, who[0]) : null
   if (kind === 'anniversary' && anniversary === null) return null
+  const birthday = kind === 'birthday' ? birthdayOffer(save, who[0], birthdays) : null
+  if (kind === 'birthday' && birthday === null) return null
   const looks = who.map((id, i) => {
     const heart = greaterLoveOf(save, id)
     const look = visitLookKind({ kind }, i)
     return ((look === 'pajamas' ? heart.pajamas : heart.anniversaries) % unlockedLooks(heart.points, look)) + 1
   })
-  return { day: save.calendar.day, kind, who, looks, ...(anniversary === null ? {} : { anniversary }) }
+  return { day: save.calendar.day, kind, who, looks, ...(anniversary === null ? {} : { anniversary }), ...(birthday === null ? {} : { birthday }) }
 }
 
 function award(heart: GreaterLove, day: number): GreaterLove {
@@ -175,18 +186,21 @@ function award(heart: GreaterLove, day: number): GreaterLove {
   return { ...heart, points, ...(points === TRUE_LOVE ? { trueDay: day } : {}) }
 }
 
-export function completeVisit(save: SaveV4, pack: LifePack, visit: Visit, slot: number, birthdayAlone: (id: string) => boolean): SaveV4 {
+export function completeVisit(save: SaveV4, pack: LifePack, visit: Visit, slot: number, birthdayAlone: (id: string) => boolean, birthdays = NO_BIRTHDAYS): SaveV4 {
   const next = activateLongGame(save, pack)
   const visits = nightVisits(next)
-  const plan = planVisit(next, pack, visit.who, visit.kind, birthdayAlone)
+  const plan = planVisit(next, pack, visit.who, visit.kind, birthdayAlone, birthdays)
   if (!next.longGame || !plan || slot !== visits.length || visit.day !== plan.day || visit.anniversary !== plan.anniversary
-    || visitMemoryKey(visit) !== visitMemoryKey(plan)) throw new SaveRuleError('not-ready', 'Open a new visit for tonight.')
+    || visit.birthday !== plan.birthday || visitMemoryKey(visit) !== visitMemoryKey(plan)) throw new SaveRuleError('not-ready', 'Open a new visit for tonight.')
   const love = { ...next.longGame.love }
   for (const [i, id] of plan.who.entries()) {
     const heart = award(greaterLoveOf(next, id), plan.day)
     const memories = heart.memories.some(memory => visitMemoryKey(memory) === visitMemoryKey(plan)) ? heart.memories : [...heart.memories, plan]
     if (plan.kind === 'pajamas') love[id] = { ...heart, pajamas: plan.looks[i]!, memories }
-    else love[id] = i === 0 ? { ...heart, anniversaries: plan.looks[i]!, anniversary: plan.anniversary!, memories } : { ...heart, memories }
+    else if (i === 0) {
+      const receipt = plan.kind === 'birthday' ? { birthday: plan.birthday! } : { anniversary: plan.anniversary! }
+      love[id] = { ...heart, anniversaries: plan.looks[i]!, memories, ...receipt }
+    } else love[id] = { ...heart, memories }
   }
   return { ...next, longGame: { ...next.longGame, love, night: { day: plan.day, visits: [...visits, plan] } } }
 }

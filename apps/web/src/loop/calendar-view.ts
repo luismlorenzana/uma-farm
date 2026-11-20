@@ -7,8 +7,10 @@ import { plural, whenWords } from './words'
 export const CELL_FACES = 3
 
 /** A cell's one label: its festival, else New Year's, else the story's first holiday or minor day; else none. */
-export function cellLabel(day: Pick<CalendarDay, 'festival' | 'newYear' | 'storyDays'>): string | null {
-  return day.festival?.name ?? (day.newYear ? NEW_YEAR_NAME : null) ?? day.storyDays[0]?.name ?? null
+export function cellLabel(day: Pick<CalendarDay, 'festival' | 'newYear' | 'storyDays'> & Partial<Pick<CalendarDay, 'weddings' | 'celebrations' | 'trips' | 'birthdays' | 'anniversaries'>>): string | null {
+  return day.festival?.name ?? (day.newYear ? NEW_YEAR_NAME : null) ?? day.storyDays[0]?.name
+    ?? (day.weddings?.length ? 'Wedding' : day.celebrations?.length ? 'Celebration' : day.trips?.length ? 'Expedition'
+      : day.anniversaries?.length ? 'Anniversary' : day.birthdays?.length ? 'Birthday' : null)
 }
 
 /** What marks a cell: a festival's trophy, New Year's bell, a holiday's flag, a minor day's dot, and a special day's
@@ -44,6 +46,7 @@ export function reasonWords(reason: FaceReason, face: Pick<DayFace, 'occasions'>
     case 'occasion': return face.occasions.map((o) => o.name).join(' · ') || 'Occasion'
     case 'birthday': return face.occasions.some((o) => o.kind === 'birthday') ? null : 'Birthday'
     case 'anniversary': return face.occasions.some((o) => o.kind === 'anniversary') ? null : 'Anniversary'
+    case 'wedding': return day.when === 'past' ? 'Wedding day' : 'Wedding planned'
     case 'ready': return day.when === 'today' ? 'Ready' : 'Likely ready'
   }
 }

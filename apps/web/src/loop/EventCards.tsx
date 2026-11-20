@@ -122,6 +122,10 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
           {save?.longGame ? `Married ${married.married}/${married.met}${married.married < 50 ? ` · Celebration at ${Math.floor(married.married / 5 + 1) * 5}` : ''}`
             : marriedWords(married.married, married.met)}
         </p>}
+        {(stage === 'romance' || stage === 'engaged') &&
+          <Link to={`/?sheet=calendar&weddingPlan=${id}`} replace className="flex min-h-11 items-center justify-center rounded-md border border-hairline font-semibold text-accent" data-action="plan-wedding">
+            {love.weddingDay ? 'View wedding plan' : 'Pick a wedding day'} ›
+          </Link>}
         {stage === 'married' && save && <RoomStep save={save} id={id} />}
         {stage === 'married' && save && celebrationReached(save, 'cohort:50') && save.longGame?.weddings[49] === id && !save.longGame.celebrations['cohort:50']
           && <Link to="/?household=cohort:50" replace className="flex min-h-11 items-center justify-center rounded-md border border-hairline font-semibold text-accent">

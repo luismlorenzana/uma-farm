@@ -5,6 +5,10 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+Birthday and anniversary nights use the shared formal wardrobe. The calendar carries the evenly spread birthdays,
+travel and crew schedules, and wedding dates chosen after confession. The [approved expression
+packet](../design/her-look.md#approved-expression-authoring-packet) covers each face and the review steps for numbered looks.
+
 **The rework is in** (the owner, 2026-11-14; F74–F85): the game plays sideways, a day of ten actions on the tile farm,
 the town map where you meet her by introducing yourself, the Uma loop to married life, farmhands and their aptitudes,
 upkeep and loans, the calendar, the ranch and the mine, the dialogue engine, the default Uma, and her illustrations.

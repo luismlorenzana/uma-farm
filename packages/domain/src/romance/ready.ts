@@ -38,6 +38,7 @@ export type Wait =
   | { kind: 'bar' }
   /** A waiting rung: Ready the day after the rung before. */
   | { kind: 'day' }
+  | { kind: 'wedding-day'; day: number }
   /** The proposal: a ring in the Warehouse. */
   | { kind: 'ring' }
   /** She played one of her events today. */
@@ -55,7 +56,7 @@ export type Wait =
 
 /** The four conditions, as the manual lists them. */
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
-  { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
+  { condition: 'Her bar is full for the rung; a waiting rung opens the day after the rung before, the proposal needs a ring, and a planned wedding waits for its date', unmet: '`bar`, `day`, `ring`, `wedding-day`' },
   { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
   { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters)' },
   { condition: 'Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival)', unmet: '`gate`: “Opens when the Kitchen is built”' },
@@ -68,6 +69,7 @@ export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'gate', when: 'Her next event opens her chapter, and its gate doesn’t hold yet' },
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
+  { kind: 'wedding-day', when: 'The wedding is scheduled for a later day' },
   { kind: 'ring', when: 'The proposal, with no ring in the Warehouse' },
   { kind: 'today', when: 'She played one of her events today' },
   { kind: 'setup', when: 'Its day setup isn’t met today' },
@@ -111,6 +113,7 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'>
   const trigger: Trigger = beatOf(pack, id, rung)?.trigger ?? { kind: 'hearts' }
   const day = save.calendar.day
   if (WAITING_RUNGS.includes(rung) ? day <= love.last : !now.full) return wait({ kind: WAITING_RUNGS.includes(rung) ? 'day' : 'bar' })
+  if (rung === 'wedding' && love.weddingDay !== undefined && day < love.weddingDay) return wait({ kind: 'wedding-day', day: love.weddingDay })
   if (rung === 'proposal' && !RING_IDS.some((ring) => goodCount(save.items, ring) > 0)) return wait({ kind: 'ring' })
   if (save.today.events.includes(id) || love.last === day) return wait({ kind: 'today' })
   if ((trigger.kind === 'working' || trigger.kind === 'item' || trigger.kind === 'bond') && !setupMet(save, id, trigger)) return wait({ kind: 'setup', setup: trigger })
