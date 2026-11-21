@@ -1,12 +1,34 @@
 import {
   actionsLeft, anniversaryOffer, awayOn, birthdayOffer, canPlanWedding, DAYS_PER_YEAR, greaterLoveOf, isAnniversary, isBirthday,
-  levelWords, longGameEnabled, nightAvailable, NIGHT_VISITS, nightVisits, occasionsLeft, occasionsOn,
-  townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type SpecialDays, type StoryPack,
+  LADDER_COLOURS, ladderOf, levelWords, longGameEnabled, nightAvailable, NIGHT_VISITS, nightVisits, occasionsLeft, occasionsOn,
+  townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type LadderName, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { Link, useLocation } from 'react-router'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
-import { nextCard } from '../loop/hearts-view'
+import { HeartIcon } from '@luismlorenzana/uma-kit/ui'
+import { LADDER_HEARTS, nextCard } from '../loop/hearts-view'
 import { dateWords } from '../loop/words'
+
+const rankSize = { friendship: 14, romance: 16, spouse: 20 } as const satisfies Record<LadderName, number>
+const greaterLoveHearts = 5
+const greaterLoveColour = '#ff4b5e'
+
+function RankHearts({ earned, total, size, colour, label }: {
+  earned: number; total: number; size: 14 | 16 | 20 | 24; colour: string; label: string
+}) {
+  return <div className="flex flex-wrap" role="img" aria-label={label} style={{ color: colour }}>
+    {Array.from({ length: total }, (_, i) => {
+      const fill = Math.max(0, Math.min(1, earned - i))
+      // The heart drawing leaves 14% padding on either side of the icon box.
+      const clipped = 14 + (1 - fill) * 72
+      return <span key={i} className="relative" data-heart-fill={fill}>
+        <HeartIcon size={size} variant={fill === 1 ? 'solid' : 'line'} className={fill === 1 ? '' : 'opacity-45'} />
+        {fill > 0 && fill < 1 && <HeartIcon size={size} variant="solid" className="absolute inset-0"
+          style={{ clipPath: `inset(0 ${clipped}% 0 0)` }} />}
+      </span>
+    })}
+  </div>
+}
 
 function datesFor(save: FarmSave, pack: StoryPack, days: SpecialDays, id: string) {
   const today = save.calendar.day
@@ -39,6 +61,10 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
 }) {
   const location = useLocation()
   const love = save.love[id]!
+  const ladder = ladderOf(love.stage)
+  const standing = levelWords(love, true)
+  const total = LADDER_HEARTS[ladder]
+  const level = love.stage === 'confession' || love.stage === 'proposal' || love.stage === 'wedding' ? total : love.level
   const next = nextCard(save, pack, id, nameOf)
   const dates = datesFor(save, pack, days, id)
   const heart = love.stage === 'spouse' && longGameEnabled(save, pack) ? greaterLoveOf(save, id) : null
@@ -74,14 +100,17 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
     </div>
     <div className="lib-relationship">
       <section aria-label="Current relationship" className="lib-relationship-card">
-        <h3 data-relationship-standing>{levelWords(love, true)}</h3>
+        <h3 data-relationship-standing>{standing}</h3>
+        <RankHearts earned={level} total={total} size={rankSize[ladder]} colour={LADDER_COLOURS[ladder]}
+          label={`${standing}, ${level} of ${total} levels earned`} />
         <strong>{next.title}</strong>
         {next.bar.cost > 0 && <progress className="lib-greater-love" aria-label="Relationship points" value={next.bar.points} max={next.bar.cost} />}
         {next.words && <p>{next.words}</p>}
         {next.ready && <Link className="lib-button" to={withParam(location, 'event', id)} state={{ back: true }}>Play scene ›</Link>}
         {heart && <div className="mt-1 grid gap-1 border-t border-hairline pt-2">
           <h3 data-book-love={heart.points}>{heart.points >= TRUE_LOVE ? 'True Love' : 'Greater Love'}</h3>
-          <progress className="lib-greater-love" aria-label="Greater Love points" value={heart.points} max={TRUE_LOVE} />
+          <RankHearts earned={greaterLoveHearts * heart.points / TRUE_LOVE} total={greaterLoveHearts} size={24} colour={greaterLoveColour}
+            label={`${heart.points} of ${TRUE_LOVE} Greater Love points`} />
           <p>{heart.points}/{TRUE_LOVE} {heart.points < TRUE_LOVE ? '· Spend time together at night' : ''}</p>
         </div>}
       </section>

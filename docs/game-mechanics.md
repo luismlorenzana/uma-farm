@@ -813,8 +813,11 @@ packs unlocked books in roster order and **Name (A–Z)** orders the same books 
 the original launch tiers and their empty positions. Earlier cast members keep their books in every view.
 Covers show her current relationship level and, for eligible spouses, Greater Love or True Love beside the collection count.
 
-**Relationship** is the first page when you open a book. It shows current standing, progress toward the next scene
-and any Greater Love progress. Its date links open the Calendar at her next birthday, anniversary, booked wedding
+**Relationship** is the first page when you open a book. Filled hearts show earned levels on her current ladder.
+Friendship uses ten small coral hearts, In Love uses ten larger rose hearts, and Spouse uses five gold hearts.
+Greater Love has five still larger red hearts, one per 24 points, filled in proportion to progress. At 120 points
+all five are full and the label reads True Love. The next scene has its own progress bar. Date links open the Calendar
+at her next birthday, anniversary, booked wedding
 or expedition return. The page links to her actions, Ready scene and available night visits.
 
 | Page | What fills it |
