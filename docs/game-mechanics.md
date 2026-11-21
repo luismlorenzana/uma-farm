@@ -64,7 +64,7 @@ costs. Travel and browsing are free. Hangouts and dates still take two actions a
 Festival and birthday bonuses count separately.
 
 The **crew shift** runs after the fifth regular action, using each Uma’s town rota, orders, aptitudes, food,
-reservations and expedition schedule. A two-action date can cross the boundary. **Start afternoon** on the Work
+reservations and expedition schedule. **Start afternoon** on the Work
 board passes the unused Morning actions and runs the shift. The crew’s produce and gathered goods are ready in the
 Warehouse that afternoon. Loads finish and crops grow at night.
 
