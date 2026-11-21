@@ -1,3 +1,4 @@
+import { MORNING_SCENES } from '../romance/morning-outings'
 // The farm's authored story: the pack's files (the cast, the ties, each Uma's bible and route, the pairs' conversations
 // and the household) as the private `content/story/` holds them, and the one reader the game, the release and the Story
 // Sandbox share. No character, name or line lives here; tests run on the invented stand-in (`authored.fixture.ts`).
@@ -105,7 +106,7 @@ export const OCCASIONS: readonly string[] = [
 export const EVENING_SCENES = [
   'hangout-walk', 'hangout-fishing', 'hangout-picnic', 'hangout-market', 'hangout-cooking', 'hangout-festival',
   'date-walk', 'date-fishing', 'date-picnic', 'date-market', 'date-cooking', 'date-crafting', 'date-stargazing', 'date-dance', 'date-boat', 'date-footrace',
-  'date-festival', 'dinner-in-town', 'a-night-in',
+  'date-festival', 'dinner-in-town', 'a-night-in', ...MORNING_SCENES,
 ] as const
 /** Every event a route may write: the rungs, her life's events, her occasions and the evenings' scenes. Each one it
  * leaves out plays the default story's (`default-story.ts`). */
@@ -734,7 +735,7 @@ function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings,
     if (!isObject(step)) { f.errors.push(`${at}: not a step`); return }
     if ('say' in step) {
       if (!isText(step.say)) f.errors.push(`${at}: say names who speaks`)
-      else if (!sc.speakers.has(step.say)) f.notes.push(`${at}: ${step.say} isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)`)
+      else if (step.say !== YOU && !sc.speakers.has(step.say)) f.notes.push(`${at}: ${step.say} isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)`)
       shown(step.line, LINE_LIMITS.line, at, f)
       if (step.emote !== undefined && !oneOf(EMOTES, step.emote)) f.notes.push(`${at}: the emote ${String(step.emote)} isn’t one of the menu’s ${EMOTES.length}, so her face shows neutral`)
     } else if ('choice' in step) {

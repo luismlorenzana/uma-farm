@@ -137,7 +137,9 @@ afterEach(async () => {
 describe('an evening from her profile', () => {
   it('shows her kinds with her numbers, plays a Walk at its evening length, and pays it on the card once', async () => {
     // Spring 5: she's out in town, and you've gone in.
-    useGame.setState({ uid: 'u1', status: 'ready', save: inTown(farm({ [TWO]: { level: 3 } }, 5)) })
+    // A legacy date was already in progress when the split schedule arrived.
+    const legacy = inTown(farm({ [TWO]: { level: 3 } }, 5))
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...legacy, today: { ...legacy.today, actions: 1 } } })
     const before = save().account.updatedAt
     await render(<HeartsPage />, `/hearts?uma=${TWO}`)
     expect($('[data-evening-marks]')?.dataset.eveningMarks).toBe('○')
@@ -175,7 +177,7 @@ describe('an evening from her profile', () => {
     await find('[data-evening-scene="hangout-walk"]')
     expect($('[data-scene-title]')?.textContent).toBe('Walk at dusk · Stand-in 2')
     expect($('[data-step] [data-line]')?.dataset.line).toBe('You walk the lanes as the light goes.')
-    expect(save().today.actions).toBe(2)
+    expect(save().today.actions).toBe(3)
     await click($('[data-action="skip"]'))
     const card = await find('[data-evening-card="walk"]')
     expect(card.dataset.grade).toBe('perfect')
@@ -218,15 +220,16 @@ describe('the morning\'s invitation', () => {
     expect(save().today.invites).toEqual([{ id: TWO, kind: 'walk', answer: 'yes' }])
     await find('[data-invite-answer="yes"]')
     expect($(`[data-heart-row="${TWO}"] [data-invite-chip]`)).not.toBeNull()
-    // Tonight's row is hers, with Play ›; her kinds sheet says the +20.
-    useGame.setState({ save: save() })
+    // The invitation is for Afternoon. Enter that half of the day before opening its row.
+    const accepted = save()
+    useGame.setState({ save: { ...accepted, today: { ...accepted.today, dayParts: true, actions: 5 } } })
     await render(<p />, '/?sheet=end')
     const row = await find('[data-evening-row="evening"]')
     expect(row.dataset.state).toBe('invited')
     expect(row.textContent).toContain('Stand-in 2 · Walk')
     await click(row.querySelector('[data-action="play-evening"]') as HTMLElement)
     expect(path).toBe(`/?sheet=end&evening=${TWO}`)
-    expect((await find('[data-evening-invite]')).textContent).toContain('She asked you: +20 with the evening')
+    expect((await find('[data-evening-invite]')).textContent).toContain('She asked you: +20 with the outing')
     // Whatever kind you choose, the +20 comes with it (her ×1.5 only in her kind, walk).
     await click($('[data-kind="fishing"]'))
     await find('[data-play="cast"][data-length="evening"]')

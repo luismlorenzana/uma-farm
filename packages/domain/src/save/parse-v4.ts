@@ -1,3 +1,4 @@
+import { isMorningOuting } from '../romance/morning-outings'
 // Save v5's parse: strict keys, explicit paths, every id checked, the farm's parts from `parse-loop.ts`. Unknown
 // keys (an older save's `start`, `visitors`, `work`, a roster Uma's `affinity` among them) are refused; roster keys are character ids by form,
 // or a sister's `s<outfitId>` (the API has no story pack or master data): the roster is everyone you've met, her `joined`
@@ -232,7 +233,7 @@ function parseGallery(value: unknown, path: string, roster: ReadonlySet<string>)
 /** An evening's kind: a date game or festival night. */
 const eveningKind = (v: unknown, at: string): EveningKind => oneOf(v, at, EVENING_KINDS)
 /** An invitation's kind: a date game, never festival night. */
-const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT ? fail(at, 'expected a date game') : eveningKind(v, at) as InviteKind)
+const inviteKind = (v: unknown, at: string): InviteKind => ((typeof v === 'string' && isMorningOuting(v)) || v === FESTIVAL_NIGHT ? fail(at, 'expected a date game') : eveningKind(v, at) as InviteKind)
 
 /** An occasion's id in `today.occasions`: lowercase words joined by `-` (`romance/occasions.ts`). */
 const OCCASION_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
@@ -290,7 +291,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
   const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
-  const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
+  const evenings = list(o.evenings, `${path}.evenings`, 0, slots + (o.dayParts === true ? 2 : 1)).map((v, i) => {
     const e = object(v, `${path}.evenings.${i}`, ['with', 'kind'])
     return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: eveningKind(e.kind, `${path}.evenings.${i}.kind`) }
   })
@@ -298,7 +299,9 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
   // Festival night once a day at most. Which days hold a festival is the story's (`festivalsOf`: it may move or add
   // them), so the save reads any day's; the evening's rule spends it only on a festival day or the Festival of Vows.
   if (nights > 1) fail(`${path}.evenings`, 'festival night once a day at most')
-  if (evenings.length - nights > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
+  const mornings = evenings.filter(entry => isMorningOuting(entry.kind)).length
+  if (mornings > (o.dayParts === true ? 1 : 0)) fail(`${path}.evenings`, 'one morning outing at most on a split day')
+  if (evenings.length - nights - mornings > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
   return {
     ...(o.dayParts === undefined ? {} : o.dayParts === true ? { dayParts: true as const } : fail(`${path}.dayParts`, 'expected true')),
     ...(o.crew === undefined ? {} : o.dayParts === true ? { crew: parseCrew(o.crew, `${path}.crew`, roster) } : fail(`${path}.crew`, 'expected day parts')),

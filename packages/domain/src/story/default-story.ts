@@ -1,3 +1,4 @@
+import { MORNING_OUTINGS } from '../romance/morning-outings'
 // The default story: what every Uma says and plays until her own story is written. Written once for the game, warm and
 // short, adults only, tender and never explicit; the protagonist is a man (he may be her husband, the groom). It names
 // no one: `{name}` is hers, `{farmer}` his, `{good}` her favourite good and `{work}` her line's work, filled at run time
@@ -284,6 +285,10 @@ export const DEFAULT_TOWN_MEETING: DefaultScene = scene('You introduce yourself,
 /** Her events by id: the route's rungs (her meeting in town as `arrival`), then her life's (the invitation to work, the
  * wedding night, moving in and married life 2 and 4; the rungs are S1, S3 and S5), then her occasions. */
 export const DEFAULT_EVENTS: Readonly<Record<string, DefaultScene>> = {
+  ...Object.fromEntries(MORNING_OUTINGS.flatMap(({ id, name }) => [
+    [`hangout-${id}`, scene(name, [say('I’m glad we had time to do this today.', 'happy')])],
+    [`date-${id}`, scene(name, [say('Starting the day with you feels good.', 'loving')])],
+  ])),
   arrival: DEFAULT_TOWN_MEETING,
   f1: scene('A quiet afternoon with her.', [
     say('It’s so quiet out here. I didn’t know I needed quiet.', 'thinking'),

@@ -597,6 +597,13 @@ farmhand, sweetheart, engaged and married. Her rungs run along all of them, and 
 | Sweetheart, and on | The dates' scenes (`date-<kind>`), `dinner-in-town` (from Romance 3) and `a-night-in` (from Romance 6) |
 | Married | `wedding-night` and `moving-in` after the wedding, then `s2` and `s4`; her bible's `mornings` (the night's companion) and `meals` |
 
+### Morning outing scenes
+
+The launch cast has six Morning outings. Author both `hangout-<kind>` and `date-<kind>` for `morning-walk`, `breakfast`,
+`tea-by-the-pond`, `flower-market`, `sunrise-sketch` and `bakery-stop`. The hangout plays for friends. The date plays
+for partners and spouses. Each has its own route scene and reuses the existing activity games. The scene begins after
+its outing has been recorded and can be replayed from the Library.
+
 ### Her occasions
 
 **An occasion scene** is a scene for a day of the year, played with each Uma who has it written on that day, from the

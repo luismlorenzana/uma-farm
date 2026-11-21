@@ -1,3 +1,4 @@
+import { WeeklySchedule } from './WeeklySchedule'
 // Her profile, a wide sheet over the Hearts tab at `?uma=<characterId>`. From the top: her
 // face (the "+N" an act paid floats up from it), her stage in the Uma loop (Acquaintance, Friend, Farmhand, Sweetheart,
 // Engaged, Married), her level in words and her ● Ready chip, her line, birthday and house;
@@ -107,6 +108,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       <div className="sticky top-0 z-10 -mx-4 bg-panel px-4 pb-3" data-profile-sides>
         <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       </div>
+      <WeeklySchedule save={save} pack={pack} id={id} />
       {(!atHome(save, id) || pack.town?.professions?.length || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
       {side === 'hearts' && canPlanWedding(love) && <Link to={`/?sheet=calendar&weddingPlan=${id}`} state={{ back: true }}
         className="mb-3 flex min-h-11 items-center justify-center rounded-md border border-hairline font-semibold text-accent" data-action="plan-wedding">

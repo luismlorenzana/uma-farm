@@ -1,4 +1,4 @@
-import { actionsLeft, eventActionsLeft } from '@farm/domain'
+import { actionsLeft, eventActionsLeft, marriedCount } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useRef, useState } from 'react'
@@ -25,6 +25,7 @@ export default function OutOfActions() {
     if (before && before.day !== day) setOpen(false)
   }, [day, left])
   if (!open) return null
+  const married = save ? marriedCount(save) : 0
   return (
     <Sheet open onClose={() => setOpen(false)} label="Out of actions" title="Out of actions"
       footer={
@@ -36,7 +37,11 @@ export default function OutOfActions() {
           }} data-action="end-the-day">End the day</Button>
         </div>
       }>
-      <p className="py-1 text-[15px]" data-out-of-actions>The day’s work is done. You can still build, go into town, shop or choose an evening companion.</p>
+      <p className="py-1 text-[15px]" data-out-of-actions>The daytime actions are spent. {married ? 'Night visits are available with your spouses.' : 'Night visits unlock after marriage.'} Town travel and shopping are free.</p>
+      {married > 0 && <Button variant="secondary" className="w-full" onClick={() => {
+        setOpen(false)
+        navigate(withParam(location, 'visits', '1'), { state: { back: true } })
+      }}>Night visits</Button>}
       {save && days && eventActionsLeft(save, days) > 0 && (
         <p className="text-[14px] text-ink-soft" data-event-actions-left>{eventActionsLeft(save, days)} left for events: the calendar has today’s.</p>
       )}

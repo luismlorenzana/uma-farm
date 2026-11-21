@@ -3,6 +3,7 @@ import type { SpecialDays } from '../farm/actions'
 import { isGoodId } from '../goods/ids'
 import { goodName } from '../goods/names'
 import { tasteKnown } from '../romance/acts'
+import { isMorningOuting } from '../romance/morning-outings'
 import { EVENINGS, eveningMoments, eveningScene, kindBuilt, type EveningRole } from '../romance/evening'
 import { householdTitle, isHouseholdId } from '../romance/household'
 import { rungName } from '../romance/love'
@@ -106,7 +107,7 @@ export function bookScenes(save: FarmSave, pack: StoryPack, id: string, days: Sp
       return [{ key: row, title: ROLE_TITLE[role as EveningRole], source: 'script', script, day, moments: eveningMoments(kind) }]
     })
     const proved = known.some(([row]) => row.startsWith(key + ':'))
-    if (kindBuilt(kind) || proved) scenes.push({ key, title: EVENINGS[kind].name, group: 'outings', core: kindBuilt(kind),
+    if (kindBuilt(kind) || proved) scenes.push({ key, title: EVENINGS[kind].name, group: 'outings', core: kindBuilt(kind) && !isMorningOuting(kind),
       earned: proved || save.today.evenings.some(outing => outing.with === id && outing.kind === kind), variants })
   }
   const scheduled = occasionCatalogue(save, pack, id, days)

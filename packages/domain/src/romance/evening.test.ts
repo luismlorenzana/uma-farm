@@ -154,6 +154,7 @@ describe('the kinds', () => {
     expect(Object.fromEntries(Object.values(EVENINGS).map((d) => [d.kind, `${d.play.kind}${d.play.mark ? `:${d.play.mark}` : ''}`]))).toEqual({
       walk: 'walk', fishing: 'cast', picnic: 'pick', market: 'pick', cooking: 'rhythm:pot', crafting: 'rhythm:hands', stargazing: 'pick', dinner: 'pick', 'night-in': 'pick', dance: 'rhythm:step',
       boat: 'rhythm:oar', footrace: 'rhythm:track', festival: 'walk',
+      'morning-walk': 'walk', breakfast: 'pick', 'tea-by-the-pond': 'pick', 'flower-market': 'pick', 'sunrise-sketch': 'rhythm:hands', 'bakery-stop': 'pick',
     })
   })
 

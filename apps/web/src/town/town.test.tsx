@@ -429,7 +429,7 @@ describe('the town', () => {
     expect($('[data-meet]')).toBeNull()
     expect($('[data-find-today]')?.textContent).toBe('Today · On the farm')
     expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · On the farm · 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30', 'Invented Café · 1, 7, 10, 13, 16, 19, 22, 25, 28', 'Invented Bakery · 4'])
-    expect($('[data-profile-actions] [data-action="evening"]')?.textContent).toContain('Evening · 2 ›')
+    expect($('[data-profile-actions] [data-action="evening"]')?.textContent).toBe('Outings unavailable')
     // Spring 7, her town day: she's in town at the café, and the town shows her there.
     useGame.setState({ save: { ...save(), calendar: { day: 7 }, today: { ...save().today, town: true } } })
     await render(<TownPage />, '/town?at=cafe')

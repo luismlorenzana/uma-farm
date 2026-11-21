@@ -110,10 +110,10 @@ test('a dry run lists every missing piece and writes nothing', async (t) => {
   assert.equal(existsSync(join(root, 'content/story-backups')), false)
   const said = lines.join('\n')
   assert.match(said, /Scaffolding Tier 1 \(3 Umas\) in .* \(a dry run: nothing is written\)/)
-  assert.match(said, new RegExp(`${id(1)} Invented Aster: would write 95 pieces \\(cast 2, bible 35, route 58\\)`))
-  assert.match(said, new RegExp(`${id(3)} Invented Corra: would write 98 pieces \\(cast 2, bible 37, route 59\\)`))
+  assert.match(said, new RegExp(`${id(1)} Invented Aster: would write 107 pieces \\(cast 2, bible 35, route 70\\)`))
+  assert.match(said, new RegExp(`${id(3)} Invented Corra: would write 110 pieces \\(cast 2, bible 37, route 71\\)`))
   assert.match(said, /route: arrival, f1–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk/)
-  assert.match(said, /291 pieces in 7 files would be written/)
+  assert.match(said, /327 pieces in 7 files would be written/)
   assert.deepEqual(result.files.map(slash).sort(), ['cast.json', `routes/${id(1)}.json`, `routes/${id(2)}.json`, `routes/${id(3)}.json`, `umas/${id(1)}.json`, `umas/${id(2)}.json`, `umas/${id(3)}.json`])
 })
 
