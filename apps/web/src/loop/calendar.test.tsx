@@ -226,7 +226,7 @@ describe('the calendar', () => {
     // The festival's panel.
     await click($(`[data-day="${SHOW}"]`))
     expect($('[data-festival-row="flower-show"]')?.textContent).toContain('Flower Show')
-    expect($$('[data-day-panel] [data-face]').map((f) => f.dataset.reasons)).toEqual(['occasion', 'occasion ready', 'occasion'])
+    expect($$('[data-day-panel] [data-face]').map((f) => f.dataset.reasons)).toEqual(['occasion ready', 'occasion', 'occasion'])
     // Another season, a tap away.
     await click($('[data-season="summer"]'))
     expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(30)

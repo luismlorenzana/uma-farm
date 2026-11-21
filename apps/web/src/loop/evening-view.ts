@@ -2,6 +2,7 @@
 // three numbers for her today, the picker's rows, Tonight's Evening rows, the Hearts header's marks, the card's sum and
 // the profile's Evening button. Festival night follows the year's festivals (the story's, `festivalsOf`). Pure, so the
 // screens and the tests read the same. Loaded on demand.
+import { byRelationship } from './relationship-order'
 import {
   DATE_FROM, EVENING_KINDS, eveningAffordable, eveningCost, eveningHere, EVENINGS, eveningMarks, eveningPreview, eveningRole, eveningUmas, favouriteKind, festivalsOf, GRADE_NAMES, GRADES,
   HANGOUT_FROM, invitedNow, inviteDue, invitePoints, isFestivalNight, kindBuilt, kindOpens, kindsNow, levelWords, ROLE_WORDS, rungName, slotsLeft, whereYouMeet, type EveningCard,
@@ -63,16 +64,16 @@ export interface PickRow {
   /** ✉ she asked today and it stands (unanswered or yes); `yes` once you said yes. */
   invite: 'yes' | 'asked' | null
 }
-/** The picker: the Umas who can spend an evening now, a yes first, then an unanswered invitation, then the cast's order. */
+/** The picker: the Umas who can spend an evening now, strongest relationship first. Invitations still appear beside her name. */
 export function pickRows(save: SaveV4, pack: Pack, nameOf: NameOf): PickRow[] {
   const inviteOf = (id: string): PickRow['invite'] => {
     if (!invitedNow(save, id)) return null
     return save.today.invites.find((i) => i.id === id)?.answer === 'yes' ? 'yes' : 'asked'
   }
-  const rank = (r: PickRow) => (r.invite === 'yes' ? 0 : r.invite === 'asked' ? 1 : 2)
+  const compare = byRelationship(save)
   return eveningUmas(save, pack).map((id): PickRow => ({
     id, name: nameOf(id), level: levelWords(save.love[id]!), favourite: EVENINGS[favouriteKind(pack, id)].short, invite: inviteOf(id),
-  })).map((r, i) => ({ r, i })).sort((a, b) => rank(a.r) - rank(b.r) || a.i - b.i).map(({ r }) => r)
+  })).sort((a, b) => compare(a.id, b.id))
 }
 
 /** One of Tonight's Evening rows: a spent slot "with Stand-in 2 · Walk ✓", the Uma who said yes with **Play ›**,

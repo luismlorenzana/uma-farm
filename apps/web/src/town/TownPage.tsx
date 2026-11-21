@@ -285,9 +285,9 @@ function Place({ view, save, nameOf, onOpen }: { view: LocationView; save: SaveV
 
 function People({ save, pack, day, nameOf, onOpen }: { save: SaveV4; pack: StoryPack; day: TownDay; nameOf: NameOf; onOpen: (id: string, at: string | null) => void }) {
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<PeopleSort>('met')
+  const [sort, setSort] = useState<PeopleSort>('relationship')
   const all = useMemo(() => peopleRows(save, pack, day, nameOf), [save, pack, day, nameOf])
-  const rows = useMemo(() => sortPeople(findPeople(all, query), sort), [all, query, sort])
+  const rows = useMemo(() => sortPeople(findPeople(all, query), sort, save), [all, query, sort, save])
   return (
     <div className="@container space-y-2" data-people={all.length}>
       <div className="flex items-center gap-2">

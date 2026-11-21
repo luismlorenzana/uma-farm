@@ -10,6 +10,7 @@
 // scene (`?occasion=`, one action, the event actions first) and her Ready event (`?event=`). Under them, **In town**: who's
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
+import { byRelationship } from './relationship-order'
 import {
   actionsLeft, canPlanWedding, celebrationDate, celebrationTitle, dateDayOf, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
   householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, NIGHT_VISITS, nightVisits, planWedding, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
@@ -40,7 +41,11 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const request = new URLSearchParams(location.search).get('weddingPlan')
   const planner = request && canPlanWedding(save?.love[request]) ? request : null
   const today = save?.calendar.day ?? 1
-  const [picked, setPicked] = useState(() => planner ? save?.love[planner]?.weddingDay ?? today + 1 : today)
+  const [picked, setPicked] = useState(() => {
+    if (planner) return save?.love[planner]?.weddingDay ?? today + 1
+    const requested = Number(new URLSearchParams(location.search).get('calendarDay'))
+    return Number.isSafeInteger(requested) && requested > 0 ? requested : today
+  })
   const swipe = useRef<{ x: number; y: number } | null>(null)
   const grid = useRef<HTMLOListElement | null>(null)
   const suppressTapUntil = useRef(0)
@@ -49,7 +54,16 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const { year, season } = dateOf(selected, save?.calendar)
   const pack = useMemo(() => story ?? noPack(), [story])
   const days = useMemo((): SpecialDays => special ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }, [special, story])
-  const list = useMemo(() => (save ? seasonDays(save, pack, days, season, year) : []), [save, pack, days, season, year])
+  const list = useMemo(() => {
+    if (!save) return []
+    const compare = byRelationship(save)
+    const countAsOccasion = (face: DayFace) => Number(face.reasons.some(reason => reason !== 'ready'))
+    return seasonDays(save, pack, days, season, year).map(day => day.day === null ? day : {
+      ...day,
+      faces: day.faces.sort((a, b) => countAsOccasion(b) - countAsOccasion(a) || compare(a.id, b.id)),
+      crew: { farm: day.crew.farm.sort(compare), off: day.crew.off.sort(compare) },
+    })
+  }, [save, pack, days, season, year])
   useEffect(() => {
     const pane = grid.current
     const tile = pane?.querySelector(`[data-day="${selected}"]`)

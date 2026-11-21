@@ -41,6 +41,7 @@ function useClose(): () => void {
     const params = new URLSearchParams(location.search)
     params.delete('sheet')
     params.delete('weddingPlan')
+    params.delete('calendarDay')
     const rest = params.toString()
     leave(`${location.pathname}${rest ? `?${rest}` : ''}`)
   }

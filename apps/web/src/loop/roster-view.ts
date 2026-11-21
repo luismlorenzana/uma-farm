@@ -128,13 +128,14 @@ export function sortedFor(rows: readonly LoopUmaRow[], activity: Activity): Loop
 const ACTIVITY_OPTIONS = ACTIVITIES.map((a) => ({ value: a, label: ACTIVITY_NAMES[a] }))
 /** The roster's sorts: talent score and rank points in a chosen activity, joined, name. */
 export const ROSTER_SORTS: readonly SortDef[] = [
+  { key: 'relationship', label: 'Relationship', defaultDirection: 'desc' },
   { key: 'joined', label: 'Joined', defaultDirection: 'asc' },
   { key: 'talent', label: 'Talent', defaultDirection: 'desc', parameter: { label: 'In', options: ACTIVITY_OPTIONS } },
   { key: 'points', label: 'Rank points', defaultDirection: 'desc', parameter: { label: 'In', options: ACTIVITY_OPTIONS } },
   { key: 'name', label: 'Name', defaultDirection: 'asc' },
 ]
-/** The roster opens by joined, oldest first. */
-export const ROSTER_QUERY: AlbumQuery = { search: '', filters: {}, sort: 'joined', direction: 'asc', group: null, view: 'icons', mode: null }
+/** The roster opens by relationship, strongest first. */
+export const ROSTER_QUERY: AlbumQuery = { search: '', filters: {}, sort: 'relationship', direction: 'desc', group: null, view: 'icons', mode: null }
 /** The activity a sort reads, or null for joined and name. */
 export const sortActivity = (query: Pick<AlbumQuery, 'sort'>, parameter: string | null): Activity | null =>
   query.sort === 'talent' || query.sort === 'points' ? ((parameter as Activity | null) ?? 'farming') : null

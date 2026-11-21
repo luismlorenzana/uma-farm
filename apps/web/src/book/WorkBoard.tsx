@@ -7,6 +7,7 @@
 // the Coop's or the Barn's animals; a face at the Mine or the Quarry; Cook, in the farmhouse kitchen, with nowhere to
 // choose) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
+import { byRelationship } from '../loop/relationship-order'
 import {
   aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
   canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
@@ -44,7 +45,7 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const pack = useStory()
   const talents = useTalents()
   const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
-  const hands = handsInOrder(save)
+  const hands = handsInOrder(save).sort(byRelationship(save))
   const forecast = handsTonight(save, save, talents.of, pack)
   const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
   const adding = new URLSearchParams(location.search).get('task')

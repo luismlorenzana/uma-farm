@@ -1,15 +1,16 @@
 import {
   archivedDiscoveries, atHome, awayOn, bookDiscoveries, bookHistory, bookMilestones, bookProgress, dateOf, festivalsOf, gradeOf,
-  GRADE_NAMES, LAUNCH_CAST, levelWords, libraryEntryName, longGameEnabled, NO_BIRTHDAYS, SEASON_NAMES,
+  GRADE_NAMES, greaterLoveOf, LAUNCH_CAST, levelWords, libraryEntryName, longGameEnabled, NO_BIRTHDAYS, SEASON_NAMES, TRUE_LOVE,
   type FarmSave, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { GuideButton } from '../guide/Guide'
-import { lazy, Suspense, useMemo, useRef } from 'react'
+import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import { ProfileChapters, ProfileDetails, TownCard } from '../loop/HeartProfile'
 import { nextCard, profileLine } from '../loop/hearts-view'
 import { LoveActs } from '../loop/Love'
+import { byRelationship } from '../loop/relationship-order'
 import { umaRows } from '../loop/roster-view'
 import { WorkFacts, WorkSide } from '../loop/RosterAlbum'
 import { talentTable } from '../loop/talents'
@@ -18,20 +19,25 @@ import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
 import { MarriedLife } from './MarriedLife'
+import { RelationshipPage } from './RelationshipPage'
 import './library.css'
 
 const GalleryPage = lazy(() => import('./LibraryScenes'))
 const PER_TIER = 10
-const BOOK_PAGES = [['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story'], ['married', 'Married Life']] as const
+const BOOK_PAGES = [['relationship', 'Relationship'], ['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story'], ['married', 'Married Life']] as const
 export const libraryDate = (day: number | null, clock?: FarmSave['calendar']) => {
   if (day === null) return 'Date unknown'
   const { year, season, day: d } = dateOf(day, clock)
   return `Y${year} · ${SEASON_NAMES[season]} ${d}`
 }
-export const libraryHref = (uma: string, page = 'profile') => `/library?uma=${encodeURIComponent(uma)}&page=${page}`
+export const libraryHref = (uma: string, page = 'relationship') => `/library?uma=${encodeURIComponent(uma)}&page=${page}`
 const button = 'lib-button'
 
 interface Shelf { name: string; ids: (string | null)[] }
+type ShelfOrder = 'relationship' | 'cast' | 'name' | 'tier'
+const SHELF_ORDERS: readonly [ShelfOrder, string][] = [
+  ['relationship', 'Relationship'], ['cast', 'Cast order'], ['name', 'Name (A–Z)'], ['tier', 'By tier'],
+]
 function collectionShelves(save: FarmSave, pack: StoryPack): Shelf[] {
   const cast = new Set(pack.cast.umas.map(uma => uma.characterId))
   const known = new Set(LAUNCH_CAST)
@@ -48,27 +54,46 @@ function collectionShelves(save: FarmSave, pack: StoryPack): Shelf[] {
   return shelves
 }
 
+function shelvesFor(save: FarmSave, pack: StoryPack, order: ShelfOrder, master: MasterView | null): Shelf[] {
+  const tiers = collectionShelves(save, pack)
+  if (order === 'tier') return tiers
+  const ids = tiers.flatMap(shelf => shelf.ids.filter((id): id is string => !!id && !!save.roster[id]))
+  if (order === 'relationship') ids.sort(byRelationship(save))
+  if (order === 'name') {
+    const nameOf = namer(master, pack)
+    ids.sort((a, b) => nameOf(a).localeCompare(nameOf(b)))
+  }
+  return Array.from({ length: Math.ceil(ids.length / PER_TIER) }, (_, i) => ({
+    name: `Shelf ${i + 1}`, ids: ids.slice(i * PER_TIER, (i + 1) * PER_TIER),
+  }))
+}
+
 export default function LibraryPage() {
   const save = useLoopSave()
   const pack = useStory()
   const master = useMaster()
   const special = useSpecialDays()
   const [params, set] = useSearchParams()
-  const days = useMemo(() => special ?? { festivals: festivalsOf(pack), birthdays: NO_BIRTHDAYS }, [special, pack])
-  if (!save || !pack) return null
+  const [order, setOrder] = useState<ShelfOrder>('relationship')
   const view = master.status === 'ready' ? master.view : null
+  const days = useMemo(() => special ?? { festivals: festivalsOf(pack), birthdays: NO_BIRTHDAYS }, [special, pack])
+  const shelves = useMemo(() => save && pack ? shelvesFor(save, pack, order, view) : [], [save, pack, order, view])
+  if (!save || !pack) return null
   const id = params.get('uma')
   return <main className="uma-library absolute inset-0 overflow-y-auto overscroll-contain" data-page="library">
     {id && save.roster[id] && save.love[id]
-      ? <OpenBook key={id} save={save} pack={pack} days={days} id={id} master={view} params={params} />
-      : <ShelfView save={save} pack={pack} days={days} master={view} params={params} setShelf={shelf => set({ shelf: String(shelf + 1) }, { replace: true })} />}
+      ? <OpenBook key={id} save={save} pack={pack} days={days} id={id} master={view} params={params} shelves={shelves} />
+      : <ShelfView save={save} pack={pack} days={days} master={view} params={params} shelves={shelves} order={order}
+          setOrder={next => { setOrder(next); set({ shelf: '1' }, { replace: true }) }}
+          setShelf={shelf => set({ shelf: String(shelf + 1) }, { replace: true })} />}
   </main>
 }
 
 type Base = { save: FarmSave; pack: StoryPack; days: SpecialDays; master: MasterView | null }
 
-function ShelfView({ save, pack, days, master, params, setShelf }: Base & { params: URLSearchParams; setShelf: (shelf: number) => void }) {
-  const shelves = useMemo(() => collectionShelves(save, pack), [save.roster, pack])
+function ShelfView({ save, pack, days, master, params, shelves, order, setOrder, setShelf }: Base & {
+  params: URLSearchParams; shelves: Shelf[]; order: ShelfOrder; setOrder: (order: ShelfOrder) => void; setShelf: (shelf: number) => void
+}) {
   const index = Number(params.get('shelf') ?? 0) - 1
   const start = Math.max(0, shelves.findIndex(shelf => shelf.ids.some(id => id && save.roster[id])))
   const shown = Number.isInteger(index) && shelves[index] ? index : start
@@ -80,7 +105,15 @@ function ShelfView({ save, pack, days, master, params, setShelf }: Base & { para
   return <>
     <header className="lib-head">
       <div><h1>Uma Library</h1><p>{met} of {total} met</p></div>
+      {shelf && shelves.length > 1 && <nav aria-label="Shelves" className="lib-pagination">
+        <button type="button" className={button} disabled={!shelves[shown - 1]} onClick={() => setShelf(shown - 1)} aria-label="Previous shelf">‹</button>
+        <span aria-live="polite">{order === 'tier' ? `${shelf.name} · ` : ''}{shown + 1}/{shelves.length}</span>
+        <button type="button" className={button} disabled={!shelves[shown + 1]} onClick={() => setShelf(shown + 1)} aria-label="Next shelf">›</button>
+      </nav>}
       <div className="lib-actions">
+        {met > 0 && <select className={button} aria-label="Sort books" value={order} onChange={e => setOrder(e.target.value as ShelfOrder)}>
+          {SHELF_ORDERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>}
         <Link className={button} to="/hearts" state={{ back: true }}>People &amp; work</Link>
         <GuideButton topic="library" title="Uma Library" label="About the Library">
           <p>Meet an Uma to place her book on the shelf. Playing her scenes, learning her tastes and reaching milestones fills the book.</p>
@@ -110,30 +143,32 @@ function ShelfView({ save, pack, days, master, params, setShelf }: Base & { para
               const name = nameOf(id)
               const progress = bookProgress(save, pack, id, days)
               const full = progress.available > 0 && progress.filled === progress.available
+              const love = save.love[id]!
+              const standing = levelWords(love, true)
+              const greater = love.stage === 'spouse' && longGameEnabled(save, pack) ? greaterLoveOf(save, id).points : null
+              const married = greater === null ? null : greater >= TRUE_LOVE ? 'True Love' : `Greater Love ${greater}/${TRUE_LOVE}`
               return <Link key={id} className="lib-cover" data-book-cover={id} data-tone={(from + offset) % 5} data-completed={full || undefined}
-                to={libraryHref(id)} state={{ back: true }} aria-label={`Open ${name}’s book, ${progress.filled} of ${progress.available} filled`}>
-                <Avatar id={id} size={44} label={name} />
-                <strong>{name}</strong><span className="tabular-nums">{full ? '✓ ' : ''}{progress.filled}/{progress.available}</span>
+                to={libraryHref(id)} state={{ back: true }} aria-label={`Open ${name}’s book, ${standing}${married ? `, ${married}` : ''}, ${progress.filled} of ${progress.available} filled`}>
+                <Avatar id={id} size={52} label={name} />
+                <strong>{name}</strong>
+                <span className="lib-cover-standing">{standing}</span>
+                {married && <span className="lib-cover-greater">{married}</span>}
+                <small className="tabular-nums">{full ? '✓ ' : ''}{progress.filled}/{progress.available}</small>
               </Link>
             })}
           </div>)}
         </div>
-        <nav aria-label="Shelves" className="lib-pagination">
-          <button type="button" className={button} disabled={!shelves[shown - 1]} onClick={() => setShelf(shown - 1)} aria-label="Previous shelf">‹</button>
-          <span aria-live="polite">{shelf.name} · {shown + 1}/{shelves.length}</span>
-          <button type="button" className={button} disabled={!shelves[shown + 1]} onClick={() => setShelf(shown + 1)} aria-label="Next shelf">›</button>
-        </nav>
       </>}
   </>
 }
 
-function OpenBook({ save, pack, days, master, id, params }: Base & { id: string; params: URLSearchParams }) {
+function OpenBook({ save, pack, days, master, id, params, shelves }: Base & { id: string; params: URLSearchParams; shelves: Shelf[] }) {
   const love = save.love[id]!
   const pages = BOOK_PAGES.filter(([id]) => id !== 'married' || (love.stage === 'spouse' && longGameEnabled(save, pack)))
   const page = pages.find(([key]) => key === params.get('page')) ?? BOOK_PAGES[0]
   const nameOf = namer(master, pack)
   const name = nameOf(id)
-  const index = collectionShelves(save, pack).findIndex(shelf => shelf.ids.includes(id))
+  const index = shelves.findIndex(shelf => shelf.ids.includes(id))
   const toShelf = `/library?shelf=${Math.max(1, index + 1)}`
   const progress = useMemo(() => bookProgress(save, pack, id, days), [save, pack, id, days])
   const complete = progress.available > 0 && progress.filled === progress.available
@@ -154,6 +189,7 @@ function OpenBook({ save, pack, days, master, id, params }: Base & { id: string;
         </ul>
       </aside>
       <article className="lib-paper" aria-label={page[1]} data-library-page={page[0]}>
+        {page[0] === 'relationship' && <RelationshipPage save={save} pack={pack} days={days} id={id} nameOf={nameOf} />}
         {page[0] === 'profile' && <BookProfile save={save} pack={pack} days={days} id={id} nameOf={nameOf} archived={params.get('facts') === 'archive'} />}
         {page[0] === 'abilities' && <Abilities save={save} pack={pack} id={id} master={master} />}
         {page[0] === 'chapters' && <>
@@ -177,7 +213,7 @@ function BookProfile({ save, pack, days, id, nameOf, archived }: Omit<Base, 'mas
     <p>{profileLine(save, pack, id, days.birthdays).join(' · ')}</p>
     {(!atHome(save, id) || pack.town?.professions?.length || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
     <div className="lib-head"><h3>Discoveries</h3>{archive.length > 0 && <Link className={button} replace
-      to={libraryHref(id) + (archived ? '' : '&facts=archive')}>{archived ? 'Current' : 'Archive'}</Link>}</div>
+      to={libraryHref(id, 'profile') + (archived ? '' : '&facts=archive')}>{archived ? 'Current' : 'Archive'}</Link>}</div>
     <ul className="lib-lines">{(archived ? archive : facts).map(fact =>
       <li key={fact.key} data-discovery={fact.value === null ? 'unknown' : 'known'}>
         <span>{fact.title}</span>

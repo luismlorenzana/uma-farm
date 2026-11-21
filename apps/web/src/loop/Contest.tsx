@@ -5,6 +5,7 @@
 // judging (the rivals at today's Farm Rank, the score's rule, an optional cook: none, or a farmhand with an action
 // tonight), then **Enter · 3**, which opens the stove (`?stove=1`). The festival's name is the story's (a moved or renamed
 // Contest). Loaded on demand with the Kitchen's sheet.
+import { byRelationship } from './relationship-order'
 import {
   actionsLeft, aptitudeOf, APTITUDE_NAMES, boardRows, CONTEST_ACTIONS, contestBlock, contestBoard, contestDefault, contestMains, contestOn, contestResult, contestSides, cookLock,
   dishName, entryStars, eventActionsLeft, FESTIVALS, GAME_DAYS, handDay, handsInOrder, ingredientName, knownRecipes, placeWords, PLAY_TIERS, recipeWords, stoveSeed,
@@ -124,7 +125,7 @@ function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   const entry = chosen ?? contestDefault(save)
   const why = contestBlock(save, days, entry, pack)
   const known = knownRecipes(save)
-  const hands = handsInOrder(save).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
+  const hands = handsInOrder(save).filter((id) => (handDay(save, id)?.actions ?? 0) > 0).sort(byRelationship(save))
   const rivals = contestBoard(save, save.calendar.day, 0).rivals
   const set = (next: Partial<ContestEntry>) => setChosen({ ...(entry ?? { dish: '', main: '', side: '', cook: null }), ...next })
   const pickDish = (dish: string) => set({ dish, main: contestMains(save, dish)[0] ?? '', side: contestSides(save, dish)[0] ?? '' })

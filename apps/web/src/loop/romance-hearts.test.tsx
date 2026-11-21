@@ -29,6 +29,7 @@ const { castLens } = await import('../story/load')
 const { FarmRail } = await import('../shell/Bars')
 const { ROUTES } = await import('../app/router')
 const { default: HeartsPage } = await import('./HeartsPage')
+const { default: LibraryPage } = await import('../library/LibraryPage')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
@@ -116,10 +117,10 @@ describe('the bar and the routes', () => {
 })
 
 describe('the Hearts view', () => {
-  it('lists the three stand-ins, 9000001 Ready first, with the header and the chips’ counts', async () => {
+  it('lists the three stand-ins by relationship with the header and the chips’ counts', async () => {
     await render(<HeartsPage />, '/hearts')
     await find('[data-heart-row]')
-    expect($$('[data-heart-row]').map((r) => r.dataset.heartRow)).toEqual([ONE, THREE, TWO])
+    expect($$('[data-heart-row]').map((r) => r.dataset.heartRow)).toEqual([ONE, TWO, THREE])
     const first = $(`[data-heart-row="${ONE}"]`)!
     expect(first.querySelector('[data-ready-chip]')?.textContent).toBe('● Ready')
     expect(first.querySelector('[data-level-words]')?.textContent).toBe('New friend')
@@ -147,6 +148,44 @@ describe('the Hearts view', () => {
     await click($(`[data-heart-row="${ONE}"] [data-open-row]`))
     expect(path).toBe(`/hearts?uma=${ONE}`)
     await find(`[data-profile="${ONE}"]`)
+  })
+})
+
+describe('the Uma Library', () => {
+  it('opens the relationship page, shows personal dates, and switches the shelves to cast order', async () => {
+    const base = farm()
+    useGame.setState({ save: {
+      ...base,
+      love: {
+        ...base.love,
+        [ONE]: { ...base.love[ONE]!, stage: 'spouse', level: 4, wed: 2, house: 0 },
+        [TWO]: { ...base.love[TWO]!, stage: 'spouse', level: 1, wed: 3, house: 0 },
+        [THREE]: { ...base.love[THREE]!, stage: 'romance', level: 0, weddingDay: 61 },
+      },
+      longGame: { weddings: [ONE, TWO], celebrations: {}, love: {
+        [TWO]: { points: 120, trueDay: 3, pajamas: 0, anniversaries: 0, memories: [] },
+      } },
+    } })
+    await render(<LibraryPage />, '/library')
+    const covers = () => $$('[data-book-cover]').map(cover => cover.dataset.bookCover)
+    expect(covers()).toEqual([TWO, ONE, THREE])
+    expect($(`[data-book-cover="${TWO}"]`)?.textContent).toContain('True Love')
+    await click($(`[data-book-cover="${TWO}"]`))
+    await find('[data-library-page="relationship"]')
+    expect($('[data-relationship-standing]')?.textContent).toBe('Spouse · S1')
+    expect($('[data-book-love]')?.textContent).toBe('True Love')
+    expect($('[data-relationship-date="Anniversary"]')?.getAttribute('href')).toContain('calendarDay=123')
+    await click($('a[aria-label="Profile"], .lib-tabs a[href$="page=profile"]'))
+    await find('[data-library-page="profile"]')
+    await click($('.lib-book-head a'))
+    const sort = await find('[aria-label="Sort books"]') as HTMLSelectElement
+    await act(async () => {
+      sort.value = 'cast'
+      sort.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(covers()).toEqual([ONE, TWO, THREE])
+    await click($(`[data-book-cover="${THREE}"]`))
+    expect($('[data-relationship-date="Planned wedding"]')?.getAttribute('href')).toContain('calendarDay=61')
   })
 })
 
