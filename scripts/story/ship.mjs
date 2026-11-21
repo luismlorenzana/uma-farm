@@ -44,7 +44,10 @@ const FILE_HEADERS = ['--cache-control=private, max-age=31536000, immutable', '-
 const INDEX_HEADERS = ['--cache-control=private, no-cache', '--content-type=application/json']
 /** gcloud's words for an object or a folder that isn't there yet; a bucket that isn't there ("not found: 404") stops. */
 const NOT_THERE = /matched no objects|No URLs matched/i
-const USAGE = 'pnpm story:ship [--note "…"] [--release <n>] [--dry-run] [--from <dir>] [--out <dir>]'
+const { launchDuoIssues } = await import('./duos.mjs')
+const { readStoryPack } = await import('../../packages/domain/src/story/pack.ts')
+
+const USAGE = 'pnpm story:ship [--note "…"] [--release <n>] [--dry-run] [--from <dir>] [--out <dir>] [--launch-duos]'
 
 /** A ship that stops before anything is uploaded, or one whose upload stopped, with every reason. */
 export class ShipRefused extends Error {
@@ -182,7 +185,7 @@ function backUp({ from, platform, dryRun, pnpm, log }) {
 }
 
 /** Steps 1 to 5 for the pack in `from`. Returns what shipped: its number, its note and what went up. */
-async function shipPack({ from, out, given, dryRun, store, platform, now, gcloud, pnpm, log }) {
+async function shipPack({ from, out, given, dryRun, launchDuos, store, platform, now, gcloud, pnpm, log }) {
   const note = noteFor(given, from)
   log(`Shipping the story${dryRun ? ' (a dry run: nothing is uploaded)' : ''}: ${shown(from)} → ${store.url}`)
 
@@ -190,6 +193,11 @@ async function shipPack({ from, out, given, dryRun, store, platform, now, gcloud
   const read = await readPack(from)
   const check = releaseCheck(read.files)
   const skipped = [...read.errors, ...check.errors]
+  if (launchDuos) {
+    const issues = [...skipped, ...launchDuoIssues(readStoryPack(check.files).pack)]
+    if (issues.length) throw new ShipRefused(issues)
+    log('  Launch duos: all 75 have complete bond scenes and night scripts')
+  }
   log(skipped.length === 0 ? '  Nothing skipped: the game reads every part' : `  Skipped, since the game can't read them (${skipped.length}); the rest is in:\n${skipped.map((e) => `    - ${e}`).join('\n')}`)
   log(check.notes.length === 0 ? '  No notes' : `  Notes (${check.notes.length}), which block nothing:\n${groupNotes(check.notes).map((n) => `    - ${n}`).join('\n')}`)
   // Each Uma it ships with a route, as `story:status` shows her: hers, the default and missing, by part.
@@ -283,13 +291,13 @@ async function rollBack({ to, given, dryRun, store, now, log }) {
  * `story.json` only after every file. `gcloud`, `pnpm`, `now` and `log` stand in for the real ones in the tests.
  */
 export async function ship({
-  from = SOURCE, out = OUT, note: given, dryRun = false, rollback, bucket = process.env.STORY_BUCKET || 'uma-farm-content',
+  from = SOURCE, out = OUT, note: given, dryRun = false, launchDuos = false, rollback, bucket = process.env.STORY_BUCKET || 'uma-farm-content',
   platform = process.env.STORY_PLATFORM_DIR ? resolve(process.env.STORY_PLATFORM_DIR) : PLATFORM,
   now = () => new Date(), gcloud = realGcloud, pnpm = realPnpm, log = console.log,
 } = {}) {
   const store = bucketOf(gcloud, bucket)
   if (rollback !== undefined) return rollBack({ to: rollback, given: given === undefined ? null : cleanNote(given, '--note'), dryRun, store, now, log })
-  return shipPack({ from, out, given, dryRun, store, platform, now, gcloud, pnpm, log })
+  return shipPack({ from, out, given, dryRun, launchDuos, store, platform, now, gcloud, pnpm, log })
 }
 
 /** The command line, read: every flag known, each value there. */
@@ -299,6 +307,7 @@ export function parseArgs(argv) {
   for (let i = 0; i < args.length; i++) {
     const flag = args[i]
     if (flag === '--dry-run') { options.dryRun = true; continue }
+    if (flag === '--launch-duos') { options.launchDuos = true; continue }
     if (!['--note', '--release', '--from', '--out'].includes(flag)) throw new ShipRefused([`Unknown: ${flag}. Usage: ${USAGE}`])
     const value = args[++i]
     if (value === undefined) throw new ShipRefused([`${flag} needs a value. Usage: ${USAGE}`])

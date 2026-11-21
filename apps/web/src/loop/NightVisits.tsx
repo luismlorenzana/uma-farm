@@ -1,8 +1,8 @@
 import { byRelationship } from './relationship-order'
 import {
-  anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, defaultNightScript, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled,
-  NIGHT_VISITS, nightAvailable, nightBeatFace, nightVisits, planVisit, setVisitStay, TRUE_LOVE, visitLookKind, visitPortraitKey, visitScript, wantsBirthdayAlone,
-  type Birthdays, type Duo, type FarmSave, type VisitKind, type Step, type StoryPack, type Visit,
+  anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
+  NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, useStoryDuos, visitBeats, wantsBirthdayAlone,
+  type Birthdays, type Duo, type FarmSave, type VisitKind, type StoryPack, type Visit,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -32,10 +32,11 @@ export default function NightVisits({ replay, morning }: { replay: string | null
   const leave = useLeave()
   const close = () => leave(withParam(location, morning ? 'visitMorning' : replay ? 'visitReplay' : 'visits', null))
   if (!save || !pack || !longGameEnabled(save, pack)) return null
-  const [owner, index] = replay?.split(':') ?? []
+  const [owner, index, beat] = replay?.split(':') ?? []
   const memory = owner && index && /^\d+$/.test(index) ? greaterLoveOf(save, owner).memories[Number(index)] : undefined
   const outing = owner && index && /^e\d+$/.test(index) ? save.longGame?.outings?.[Number(index.slice(1))] : undefined
-  const found = morning ? save.longGame?.morning : memory
+  const playMorning = morning || beat === 'morning'
+  const found = morning ? save.longGame?.morning : memory && (playMorning ? morningOfMemory(save, memory) : memory)
   return createPortal(<MasterGate skeleton={null}>{master => {
     const birthdays = birthdaysOf(pack, master.birthdays)
     const birthday: BirthdayCheck = (farm, id) => wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, farm.calendar.day, farm.calendar)
@@ -43,7 +44,7 @@ export default function NightVisits({ replay, morning }: { replay: string | null
     if (outing && owner && outing.who.includes(owner)) return <EveningScene save={save} pack={pack} master={master}
       id={outing.who[0]} name={nameOf(outing.who[0])} role="spouse" kind={outing.kind} partner={outing.who[1]} day={outing.day} onDone={close} />
     if (replay || morning) return found
-      ? <VisitScene save={save} pack={pack} visit={found} morning={morning} nameOf={nameOf} onDone={close} onClose={close} />
+      ? <VisitScene save={save} pack={pack} visit={found} morning={playMorning} nameOf={nameOf} onDone={close} onClose={close} />
       : <Sheet open title="Night memories" onClose={close}><p>That scene hasn’t been seen.</p></Sheet>
     return <Visits save={save} pack={pack} birthdays={birthdays} birthday={birthday} focus={focus} nameOf={nameOf} onClose={close} />
   }}</MasterGate>, document.body)
@@ -113,7 +114,7 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
           {duos.map(duo => {
             const availableNow = availableDuo(duo)
             return <li key={duoKey(duo)} className="space-y-1">
-              <Button variant="secondary" className="w-full" disabled={!availableNow} onClick={() => start(duo, 'pajamas')}>{duo.map(nameOf).join(' & ')}</Button>
+              <Button variant="secondary" className="w-full" disabled={!availableNow} onClick={() => start(duo[1] === focus ? [duo[1], duo[0]] : duo, 'pajamas')}>{duo.map(nameOf).join(' & ')}</Button>
               {duo.flatMap((id, i) => celebrations(id).map(({ kind, label }) =>
                 <Button key={`${id}:${kind}`} variant="secondary" className="w-full" disabled={!availableNow}
                   onClick={() => start([id, duo[1 - i]!], kind)}>{nameOf(id)} · {label}</Button>))}
@@ -147,9 +148,17 @@ function DuoEditor({ save, pack, nameOf, busy, run }: { save: FarmSave; pack: St
   const [second, setSecond] = useState(cast[1] ?? '')
   const [sharing, setSharing] = useState(false)
   const pairs = configuredDuos(save, pack)
+  const custom = save.longGame?.duos !== undefined
+  const storyCount = configuredDuos(useStoryDuos(save), pack).length
   const linked = pairs.filter(pair => pair.includes(first))
   const options = cast.map(id => <option key={id} value={id}>{nameOf(id)}</option>)
   return <div className="space-y-2">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <p data-duo-source={custom ? 'custom' : 'story'}>{custom ? 'Custom duos' : 'Story duos'} · {pairs.length} pairs</p>
+      {custom && <Button variant="secondary" disabled={busy} onClick={() => void run(useStoryDuos)}>
+        Use story duos ({storyCount})
+      </Button>}
+    </div>
     <div className="flex flex-wrap items-center gap-2">
       <select className="min-h-11 rounded-md border border-hairline bg-panel px-2" aria-label="First Uma" value={first} onChange={event => setFirst(event.target.value)}>{options}</select>
       <select className="min-h-11 rounded-md border border-hairline bg-panel px-2" aria-label="Second Uma" value={second} onChange={event => setSecond(event.target.value)}>{options}</select>
@@ -168,33 +177,20 @@ function DuoEditor({ save, pack, nameOf, busy, run }: { save: FarmSave; pack: St
   </div>
 }
 
-const beats = ['sitting', 'bedside', 'farewell'] as const
 function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, onDone, onClose }: {
   save: FarmSave; pack: StoryPack; visit: Visit; morning?: boolean; nameOf: NameOf; busy?: boolean; error?: string | null; onDone: () => void; onClose: () => void
 }) {
   const [part, setPart] = useState(0)
-  const who = visit.who[part % visit.who.length]
-  const phase = Math.floor(part / visit.who.length)
+  const scene = visitBeats(pack, visit, morning)[part]
   const title = `${morning ? 'Morning' : visit.kind === 'anniversary' ? 'Anniversary ' + visit.anniversary : visit.kind === 'birthday' ? 'Birthday night' : 'Night visit'} · ${visit.who.map(nameOf).join(' & ')}`
-  const done = phase >= (morning ? 1 : beats.length)
-  if (done || !who) return <Sheet open title={title} onClose={onClose} label={title}>
+  if (!scene) return <Sheet open title={title} onClose={onClose} label={title}>
     {error && <p role="alert" className="text-danger">{error}</p>}
     <Button disabled={busy} onClick={onDone}>{morning ? 'Good morning' : 'Finish'}</Button>
   </Sheet>
-  const index = part % visit.who.length
-  const script = visitScript(pack, visit, index)
-  const kind = index === 0 ? visit.kind : 'pajamas'
-  const wardrobe = visitLookKind(visit, index)
-  const steps: Step[] = []
-  if (phase === 0 && script.illustration) steps.push({ illustration: script.illustration })
-  if (phase === 1 && part % visit.who.length === 0) steps.push({ narrate: 'You sit by the bedside as the house grows quiet.' })
-  const beat = morning ? 'morning' : beats[phase]!
-  steps.push({ say: who, line: script[beat] ?? defaultNightScript(kind)[beat], emote: script.emotes?.[beat] ?? nightBeatFace(kind, beat) })
   return <Frame title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
-    <SceneLookProvider value={{ day: visit.day, leads: [who], own: script.outfit ?? (wardrobe === 'anniversary' ? 'wedding-night' : 'pajamas'),
-      ...(script.outfit ? {} : { portrait: visitPortraitKey(wardrobe, visit.looks[index]!) }) }}>
-      <LifeScene key={part} id={who} steps={steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={morning ? MORNING_BACKDROP : NIGHT_BACKDROP}
-        onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': morning ? 'morning' : beats[phase] }} />
+    <SceneLookProvider value={{ day: visit.day + (morning ? 1 : 0), leads: [scene.id], own: scene.outfit, portrait: scene.portrait }}>
+      <LifeScene key={part} id={scene.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={morning ? MORNING_BACKDROP : NIGHT_BACKDROP}
+        onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': scene.beat, 'data-visit-speaker': scene.id }} />
     </SceneLookProvider>
   </Frame>
 }

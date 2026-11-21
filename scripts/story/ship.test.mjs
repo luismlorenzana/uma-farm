@@ -12,6 +12,13 @@ import { fileURLToPath } from 'node:url'
 import { STAND_IN } from './release.mjs'
 import { commandFor, gcloudEnv, noteFor, parseArgs, ship, ShipRefused } from './ship.mjs'
 
+test('a strict launch duo ship rejects an incomplete draft before reading or writing the bucket', async t => {
+  const from = await pack(t)
+  const gcloud = () => { throw new Error('Unexpected cloud call') }
+  await assert.rejects(ship({ from, launchDuos: true, gcloud, log: () => undefined }),
+    error => error instanceof ShipRefused && error.issues.some(issue => issue.includes('Expected 75 unique launch duos')))
+})
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const BUCKET = 'uma-farm-content'
 const NOW = new Date('2026-11-14T09:30:00.000Z')

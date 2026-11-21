@@ -4,12 +4,12 @@ import { availableDishes } from '../expeditions/stock'
 import { SaveRuleError } from '../save/rules'
 import {
   CELEBRATIONS, COHORTS, DUO_LIMIT, ENDING_SPOUSES, FARM_YEAR, NIGHT_VISITS, TRUE_LOVE,
-  celebrationDate, duoKey, festivalGiftWindow, unlockedLooks, visitLookKind, visitMemoryKey, type Celebration, type Cohort, type Duo, type GreaterLove, type VisitKind, type Visit,
+  celebrationDate, duoKey, festivalGiftWindow, unlockedLooks, visitLookKind, visitMemoryKey, visitPortraitKey, type Celebration, type Cohort, type Duo, type GreaterLove, type VisitKind, type Visit,
 } from '../save/long-game'
 import { isDishId, vowsOn, type SaveV4 } from '../save/v4'
 import { parseStockKey, takeGoods } from '../save/warehouse'
 import type { StoryPack } from '../story/pack'
-import type { NightScript } from '../story/authored'
+import { defaultNightScript, NIGHT_BEATS, nightBeatFace, type NightScript, type Step } from '../story/authored'
 import { chooseCompanion } from './loop'
 import { isBirthday, NO_BIRTHDAYS, type Birthdays } from './days'
 
@@ -134,18 +134,26 @@ export function birthdayOffer(save: CalendarSave, id: string, birthdays: Birthda
   return save.love[id]?.stage === 'spouse' && isBirthday(birthdays, id, day, save.calendar) && (greaterLoveOf(save, id).birthday ?? 0) < year ? year : null
 }
 
-export const configuredDuos = (save: Pick<SaveV4, 'longGame'>, pack: Pick<LifePack, 'household'>): Duo[] =>
-  save.longGame?.duos ?? pack.household?.duos ?? []
+export function configuredDuos(save: Pick<SaveV4, 'longGame'>, pack: Pick<LifePack, 'cast' | 'household'>): Duo[] {
+  const inCast = new Set(pack.cast.umas.map(uma => uma.characterId))
+  return (save.longGame?.duos ?? pack.household?.duos ?? []).filter(duo => duo.every(id => inCast.has(id)))
+}
 
 export const duoReady = (save: Pick<SaveV4, 'longGame'>, duo: Duo): boolean =>
   duo.every(id => greaterLoveOf(save, id).points === TRUE_LOVE)
+
+export function useStoryDuos(save: SaveV4): SaveV4 {
+  if (save.longGame?.duos === undefined) return save
+  const { duos: _, ...longGame } = save.longGame
+  return { ...save, longGame }
+}
 
 export function editDuo(save: SaveV4, pack: LifePack, duo: Duo, remove: boolean): SaveV4 {
   const next = activateLongGame(save, pack)
   const valid = new Set(pack.cast.umas.map(uma => uma.characterId))
   if (!next.longGame || duo[0] === duo[1] || duo.some(id => !valid.has(id))) throw new SaveRuleError('bad-job', 'Choose two different Umas.')
   const key = duoKey(duo)
-  const before = configuredDuos(next, pack)
+  const before = next.longGame.duos ?? pack.household?.duos ?? []
   const duos = before.filter(other => duoKey(other) !== key)
   if (!remove) {
     if (duos.length !== before.length || duo.some(id => duos.filter(pair => pair.includes(id)).length >= DUO_LIMIT)) {
@@ -160,13 +168,37 @@ export function visitScript(pack: LifePack, visit: Visit, index: number): NightS
   const id = visit.who[index]!
   const kind = index === 0 ? visit.kind : 'pajamas'
   const base = pack.bibles.get(id)?.marriedLife?.[kind]?.[visit.looks[index]!]
-  const duo = visit.who.length === 2 ? pack.household?.duoLines?.[duoKey(visit.who)]?.[id] : undefined
+  const duo = visit.kind === 'pajamas' && visit.who.length === 2 ? pack.household?.duoLines?.[duoKey(visit.who)]?.[id] : undefined
   return { ...base, ...duo, ...(base?.emotes || duo?.emotes ? { emotes: { ...base?.emotes, ...duo?.emotes } } : {}) }
+}
+
+/** The game and the authoring preview play these beats in the same speaker order. */
+export function visitBeats(pack: LifePack, visit: Visit, morning = false) {
+  const speakers = visit.who.map((id, i) => ({ id, script: visitScript(pack, visit, i),
+    kind: i === 0 ? visit.kind : 'pajamas' as const, wardrobe: visitLookKind(visit, i), slot: visit.looks[i]! }))
+  const beats = morning ? ['morning'] as const : NIGHT_BEATS.slice(0, -1)
+  return beats.flatMap((beat, phase) => speakers.map(({ id, script, kind, wardrobe, slot }, i) => {
+    const steps: Step[] = []
+    if (phase === 0 && script.illustration) steps.push({ illustration: script.illustration })
+    if (beat === 'bedside' && i === 0) steps.push({ narrate: 'You sit by the bedside as the house grows quiet.' })
+    steps.push({ say: id, line: script[beat] ?? defaultNightScript(kind)[beat], emote: script.emotes?.[beat] ?? nightBeatFace(kind, beat) })
+    return { id, beat, steps, outfit: script.outfit ?? (wardrobe === 'anniversary' ? 'wedding-night' as const : 'pajamas' as const),
+      portrait: script.outfit ? undefined : visitPortraitKey(wardrobe, slot) }
+  }))
+}
+
+export function partnerLock(save: SaveV4, pack: LifePack, duo: Duo, birthdayAlone: (id: string) => boolean): string | null {
+  if (duo.some(id => save.love[id]?.stage !== 'spouse')) return 'Both Umas must be spouses'
+  if (!duoReady(save, duo)) return 'Both spouses need True Love'
+  if (duo.some(id => save.love[id]?.house === undefined)) return 'Both spouses need a room'
+  if (duo.some(id => awayForNight(save, id, save.calendar.day))) return 'A spouse is away on expedition'
+  if (duo.some(birthdayAlone)) return 'A spouse asked for a private birthday'
+  return duo.every(id => nightAvailable(save, pack, id)) ? null : 'Night visits are unavailable'
 }
 
 export function planVisit(save: SaveV4, pack: LifePack, who: Visit['who'], kind: VisitKind, birthdayAlone: (id: string) => boolean, birthdays = NO_BIRTHDAYS): Visit | null {
   if (nightVisits(save).length >= NIGHT_VISITS || who.some(id => !nightAvailable(save, pack, id))) return null
-  if (who.length === 2 && (who.some(birthdayAlone) || !duoReady(save, who)
+  if (who.length === 2 && (partnerLock(save, pack, who, birthdayAlone)
     || !configuredDuos(save, pack).some(duo => duoKey(duo) === duoKey(who)))) return null
   const anniversary = kind === 'anniversary' ? anniversaryOffer(save, who[0]) : null
   if (kind === 'anniversary' && anniversary === null) return null
@@ -217,6 +249,13 @@ export function setVisitStay(save: SaveV4, pack: LifePack, day: number, birthday
   return { ...next, longGame: { ...save.longGame, night: { ...night, stay: true } } }
 }
 
+/** Older saves can still replay the live morning until it rolls off. New stays are also kept in each book. */
+export function morningOfMemory(save: Pick<SaveV4, 'longGame'>, memory: Visit): Visit | null {
+  if (memory.overnight) return memory
+  const morning = save.longGame?.morning
+  return morning && visitMemoryKey(morning) === visitMemoryKey(memory) ? morning : null
+}
+
 export function settleVisits(save: SaveV4, companion: string | null): SaveV4 {
   if (!save.longGame) return save
   const { night, morning: previous, ...game } = save.longGame
@@ -224,8 +263,15 @@ export function settleVisits(save: SaveV4, companion: string | null): SaveV4 {
   const last = night?.stay && night.day === save.calendar.day ? night.visits[NIGHT_VISITS - 1] : undefined
   const stayed = last && last.who[0] === companion && (!save.homestead.alone || last.who.length === 1)
     && last.who.every(id => save.love[id]?.house !== undefined && !awayForNight(save, id, last.day))
-  if (!stayed) return { ...save, longGame: game }
   const love = { ...game.love }
-  for (const id of last.who) love[id] = award(greaterLoveOf(save, id), last.day + 1)
-  return { ...save, longGame: { ...game, love, morning: last } }
+  for (const morning of [previous, stayed ? last : undefined]) {
+    if (!morning) continue
+    const key = visitMemoryKey(morning)
+    for (const id of morning.who) {
+      const heart = greaterLoveOf({ longGame: { ...game, love } }, id)
+      const earned = morning === last && stayed ? award(heart, morning.day + 1) : heart
+      love[id] = { ...earned, memories: earned.memories.map(memory => visitMemoryKey(memory) === key ? { ...memory, overnight: true } : memory) }
+    }
+  }
+  return { ...save, longGame: { ...game, love, ...(stayed ? { morning: last } : {}) } }
 }

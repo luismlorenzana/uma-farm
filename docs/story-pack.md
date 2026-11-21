@@ -742,6 +742,20 @@ when preparing and reviewing the art.
 Use `pnpm story:scaffold --ids <id> --married-life` to generate missing look scripts marked as defaults.
 `pnpm story:status --ids <id> --married-life` reports authored, default and missing slots.
 
+The launch set uses `household.json` `duos` for the 75 mutual assignments. Its `duoLines` records index by canonical pair
+key and then by speaker. They provide the four casual beats. The game uses each speaker’s pajamas slot for gaps.
+On a birthday or anniversary, the host uses her occasion slot and her guest uses her own pajamas slot. The same
+pair can play in either order, with the occasion host first.
+
+In Uma Studio, **Save draft** saves a separate `duo-draft.json`. **Apply draft to story** checks the saved canonical
+revision before replacing the assignments. Other household content stays in place. Selected pairs show their bond
+levels and each member’s authored night beats, with a link to the Farm Duo preview in the Story Sandbox.
+
+Run `pnpm story:duos --from <story directory>` for the launch roster, ties, five bond levels and both members’ four
+night beats. Use `--launch-duos` on `pnpm story:ship` to require that coverage before publishing an approved launch
+edit. Ordinary development packs can be incomplete. After shipping, `pnpm story:duos --release <readback directory>`
+checks the index, asset hashes and playable pair files from a downloaded release.
+
 | Field | What it does | Without it |
 |---|---|---|
 | `scenes` | The household scenes at 5, 10 and 15 married, each `{ "at": 5, "open": […], "each": { "<id>": […] }, "close": […] }`. `open` and `close` speak through narration and the town's people; `each` is one spouse's beat | The game's short card at each: a line, each spouse's line, a line |

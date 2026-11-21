@@ -28,6 +28,8 @@ export interface Visit {
   anniversary?: number
   /** Farm year of the birthday, separate from the anniversary receipt. */
   birthday?: number
+  /** This look and conversation also have a witnessed morning. */
+  overnight?: true
 }
 /** The host of a birthday or anniversary wears her formal look. */
 export const visitLookKind = (visit: Pick<Visit, 'kind'>, index: number): NightKind =>

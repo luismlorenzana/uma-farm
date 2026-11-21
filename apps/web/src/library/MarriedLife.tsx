@@ -1,5 +1,6 @@
 import { ANNIVERSARY_LOOK_POINTS, EVENINGS, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitLookKind, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
 import { Link } from 'react-router'
+import { NightReplayLinks } from '../loop/NightReplayLinks'
 import { libraryDate } from './LibraryPage'
 
 export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: StoryPack; id: string; nameOf: (id: string) => string }) {
@@ -38,7 +39,7 @@ export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: 
         return <li key={index}>
           <span>{label}{withUma && ` · With ${nameOf(withUma)}`}</span>
           <small>{libraryDate(visit.day)}</small>
-          <Link className="lib-button" to={`/library?uma=${id}&page=married&visitReplay=${id}:${index}`} state={{ back: true }}>Replay</Link>
+          <NightReplayLinks save={save} visit={visit} owner={id} index={index} className="lib-button" />
         </li>
       })}
       {save.longGame?.outings?.map((outing, index) => outing.who.includes(id) && <li key={`outing:${index}`}>

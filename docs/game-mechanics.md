@@ -7438,14 +7438,19 @@ cursor. A birthday visit opens on the spouse's birthday once per farm year. Anni
 farm year and can be played later for the most recent anniversary. If both fall on the same date, each can be played
 once and uses one visit slot. Their default scene beats use neutral, tender and loving. A story can choose the
 expression for each beat. Numbered portraits load by slot, with the standard pajamas or wedding-night portrait as
-fallback. Married Life in the Uma Library shows the looks, earned memories and True Love date. Replays preserve
-participants and look numbers and cost no slots or points.
+fallback. Married Life in the Uma Library shows the looks, earned memories and True Love date. Both books and the
+Diary can replay a shared visit and its morning after a stay. Replays keep the original participants, host and numbered
+looks. They cost no slots and grant no points, unlocks or rewards.
 
-**True Love** is 120 points. A curated duo opens when both spouses reach it. Use the Duo editor to add or remove
-mutual pairs, up to three partners per Uma. An eligible duo can share a pajama visit, a birthday, an anniversary or a
-regular evening. A shared occasion uses one slot. Its host wears and advances her formal look, and her partner joins
-in pajamas. Each spouse keeps her own offer when she joins as a guest. A shared evening keeps its original play
-and payment. Both books link to the shared memory. Removing a pair retires future offers and keeps the memory.
+**True Love** is 120 points. Both spouses need True Love, their own rooms and to be home before a duo can visit.
+Their Relationship pages show their partners and what still holds a pairing back. The Duo editor starts with the story
+roster. Editing creates a custom list of mutual pairs, with up to three partners per Uma. Even an empty custom list
+stays in effect until you choose **Use story duos**, which keeps all earned memories and progress.
+
+An eligible duo can share a pajama visit, a birthday, an anniversary or a regular evening. Casual visits play the
+pair’s own lines in speaker order. A shared occasion uses one slot, with the celebrant first in her formal look and her
+own dialogue. Her guest wears pajamas and keeps her own occasion offer. A spouse who wants a private birthday
+can still celebrate solo. A shared evening keeps its original play and payment.
 
 #### Bonds and ties
 

@@ -18,7 +18,7 @@ import { spendDuoEvening } from './evening'
 import { householdPlay, householdReady, readHousehold } from './household'
 import {
   activateLongGame, anniversaryOffer, chooseTradition, collectFestivalGift, completeVisit, configuredDuos, duoReady, editDuo, giveFestivalGift,
-  greaterLoveOf, householdVows, nightAvailable, nightVisits, planVisit, pledgeFestivalGift, setVisitStay, softEndingReached, visitScript,
+  greaterLoveOf, householdVows, nightAvailable, nightVisits, planVisit, pledgeFestivalGift, setVisitStay, softEndingReached, morningOfMemory, partnerLock, useStoryDuos, visitBeats, visitScript,
 } from './long-game'
 
 const ids = Array.from({ length: 50 }, (_, i) => String(9800001 + i))
@@ -190,6 +190,9 @@ describe('married life', () => {
       const morning = runNight(save, { story: pack })
       expect(greaterLoveOf(morning, a).points).toBe((night + 1) * 6)
       expect(morning.longGame?.morning?.who).toEqual([a])
+      const memory = greaterLoveOf(morning, a).memories.find(visit => visit.looks[0] === morning.longGame?.morning?.looks[0])
+      expect(memory?.overnight).toBe(true)
+      expect(morningOfMemory({ longGame: undefined }, memory!)).toEqual(memory)
       expect(nightVisits(morning)).toEqual([])
       expect(parseSaveV6(morning).longGame).toEqual(morning.longGame)
       save = morning
@@ -237,6 +240,7 @@ describe('married life', () => {
     save = editDuo(editDuo(save, pack, [a, ids[2]!], false), pack, [a, ids[3]!], false)
     expect(() => editDuo(save, pack, [a, ids[4]!], false)).toThrow()
     expect(duoReady(save, [a, b])).toBe(false)
+    expect(partnerLock(save, pack, [a, b], noBirthday)).toBe('Both spouses need True Love')
     for (const who of [a, b]) {
       save = { ...save, longGame: { ...save.longGame!, love: {
         ...save.longGame!.love, [who]: { ...greaterLoveOf(save, who), points: TRUE_LOVE, trueDay: save.calendar.day },
@@ -273,18 +277,27 @@ describe('married life', () => {
     expect(parseSaveV6(save).longGame).toEqual(save.longGame)
     expect(() => setVisitStay(save, pack, 1, noBirthday)).toThrow()
     expect(nightVisits(visit(save))).toHaveLength(2)
+    const released = { ...pack, household: checkHousehold({ duos: [[a, b]] }, { umas: new Set(ids) }).value }
+    const emptyOverride = { ...save, longGame: { ...save.longGame!, duos: [] } }
+    expect(configuredDuos(emptyOverride, released)).toEqual([])
+    const defaults = parseSaveV6(useStoryDuos(emptyOverride))
+    expect(defaults.longGame?.duos).toBeUndefined()
+    expect(configuredDuos(defaults, released)).toEqual([[a, b]])
+    expect(defaults.bonds).toEqual(save.bonds)
+    expect(defaults.longGame?.love).toEqual(save.longGame?.love)
+    expect(defaults.diary).toEqual(save.diary)
   })
 
   it('validates story slots and reciprocal duo data, preserving approved art cues and rejecting unknown entries', () => {
     const ctx = { umas: new Set([...ids, 's9800001']) }
     const script = { sitting: 'The house is quiet tonight.', illustration: 'quiet-room', emotes: { morning: 'tender' } }
     const birthday = { bedside: 'Thank you for spending today with me.', emotes: { bedside: 'loving' } }
-    const bible = checkBible({ characterId: a, marriedLife: { pajamas: { 1: script, 11: script }, birthday: { 1: birthday } } }, a, ctx)
+    const bible = checkBible({ characterId: a, marriedLife: { pajamas: { 1: script, 11: script }, birthday: { 1: birthday }, anniversary: { 1: birthday } } }, a, ctx)
     const household = checkHousehold({
       duos: [[b, a], [a, b], [a, a], [a, 's9800001']],
       duoLines: { [`${a}:${b}`]: { [a]: { sitting: 'The table is set for three.', emotes: { sitting: 'loving' } } } },
     }, ctx)
-    expect(bible.value?.marriedLife).toEqual({ pajamas: { 1: script }, birthday: { 1: birthday } })
+    expect(bible.value?.marriedLife).toEqual({ pajamas: { 1: script }, birthday: { 1: birthday }, anniversary: { 1: birthday } })
     expect(bible.errors).toHaveLength(1)
     expect(household.errors).toHaveLength(2)
     expect(household.value?.duos).toEqual([[a, b], [a, 's9800001']])
@@ -292,5 +305,16 @@ describe('married life', () => {
     expect(visitScript(authored, { day: 1, kind: 'pajamas', who: [a, b], looks: [1, 1] }, 0))
       .toEqual({ ...script, sitting: 'The table is set for three.', emotes: { morning: 'tender', sitting: 'loving' } })
     expect(visitScript(authored, { day: 1, kind: 'birthday', who: [a], looks: [1], birthday: 1 }, 0)).toEqual(birthday)
+    const reverse = visitBeats(authored, { day: 1, kind: 'pajamas', who: [b, a], looks: [1, 1] })
+    expect(reverse.map(row => row.id)).toEqual([b, a, b, a, b, a])
+    expect(reverse[1]?.steps.at(-1)).toMatchObject({ say: a, line: 'The table is set for three.', emote: 'loving' })
+    for (const kind of ['birthday', 'anniversary'] as const) {
+      const special = { day: 1, kind, who: [a, b] as [string, string], looks: [1, 1] }
+      expect(visitScript(authored, special, 0)).toEqual(birthday)
+      const beats = visitBeats(authored, special)
+      expect(beats[0]?.portrait).toBe('wedding-anniversary-1')
+      expect(beats[1]?.portrait).toBe('pajamas-playful')
+      expect(beats[2]?.steps.at(-1)).toMatchObject({ say: a, line: birthday.bedside, emote: 'loving' })
+    }
   })
 })
