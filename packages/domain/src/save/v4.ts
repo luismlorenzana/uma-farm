@@ -453,6 +453,10 @@ export interface Invite {
 
 /** Today's once-a-day acts, cleared each night, and the bond hearts the morning compares. */
 export interface TodayV4 {
+  /** Split daytime actions are in use on this date. Older in-progress dates keep their previous timing. */
+  dayParts?: true
+  /** Actual farmhand output, carried until the night consumes it. */
+  crew?: import('../farm/farmhands').CrewReceipt
   /** The day's actions spent: the farm's tasks and outings (`farm/actions.ts`). */
   actions: number
   /** A special day's event actions spent: only events spend them. */
@@ -680,7 +684,7 @@ export interface SaveV6 {
    * and their stars (`farm/food.ts`); a save from before food has none: an empty pantry. Then the market: each good a
    * flood eased, by its steps (`goods/market.ts`); a save from before the market has none: nothing eased. */
   farm: {
-    points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]; accounts?: NightAccount[]
+    points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]; accounts?: NightAccount[]; workHistory?: import('../farm/work-coverage').WorkDayRecord[]
     pantry: PantryLot[]; market: Record<string, number>
     /** First production day by exact stock ID. Legacy crop evidence can be read without stamping the save. */
     discoveries?: Record<string, number>

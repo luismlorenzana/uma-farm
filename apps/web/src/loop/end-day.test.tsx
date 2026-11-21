@@ -86,6 +86,17 @@ afterEach(async () => {
 })
 
 describe('End the day', () => {
+  it('shows the current five-action budget on a split day', async () => {
+    const days = (actions: number): SaveV4 => {
+      const save = farm(actions)
+      return { ...save, today: { ...save.today, dayParts: true } }
+    }
+    useGame.setState({ uid: 'u1', status: 'ready', save: days(3) })
+    await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
+    expect(host.querySelector('[data-bar-chip="actions"]')?.textContent).toBe('Morning2/5')
+    await act(async () => useGame.setState({ save: days(5) }))
+    expect(host.querySelector('[data-bar-chip="actions"]')?.textContent).toBe('Afternoon5/5')
+  })
   it('shows the actions left in the bar, asks in one line what\'s left, and ends the day on End anyway', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(3) })
     await render(<KitStage layout="landscape"><FarmBar /></KitStage>)

@@ -3,14 +3,21 @@
 // night's run of her work: the field watered and harvested, the hauls, the loads, rank points and challenges, the
 // morning's lines, the save. Invented ids; no story pack unless named.
 import { describe, expect, it } from 'vitest'
-import { actionsLeft, DAY_ACTIONS } from './actions'
+import { actionsLeft, DAY_ACTIONS, GAME_DAYS, goToTown, morningShiftDue, passDayPart, prepareDayChange, spendActions, spendForEvent } from './actions'
+import { FESTIVALS, festivalDayOfYear } from './calendar'
 import { upkeepOf, UPKEEP_RESIDENT } from './economy'
 import {
-  aptitudeLevelOf, aptitudeOf, APTITUDE_POINTS, aptitudeQuality, aptitudeUps, aptitudesOf, aptitudeYield, BIG_LOAD, fedThisMorning, handDay, handsInOrder,
-  handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setTasks, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
+  aptitudeLevelOf, aptitudeOf, APTITUDE_POINTS, aptitudeQuality, aptitudeUps, aptitudesOf, aptitudeYield, BIG_LOAD, fedThisMorning, handActionsLeft, handDay, handsInOrder,
+  handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setTasks, settleCrewShift, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
 } from './farmhands'
 import { clearPlot, rowOfPlot } from '../fields/plots'
 import { talentsD, type TalentOf } from './talents'
+import { setSurplusPlan } from './production'
+import { assistantLock } from '../kitchen/kitchen'
+import { cookLock } from '../kitchen/contest'
+import { castPack } from '../story/authored.fixture'
+import { spendEvening } from '../romance/evening'
+import { goodCount } from '../save/warehouse'
 import { cookMeal } from '../romance/loop'
 import { runNight, type NightContext } from '../night/end-day'
 import { parseSaveV6 } from '../save/parse-v4'
@@ -395,5 +402,64 @@ describe('the plots on the board', () => {
     // Three actions, a step each: the row's first tile cleared and tilled, the second cleared.
     expect(morning.fields.plots[1]!.tiles.slice(FIELD_COLUMNS, FIELD_COLUMNS + 2).map((t) => t.ground)).toEqual(['tilled', 'clear'])
     expect(morning.fields.plots[0]!.tiles.slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
+  })
+})
+
+describe('the morning shift', () => {
+  it('produces goods once when a two-action date crosses the boundary, including across a save reload', () => {
+    const pack = castPack([A, B])
+    const before = tasks(ripe(farm(), [0, 1, 2]), A, [{ kind: 'harvest', tiles: [0, 1, 2] }])
+    const dated: SaveV4 = { ...before, love: { ...before.love, [A]: { ...newLove(), stage: 'romance', level: 1 } } }
+    const four = prepareDayChange(dated, spendActions(goToTown(dated), 4))
+    expect(morningShiftDue(four)).toBe(false)
+    const six = spendEvening(four, pack, A, 'walk', 75).save
+    expect(six.today.actions).toBe(6)
+    expect(morningShiftDue(six)).toBe(true)
+    const shift = settleCrewShift(six, talentsD, pack)
+    expect(goodCount(shift.items, 'carrot')).toBeGreaterThan(0)
+    const restored = parseSaveV6(json(shift))
+    expect(restored).toEqual(shift)
+    expect(settleCrewShift(restored, talentsD, pack)).toBe(restored)
+    expect(morningShiftDue(restored)).toBe(false)
+    const morning = runNight(restored, { story: pack })
+    expect(morning.roster[A]!.practice).toEqual(shift.roster[A]!.practice)
+    expect(goodCount(morning.items, 'carrot')).toBe(goodCount(shift.items, 'carrot'))
+    expect(morning.summary!.work.filter(row => row.kind === 'farmhand' && row.id === A)).toHaveLength(1)
+    expect(morning.farm.workHistory?.[0]?.covered).toMatchObject({ harvest: 1 })
+  })
+
+  it('ignores free travel and bonus-only festival actions and keeps the timing of a legacy mid-day save', () => {
+    const start = farm(festivalDayOfYear(FESTIVALS[0]!))
+    const bonus = prepareDayChange(start, spendForEvent(goToTown(start), 3, GAME_DAYS))
+    expect(bonus.today).toMatchObject({ actions: 0, eventActions: 3 })
+    expect(morningShiftDue(bonus)).toBe(false)
+    expect(morningShiftDue(passDayPart(bonus, 'afternoon'))).toBe(true)
+    const legacy = spendActions(start, 4)
+    expect(morningShiftDue(prepareDayChange(legacy, spendActions(legacy, 2)))).toBe(false)
+  })
+
+  it('ships before the nightly payout even when the player ends the day early', () => {
+    let save = tasks(ripe(farm(), [0]), A, [{ kind: 'harvest', tiles: [0] }, { kind: 'ship-surplus' }])
+    save = setSurplusPlan(save, { goods: ['carrot'], limit: 10 })
+    const early = night({ ...save, today: { ...save.today, dayParts: true } })
+    expect(early.summary!.bin.some(line => line.id === 'carrot')).toBe(true)
+    expect(early.farm.workHistory?.[0]?.covered).toMatchObject({ harvest: 1, 'ship-surplus': 1 })
+    expect(early.today).toMatchObject({ dayParts: true, actions: 0 })
+    expect(early.today.crew).toBeUndefined()
+    const legacy = night(save)
+    expect(legacy.summary!.bin).toEqual([])
+    expect(goodCount(legacy.bin, 'carrot')).toBeGreaterThan(0)
+  })
+
+  it('blocks a workshop from spending occupied crew actions and includes a later booking in the report', () => {
+    const save = tasks(tasks(farm(), A, [{ kind: 'fish', spot: 'pond' }]), B, [{ kind: 'harvest', tiles: [0] }])
+    const afternoon = settleCrewShift(prepareDayChange(save, passDayPart(save, 'afternoon')), talentsD, null)
+    expect(handActionsLeft(afternoon, A)).toBe(0)
+    expect(handActionsLeft(afternoon, B)).toBe(3)
+    expect(assistantLock(afternoon, A)).toMatch(/no work action/i)
+    const reserved = { ...afternoon, today: { ...afternoon.today, assistant: B } }
+    expect(handActionsLeft(reserved, B)).toBe(2)
+    expect(cookLock(reserved, B)).toBeNull()
+    expect(night(reserved).summary!.work).toContainEqual(expect.objectContaining({ kind: 'farmhand', id: B, kitchen: 1, spent: 1 }))
   })
 })

@@ -185,7 +185,7 @@ describe('the work board', () => {
     expect($('[data-hand="81001"] [data-tonight]')).toBeNull()
     expect($('[data-hand="81001"] [data-actions]')).toBeNull()
     expect($('[data-hand="81002"] [data-in-town]')).toBeNull()
-    expect($('[data-hand="81002"] [data-tonight]')?.textContent).toBe('Tonight · No tasks: set her tasks')
+    expect($('[data-hand="81002"] [data-tonight]')?.textContent).toBe('Shift forecast · No tasks: set her tasks')
     expect($('[data-hand="81002"] [data-actions]')?.dataset.actions).toBe('3')
   })
 

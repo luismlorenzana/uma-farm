@@ -6,7 +6,7 @@
 // Earlier saves stop at the start-over card. Its button keeps a dirty device copy before starting fresh
 // with the original account. A newer save stops boot and sync and opens the update prompt.
 import {
-  expandCalendar, freshV6, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
+  morningShiftDue, prepareDayChange, expandCalendar, freshV6, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
 } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
@@ -164,7 +164,22 @@ export function resetGame(): void {
 
 /** Every change goes through here: on screen, on the device, then to the server. It never stamps `updatedAt`: a player's
  * change arrives stamped by its rule. */
+let loadingShift = false
+
 export async function commit(save: FarmSave): Promise<void> {
+  const before = useGame.getState().save
+  if (loadingShift) throw new Error('The morning shift is still loading. Try again in a moment.')
+  if (before) save = prepareDayChange(before, save)
+  if (morningShiftDue(save)) {
+    loadingShift = true
+    try {
+      const { finishMorningShift } = await import('../loop/morning-shift')
+      save = await finishMorningShift(save)
+      if (useGame.getState().save !== before) throw new Error('The farm changed while the shift was loading. Try again.')
+    } finally {
+      loadingShift = false
+    }
+  }
   useGame.setState({ save, dirty: true })
   await persist()
   scheduleSync()

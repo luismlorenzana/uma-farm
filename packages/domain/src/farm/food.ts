@@ -103,8 +103,10 @@ const mealsToPack = (save: ScheduledTable): number =>
 
 /** The meals tonight's table needs (a cook stops once the pantry holds them): two a mouth, but for the mouths a staff
  * meal feeds tonight. */
-export const mealsNeeded = (save: ScheduledTable & Partial<Pick<FarmSave, 'today'>>, pack: SchedulePack | null): number =>
-  MEALS_A_DAY * Math.max(0, mouthsTonight(save, handsAtTable(save, pack)) - (save.today?.staff?.mouths ?? 0)) + mealsToPack(save)
+export function mealsNeeded(save: ScheduledTable & Partial<Pick<FarmSave, 'today'>>, pack: SchedulePack | null): number {
+  const crew = save.today?.crew?.lines.map(line => line.id) ?? handsAtTable(save, pack)
+  return MEALS_A_DAY * Math.max(0, mouthsTonight(save, crew) - (save.today?.staff?.mouths ?? 0)) + mealsToPack(save)
+}
 
 /** What the farm ate tonight. */
 export interface Eaten<S extends FarmSave> {

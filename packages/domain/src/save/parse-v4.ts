@@ -18,10 +18,11 @@ import { FISH_MODES } from '../goods/production-catalogue'
 import { isStockId, parseStockKey } from './warehouse'
 import { checkFestivalSave } from './parse-festivals'
 import { parseLibrary } from './parse-library'
+import type { CrewReceipt } from '../farm/farmhands'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
-  counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions, parseExpeditionReturn,
+  counts, day, fail, LOOP_WORK_PLACES, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions, parseExpeditionReturn,
   legacyChapter, parseFarm, parseFields, parseLoads, parseMoneyLines, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWorkLines,
   parseWorkshops, unique,
 } from './parse-loop'
@@ -250,8 +251,43 @@ function parseOccasions(value: unknown, path: string, roster: ReadonlySet<string
 
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
+function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): CrewReceipt {
+  const o = object(value, path, ['lines', 'worked', 'tended', 'made', 'gathered', 'aptitudes'])
+  const lines = parseWorkLines(o.lines, `${path}.lines`, roster).map(line =>
+    line.kind === 'farmhand' ? line : fail(`${path}.lines`, 'expected a farmhand'))
+  unique(lines.map(line => line.id), `${path}.lines`)
+  const crew = new Set(lines.map(line => line.id))
+  const places = [...LOOP_WORK_PLACES, 'restaurant'] as const
+  const rows = <T>(k: string, max: number, keys: string[], parse: (row: Record<string, unknown>, at: string) => T): T[] =>
+    list(o[k], `${path}.${k}`, 0, max).map((entry, i) => {
+      const at = `${path}.${k}.${i}`
+      return parse(object(entry, at, keys), at)
+    })
+  return {
+    lines,
+    worked: rows('worked', crew.size, ['outfitId', 'place'], (row, at) => ({
+      outfitId: member(row.outfitId, `${at}.outfitId`, crew), place: oneOf(row.place, `${at}.place`, places),
+    })),
+    tended: rows('tended', crew.size, ['outfitId'], (row, at) => ({ outfitId: member(row.outfitId, `${at}.outfitId`, crew) })),
+    made: rows('made', crew.size * (places.length + 1), ['outfitId', 'place', 'items'], (row, at) => ({
+      outfitId: member(row.outfitId, `${at}.outfitId`, crew),
+      place: oneOf(row.place, `${at}.place`, [...places, 'fields'] as const),
+      items: list(row.items, `${at}.items`, 1, 1000).map((item, i) =>
+        typeof item === 'string' && parseStockKey(item) ? item : fail(`${at}.items.${i}`, 'expected graded stock')),
+    })),
+    gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length)
+      .map((value, i) => oneOf(value, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),
+    ...(o.aptitudes === undefined ? {} : { aptitudes: rows('aptitudes', crew.size * APTITUDE_IDS.length,
+      ['kind', 'outfitId', 'aptitude', 'level'], (row, at) => ({
+        kind: oneOf(row.kind, `${at}.kind`, ['aptitude'] as const),
+        outfitId: member(row.outfitId, `${at}.outfitId`, crew),
+        aptitude: oneOf(row.aptitude, `${at}.aptitude`, APTITUDE_IDS), level: int(row.level, `${at}.level`, 2, 10),
+      })) }),
+  }
+}
+
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server'])
+  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -264,6 +300,8 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
   if (nights > 1) fail(`${path}.evenings`, 'festival night once a day at most')
   if (evenings.length - nights > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
   return {
+    ...(o.dayParts === undefined ? {} : o.dayParts === true ? { dayParts: true as const } : fail(`${path}.dayParts`, 'expected true')),
+    ...(o.crew === undefined ? {} : o.dayParts === true ? { crew: parseCrew(o.crew, `${path}.crew`, roster) } : fail(`${path}.crew`, 'expected day parts')),
     actions: int(o.actions, `${path}.actions`, 0, MAX_DAY_ACTIONS), eventActions: int(o.eventActions, `${path}.eventActions`, 0, MAX_DAY_ACTIONS),
     town: bool(o.town, `${path}.town`),
     gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length).map((v, i) => oneOf(v, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),

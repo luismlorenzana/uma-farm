@@ -25,7 +25,7 @@ import { recordLibrary } from '../library/receipts'
 import { actionCost, canSpendForEvent, type SpecialDays } from '../farm/actions'
 import { dateOf, festivalOn, SEASONS, type Festival, type FestivalId } from '../farm/calendar'
 import { farmRankOf } from '../farm/farm'
-import { handDay } from '../farm/farmhands'
+import { handDay, handActionsLeft } from '../farm/farmhands'
 import { worksOn, type SchedulePack } from '../town/town'
 import { FESTIVAL_PLACE_POINTS } from '../farm/milestones'
 import { bookedForExpedition } from '../expeditions/presence'
@@ -144,7 +144,8 @@ export function cookLock(save: FarmSave, id: string, pack: SchedulePack | null =
   if (pack?.town?.professions?.length && !worksOn(save, pack, id)) return 'She has no farm shift today.'
   if (save.today.server === id) return 'She’s serving today.'
   if (festivalBooked(save, id)) return 'She’s booked for the festival.'
-  return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
+  if (handActionsLeft(save, id) > 0) return null
+  return save.today.crew ? 'She has no work action left today.' : 'She has no action left tonight.'
 }
 
 /** The held goods a recipe can take, a row a good and star, the most held first, then fewer stars, then the id: its mains

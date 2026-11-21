@@ -97,6 +97,7 @@ export * from './festivals/contests'
 // Farmhands: her day's actions on her farm days, the work board's tasks, her aptitudes and their tricks, and the
 // night's run of their work.
 export * from './farm/farmhands'
+export * from './farm/work-coverage'
 export * from './story/cast'
 export * from './story/scenes'
 // The town map: its locations, who lives there, her fixed schedule (the story's, else the default) and who's where on a

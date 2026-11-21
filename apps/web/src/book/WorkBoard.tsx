@@ -9,7 +9,7 @@
 // Book.
 import { byRelationship } from '../loop/relationship-order'
 import {
-  aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
+  crewShiftEnabled, MORNING_ACTIONS, aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
   canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   MAX_SEED_TARGET, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
@@ -23,7 +23,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
-import { copyHandTask, planSurplus, setHandTasks } from '../loop/actions'
+import { copyHandTask, enterDayPart, planSurplus, setHandTasks } from '../loop/actions'
 import { Notes, useAct } from '../loop/FarmPanels'
 import { useTalents } from '../loop/talents'
 import { plural, shortDate } from '../loop/words'
@@ -50,6 +50,17 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const forecast = useMemo(() => handsTonight(save, save, talents.of, pack), [save, talents.of, pack])
   const suggestions = useMemo(() => workSuggestions(save, forecast, pack, talents.of), [save, forecast, pack, talents.of])
   const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
+  const canStart = crewShiftEnabled(save) && save.today.actions < MORNING_ACTIONS
+  const passes = MORNING_ACTIONS - save.today.actions
+  const [starting, setStarting] = useState(false)
+  const [shiftError, setShiftError] = useState<string | null>(null)
+  const startAfternoon = async () => {
+    setStarting(true)
+    setShiftError(null)
+    try { await enterDayPart('afternoon') }
+    catch (error) { setShiftError(errorWords(error)) }
+    finally { setStarting(false) }
+  }
   const adding = new URLSearchParams(location.search).get('task')
   const selected = new URLSearchParams(location.search).get('hand')
   useEffect(() => {
@@ -63,15 +74,21 @@ export function WorkBoard({ save }: { save: FarmSave }) {
         <h2 className="font-display text-[18px] font-bold text-ink">Work board</h2>
         <GuideButton topic="staff" title="The work board" label="About the work board">
           <p>A friend you invite to work is a farmhand. She keeps her life in town, and comes to the farm on her farm days, the days it leaves free. There she gives the farm 3 actions: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
-          <p>She works your tasks overnight, before the crops grow: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The morning says what she did.</p>
+          <p>At the start of Afternoon she works your orders: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The crew’s goods are ready for the afternoon. Watered crops grow at night.</p>
           <p>Production tasks train her aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
         </GuideButton>
       </div>
+      {canStart && <div className="flex flex-wrap items-center gap-2 rounded-md border border-hairline bg-panel p-2">
+        <Button disabled={starting} onClick={() => void startAfternoon()}>Start afternoon</Button>
+        <p className="text-[13px] text-ink-soft">Pass {passes} morning {passes === 1 ? 'action' : 'actions'} and run the crew shift.</p>
+      </div>}
+      {save.today.crew && <p className="text-[13px] text-ink-soft">Morning shift complete. Order changes apply on each Uma’s next farm shift.</p>}
+      {shiftError && <p role="alert" className="text-danger">{shiftError}</p>}
+      <Coverage suggestions={suggestions} nameOf={nameOf} />
       {hands.length > 0 && <>
-        <Coverage suggestions={suggestions} nameOf={nameOf} />
         <ProductionForecast before={save} after={forecast.save} pack={pack} />
         <SurplusEditor save={save} />
       </>}
@@ -104,10 +121,10 @@ function Coverage({ suggestions, nameOf }: { suggestions: WorkSuggestion[]; name
   return <section aria-label="Work that needs coverage" data-work-coverage className="space-y-1 rounded-md border border-hairline bg-panel p-2.5">
     <h3 className="font-semibold">Needs coverage</h3>
     {suggestions.length ? <ul className="divide-y divide-hairline">
-      {suggestions.slice(0, 5).map(({ worker, need, job }) => <li key={job.key} className="flex min-h-11 items-center justify-between gap-2 py-1">
+      {suggestions.slice(0, 5).map(({ worker, need, job, blocked }) => <li key={job.key} className="flex min-h-11 items-center justify-between gap-2 py-1">
         <span><strong className="block text-[13px]">{job.label}</strong><small className="text-ink-soft">{need} after assigned work</small></span>
         {worker ? <Button variant="secondary" disabled={assigning} onClick={() => assign(worker, job.task)}>Assign {nameOf(worker)}</Button>
-          : <small className="shrink-0 text-ink-soft">No free worker</small>}
+          : <small className="shrink-0 text-ink-soft">{blocked ? "Needs supplies" : "No free worker"}</small>}
       </li>)}
     </ul> : <p className="text-[13px] text-ink-soft">Current assignments cover the priority jobs we can do with today’s supplies.</p>}
     {suggestions.length > 5 && <p className="text-[12px] text-ink-soft">{suggestions.length - 5} more jobs after these</p>}
@@ -161,14 +178,14 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
         </p>
       )}
       {working
-        ? <p className="text-[13px]" data-tonight><span className="font-semibold">Tonight · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
+        ? <p className="text-[13px]" data-tonight><span className="font-semibold">{save.today.crew ? 'Morning shift' : crewShiftEnabled(save) ? 'Shift forecast' : 'Tonight'} · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
         : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away, save.calendar)}</p>
         : <p className="text-[13px] font-semibold" data-in-town={!offToday || undefined} data-day-off={offToday || undefined}>{offToday ? 'Day off' : 'In town today'}{back ? ` · back ${shortDate(back, save.calendar)}` : ''}</p>}
       {working && !worksOn(save, pack, id, save.calendar.day + 1) && (
         <p className="text-[12px] text-ink-soft">{awayOn(save, id, save.calendar.day + 1) ? 'Away tomorrow' : offTomorrow ? 'Day off tomorrow' : 'In town tomorrow'}</p>
       )}
       {tasks.length === 0 ? (
-        <p className="text-[13px] text-ink-soft" data-no-tasks>No tasks yet: add one, and she starts tonight.</p>
+        <p className="text-[13px] text-ink-soft" data-no-tasks>No orders yet. Add a task for her next farm shift.</p>
       ) : (
         <ol className="divide-y divide-hairline rounded-md border border-hairline" aria-label={`${name}’s tasks`} data-tasks={tasks.length}>
           {tasks.map((task, i) => {

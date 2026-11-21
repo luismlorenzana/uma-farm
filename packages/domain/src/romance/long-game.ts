@@ -1,3 +1,4 @@
+import { actionsLeft } from '../farm/actions'
 import { awayForNight } from '../expeditions/presence'
 import { dateDayOf, dateOf, yearsSince } from '../farm/calendar'
 import { availableDishes } from '../expeditions/stock'
@@ -197,6 +198,7 @@ export function partnerLock(save: SaveV4, pack: LifePack, duo: Duo, birthdayAlon
 }
 
 export function planVisit(save: SaveV4, pack: LifePack, who: Visit['who'], kind: VisitKind, birthdayAlone: (id: string) => boolean, birthdays = NO_BIRTHDAYS): Visit | null {
+  if (save.today.dayParts && actionsLeft(save) > 0) return null
   if (nightVisits(save).length >= NIGHT_VISITS || who.some(id => !nightAvailable(save, pack, id))) return null
   if (who.length === 2 && (partnerLock(save, pack, who, birthdayAlone)
     || !configuredDuos(save, pack).some(duo => duoKey(duo) === duoKey(who)))) return null

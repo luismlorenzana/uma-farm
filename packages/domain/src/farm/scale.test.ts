@@ -18,14 +18,14 @@
 // on the default schedule, no bible), for their farm days; everyone a D talent.
 import { setImmediate } from 'node:timers/promises'
 import { describe, expect, it } from 'vitest'
-import { actionsLeft, goToTown, spendActions } from './actions'
+import { actionsLeft, goToTown, MORNING_ACTIONS, morningShiftDue, prepareDayChange, spendActions } from './actions'
 import { buildLock, buildLockWords, heldFor, payBuild, pickFor } from './builds'
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS } from './calendar'
 import { upkeepOf } from './economy'
 import { routineStockFloors, setStockReserve } from './production'
 import { farmRankOf } from './farm'
 import { playProductionFarm, PRODUCTION_CREWS } from './production-scale.fixture'
-import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, tilesAnAction, TRICK_AT } from './farmhands'
+import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, settleCrewShift, tilesAnAction, TRICK_AT } from './farmhands'
 import { expeditionCoverage, expeditionMemberBlock, expeditionMemberPower, expeditionPower, expeditionSlots, EXPEDITION_FAMILIES, EXPEDITION_REGIONS, MAX_EXPEDITION_SUPPLIES, sendExpedition } from '../expeditions/expeditions'
 import { dishesHeld } from '../kitchen/kitchen'
 import { fieldTiles, REGION_IDS } from '../save/v4'
@@ -39,7 +39,7 @@ import { talentsD, type TalentOf } from './talents'
 import { growsIn, plantableIn, CROPS } from '../fields/crops'
 import { needsWater } from '../fields/plantables'
 import { plantingPlan, setFieldPlan } from '../fields/production'
-import { harvestTile, plantTile, stagesOf, tillTile, waterTile } from '../fields/fields'
+import { harvestTile, plantTile, seedsInSeason, stagesOf, tillTile, waterTile } from '../fields/fields'
 import { clearPlot, FIELD_PLOTS, plotLock } from '../fields/plots'
 import { digBuilt, stairsLock, takeStairs } from '../gathering/digs'
 import { chop, fish, forage, FULL_HAULS, reachList } from '../gathering/hauls'
@@ -56,6 +56,13 @@ import { goodCount } from '../save/warehouse'
 import { WEEKDAYS } from '../town/professions'
 import type { SchedulePack } from '../town/town'
 import type { StoryPack } from '../story/pack'
+import { chatV4, giftV4 } from '../romance/acts'
+import { eveningRole, kindsNow, spendEvening } from '../romance/evening'
+import { playEvent } from '../romance/events'
+import { finishArrival, walkScene } from '../romance/love'
+import { introduce } from '../romance/meeting'
+import { readiness } from '../romance/ready'
+import { eventOf } from '../story/placeholders'
 import { RESTAURANT_RECIPES } from '../restaurant/recipes'
 import { isRestaurantDish } from '../restaurant/rules'
 import { discovered } from '../goods/discovery'
@@ -1119,3 +1126,132 @@ describe('the farm at scale: 10, 20 and 50 Umas, brought in over four years', ()
   })
 })
 
+
+const FOCUS = '9900101'
+const GIFTS = ['basil', 'mint', 'button-mushroom', 'carp', 'carrot']
+const DAY_PART_PACK: StoryPack = {
+  ...BALANCE_PACK,
+  cast: { ...BALANCE_PACK.cast, umas: [...BALANCE_PACK.cast.umas, { characterId: FOCUS, home: 'rose-cottage' }] },
+  town: { ...BALANCE_PACK.town, locations: [{ id: 'rose-cottage', name: 'Rose Cottage', kind: 'home' }] },
+  bibles: new Map([[FOCUS, { characterId: FOCUS, gifts: { loved: 'basil', liked: GIFTS.slice(1) } }]]),
+}
+
+function paceFarmAction(save: SaveV4, manualFields: boolean): SaveV4 {
+  if (manualFields) {
+    const tiles = fieldTiles(save)
+    const ready = tiles.findIndex(tile => tile.ready)
+    if (ready >= 0) return harvestTile(save, ready).save
+    const dry = tiles.findIndex(needsWater)
+    if (dry >= 0) return waterTile(save, dry)
+    const plan = plantingPlan(save, 0)
+    const empty = tiles.findIndex(tile => tile.ground === 'tilled' && !tile.crop)
+    const seed = plan?.crop ? seedsInSeason(save).find(row => row.crop === plan.crop && (row.grade ?? cropBaseGrade(row.crop)) === plan.grade) : undefined
+    if (empty >= 0 && seed) return plantTile(save, empty, seed.id)
+    const clear = START_CLEAR.slice(0, 3).find(index => tiles[index]?.ground === 'clear')
+    if (clear !== undefined) return tillTile(save, clear)
+  }
+  return save.today.actions % 2 ? fish(save, 'pond').save : forage(save, 'woods').save
+}
+
+/** Same seed, starting gold and player policy, with a fixed crew of synthetic hires in each comparison. */
+async function playPacedYear(size: 0 | Stage, morningCrew: boolean) {
+  let save = hire({ ...newSave('day-parts-pacing', AT), farmer: { name: 'Robin' } }, size)
+  const pack = DAY_PART_PACK
+  const ctx = { story: pack, talentOf: tripTalents }
+  const builds = planFor(false)
+  const metrics = { morning: 0, afternoon: 0, relationship: 0, hangouts: 0, dates: 0, friendship3: 0, firstDate: 0, confession: 0,
+    shipping: 0, short: 0, takeout: 0, upkeep: 0, withered: 0, crew: 0, unused: 0, seedDays: 0, rank: 1, gold: 0,
+    exactByAfternoon: Object.fromEntries(BALANCE_INGREDIENTS.map(key => [key, 0])), milestones: {} as Record<string, number> }
+  const act = (changed: SaveV4, social = false) => {
+    const from = save.today.actions
+    const to = changed.today.actions
+    const first = Math.min(MORNING_ACTIONS, to) - Math.min(MORNING_ACTIONS, from)
+    metrics.morning += first
+    metrics.afternoon += to - from - first
+    if (social) metrics.relationship += to - from + changed.today.eventActions - save.today.eventActions
+    save = morningCrew ? prepareDayChange(save, changed) : changed
+    if (morningShiftDue(save)) save = settleCrewShift(save, ctx.talentOf, pack)
+  }
+  for (let day = 1; day <= DAYS_PER_YEAR; day++) {
+    act(grow(save, size > 0 && save.fields.plots.length < Math.ceil(size / 8), builds, pack))
+    save = stock(save, true, size <= 10 ? 2 : 4)
+    save = balanceStockPlan(save, size > 0)
+    save = seeds(save, (options, plot) => plantingPlan(save, plot * FIELD_TILES)?.crop ?? plotCrop(options, plot))
+    save = goToTown(save)
+    if (size) save = assign(save, pack, true).save
+    if (!save.roster[FOCUS]) act(finishArrival(introduce(save, pack, FOCUS), FOCUS, { choice: 30, flags: [] }), true)
+    const route = readiness(save, pack, FOCUS)
+    if (route.ready && route.rung && !['proposal', 'wedding'].includes(route.rung)) {
+      const event = await eventOf(pack, FOCUS, route.rung)
+      const picks: number[] = []
+      let path = walkScene(event.steps, picks, { flags: save.love[FOCUS]!.flags })
+      while (!path.done) {
+        const last = path.steps.at(-1)
+        if (!last || !('choice' in last) || picks.length > 12) throw new Error('Synthetic route requires a different play policy.')
+        picks.push(Math.max(0, last.choice.findIndex(option => option.answer === 'yes')))
+        path = walkScene(event.steps, picks, { flags: save.love[FOCUS]!.flags })
+      }
+      act(playEvent(save, pack, FOCUS, { event, picks, plays: [] }).save, true)
+      metrics.milestones[route.rung] = day
+      if (route.rung === 'f3') metrics.friendship3 = day
+      if (route.rung === 'confession') metrics.confession = day
+    }
+    act(chatV4(save, FOCUS).save, true)
+    const gift = GIFTS.flatMap(id => (save.items[id] ?? []).flatMap((count, i) => count > 0 ? [{ id, stars: i + 1 }] : [])).sort((a, b) => b.stars - a.stars)[0]
+    if (gift) act(giftV4(save, pack, FOCUS, gift.id, gift.stars).save, true)
+    if (pantryMeals(save) < mealsNeeded(save, pack) && plainBatch(save) && size <= 10) act(cookBatch(save))
+    while (save.today.actions < MORNING_ACTIONS) act(paceFarmAction(save, size === 0))
+    if (morningCrew) {
+      expect(save.today.crew).toBeDefined()
+      if (day % 30 === 0) expect(parseSaveV6(JSON.parse(JSON.stringify(save)))).toEqual(save)
+    }
+    for (const id of BALANCE_INGREDIENTS) if (goodCount(save.items, id) >= 2) metrics.exactByAfternoon[id]!++
+    if (Object.keys(save.items).some(id => id.startsWith('seed-'))) metrics.seedDays++
+    const outing = kindsNow(save, pack, FOCUS)[0]
+    if (outing) {
+      const role = eveningRole(save.love[FOCUS]!)
+      act(spendEvening(save, pack, FOCUS, outing, 75).save, true)
+      if (role === 'date') { metrics.firstDate ||= day; metrics.dates++ }
+      else if (role === 'hangout') metrics.hangouts++
+    }
+    while (actionsLeft(save) > 1) act(paceFarmAction(save, size === 0 || handsWorking(save, pack).length < 3))
+    act(ship(save, builds, pack, true))
+    save = runNight(save, ctx)
+    if (save.farm.short) metrics.short++
+    metrics.shipping += sum(save.summary!.bin.map(sale => sale.gold))
+    for (const line of save.summary?.money ?? []) {
+      if (line.kind === 'takeout') metrics.takeout += line.meals
+      if (line.kind === 'upkeep') metrics.upkeep += line.due
+    }
+    for (const line of save.summary?.work ?? []) {
+      if (line.kind === 'withered') metrics.withered += line.tiles
+      if (line.kind === 'farmhand') { metrics.crew += line.spent; metrics.unused += line.actions - line.spent }
+    }
+    if (day % DAYS_PER_SEASON === 0) await setImmediate()
+  }
+  metrics.rank = farmRankOf(save.farm.points)
+  metrics.gold = save.gold
+  expect(save.calendar.day).toBe(DAYS_PER_YEAR + 1)
+  expect(handsInOrder(save)).toHaveLength(size)
+  expect(save.farm.workHistory?.length ?? 0).toBe(morningCrew ? DAYS_PER_YEAR : 0)
+  expect(parseSaveV6(JSON.parse(JSON.stringify(save)))).toEqual(save)
+  return metrics
+}
+
+describe('F106 first-year farm and relationship pacing', () => {
+  it.each([0, ...STAGES] as const)('compares 120 identical turns with %i farmhands', async size => {
+    const old = await playPacedYear(size, false)
+    const split = await playPacedYear(size, true)
+    if (process.env.DAY_PART_REPORT === '1') console.log(JSON.stringify({ size, old, split }))
+    expect(split.morning).toBe(DAYS_PER_YEAR * MORNING_ACTIONS)
+    expect(split.shipping).toBeGreaterThan(0)
+    expect(split.short).toBeLessThanOrEqual(old.short)
+    expect(split.rank).toBeGreaterThanOrEqual(old.rank)
+    expect(split.friendship3).toBeGreaterThan(0)
+    expect(split.firstDate).toBeGreaterThan(split.confession)
+    expect(split.firstDate).toBeLessThanOrEqual(old.firstDate + 2)
+    expect(split.confession).toBeLessThanOrEqual(old.confession + 2)
+    expect(split.confession).toBeGreaterThan(split.friendship3)
+    if (size > 0) expect(split.crew).toBeGreaterThan(split.morning + split.afternoon)
+  }, 120_000)
+})

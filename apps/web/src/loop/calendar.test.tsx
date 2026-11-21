@@ -154,7 +154,10 @@ describe('the calendar', () => {
       longGame: { weddings: [ONE], celebrations: {}, love: {} } } })
     await render(<p>Farm</p>, '/?sheet=calendar')
     await click(await find(`[href="/?visits=${ONE}"]`))
-    const birthday = () => $$('button').find(button => button.textContent === 'Birthday night')
+    const startNight = () => [...document.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === 'Start night')
+    await until(() => !!startNight())
+    await click(startNight())
+    const birthday = () => [...document.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === 'Birthday night')
     await until(() => !!birthday())
     await click(birthday())
     const stage = '[data-scene^="visit:birthday:"]'
@@ -168,7 +171,8 @@ describe('the calendar', () => {
     await click(finish())
     await until(() => save().longGame?.love[ONE]?.birthday === 1)
     expect(save().longGame?.night?.visits.map(visit => visit.kind)).toEqual(['birthday'])
-    expect(save().today.actions).toBe(0)
+    expect(save().today.actions).toBe(10)
+    expect(save().today.crew).toBeDefined()
   })
 
   it('picks a wedding date in a later year and returns to today without losing the plan', async () => {

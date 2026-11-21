@@ -82,7 +82,7 @@ describe('the bar', () => {
     expect($(`${bar} a[aria-label^="Gold"]`)?.getAttribute('href')).toBe('/fields?sheet=bin')
     // The day's actions left, of its ten, by End the day: nothing to tap.
     const actions = $('[data-kit="bar-actions"] > [data-bar-chip="actions"]')!
-    expect(actions.getAttribute('aria-label')).toBe('Actions left: 10 of 10. Morning')
+    expect(actions.getAttribute('aria-label')).toBe('Actions left: 5 of 5. Morning')
     expect(actions.tagName).toBe('SPAN')
     expect(actions.nextElementSibling?.getAttribute('href')).toBe('/fields?sheet=end')
     expect($('[data-kit="bar-menu"]')?.getAttribute('href')).toBe('/fields?sheet=menu')
