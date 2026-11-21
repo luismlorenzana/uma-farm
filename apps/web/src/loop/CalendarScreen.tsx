@@ -1,8 +1,8 @@
 // The calendar screen (`?sheet=calendar`, from the bar's date): the year at a glance, laid out sideways over the whole
 // screen. On top, the date and year, the four seasons (this one marked, the others a tap away), the day's actions with a
-// special day's bonus actions, and Close. Below, the 30 dates in pages of six columns and three rows: each day its number, its marks
+// special day's bonus actions, and Close. Below, the 30 dates in pages of six columns and two rows: each day its number, its marks
 // (a festival's trophy, New Year's spark, a holiday's ribbon, a minor day's dot), its one label (the festival, New
-// Year's, the story's day) and the faces of the Umas with an event that day (three, or two and "+n"); today in the accent
+// Year's, the story's day) and the faces of the Umas with an event that day (six, or five and "+n"); today in the accent
 // colour, days gone by faded. Beside it, the chosen day's panel: its festival and what happens at it, New Year's, the
 // story's holidays and minor days with their lines, the special day's event actions, and everyone with an event that day
 // with why (the occasion, her birthday, your anniversary, her event Ready or likely Ready). A face that's only a guess
@@ -27,12 +27,11 @@ import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
-import { cellFaces, cellLabel, cellMarks, dayHeading, eventActionWords, faceWords, faintFace } from './calendar-view'
+import { CalendarFaces } from './CalendarFaces'
+import { CALENDAR_GRID, CALENDAR_PAGE_SIZE, cellFaces, cellLabel, cellMarks, dayHeading, eventActionWords, faceWords, faintFace } from './calendar-view'
 import { townRows, type TownRow } from './schedule-words'
 import { SEASON_COLOR, shortDate, whenWords } from './words'
 import { changeHomestead } from './homestead-actions'
-
-const DAYS_IN_VIEW = 18
 
 export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
@@ -56,8 +55,8 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const start = save?.calendar.start ?? 1
   const selected = Math.max(start, picked)
   const { year, season, day: dayOfSeason } = dateOf(selected, save?.calendar)
-  const page = browsingPage ?? Math.floor((dayOfSeason - 1) / DAYS_IN_VIEW)
-  const firstDay = page * DAYS_IN_VIEW + 1
+  const page = browsingPage ?? Math.floor((dayOfSeason - 1) / CALENDAR_PAGE_SIZE)
+  const firstDay = page * CALENDAR_PAGE_SIZE + 1
   const pack = useMemo(() => story ?? noPack(), [story])
   const days = useMemo((): SpecialDays => special ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }, [special, story])
   const list = useMemo(() => {
@@ -80,7 +79,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
     chooseDay(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }, save.calendar))
   }
   const changePage = (direction: -1 | 1) => {
-    const next = Math.max(0, Math.min(Math.ceil(list.length / DAYS_IN_VIEW) - 1, page + direction))
+    const next = Math.max(0, Math.min(Math.ceil(list.length / CALENDAR_PAGE_SIZE) - 1, page + direction))
     setBrowsingPage(next)
   }
   return createPortal(
@@ -97,7 +96,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
               onClick={() => chooseDay(today)} data-action="calendar-today">Today</button>
             <GuideButton topic="calendar" label="How the calendar works" />
           </div>
-          <ol className="grid min-h-0 min-w-0 flex-1 touch-pan-y grid-cols-6 grid-rows-3 gap-1 select-none"
+          <ol className={CALENDAR_GRID}
             aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}
             onTouchStart={event => {
               const first = event.touches[0]
@@ -112,7 +111,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
               const horizontal = last.clientX - start.x
               if (Math.abs(horizontal) > 45 && Math.abs(horizontal) > Math.abs(last.clientY - start.y)) changePage(horizontal < 0 ? 1 : -1)
             }}>
-            {list.slice(firstDay - 1, firstDay - 1 + DAYS_IN_VIEW).map(d => d.day === null
+            {list.slice(firstDay - 1, firstDay - 1 + CALENDAR_PAGE_SIZE).map(d => d.day === null
               ? <li key={d.date.day} className="rounded-sm border border-hairline/50 p-1 text-[13px] text-ink-faint"
                   title="Added after this season" data-calendar-gap>{d.date.day}</li>
               : <Cell key={d.date.day} day={d} chosen={d.day === chosen.day} focus={focus} nameOf={nameOf} onPick={() => chooseDay(d.day)} />)}
@@ -120,8 +119,8 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
           <div className="flex shrink-0 items-center justify-between text-[12px] text-ink-soft">
             <button type="button" onClick={() => changePage(-1)} disabled={firstDay === 1} aria-label="Earlier dates"
               className="grid size-11 place-items-center disabled:opacity-40"><ChevronLeftIcon size={16} /></button>
-            <span data-calendar-range>Days {firstDay}–{Math.min(firstDay + DAYS_IN_VIEW - 1, list.length)} of {list.length}</span>
-            <button type="button" onClick={() => changePage(1)} disabled={firstDay + DAYS_IN_VIEW > list.length} aria-label="Later dates"
+            <span data-calendar-range>Days {firstDay}–{Math.min(firstDay + CALENDAR_PAGE_SIZE - 1, list.length)} of {list.length}</span>
+            <button type="button" onClick={() => changePage(1)} disabled={firstDay + CALENDAR_PAGE_SIZE > list.length} aria-label="Later dates"
               className="grid size-11 place-items-center disabled:opacity-40"><ChevronRightIcon size={16} /></button>
           </div>
         </section>
@@ -173,13 +172,13 @@ function Cell({ day, chosen, focus, nameOf, onPick }: { day: CalendarDay; chosen
   const tone = today ? 'bg-accent text-accent-ink' : day.when === 'past' ? 'bg-sunken/50 text-ink-faint' : 'bg-panel text-ink'
   const ring = day.festival && !chosen ? { ['--tw-ring-color' as string]: SEASON_COLOR[day.date.season] } : undefined
   const words = [
-    `${SEASON_NAMES[day.date.season]} ${day.date.day}`, today ? 'today' : null, label,
+    `${SEASON_NAMES[day.date.season]} ${day.date.day}`, today ? 'today' : null, label?.full,
     day.faces.length > 0 ? `${day.faces.length} with an event: ${day.faces.map((f) => nameOf(f.id)).join(', ')}` : null,
   ].filter(Boolean).join(', ')
   return (
     <li className="min-h-0 min-w-0">
       <button type="button" onClick={onPick} aria-label={words} aria-pressed={chosen} data-day={day.day} data-today={today || undefined} data-festival={day.festival?.id}
-        data-faces={day.faces.length} data-more={more || undefined} data-weddings={day.weddings.length || undefined}
+        data-faces={day.faces.length} data-more={more || undefined} title={label?.full} data-weddings={day.weddings.length || undefined}
         className={`flex h-full w-full min-w-0 flex-col items-stretch gap-0.5 overflow-hidden rounded-sm border p-1 sm:px-1.5 text-left ${tone} ${chosen ? 'ring-2 ring-inset ring-ink/65' : 'border-hairline'} ${day.festival && !chosen ? 'ring-2 ring-inset' : ''}`}
         style={ring}>
         <span className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
@@ -193,15 +192,8 @@ function Cell({ day, chosen, focus, nameOf, onPick }: { day: CalendarDay; chosen
           {marks.minor && <span aria-hidden className="size-1.5 rounded-full bg-current opacity-70" />}
           {marks.eventActions > 0 && day.when !== 'past' && <span className={`text-[9px] leading-none font-semibold ${today ? '' : 'text-[#c2385e]'}`} data-cell-events>♥+{marks.eventActions}</span>}
         </span>
-        {label && <span className="line-clamp-2 break-words text-[10px] leading-tight font-semibold md:text-[11px]" data-cell-label>{label}</span>}
-        <span className="mt-auto flex max-w-full items-center -space-x-1.5" data-cell-faces>
-          {shown.map((f) => (
-            <span key={f.id} className={`rounded-avatar block size-5 shrink-0 ring-1 ${f.id === focus ? 'ring-accent' : 'ring-panel'} ${faintFace(f, day) ? 'opacity-45' : ''}`} data-cell-face={f.id} data-faint={faintFace(f, day) || undefined}>
-              <Avatar id={f.id} size={20} label={nameOf(f.id)} />
-            </span>
-          ))}
-          {more > 0 && <span className="rounded-avatar grid size-5 shrink-0 place-items-center bg-sunken text-[11px] font-bold text-ink ring-1 ring-panel" data-more>+{more}</span>}
-        </span>
+        {label && <span className="line-clamp-2 break-normal text-[10px] leading-tight font-semibold md:text-[11px]" data-cell-label>{label.short}</span>}
+        <CalendarFaces shown={shown.map(face => ({ id: face.id, faint: faintFace(face, day) }))} more={more} nameOf={nameOf} focus={focus} />
       </button>
     </li>
   )
@@ -378,26 +370,30 @@ function FaceRow({ face, day, save, days, name, focused }: {
   const funding = eventActionsLeft(save, days) >= cost ? 'bonus' : 'regular'
   const canVisit = now && face.night && nightVisits(save).length < NIGHT_VISITS
   return (
-    <li className={`flex min-h-12 items-center gap-2 py-1 ${focused ? 'rounded-sm bg-accent/10 px-1' : ''}`}
+    <li className={`flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 py-1 ${focused ? 'rounded-sm bg-accent/10 px-1' : ''}`}
       data-face={face.id} data-reasons={face.reasons.join(' ')} data-calendar-focus={focused || undefined}>
-      <span className="block size-9 shrink-0"><Avatar id={face.id} size={36} label={name} /></span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-semibold">{name}</span>
-        <span className="block text-[12px] text-ink-soft">{save.love[face.id]?.wed === day.day ? why.replace('Wedding planned', 'Wedding held') : why}</span>
-        {face.night && <span className="block text-[12px] font-semibold text-accent">
-          {[face.night.birthday && 'Birthday night', face.night.anniversary && 'Anniversary night'].filter(Boolean).join(' · ')}
-        </span>}
-      </span>
-      {now && face.reasons.includes('occasion') && (can
-        ? <Link to={withParam(location, 'occasion', face.id)} state={{ back: true }} aria-label={`Play ${next?.name ?? 'the occasion'} with ${name} · 1 ${funding} action`} data-action="play-occasion" data-occasion={next?.id} data-funding={funding}
-          className="grid min-h-11 shrink-0 place-items-center rounded-sm bg-[#c2385e] px-2.5 text-[13px] font-bold text-white">Play · {funding === 'bonus' ? '♥1' : '1'}</Link>
-        : <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
-      {now && face.reasons.includes('ready') && (can
-        ? <Link to={withParam(location, 'event', face.id)} state={{ back: true }} aria-label={`Play ${name}’s event · 1 ${funding} action`} data-action="play-event" data-funding={funding}
-          className="grid min-h-11 shrink-0 place-items-center rounded-sm border-2 border-[#c2385e] px-2 text-[13px] font-bold text-[#c2385e]">Event · {funding === 'bonus' ? '♥1' : '1'}</Link>
-        : !next && <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
-      {canVisit && <Link to={`/?visits=${face.id}`} state={{ back: true }} aria-label={`Night visits with ${name}`}
-        className="grid min-h-11 shrink-0 place-items-center rounded-sm border border-hairline-strong px-2 text-[13px] font-bold text-accent">Night ›</Link>}
+      <div className="flex min-w-0 flex-[1_0_7rem] items-center gap-2">
+        <span className="block size-9 shrink-0"><Avatar id={face.id} size={36} label={name} /></span>
+        <div className="min-w-0 flex-1 break-normal">
+          <span className="block text-[14px] font-semibold">{name}</span>
+          <span className="block text-[12px] text-ink-soft">{save.love[face.id]?.wed === day.day ? why.replace('Wedding planned', 'Wedding held') : why}</span>
+          {face.night && <span className="block text-[12px] font-semibold text-accent">
+            {[face.night.birthday && 'Birthday night', face.night.anniversary && 'Anniversary night'].filter(Boolean).join(' · ')}
+          </span>}
+        </div>
+      </div>
+      {now && (face.reasons.includes('occasion') || face.reasons.includes('ready') || canVisit) && <div className="ml-auto flex flex-wrap justify-end gap-1.5">
+        {face.reasons.includes('occasion') && (can
+          ? <Link to={withParam(location, 'occasion', face.id)} state={{ back: true }} aria-label={`Play ${next?.name ?? 'the occasion'} with ${name} · 1 ${funding} action`} data-action="play-occasion" data-occasion={next?.id} data-funding={funding}
+            className="grid min-h-11 shrink-0 place-items-center rounded-sm bg-[#c2385e] px-2.5 text-[13px] font-bold text-white">Play · {funding === 'bonus' ? '♥1' : '1'}</Link>
+          : <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
+        {face.reasons.includes('ready') && (can
+          ? <Link to={withParam(location, 'event', face.id)} state={{ back: true }} aria-label={`Play ${name}’s event · 1 ${funding} action`} data-action="play-event" data-funding={funding}
+            className="grid min-h-11 shrink-0 place-items-center rounded-sm border-2 border-[#c2385e] px-2 text-[13px] font-bold text-[#c2385e]">Event · {funding === 'bonus' ? '♥1' : '1'}</Link>
+          : !next && <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
+        {canVisit && <Link to={`/?visits=${face.id}`} state={{ back: true }} aria-label={`Night visits with ${name}`}
+          className="grid min-h-11 shrink-0 place-items-center rounded-sm border border-hairline-strong px-2 text-[13px] font-bold text-accent">Night ›</Link>}
+      </div>}
     </li>
   )
 }

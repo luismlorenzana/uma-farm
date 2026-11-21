@@ -3,14 +3,22 @@
 import { NEW_YEAR_NAME, SEASON_NAMES, type CalendarDay, type DayFace, type FaceReason } from '@farm/domain'
 import { plural, whenWords } from './words'
 
-/** How many faces a day's cell shows before "+n". */
-export const CELL_FACES = 3
+export const CALENDAR_PAGE_SIZE = 12
+export const CALENDAR_GRID = 'grid min-h-0 min-w-0 flex-1 touch-pan-y grid-cols-6 grid-rows-2 gap-1 select-none'
 
-/** A cell's one label: its festival, else New Year's, else the story's first holiday or minor day; else none. */
-export function cellLabel(day: Pick<CalendarDay, 'festival' | 'newYear' | 'storyDays'> & Partial<Pick<CalendarDay, 'weddings' | 'celebrations' | 'trips' | 'birthdays' | 'anniversaries'>>): string | null {
-  return day.festival?.name ?? (day.newYear ? NEW_YEAR_NAME : null) ?? day.storyDays[0]?.name
-    ?? (day.weddings?.length ? 'Wedding' : day.celebrations?.length ? 'Celebration' : day.trips?.length ? 'Expedition'
-      : day.anniversaries?.length ? 'Anniversary' : day.birthdays?.length ? 'Birthday' : null)
+/** Two rows of portraits, with the last spot available for an overflow count. */
+const CELL_FACES = 6
+
+/** Keep the tile label compact and the full wording available to its day button. */
+export function cellLabel(day: CalendarDay): { short: string; full: string } | null {
+  const title = day.festival?.name ?? (day.newYear ? NEW_YEAR_NAME : null) ?? day.storyDays[0]?.name
+  if (title) return { short: title, full: title }
+  if (day.weddings.length) return { short: 'Wedding', full: 'Wedding' }
+  if (day.celebrations.length) return { short: 'Celeb.', full: 'Celebration' }
+  if (day.trips.length) return { short: 'Trip', full: 'Expedition' }
+  if (day.anniversaries.length) return { short: 'Anniv.', full: 'Anniversary' }
+  if (day.birthdays.length) return { short: 'Birthday', full: 'Birthday' }
+  return null
 }
 
 /** What marks a cell: a festival's trophy, New Year's bell, a holiday's flag, a minor day's dot, and a special day's
