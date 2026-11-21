@@ -1,4 +1,4 @@
-// The calendar on screen: the bar's date opens it over everything; the season's 12 days as a grid with the festival,
+// The calendar on screen: the bar's date opens it over everything; the season's 30 days as a strip with the festival,
 // birthdays and the faces of the Umas with an event; the other seasons a tap away; the chosen day's panel. On the Flower
 // Show, the bar shows the festival's event actions, its occasion scene plays with each Uma you've met (one action, the
 // event actions first) and two Umas' events play past the day's budget; on a plain day with no action left, her event
@@ -126,7 +126,7 @@ describe('the calendar', () => {
     expect(save().today.actions).toBe(6)
   })
 
-  it('pages through 30-day seasons by day buttons and swiping, with a fresh detail scroll', async () => {
+  it('browses all 30 dates sideways while keeping the selected day and its details in place', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(30) })
     await render(<p>Farm</p>, '/?sheet=calendar')
     await find('[data-calendar-grid="spring"]')
@@ -136,21 +136,16 @@ describe('the calendar', () => {
     expect($('[data-day-panel]')?.dataset.dayPanel).toBe('31')
     expect($('[data-day-scroll]')?.scrollTop).toBe(0)
     await click($('[aria-label="Previous day"]'))
-    const grid = $('[data-calendar-grid="spring"]')!
-    const touch = (type: string, property: string, clientX: number, clientY: number) => {
-      const event = new Event(type, { bubbles: true })
-      Object.defineProperty(event, property, { value: [{ clientX, clientY }] })
-      grid.dispatchEvent(event)
-    }
-    await act(async () => {
-      touch('touchstart', 'touches', 220, 100)
-      touch('touchend', 'changedTouches', 218, 180)
-    })
-    expect($('[data-calendar-grid="spring"]')).not.toBeNull()
-    await act(async () => {
-      touch('touchstart', 'touches', 220, 100)
-      touch('touchend', 'changedTouches', 135, 100)
-    })
+    const grid = await find('[data-calendar-grid="spring"]')
+    expect($$('[data-calendar-grid="spring"] [data-day]')).toHaveLength(30)
+    vi.spyOn(grid.children[0]!, 'getBoundingClientRect').mockReturnValue({ left: 0 } as DOMRect)
+    vi.spyOn(grid.children[1]!, 'getBoundingClientRect').mockReturnValue({ left: 56 } as DOMRect)
+    await click($('[aria-label="Next 7 days"]'))
+    expect(grid.scrollLeft).toBe(392)
+    await act(async () => grid.dispatchEvent(new Event('scroll')))
+    expect($('[data-calendar-range]')?.textContent).toBe('Days 8–14 of 30')
+    expect($('[data-day-panel]')?.dataset.dayPanel).toBe('30')
+    await click($('[data-season="summer"]'))
     expect($$('[data-calendar-grid="summer"] [data-day]')).toHaveLength(30)
   })
 

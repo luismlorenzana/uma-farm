@@ -172,7 +172,7 @@ const GUIDE_TOPICS = {
   calendar: {
     title: 'Calendar', lead: `Open the date chip to see the ${DAYS_PER_SEASON} days of a season and the plans on each date.`,
     items: [
-      ['time', 'Move around the year', 'Scroll down to reach later dates, swipe across for another season, or use the arrows beside the selected date to move one day.'],
+      ['time', 'Move around the year', 'Swipe the day columns sideways or use the arrows below them to browse all 30 dates. Tap a season tab to change seasons. The arrows by the selected date move one day.'],
       ['festival', 'Check a date before you commit', 'The panel shows events, birthdays, work shifts and weddings. Select Today to return to the day you are playing.'],
     ],
   },

@@ -162,7 +162,9 @@ describe('the Uma Library', () => {
         [TWO]: { ...base.love[TWO]!, stage: 'spouse', level: 1, wed: 3, house: 0 },
         [THREE]: { ...base.love[THREE]!, stage: 'romance', level: 0, weddingDay: 61 },
       },
-      longGame: { weddings: [ONE, TWO], celebrations: {}, love: {
+      longGame: { weddings: [ONE, TWO], celebrations: {}, night: {
+        day: 3, visits: [{ day: 3, kind: 'pajamas', who: [ONE], looks: [1] }],
+      }, love: {
         [TWO]: { points: 120, trueDay: 3, pajamas: 0, anniversaries: 0, memories: [] },
       } },
     } })
@@ -174,7 +176,15 @@ describe('the Uma Library', () => {
     await find('[data-library-page="relationship"]')
     expect($('[data-relationship-standing]')?.textContent).toBe('Spouse · S1')
     expect($('[data-book-love]')?.textContent).toBe('True Love')
+    expect($('[data-talks-left="1"]')?.textContent).toBe('1 talk left')
+    expect($('[data-visits-left="4"]')?.textContent).toBe('4 of 5 night visits left')
+    const current = save()
+    await act(async () => useGame.setState({ save: { ...current, today: { ...current.today, chats: [TWO] } } }))
+    expect($('[data-talks-left="0"]')?.parentElement?.nextElementSibling?.textContent).toBe('Already talked today')
+    expect($('[data-visits-left="4"]')).not.toBeNull()
+    expect($('[data-relationship-date="Flower Show"]')?.getAttribute('href')).toContain('calendarDay=19')
     expect($('[data-relationship-date="Anniversary"]')?.getAttribute('href')).toContain('calendarDay=123')
+    expect($('[data-relationship-date="Anniversary"]')?.getAttribute('href')).toContain(`calendarUma=${TWO}`)
     await click($('a[aria-label="Profile"], .lib-tabs a[href$="page=profile"]'))
     await find('[data-library-page="profile"]')
     await click($('.lib-book-head a'))
