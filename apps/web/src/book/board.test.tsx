@@ -129,6 +129,26 @@ describe('the work board in the Book', () => {
     expect($(`[data-hand="${B}"] [data-tonight]`)?.textContent).toBe('Tonight · No tasks: set her tasks')
   })
 
+  it('offers only the uncovered work and assigns it to the crew with spare actions', async () => {
+    const save = farm()
+    useGame.setState({ save: { ...save, roster: { ...save.roster, [A]: { ...save.roster[A]!, tasks: [{ kind: 'water', tiles: [...START_CLEAR] }] } } } })
+    await render(<BookPage />, '/book?view=work')
+    const coverage = $('[data-work-coverage]')!
+    expect(coverage.textContent).toContain('6 to water after assigned work')
+    expect($('[data-book="money"]')).toBeNull()
+    await click(coverage.querySelector('button'))
+    const updated = useGame.getState().save!
+    expect(updated.roster[B]?.tasks?.[0]).toMatchObject({ kind: 'water' })
+    expect(updated.roster[A]?.tasks).toEqual([{ kind: 'water', tiles: [...START_CLEAR] }])
+    expect(updated.today.actions).toBe(save.today.actions)
+  })
+
+  it('assigns a quick job without configuring individual rows', async () => {
+    await render(<BookPage />, `/book?view=work&task=${A}`)
+    await click($('[data-quick-job="fish"]'))
+    expect(useGame.getState().save?.roster[A]?.tasks).toEqual([{ kind: 'fish', spot: 'pond' }])
+  })
+
   it('says how to get a farmhand, with none', async () => {
     useGame.setState({ save: { ...farm(), roster: { 303: newRosterUma(1) }, love: { 303: newLove() } } })
     await render(<BookPage />, '/book')

@@ -19,7 +19,7 @@ import {
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, IconButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
@@ -31,6 +31,7 @@ import { useMaster } from '../master/master'
 import { daysWords } from '../loop/schedule-words'
 import { useStory } from '../story/story'
 import { dayChips, jobWords, KITCHEN, nightWords, rowTiles, runsOn, taskWords } from './board-words'
+import { hasPreset, workPresets, workSuggestions, type WorkSuggestion } from './work-plan'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 /** A season's farm days in words: "2, 3, 5, 6, 8, 9, 11, 12", "1–6, 9", "every day". */
@@ -46,7 +47,8 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const talents = useTalents()
   const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const hands = handsInOrder(save).sort(byRelationship(save))
-  const forecast = handsTonight(save, save, talents.of, pack)
+  const forecast = useMemo(() => handsTonight(save, save, talents.of, pack), [save, talents.of, pack])
+  const suggestions = useMemo(() => workSuggestions(save, forecast, pack, talents.of), [save, forecast, pack, talents.of])
   const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
   const adding = new URLSearchParams(location.search).get('task')
   const selected = new URLSearchParams(location.search).get('hand')
@@ -69,6 +71,7 @@ export function WorkBoard({ save }: { save: FarmSave }) {
         </GuideButton>
       </div>
       {hands.length > 0 && <>
+        <Coverage suggestions={suggestions} nameOf={nameOf} />
         <ProductionForecast before={save} after={forecast.save} pack={pack} />
         <SurplusEditor save={save} />
       </>}
@@ -88,6 +91,28 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       {adding && save.roster[adding]?.farmhand !== undefined && <AddTask save={save} id={adding} name={nameOf(adding)} onClose={() => leave(withParam(location, 'task', null))} />}
     </section>
   )
+}
+
+function Coverage({ suggestions, nameOf }: { suggestions: WorkSuggestion[]; nameOf: (id: string) => string }) {
+  const [assigning, setAssigning] = useState(false)
+  const [error, setError] = useState('')
+  const assign = (worker: string, task: FarmTask) => {
+    setAssigning(true)
+    setError('')
+    void copyHandTask(worker, task).catch(err => setError(errorWords(err))).finally(() => setAssigning(false))
+  }
+  return <section aria-label="Work that needs coverage" data-work-coverage className="space-y-1 rounded-md border border-hairline bg-panel p-2.5">
+    <h3 className="font-semibold">Needs coverage</h3>
+    {suggestions.length ? <ul className="divide-y divide-hairline">
+      {suggestions.slice(0, 5).map(({ worker, need, job }) => <li key={job.key} className="flex min-h-11 items-center justify-between gap-2 py-1">
+        <span><strong className="block text-[13px]">{job.label}</strong><small className="text-ink-soft">{need} after assigned work</small></span>
+        {worker ? <Button variant="secondary" disabled={assigning} onClick={() => assign(worker, job.task)}>Assign {nameOf(worker)}</Button>
+          : <small className="shrink-0 text-ink-soft">No free worker</small>}
+      </li>)}
+    </ul> : <p className="text-[13px] text-ink-soft">Current assignments cover the priority jobs we can do with today’s supplies.</p>}
+    {suggestions.length > 5 && <p className="text-[12px] text-ink-soft">{suggestions.length - 5} more jobs after these</p>}
+    {error && <p role="alert" className="text-[13px] text-danger">{error}</p>}
+  </section>
 }
 
 /** One farmhand: her day, tonight's work as the farm stands, and her tasks. */
@@ -308,11 +333,14 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           : kind === 'mine' ? { kind, dig: where as DigId }
             : kind === 'fish' ? { kind, spot: where as FishingSpotId, ...(fishMode ? { mode: fishMode } : {}) } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
   const pick = (next: TaskKind) => { setKind(next); setWhere(null); setError(null) }
-  const add = () => {
-    if (!task) return
+  const assign = (pick: FarmTask) => {
     setBusy(true)
-    setHandTasks(id, [...(save.roster[id]!.tasks ?? []), task]).then(onClose, (e: unknown) => setError(errorWords(e))).finally(() => setBusy(false))
+    setError(null)
+    void copyHandTask(id, pick).then(onClose, (e: unknown) => setError(errorWords(e))).finally(() => setBusy(false))
   }
+  const add = () => { if (task) assign(task) }
+  const assigned = save.roster[id]!.tasks ?? []
+  const presets = workPresets(save)
   const crops = [...new Set(seedsInSeason(save).map((s) => s.crop))]
   const built = (id: FarmPlaceId) => ({ id, name: farmPlace(id)?.name ?? id, lock: placeBuilt(save, id) ? null : 'Build it first.' })
   const places = kind === 'load' ? STATIONS.map((s) => ({ ...built(s), lock: stationBuilt(save, s) ? null : 'Build it first.' }))
@@ -327,6 +355,15 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
         </div>
       )}>
       <div className="space-y-3 pb-1" data-add-task={id}>
+        <details className="rounded-md border border-hairline px-2">
+          <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Quick jobs</summary>
+          <ul className="mb-2 grid grid-cols-2 gap-1.5">
+            {presets.map(({ key, label, task: preset }) => <li key={key}>
+              <Button className="w-full text-left" variant="secondary" data-quick-job={preset.kind}
+                disabled={busy || assigned.length >= MAX_TASKS || hasPreset(assigned, preset)} onClick={() => assign(preset)}>{label}</Button>
+            </li>)}
+          </ul>
+        </details>
         <fieldset>
           <legend className="text-micro pb-1">What</legend>
           <div className="flex flex-wrap gap-1.5">

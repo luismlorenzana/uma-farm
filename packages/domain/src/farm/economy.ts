@@ -23,7 +23,7 @@ import { buildLock, buildLockWords, payBuild } from './builds'
 import { buildHouse, houseOpensWords, nextLot } from '../romance/homestead'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
-import { DORM_LOAN, farmHome, HOUSE_LOAN, INCOME_NIGHTS, MAX_LOANS, type FarmSave, type Loan } from '../save/v4'
+import { DORM_LOAN, farmHome, HOUSE_LOAN, INCOME_NIGHTS, MAX_LOANS, type FarmSave, type Loan, type NightAccount } from '../save/v4'
 import type { MoneyLine } from '../night/summary'
 import { TAKEOUT_PRICE } from './food'
 
@@ -271,5 +271,8 @@ export function settleAccounts<S extends FarmSave>(save: S, income: number, food
   if (owed > 0) lines.push({ kind: 'short', owed, nights: short })
   else if (save.farm.owed > 0) lines.push({ kind: 'paid-up', owed: save.farm.owed })
   const book = [...save.farm.income, income].slice(-INCOME_NIGHTS)
-  return { save: { ...save, gold, farm: { ...save.farm, loans, owed, short, income: book } }, lines }
+  const record: NightAccount = { day: save.calendar.day, shipping: income, food: bought, upkeep: paid,
+    loans: save.gold - gold - bought - paid, owed }
+  const accounts = [...(save.farm.accounts ?? []).filter(entry => entry.day < record.day), record].slice(-INCOME_NIGHTS)
+  return { save: { ...save, gold, farm: { ...save.farm, loans, owed, short, income: book, accounts } }, lines }
 }

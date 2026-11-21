@@ -89,8 +89,8 @@ describe('End the day', () => {
   it('shows the actions left in the bar, asks in one line what\'s left, and ends the day on End anyway', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(3) })
     await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
-    expect(host.querySelector('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 7 of 10')
-    expect(host.querySelector('[data-bar-chip="actions"]')?.textContent).toBe('7/10')
+    expect(host.querySelector('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 7 of 10. Morning')
+    expect(host.querySelector('[data-bar-chip="actions"]')?.textContent).toBe('Morning7/10')
     const end = host.querySelector('a[aria-label="End the day: 7 actions left · 1 dry"]')
     expect(end?.getAttribute('href')).toBe('/?sheet=end')
     expect(end?.querySelector('[data-glow]')).toBeNull()

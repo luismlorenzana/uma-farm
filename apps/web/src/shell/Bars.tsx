@@ -33,11 +33,13 @@ function ActionsChip({ save }: { save: FarmSave | null }) {
   const left = save ? actionsLeft(save) : null
   const total = save ? dayActions(save) : null
   const events = save && days ? eventActionsLeft(save, days) : 0
+  const time = left === null || total === null ? null : left === 0 ? 'Night' : left <= Math.floor(total / 2) ? 'Afternoon' : 'Morning'
   return (
-    <span role="img" aria-label={left === null ? 'Actions left' : `Actions left: ${left} of ${total}${events > 0 ? `, and ${events} for events` : ''}`}
-      className="flex min-h-11 shrink-0 items-center justify-center" data-bar-chip="actions" data-actions={left ?? undefined} data-event-actions={events > 0 ? events : undefined}>
+    <span role="img" aria-label={left === null ? 'Actions left' : `Actions left: ${left} of ${total}${events > 0 ? `, and ${events} bonus event actions` : ''}. ${time}` }
+      className="flex min-h-11 shrink-0 items-center justify-center" data-bar-chip="actions" data-day-part={time ?? undefined} data-actions={left ?? undefined} data-event-actions={events > 0 ? events : undefined}>
       <span aria-hidden className={`flex h-8 items-center gap-1 rounded-full border border-hairline bg-panel/90 px-2 text-[13px] shadow-1 ${left === 0 && events === 0 ? 'text-ink-faint' : 'text-ink'}`}>
         <StopwatchIcon size={16} />
+        {time && <span className="text-[11px] leading-none text-ink-soft">{time}</span>}
         <span className={`font-display font-semibold tabular-nums ${left === 0 ? 'text-ink-faint' : ''}`}>{left === null ? blank : left}</span>
         {total !== null && <span className="text-[11px] text-ink-faint">/{total}</span>}
         {events > 0 && <span className="flex items-center gap-0.5 pl-0.5 font-display font-semibold text-[#c2385e] tabular-nums"><HeartIcon size={14} />+{events}</span>}

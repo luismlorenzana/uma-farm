@@ -5,8 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
-Town opens for free. The calendar shows seven tall day columns at a time. Swipe sideways to browse the season while the
-chosen day's details stay beside it. Optional [Farm guides](../game-mechanics.md#farm-guides) show what to do on each
+Town opens for free. The calendar shows six dates per row with pages for days 1–18 and 19–30. A festival date shows
+both its bonus pool and regular actions left. The chosen day’s detail stays beside the calendar. Optional [Farm guides](../game-mechanics.md#farm-guides) show what to do on each
 screen and give examples for the farm’s main systems. Uma books open to Relationship, with today's availability,
 upcoming dates that open the calendar, and relationship ranking on the shelves.
 
@@ -17,6 +17,10 @@ packet](../design/her-look.md#approved-expression-authoring-packet) covers each 
 **Farm Duo story sync** (F105) uses the approved story roster by default, preserves explicit custom lists, and gives
 birthday and anniversary hosts their own dialogue. The two books and Diary keep the shared visit and any witnessed
 morning. Studio previews pair coverage and applies approved drafts against the current story revision.
+
+**Day parts and earlier crew work** are in [F106](tasks/F106-day-parts.md) for a balance pilot. The bar labels the
+afternoon after five regular actions. The Farm’s Work shortcut, staffing suggestions, date-game guides and nightly
+accounts support playtesting the current rhythm.
 
 **The rework is in** (the owner, 2026-11-14; F74–F85): the game plays sideways, a day of ten actions on the tile farm,
 the town map where you meet her by introducing yourself, the Uma loop to married life, farmhands and their aptitudes,

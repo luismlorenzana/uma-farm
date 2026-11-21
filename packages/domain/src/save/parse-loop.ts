@@ -18,7 +18,7 @@ import {
   MARKET_FLOOR, MAX_FIELD_TILES, MAX_KITCHEN_BASE, MAX_PLOTS, MEAL_KEEPS, MENU_RECIPES, STATION_MAX_LEVEL, STOVE_PLAYS,
   isDishId, isLegacyDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   EXPEDITION_OUTCOMES, REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
-  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type PantryLot, type PlayInProgress, type RankState, type SaveV6, type StarCounts,
+  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type NightAccount, type PantryLot, type PlayInProgress, type RankState, type SaveV6, type StarCounts,
   type StationLoad, type StationTarget, type SurplusPlan, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
@@ -438,7 +438,7 @@ export function parseDiary(value: unknown, path: string): SaveV6['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'accounts', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
   'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders'] as const
 
 function parseStationPlans(value: unknown, path: string): NonNullable<SaveV6['farm']['stationPlans']> {
@@ -547,6 +547,20 @@ function parsePantry(value: unknown, path: string, today: number): PantryLot[] {
 /** The most meals a lot holds: well past any day's cooking. */
 const MAX_PANTRY_MEALS = 100_000
 
+const ACCOUNT_TOTALS = ['shipping', 'food', 'upkeep', 'loans', 'owed'] as const
+
+function parseAccounts(value: unknown, path: string, today: number): NightAccount[] {
+  const records = list(value, path, 0, INCOME_NIGHTS).map((raw, i): NightAccount => {
+    const at = `${path}.${i}`
+    const row = object(raw, at, ['day', ...ACCOUNT_TOTALS])
+    const amountOf = (key: typeof ACCOUNT_TOTALS[number]) => count(row[key], `${at}.${key}`)
+    return { day: int(row.day, `${at}.day`, 1, today),
+      shipping: amountOf('shipping'), food: amountOf('food'), upkeep: amountOf('upkeep'), loans: amountOf('loans'), owed: amountOf('owed') }
+  })
+  if (records.some((record, i) => i > 0 && record.day <= records[i - 1]!.day)) fail(path, 'expected nightly accounts in date order')
+  return records
+}
+
 export function parseFarm(value: unknown, path: string, today: number): SaveV6['farm'] {
   const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
@@ -565,6 +579,7 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV6['
     counts: counts(o.counts, `${path}.counts`, (k) => KEY.test(k), 'expected an id'), builds,
     loans: o.loans === undefined ? [] : parseLoans(o.loans, `${path}.loans`, today), owed, short,
     income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
+    ...(o.accounts === undefined ? {} : { accounts: parseAccounts(o.accounts, `${path}.accounts`, today) }),
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
     // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
     market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isShippableId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),

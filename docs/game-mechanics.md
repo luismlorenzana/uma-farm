@@ -230,34 +230,28 @@ The bar's date opens the calendar over the whole screen; looking is free, and Cl
 it. The days are read live from the save as it stands and the story's year, never stored.
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│ Spring 3 · Year 1     [Spring] Summer  Autumn  Winter                   ⏱7 ♥+3    ✕ │
-│ ‹  Spring · Year 1  ›   Today    ┌────────────────────────────────────────────────┐  │
-│ ┌────┬────┬────┬────┬────┬────┬────┐ ‹       Spring 19 · in 16 days              › │  │
-│ │15  │16  │17  │18  │19🏆│20  │21  │ ♥ +3 actions for events                      │  │
-│ │Mon │Tue │Wed │Thu │Fri │Sat │Sun │ 🏆 Flower Show                               │  │
-│ │    │    │    │    │Flwr│    │    │    (what happens at it, the story's line)    │  │
-│ │    │    │    │    │♥+3 │    │    │ With an event, as things stand               │  │
-│ │    │    │    │    │●   │    │    │ (face) Name · Flower Show                    │  │
-│ │    │    │    │    │●   │    │    │ In town                                     │  │
-│ │    │    │    │    │+3  │    │    │ The Plaza      (●)(●)(●)(●)(●) +1            │  │
-│ └────┴────┴────┴────┴────┴────┴────┘ Next festival: … · Day 3 of 120               │  │
-│ ‹          Days 15–21 of 30      › └──────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│ Spring 3 · Year 1    [Spring] Summer  Autumn  Winter      7 actions × │
+│ Spring · Year 1                 Today   │ Spring 10 · in 7 days      │
+│   1     2    [3]    4     5     6        │ Birthday                  │
+│   7     8     9   [10 ♥] 11    12        │ (face) Uma · Birthday      │
+│  13    14    15    16    17    18        │ In town                   │
+│ ‹         Days 1–18 of 30             ›  │ The Plaza   (face) +2     │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 - **On top:** the date and the year; the four seasons, this one marked, each a tap away; the day's actions left, with a
   special day's event actions after them (♥+3); and Close.
 - **Year controls** move the selected season to the previous or next year. **Today** returns to the current farm date.
-- **The season’s 30 days** in a sideways strip with seven tall columns in view. Swipe the strip or tap the arrows below
-  it to browse seven days at a time. Tap a season tab to change seasons. The arrows next to the chosen date move one day
+- **The season’s 30 days** in a grid of three rows and six columns. Swipe or use the arrows to browse days 1–18
+  and 19–30. Tap a season tab to change seasons. The arrows next to the chosen date move one day
   at a time, keeping that date in view. Each column shows its number, weekday and marks: a festival's trophy (and a
   ring in the season's colour), New Year's or a celebration's spark, a holiday's ribbon, a minor day's dot and a wedding
   heart. Under them are a short label for that date and a special day's event actions (♥+3).
   Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
   and days gone by are faded.
 - **The chosen day's panel** (today when the calendar opens): its heading ("Spring 19 · in 16 days"); a special day's
-  event actions ("+3 actions for events", today "2 of 3 actions left for events"); New Year's; its festival, with what
+  bonus actions and today’s regular actions left ("2/3 bonus · 7 regular left"); New Year's; its festival, with what
   happens at it when the story says; the story's holidays and minor days, each with its line; then everyone with an
   event that day, her face, her name and why. On a day ahead the list is "With an event, as things stand". Then **In
   town · n**: who's in town that day and where, a row a place in the map's order, its name, its first five faces (met
@@ -790,7 +784,8 @@ A thin bar along the top of the page, always there. From the left:
 - **The sync chip** shows only while offline ("Offline") or paused ("Sync paused"), and opens Account.
 
 At its right end:
-- **Actions left**, a stopwatch and "7/10" ("Actions left: 7 of 10"), greyed at 0. On a special day the event actions
+- **Actions left**, a stopwatch and "7/10", greyed at 0. Morning lasts through the first five regular actions,
+  Afternoon through the next five. Night is shown when the regular actions run out. On a special day the event actions
   left follow in rose, a heart and "+3" ("Actions left: 0 of 10, and 3 for events"). It opens nothing.
 - **End the day:** see [End the day](#end-the-day).
 - **Menu:** every place.
@@ -846,40 +841,18 @@ all 59 on day 105, including its anniversary and a personal fact gated on Friend
 
 #### The Book
 
-The farm's accounts at a glance. First **the money** (see [upkeep and loans](#upkeep-and-loans) and [food](#food)):
+**Tonight’s forecast** shows the current cash, the contents of the bin at tonight’s market prices, and the likely
+takeout bill after the crew’s cooks work. **Bills due** includes food, upkeep and any arrears. **Cash after bills**
+uses the same settlement as the night. Loans draw from shipping income only when enough cash remains to cover
+the bills. Any shortfall shows the gold still owed.
 
-```
-┌ the money ─────────────────────────────────────────────────────────────────────────────┐
-│ Upkeep a night      Food tonight        Income a night            Left each night       │
-│ 45g                 30g                 230g                      +110g                 │
-│ After the bin pays  Takeout · 2 meals   Average of the last 7     Less food, upkeep and │
-│                                                                   loans                 │
-│ ▂ █ ▅ ▁ █ ▆ ▃  - - upkeep and food      1 place built                             15g   │
-│ 7 nights ago   Last night               3 Umas on the farm                        30g   │
-│                                         4 at the table · 8 meals · 6 from the pantry    │
-│                                                                         Kitchen ›       │
-│ [Short of upkeep · 40g owed · farmhands at half pace until it’s paid]                   │
-│ Loans · 440g owed                                                                       │
-│ Mill · 440g owed · 45g a night · clears in about 10 nights (Spring 14)                  │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
-```
+**Recent nights** keeps seven settlements with actual shipping, food, upkeep and loan payments and their net.
+The shipping chart keeps the older seven-night income history and compares it with today’s food and upkeep.
+A new settlement adds the detailed figures even after the morning report is dismissed.
 
-- **Upkeep a night:** what tonight's upkeep would be, as the farm stands.
-- **Food tonight:** tonight's takeout as the farm stands: the farmhands' night run as the board shows it (a cook's
-  batches into the pantry), then the farm eating ("Takeout · 2 meals", or "From the pantry" in green at 0g).
-- **Income a night:** the average of the bin's pay over the nights the book keeps, the last seven (fewer on a new farm;
-  "No nights yet" before the first).
-- **Left each night:** the income less tonight's food, the upkeep and the loans' shares, green when it's positive and
-  red when not.
-- **The nights:** each of the last seven nights' income as a bar, oldest first, against a dashed line at the upkeep and
-  tonight's food; a night below the line is red.
-- **What the upkeep counts:** each part with its gold, the parts that count only.
-- **Tonight's table:** who eats ("4 at the table · 8 meals"), what the pantry covers and what the cooks add tonight;
-  **Kitchen ›** opens the farmhouse kitchen ([food](#food)).
-- **Short of upkeep:** a red line with what's owed, and "farmhands at half pace until it's paid" from the second short
-  night.
-- **Loans:** each with what's owed, its share a night and when it clears; "None. The mayor's office in town lends toward
-  a build." with none.
+The upkeep breakdown, **Kitchen** link and household table show why the bill is what it is: mouths on the farm,
+stocked meals, what the cooks can supply, and what will be bought in. The Book also lists outstanding loans,
+estimated repayment dates and whether arrears are slowing your crew.
 
 Then **the work board**: a card for each farmhand with her job, her actions today, what she'll do tonight and her tasks
 in your order, and **Add a task** (see [the work board](#the-work-board)); with none, how to get one.
@@ -3752,6 +3725,14 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 - **The farmer's ten are never touched.** A task on her board is hers: you don't spend your actions on it.
 
 #### The work board
+
+**Work** on either Farm view opens the Book’s work board. **Needs coverage** runs the crew forecast, then shows
+the highest-priority gaps left by existing orders. It prioritizes animal feed, cooking, harvest, water, other
+animal work and planned station loads. Tap the suggested Uma to add the order to her list. The suggestion uses
+spare actions on today’s shift and relevant aptitude. It updates after each assignment.
+
+**Quick jobs** in Add a task are one-tap, repeating orders for the whole plot or a built location. The detailed
+editor still handles exact seeds, rows, collection targets and locations.
 
 The Book's **Work board** has a card for each farmhand, in the order they work: her face and name (a tap opens her
 profile's Work side), her job and the day she started, her farm days this season ("Farm days · 2, 3, 5, 6, 8, 9, 11,

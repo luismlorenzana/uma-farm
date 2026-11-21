@@ -600,6 +600,16 @@ export interface Loan {
 export const MAX_LOANS = 2
 /** The nights of income the farm's book keeps: the last seven. */
 export const INCOME_NIGHTS = 7
+
+/** Actual gold paid through nightly shipping and bills. */
+export interface NightAccount {
+  day: number
+  shipping: number
+  food: number
+  upkeep: number
+  loans: number
+  owed: number
+}
 /** Meals waiting in the pantry (`farm/food.ts`): those cooked one day at one star. A meal keeps three days: cooked today,
  * it's eaten tonight, tomorrow night or the night after, then it spoils. */
 /** A meal keeps this many days: the day it's cooked and the next two (`farm/food.ts`). Here so the save's parse reads it
@@ -670,7 +680,7 @@ export interface SaveV6 {
    * and their stars (`farm/food.ts`); a save from before food has none: an empty pantry. Then the market: each good a
    * flood eased, by its steps (`goods/market.ts`); a save from before the market has none: nothing eased. */
   farm: {
-    points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]
+    points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]; accounts?: NightAccount[]
     pantry: PantryLot[]; market: Record<string, number>
     /** First production day by exact stock ID. Legacy crop evidence can be read without stamping the save. */
     discoveries?: Record<string, number>

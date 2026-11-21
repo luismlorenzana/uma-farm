@@ -16,7 +16,7 @@ import { useBuildingAtlas } from './building-atlas'
 import { CastRing } from './CastRing'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ItemIcon } from '../items/ItemIcon'
-import { gradeLegend, gradeWords, PLAY_HOW, playTitle } from './event-view'
+import { gradeLegend, gradeWords, PLAY_HOW, PLAY_TIP, playTitle } from './event-view'
 import { placeWords } from './hearts-view'
 
 /** What a play needs, its plan built from the seed: the events and the evenings make it with `playSpec`. */
@@ -55,6 +55,21 @@ export function BuildingArt({ frame, scale = 2, className = '' }: { frame: strin
       backgroundPosition: `-${at.x * scale}px -${at.y * scale}px`, backgroundRepeat: 'no-repeat', imageRendering: 'pixelated',
     }} />
   )
+}
+
+export function PlayHelp({ kind, className = '' }: { kind: PlaySpec['kind']; className?: string }) {
+  const title = playTitle(kind, 'evening')
+  return <details className={className} data-play-help={kind}>
+    <summary title={`How to play ${title}`} aria-label={`How to play ${title}`}
+      className="grid size-11 cursor-pointer list-none place-items-center rounded-md text-accent-strong [&::-webkit-details-marker]:hidden">
+      <span aria-hidden className="grid size-5 place-items-center rounded-full border border-current font-serif text-[14px] font-bold">i</span>
+    </summary>
+    <div className="space-y-1 rounded-md border border-hairline bg-sunken/60 p-2.5 text-[13px]">
+      <strong>{title}</strong>
+      <p>{PLAY_HOW[kind]}</p>
+      <p className="text-ink-soft">{PLAY_TIP[kind]}</p>
+    </div>
+  </details>
 }
 
 /** The sheet: its title and how to play, then the play, then its grade and **Continue**. `name` is hers. */
@@ -118,7 +133,10 @@ function Intro({ spec, name, onStart }: { spec: PlaySpec; name: string; onStart:
       {spec.kind === 'rhythm' && <p className="text-[13px] text-ink-soft" data-mark={spec.mark}>With {RHYTHM_MARK_WORDS[spec.mark]}, on {name}’s beat.</p>}
       {spec.kind === 'walk' && <p className="text-[15px] font-semibold" data-loves={spec.plan.favourite}>{name}: “I love {placeWords(spec.plan.favourite)}.”</p>}
       {spec.kind === 'cast' && <p className="text-[13px] text-ink-soft">Never a miss: every cast lands a fish.</p>}
-      <Button className="w-full" onClick={onStart} data-action="play-start">Start</Button>
+      <div className="relative pr-12">
+        <Button className="w-full" onClick={onStart} data-action="play-start">Start</Button>
+        <PlayHelp kind={spec.kind} className="[&>summary]:absolute [&>summary]:top-0 [&>summary]:right-0 [&>div]:mt-1" />
+      </div>
     </div>
   )
 }

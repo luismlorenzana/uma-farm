@@ -66,11 +66,14 @@ describe('upkeep', () => {
     expect(sold).toBeGreaterThan(0)
     expect(morning.gold).toBe(100 + sold - 35)
     expect(morning.farm.income).toEqual([sold])
+    expect(morning.farm.accounts).toEqual([{ day: 1, shipping: sold, food: 0, upkeep: 35, loans: 0, owed: 0 }])
+    expect(parseSaveV6(json({ ...morning, summary: null })).farm.accounts).toEqual(morning.farm.accounts)
     expect(morning.summary!.money).toEqual([ate(save), { kind: 'upkeep', paid: 35, due: 35 }])
     expect(averageIncome(morning)).toBe(sold)
     let later = morning
     for (let n = 0; n < 8; n++) later = night(later)
     expect(later.farm.income).toEqual([0, 0, 0, 0, 0, 0, 0])
+    expect(later.farm.accounts?.map(entry => entry.day)).toEqual([3, 4, 5, 6, 7, 8, 9])
     expect(averageIncome({ farm: { ...later.farm, income: [100, 200, 0] } })).toBe(100)
   })
 
@@ -79,6 +82,7 @@ describe('upkeep', () => {
     expect(morning.gold).toBe(470)
     expect(morning.summary!.money).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
     expect(morning.farm).toMatchObject({ owed: 0, short: 0, income: [0] })
+    expect(morning.farm.accounts?.[0]).toMatchObject({ shipping: 0, food: 30, upkeep: 0, loans: 0, owed: 0 })
     // With tonight's meals cooked, nothing at all.
     expect(night(farm()).gold).toBe(500)
   })
