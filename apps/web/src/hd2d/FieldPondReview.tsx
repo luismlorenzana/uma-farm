@@ -135,7 +135,6 @@ export default function FieldPondReview({ save, story, covered, onReady, onUnava
       />
       <div className="absolute inset-x-2 top-1 flex flex-wrap items-start gap-1" aria-label="Field and Pond options">
         <button type="button" onClick={onClose} className={`${CHIP} px-3`}>All farm places</button>
-        <Link to="/book?view=work" state={{ back: true }} className={`${CHIP} px-3`} data-farm-work>Work</Link>
         <button type="button" onClick={() => setGraphics((mode) => mode === 'saver' ? 'standard' : 'saver')}
           className={`${CHIP} px-3`} aria-label={`Graphics: ${graphics}`} data-quality={graphics}>{graphics === 'saver' ? 'Saver' : 'Standard'}</button>
         <button type="button" onClick={() => renderer.current?.toggleRun()} className={`${CHIP} px-3`} data-phone-run>
