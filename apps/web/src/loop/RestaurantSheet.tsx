@@ -6,6 +6,7 @@ import {
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { byRelationship } from './relationship-order'
 import { GuideButton } from '../guide/Guide'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router'
@@ -127,7 +128,7 @@ function ShiftSetup({ save, locked, onStart, onRecipes }: {
   })
   const openTypes = Math.max(0, rule.types - types.size - Number(lot !== undefined && !types.has(lot.id)))
   const adding = lot ? Math.max(0, Math.min(lot.count - amount(lot.key), MAX_TRAY - total - openTypes, Math.max(1, rule.tickets - total - openTypes))) : 0
-  const servers = handsWorking(save, story).filter((id) => serverLock(save, id, story) === null)
+  const servers = handsWorking(save, story).filter((id) => serverLock(save, id, story) === null).sort(byRelationship(save))
   const why = shiftBlock(save, stage, chosen, server, story)
   const last = save.workshops.restaurant?.last
   const played = save.workshops.played.restaurant === save.calendar.day

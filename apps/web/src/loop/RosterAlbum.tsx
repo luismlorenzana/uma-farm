@@ -5,6 +5,7 @@
 // score and rank points in a chosen activity, joined and name. A tap opens her sheet (`?uma=<id>`), whose Work side is
 // `WorkSide`: her favourite line, the day she joined, where she is, her aptitudes (a level a task, a bar to the next and
 // its tricks), and her nine activities with talent, rank, points and the next challenge. Loaded on demand.
+import { byRelationship } from './relationship-order'
 import { ACTIVITY_NAMES, APTITUDE_NAMES, APTITUDE_POINTS, aptitudesOf, MAX_APTITUDE, TALENT_GRADES, tricksAt, type FarmSave } from '@farm/domain'
 import { GuideButton } from '../guide/Guide'
 import { AlbumChrome, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
@@ -37,11 +38,15 @@ export function RosterAlbum({ save, rows: base, corner }: { save: FarmSave; rows
   const [parameter, setParameter] = useState<string | null>(null)
   const activity = sortActivity(query, parameter)
   const view = rosterView(save)
-  const rows = useMemo(() => sortedFor(base, activity ?? 'farming'), [base, activity])
+  const rows = useMemo(() => {
+    const compare = byRelationship(save)
+    const ordered = [...base].sort((a, b) => compare(a.id, b.id))
+    return sortedFor(ordered.map((row, index) => ({ ...row, sorts: { ...row.sorts, relationship: -index } })), activity ?? 'farming')
+  }, [save, base, activity])
   const result = runAlbumQuery(rows, ROSTER_FACETS, query)
   const byId = useMemo(() => new Map(rows.map((row) => [row.id, row])), [rows])
   const shown = result.rows.flatMap((r) => byId.get(r.id) ?? [])
-  const sortLabel = activity ? `${ACTIVITY_NAMES[activity]} ${query.sort === 'points' ? 'rank points' : 'talent'}` : query.sort === 'name' ? 'name' : 'joined'
+  const sortLabel = activity ? `${ACTIVITY_NAMES[activity]} ${query.sort === 'points' ? 'rank points' : 'talent'}` : query.sort === 'joined' ? 'joined' : query.sort === 'name' ? 'name' : 'relationship'
   return (
     <>
       <p className="pb-2 text-[13px] text-ink-soft">{view.home.length} on the farm{view.away > 0 ? ` · ${view.away} in town` : ''} · by {sortLabel}</p>

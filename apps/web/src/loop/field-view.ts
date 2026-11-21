@@ -1,6 +1,7 @@
 // The field's screen as data: its pages, one a plot, each cleared or locked with what opens it; a plot's counts and its
 // rows; and a row's farmhands, each with her task there, her aptitude and what she does an action (a tile, two, or the
 // whole row once her Watering has the trick). Pure, so the screen and the tests read the same.
+import { byRelationship } from './relationship-order'
 import {
   aptitudeOf, countTiles, FIELD_PLOTS, fieldIndex, handsInOrder, isTileTask, plotLock, plotLockWords, plotName, rowOfPlot, taskPlot,
   tilesAnAction, TRICK_AT, type AptitudeId, type FarmSave, type FieldCounts, type PlotOpens, type TalentOf, type TileTaskKind,
@@ -60,9 +61,9 @@ function eachWords(kind: TileTaskKind, level: number): { each: string; row: bool
 }
 
 /** The farmhands whose field tasks reach a row of a plot, in the order they work, each task once. */
-export function rowHands(save: Pick<FarmSave, 'roster'>, plot: number, row: number, talentOf: TalentOf): RowHand[] {
+export function rowHands(save: Pick<FarmSave, 'roster' | 'love' | 'longGame'>, plot: number, row: number, talentOf: TalentOf): RowHand[] {
   const tiles = new Set(rowOfPlot(row))
-  return handsInOrder(save).flatMap((id) => {
+  return handsInOrder(save).sort(byRelationship(save)).flatMap((id) => {
     const uma = save.roster[id]!
     return (uma.tasks ?? []).flatMap((task): RowHand[] => {
       if (!isTileTask(task) || taskPlot(task) !== plot || !task.tiles.some((i) => tiles.has(i))) return []

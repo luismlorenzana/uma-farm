@@ -1,132 +1,234 @@
-import { DAY_ACTIONS, DAYS_PER_SEASON, LOAN_FEE, loanFee, loanNightly } from '@farm/domain'
+import { BATCH_MEALS, DAY_ACTIONS, DAYS_PER_SEASON, LOAN_FEE, MEALS_A_DAY, loanFee, loanNightly, TAKEOUT_PRICE } from '@farm/domain'
 
 export type GuideIcon = 'home' | 'time' | 'night' | 'crop' | 'goods' | 'rank' | 'animal' | 'tools' | 'town' | 'book' | 'heart' | 'star' | 'festival' | 'trade' | 'save'
-type Step = readonly [icon: GuideIcon, label: string]
-interface Topic { title: string; steps: readonly [Step, Step, Step]; line: string }
+type GuideItem = readonly [icon: GuideIcon, label: string, instruction: string]
+interface Topic { title: string; lead: string; items: readonly GuideItem[]; flow?: boolean; example?: string }
 
 const loanExample = 400
 const owedExample = loanExample + loanFee(loanExample)
 
-export const TOPICS = {
+const GUIDE_TOPICS = {
   actions: {
-    title: 'Daily actions', steps: [['time', `${DAY_ACTIONS} actions`], ['tools', 'Do a job'], ['night', 'End day']],
-    line: 'Most farm jobs take one action. Visiting town, browsing and shopping are free.',
+    title: 'Daily actions', lead: `You have ${DAY_ACTIONS} actions before you end the day. You choose how to spend them.`,
+    items: [
+      ['time', 'What uses an action', 'Tending a tile, gathering, shipping a crate, talking and giving a gift all use the counter in the top bar.'],
+      ['town', 'What is free', 'Go into town, browse menus, shop and read the calendar whenever you like.'],
+      ['night', 'What waits for night', 'Your Umas work their shifts, crops grow, and the bin pays when you end the day.'],
+    ],
+    example: 'Save an action for the shipping bin if you need money by morning.',
   },
   farm: {
-    title: 'Around the farm', steps: [['crop', 'Grow crops'], ['tools', 'Gather'], ['trade', 'Ship goods']],
-    line: 'Open Fields to tend crops, the Woods to gather or chop, and the Fishery to fish.',
+    title: 'Around the farm', lead: 'Choose a place based on what the farm needs today.',
+    items: [
+      ['crop', 'Fields', 'Grow vegetables and fruit. Water unripe crops before you leave for town.'],
+      ['tools', 'Woods and Fishery', 'Gather wild food, chop logs for buildings, or catch fish to sell or cook.'],
+      ['trade', 'Shipping bin', 'Send goods from the Warehouse to turn spare stock into gold overnight.'],
+      ['home', 'Farmhouse', 'Cook meals for tonight and check what the farm will need before you end the day.'],
+    ],
   },
   fields: {
-    title: 'Crops and plots', steps: [['tools', 'Till & plant'], ['crop', 'Water daily'], ['goods', 'Harvest']],
-    line: 'Watered crops grow overnight. The plot arrows show more land as Farm Rank opens it.',
+    title: 'Crops and plots', lead: 'Tap a field tile to see the jobs you can do on it.',
+    flow: true,
+    items: [
+      ['tools', 'Prepare and plant', 'Clear weeds and till the soil. Pick a seed that grows this season.'],
+      ['crop', 'Water before night', 'A watered crop grows overnight. Check dry tiles first when actions run low.'],
+      ['goods', 'Harvest when ripe', 'Pick the crop from its tile. Some plants stay in the ground and produce another harvest.'],
+    ],
+    example: 'Carrots need four watered nights. Check the days left in the season before planting near its end.',
   },
   grades: {
-    title: 'Crop grades and orchards', steps: [['crop', 'Grow'], ['star', 'Raise grade'], ['goods', 'Save seeds']],
-    line: 'A skilled harvest or seed saved from good produce can improve grade. Orchard plants stay in their plot.',
+    title: 'Crop grades and orchards', lead: 'The grade on the item is the version a recipe asks for. Stars show its quality.',
+    items: [
+      ['star', 'Improve your harvest', 'Skill can improve crop grade. Save seeds from your own produce to carry its grade into a later crop.'],
+      ['crop', 'Keep fruit trees growing', 'An orchard plant stays on the tile across seasons. Check its bearing season to know when to harvest.'],
+    ],
   },
   gathering: {
-    title: 'Gathering and fishing', steps: [['town', 'Pick a spot'], ['tools', 'Gather'], ['goods', 'Store goods']],
-    line: 'Seasons and skill change what you find. A spot gives smaller hauls after it’s worked heavily.',
+    title: 'Gathering and fishing', lead: 'Gathering is an early source of food, build materials and shipping gold.',
+    items: [
+      ['tools', 'Pick the job you need', 'Choose Gather for wild food, Chop for timber, or a fishing spot for fish. Read the preview to see what it can yield this season.'],
+      ['town', 'Move when hauls get thin', 'A heavily worked spot yields less for the rest of the day. Try another open spot or leave it until tomorrow.'],
+      ['star', 'Target a higher grade', 'At the Fishery, use Improved or Select catch once you qualify. The fish species still depends on the spot and season.'],
+    ],
   },
   economy: {
-    title: 'Earning gold', steps: [['goods', 'Warehouse'], ['trade', 'Ship a crate'], ['night', 'Paid tonight']],
-    line: 'A crate costs one action. Higher grades sell for more. Large sales of one good ease its price.',
+    title: 'Earning gold', lead: 'The shipping bin pays at night. The gold chip opens it from anywhere on the farm.',
+    flow: true,
+    items: [
+      ['goods', 'Fill a crate', 'Pick goods from the Warehouse, review the quantities, then ship the crate for one action.'],
+      ['night', 'Read the morning report', 'Check the sale and the food and upkeep bills before deciding what to buy next.'],
+    ],
+    example: 'Keep food for the pantry and parts for your next build. Repeatedly flooding the market with one good lowers its price.',
   },
   warehouse: {
-    title: 'Warehouse', steps: [['goods', 'Collect'], ['star', 'Check grade'], ['trade', 'Use or ship']],
-    line: 'Stock is kept by exact grade. Keep ingredients for recipes and sell the rest through the shipping bin.',
+    title: 'Warehouse', lead: 'Check what you have before buying seeds or promising a recipe.',
+    items: [
+      ['star', 'Read grade and stars', 'When a recipe lists a specific grade, check that exact item. A higher grade belongs to its own stock line.'],
+      ['trade', 'Keep what you will use', 'Pick surplus goods in the Shipping bin. Use dishes as ingredients or meals when the corresponding recipe or meal picker accepts them.'],
+    ],
   },
   upkeep: {
-    title: 'Meals and upkeep', steps: [['goods', 'Fill pantry'], ['home', 'Feed the farm'], ['night', 'Settle bills']],
-    line: 'The night uses meals first, buys takeout if needed, and charges upkeep for buildings and residents.',
+    title: 'Meals and upkeep', lead: `The farm serves ${MEALS_A_DAY} meals per person each night. Farmhands eat with you on farm shifts.`,
+    items: [
+      ['goods', 'Cook before ending the day', `A Farmhouse batch uses two food goods and makes ${BATCH_MEALS} meals. Use the pantry forecast to cook close to tonight’s need.`],
+      ['trade', 'Leave room for the bill', `Each missing meal costs ${TAKEOUT_PRICE}g. Nightly income also pays for buildings and residents before it pays loans.`],
+    ],
+    example: `On a solo day, an empty pantry costs ${MEALS_A_DAY * TAKEOUT_PRICE}g in takeout.`,
   },
   rank: {
-    title: 'Farm Rank', steps: [['tools', 'Work'], ['rank', 'Earn points'], ['town', 'See unlocks']],
-    line: 'Shipping, building and milestones raise Farm Rank. Open the rank badge to see what comes next.',
+    title: 'Farm Rank', lead: 'Use the rank badge to see which building, plot or tool becomes available next.',
+    items: [
+      ['rank', 'Make progress through play', 'Ship goods, build places and complete Diary milestones. Farm Rank opens choices. The build screen shows what you need to pay or bring.'],
+    ],
   },
   shop: {
-    title: 'What to buy', steps: [['rank', 'Check rank'], ['crop', 'Pick seeds'], ['trade', 'Spend gold']],
-    line: 'The shop rotates seeds by season. Higher Farm Rank opens more stock. Check the crop’s growing season before buying.',
+    title: 'What to buy', lead: 'The shop is free to browse. Spend gold where it removes a bottleneck on your farm.',
+    items: [
+      ['crop', 'Buy seeds that have time to grow', 'The seed row shows its growing seasons. Compare its growth time with the calendar before buying a stack.'],
+      ['trade', 'Keep gold for tonight', 'Check the Ledger before a large purchase. A few spare meals or a crate ready to ship can bridge a tight night.'],
+    ],
   },
   builds: {
-    title: 'Build orders', steps: [['rank', 'Unlock'], ['goods', 'Bring materials'], ['home', 'Build']],
-    line: 'Order a place on the farm or at the Mayor’s Office. Farm buildings finish overnight.',
+    title: 'Build orders', lead: 'Pick the building that serves your next goal, such as a Mill to turn grain into flour.',
+    items: [
+      ['rank', 'Read the lock', 'Open the place on the map or the Mayor’s Office to see the required Farm Rank, materials and gold.'],
+      ['home', 'Order it when you can cover the bill', 'The building is ready in the morning. Its upkeep starts once it stands.'],
+    ],
   },
   loans: {
-    title: 'Loans', steps: [['trade', `Borrow ${loanExample}g`], ['book', `${owedExample}g owed`], ['night', `${loanNightly(owedExample)}g due`]],
-    line: `The office lends toward a build with a ${Math.round(100 * LOAN_FEE)}% fee. Each night’s income can pay its share after bills. You can repay early.`,
+    title: 'Loans', lead: 'At the Mayor’s Office, choose a build you can supply with materials and borrow toward the missing gold.',
+    items: [
+      ['trade', 'Know what you will owe', `Check the offer before accepting. The fee is ${Math.round(100 * LOAN_FEE)}% before rounding.`],
+      ['book', 'Track repayment', 'The night pays food and upkeep first. Available income then pays the loan’s share. At the office you can repay early.'],
+    ],
+    example: `Borrow ${loanExample}g → owe ${owedExample}g → pay up to ${loanNightly(owedExample)}g a night.`,
   },
   town: {
-    title: 'Visiting town', steps: [['town', 'Enter free'], ['home', 'Pick a place'], ['heart', 'Meet her']],
-    line: 'The map shows who’s out. Walking and shops are free. Introductions, talks and gifts take actions.',
+    title: 'Visiting town', lead: 'Town is free to enter. Go even on a day when you only want to shop or see who is out.',
+    items: [
+      ['town', 'Find someone', 'Open People and search her name. Her row shows where she is today or when she will next be out.'],
+      ['heart', 'Use actions with her', 'An introduction unlocks her book. Talk, give a gift, or choose an evening when you can meet her.'],
+    ],
   },
   relationships: {
-    title: 'Relationships', steps: [['heart', 'Meet & talk'], ['star', 'Heart events'], ['home', 'Plan a wedding']],
-    line: 'Talk, gift and spend time together. Open her profile for the next scene or decision.',
+    title: 'Relationships', lead: 'Open her book for your current standing, the next scene, and dates you can plan around.',
+    items: [
+      ['heart', 'Fill her relationship bar', 'Talk, gift and spend evenings with her. Check her gift tastes and where to find her before using actions.'],
+      ['book', 'Play a Ready scene', 'Playing the scene moves the relationship ahead. Some scenes need a place, a ring or another condition listed on her page.'],
+      ['home', 'Plan the wedding', 'After accepting her confession, pick a date in the calendar. The proposal still comes before the ceremony.'],
+    ],
   },
   staff: {
-    title: 'Farmhands and shifts', steps: [['heart', 'Invite'], ['book', 'Assign tasks'], ['night', 'Read report']],
-    line: 'Assign jobs on the work board. Umas do them on their farm days and eat meals there.',
+    title: 'Farmhands and shifts', lead: 'At Friendship 3, invite her to work. You can start by handing over one daily job.',
+    items: [
+      ['book', 'Give her an order', 'Open Ledger → Work board. Give her the rows to water, the animals to care for, or another job you want to hand off.'],
+      ['time', 'Check the rota', 'She works your land on her farm shifts. Check the Calendar or her profile when deciding who will cover a day.'],
+      ['night', 'Read the forecast and report', 'The forecast shows what she can do with today’s stock and time. Check the morning report for what actually got done.'],
+    ],
+    example: 'Prioritize watering ahead of gathering if your planted rows are still dry.',
   },
   aptitudes: {
-    title: 'Talents and aptitudes', steps: [['star', 'Check talent'], ['tools', 'Practise a job'], ['rank', 'Learn tricks']],
-    line: 'Talent sets a head start. Repeating a task levels its aptitude and improves what an Uma can do.',
+    title: 'Talents and aptitudes', lead: 'Use the Abilities page to match an Uma to a job.',
+    items: [
+      ['star', 'Talent is her head start', 'Look at the activity’s talent grade when you first assign her. Her favourite line earns extra rank points.'],
+      ['tools', 'Aptitude grows with practice', 'The level shown beside the task rises as she works it. Higher levels can open tricks such as watering a whole row in one action.'],
+    ],
   },
   animals: {
-    title: 'Animals', steps: [['animal', 'Buy an animal'], ['crop', 'Feed & care'], ['goods', 'Collect']],
-    line: 'Fed animals leave goods by morning. Care and higher skill help improve the haul.',
+    title: 'Animals', lead: 'Build the right home, then visit the Rancher for an animal and fodder.',
+    items: [
+      ['crop', 'Feed every day', 'Feed by hand or assign care to a farmhand. Check the silo before the night if the crew is handling it.'],
+      ['animal', 'Care and collect', 'Care builds fondness. Collect ready goods from the building. A skilled worker and a well-loved animal can improve what you collect.'],
+    ],
   },
   stations: {
-    title: 'Crafting stations', steps: [['goods', 'Stock inputs'], ['tools', 'Start a load'], ['night', 'Collect']],
-    line: 'A load uses ingredients of the recipe’s grade. Find its output in the Warehouse the next morning.',
+    title: 'Crafting stations', lead: 'Stations turn raw items into goods you can ship or use in another recipe.',
+    items: [
+      ['goods', 'Check inputs before starting', 'Open the recipe at the station. Match the item and grade it asks for and leave enough stock for the rest of the farm.'],
+      ['night', 'Schedule the load', 'Start it now or give the station an order and a worker. Finished goods appear in the Warehouse in the morning.'],
+    ],
   },
   mining: {
-    title: 'Mine and Quarry', steps: [['tools', 'Work a face'], ['goods', 'Find stone'], ['town', 'Take stairs']],
-    line: 'Work a face for materials. Use the stairs for free once you find them.',
+    title: 'Mine and Quarry', lead: 'Visit deeper floors to find materials your current floor does not offer.',
+    items: [
+      ['tools', 'Work a face', 'Spend an action to mine it. The place shows what that depth can yield and whether further work will be thin.'],
+      ['town', 'Use the stairs when they open', 'Check for stairs after working the floor. Taking them is free once available.'],
+    ],
   },
   kitchen: {
-    title: 'Kitchen and pantry', steps: [['goods', 'Add food'], ['tools', 'Cook'], ['night', 'Serve meals']],
-    line: 'Cook batches in the Farmhouse for upkeep. Build the Kitchen to play recipes and serve a staff meal.',
+    title: 'Kitchen and pantry', lead: 'Use the Farmhouse for everyday meals. The built Kitchen opens recipe play and staff meals.',
+    items: [
+      ['goods', 'Feed the farm tonight', 'Cook a Farmhouse batch with two food goods. See how many meals you already have before using ingredients.'],
+      ['tools', 'Play a recipe at the Kitchen', 'Choose ingredients that fit the recipe and play the stove. Keep the resulting dishes for food or shipment.'],
+    ],
   },
   restaurant: {
-    title: 'Restaurant', steps: [['star', 'Discover grades'], ['book', 'Unlock recipes'], ['trade', 'Serve dishes']],
-    line: 'Each recipe needs its ingredients discovered at their exact grades. Sell dishes, cook with them, or save them for meals.',
+    title: 'Restaurant', lead: 'Clear service stages to open the menus. Discover every ingredient at the recipe’s exact grade to learn the dish.',
+    items: [
+      ['book', 'Check the recipe you want', 'Open its ingredient list. A discovery comes from obtaining that grade through play. Current stock is what lets you cook it again.'],
+      ['trade', 'Decide what to do with the dish', 'Ship it for gold, use it in another dish, or save it for meals. Keep enough for any service you plan to run.'],
+    ],
   },
   calendar: {
-    title: 'Calendar', steps: [['book', `${DAYS_PER_SEASON} days`], ['town', 'Swipe seasons'], ['festival', 'Pick a date']],
-    line: 'Scroll down the grid for later dates. Swipe across or tap a season. The arrows move one day at a time.',
+    title: 'Calendar', lead: `Open the date chip to see the ${DAYS_PER_SEASON} days of a season and the plans on each date.`,
+    items: [
+      ['time', 'Move around the year', 'Scroll down to reach later dates, swipe across for another season, or use the arrows beside the selected date to move one day.'],
+      ['festival', 'Check a date before you commit', 'The panel shows events, birthdays, work shifts and weddings. Select Today to return to the day you are playing.'],
+    ],
   },
   festivals: {
-    title: 'Festivals', steps: [['book', 'Check the date'], ['goods', 'Pick an entry'], ['festival', 'Compete']],
-    line: 'Use goods and helpers from your actual farm. The calendar shows the event day and any extra actions.',
+    title: 'Festivals', lead: 'Open the Festival ground before the event to see what you can prepare.',
+    items: [
+      ['crop', 'Prepare for the contest you picked', 'Mark a crop tile for the Flower Show, care for the animal you plan to show, or set aside exhibits for the Harvest Cup.'],
+      ['heart', 'Choose the helpers who did the work', 'Entries use actual farm evidence and goods. A recent contributor can receive credit if she qualifies. Check the entry preview before spending the event actions.'],
+    ],
   },
   expeditions: {
-    title: 'Expeditions', steps: [['heart', 'Pick a party'], ['goods', 'Pack food'], ['book', 'Read return']],
-    line: 'Umas are away until the return date. Check the report for what they found and who took part.',
+    title: 'Expeditions', lead: 'At the Expedition post, choose a route, an eligible party and the supplies it requires.',
+    items: [
+      ['time', 'Check who will cover the farm', 'The party is away for the listed days. Check its return date and cover any essential watering, feeding or cooking shifts.'],
+      ['book', 'Read the return report', 'The morning report lists the goods they brought back. Her Library book records her contribution.'],
+    ],
   },
   household: {
-    title: 'Married life', steps: [['home', 'Make room'], ['night', 'Night visits'], ['heart', 'Greater Love']],
-    line: 'Spouses keep their town and farm shifts. Night visits raise Greater Love and can unlock duos.',
+    title: 'Married life', lead: 'A spouse keeps her existing work rota. Night visits are a separate way to spend time together.',
+    items: [
+      ['night', 'Spend time together at night', 'Open Night visits and choose a spouse at home. Greater Love opens outfits and eventually True Love.'],
+      ['heart', 'Look for special visits', 'Birthday and anniversary visits use their own occasion looks. Check her book for the next date.'],
+      ['home', 'See what you have unlocked', 'Her Married Life page shows earned outfits and scenes. A configured duo becomes available when both have reached True Love.'],
+    ],
   },
   rings: {
-    title: 'The ring bench', steps: [['heart', 'Plan ahead'], ['goods', 'Gather parts'], ['tools', 'Make a ring']],
-    line: 'The ring bench opens as romance advances. Use the required materials to make a proposal ring.',
+    title: 'The ring bench', lead: 'The bench opens as romance advances. A proposal needs a ring from your Warehouse.',
+    items: [
+      ['goods', 'Make the ring she will use', 'Check the bench for the required metal and gem. Choose the ring you want to give when the proposal scene is Ready.'],
+    ],
   },
   library: {
-    title: 'Uma Library', steps: [['book', 'Open her book'], ['heart', 'Fill pages'], ['star', 'Replay scenes']],
-    line: 'Each Uma’s book saves her unlocked scenes, discoveries and relationship history.',
+    title: 'Uma Library', lead: 'Meet her in town to unlock her book.',
+    items: [
+      ['heart', 'See where you stand', 'Her book opens to Relationship, with current progress and dates you can open in the calendar.'],
+      ['book', 'Browse your collection', 'Sort by Relationship, show unlocked books in Cast order or by Name, or browse the original tiers.'],
+      ['star', 'Fill the rest of her book', 'Play scenes, discover tastes, and spend time together to fill her pages. Replays are free.'],
+    ],
   },
   diary: {
-    title: 'Farm Diary', steps: [['tools', 'Play the farm'], ['star', 'Earn milestones'], ['book', 'Read the Diary']],
-    line: 'Find farm-wide achievements and records in the Diary. Personal histories are in the Library.',
+    title: 'Farm Diary', lead: 'Use the Diary to check what your farm has done and what you can work toward.',
+    items: [
+      ['book', 'Find farm-wide records', 'Check milestones, sales records and the details of recent mornings. For a particular Uma’s history, open her Library book.'],
+    ],
   },
   sync: {
-    title: 'Saves and sync', steps: [['home', 'Play'], ['save', 'Sync'], ['book', 'Check Account']],
-    line: 'The device saves as you play. Account shows cloud sync and any recovery copies.',
+    title: 'Saves and sync', lead: 'The phone saves as you play. Check Account for the status before switching devices.',
+    items: [
+      ['save', 'Wait for cloud sync on your current device', 'If the app says Offline, keep that device’s copy and let it sync when the connection returns.'],
+      ['book', 'Find a recovery copy', 'Account lists kept copies if one device replaced local changes. Check the date before restoring one.'],
+    ],
   },
-} as const satisfies Record<string, Topic>
+} satisfies Record<string, Topic>
 
-export type TopicId = keyof typeof TOPICS
+export type TopicId = keyof typeof GUIDE_TOPICS
+export const TOPICS: Readonly<Record<TopicId, Topic>> = GUIDE_TOPICS
 
 export const GROUPS: readonly { title: string; topics: readonly TopicId[] }[] = [
   { title: 'Daily farm', topics: ['actions', 'farm', 'fields', 'grades', 'gathering', 'animals', 'stations', 'mining'] },

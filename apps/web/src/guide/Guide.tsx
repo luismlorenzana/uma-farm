@@ -13,22 +13,26 @@ const ICONS: Record<GuideIcon, typeof HomeIcon> = {
 }
 
 export function GuideCard({ topic }: { topic: TopicId }) {
-  const { steps, line } = TOPICS[topic]
+  const { lead, items, flow, example } = TOPICS[topic]
+  const List = flow ? 'ol' : 'ul'
   return (
-    <div className="space-y-2" data-guide={topic}>
-      <ol className="grid grid-cols-3 gap-2" aria-label="Steps">
-        {steps.map(([icon, label], index) => {
+    <div className="space-y-3 text-[14px] leading-snug" data-guide={topic}>
+      <p className="font-medium text-ink">{lead}</p>
+      {example && <p className="rounded-r-md border-l-2 border-accent bg-accent/8 px-3 py-2 text-ink">{example}</p>}
+      <List className="divide-y divide-hairline rounded-lg border border-hairline bg-sunken/55" aria-label={flow ? 'What to do in order' : 'What to do'}>
+        {items.map(([icon, label, instruction], index) => {
           const Mark = ICONS[icon]
           return (
-            <li key={label} className="relative flex min-h-[84px] min-w-0 flex-col items-center justify-center gap-1 rounded-lg bg-sunken px-1.5 py-2 text-center text-[12px] leading-tight font-semibold text-ink">
-              <span className="text-accent-strong" aria-hidden="true"><Mark size={24} variant="duotone" /></span>
-              {label}
-              {index < steps.length - 1 && <span className="absolute -right-3 top-6 z-10 rounded-full bg-panel p-0.5 text-ink-soft" aria-hidden="true"><ChevronRightIcon size={14} /></span>}
+            <li key={label} className="flex min-w-0 items-start gap-2.5 p-2.5">
+              <span className="grid size-9 shrink-0 place-items-center rounded-md bg-panel text-accent-strong" aria-hidden="true"><Mark size={24} variant="duotone" /></span>
+              <div className="min-w-0">
+                <p className="font-semibold text-ink">{flow ? `${index + 1}. ` : ''}{label}</p>
+                <p className="text-ink-soft">{instruction}</p>
+              </div>
             </li>
           )
         })}
-      </ol>
-      <p className="text-[14px] leading-snug text-ink">{line}</p>
+      </List>
     </div>
   )
 }
@@ -38,10 +42,7 @@ export function GuideContent({ topic, children }: { topic: TopicId; children?: R
     <>
       <GuideCard topic={topic} />
       {children && (
-        <details>
-          <summary className="flex min-h-11 cursor-pointer items-center text-[13px] font-semibold text-ink">More details</summary>
-          <div className="space-y-2 text-[13px]">{children}</div>
-        </details>
+        <div className="space-y-2 border-t border-hairline py-2 text-[13px] text-ink-soft">{children}</div>
       )}
       <Link to={`/guide?topic=${topic}`} state={{ back: true }} className="inline-flex min-h-11 items-center gap-1 text-[13px] font-semibold text-accent-strong">
         All farm guides <ChevronRightIcon size={14} />

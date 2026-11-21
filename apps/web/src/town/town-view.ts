@@ -2,8 +2,9 @@
 // workplaces), who's at each now and who keeps it, the People list's rows (everyone who lives in town and the town's
 // people, met or not, with where she is today), its search and its two sorts, a keeper's post and its menu, and her ties.
 // Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
+import { byRelationship } from '../loop/relationship-order'
 import {
-  atHome, awayOn, CAST, farmRankOf, placeBuilt, herJobOf, nextOut, onDuty, onFarmToday, professionOf, professionShift, SHOPS, talkedToday, tieLineOf, townLocations, townOf, townsfolk, townTalksOf, type HereBy, type SaveV4, type ShopId, type StoryPack,
+  atHome, awayOn, CAST, farmRankOf, placeBuilt, herJobOf, nextOut, onDuty, onFarmToday, professionOf, professionShift, SHOPS, talkedToday, tieLineOf, townLocations, townOf, townsfolk, type HereBy, type SaveV4, type ShopId, type StoryPack,
   type TownDay, type TownLocationPlayed, type TownPersonPlayed,
 } from '@farm/domain'
 import { awayWords } from '../loop/expedition-words'
@@ -27,7 +28,8 @@ export function locationViews(day: TownDay, pack: StoryPack, save?: SaveV4): Loc
     locations.push({ id: 'expeditions', name: 'Expedition post', line: 'Parties out for days.', group: 'work', keeper: null })
   }
   return locations.map(loc => {
-    const here = day.at.get(loc.id) ?? []
+    const people = day.at.get(loc.id) ?? []
+    const here = save ? [...people].sort(byRelationship(save)) : people
     const npc = loc.keeper ? town.byId.get(loc.keeper) ?? null : null
     if (!pack.town?.professions?.length || loc.group !== 'shop') return { loc, here, keeper: npc }
     const role = SHOPS[loc.id as ShopId].keeper
@@ -76,8 +78,6 @@ export interface PersonRow {
   met: boolean
   /** She lives on the farm. */
   farm: boolean
-  /** Days you've talked with her. */
-  talks: number
   /** Whether you talked with her today. */
   today: boolean
   /** One of the town's people: her role in words; null for anyone else. */
@@ -100,12 +100,12 @@ export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: 
     const shift = professionShift(pack, id, day.day)
     const where = away ? awayWords(away, save.calendar) : shift === 'off' ? (at ? `Day off · ${named.get(at)}` : 'Day off') : farm ? (atHome(save, id) ? 'On the farm' : 'On the farm today')
       : at ? `At ${inSentence(named.get(at)!)}${day.by.get(id) === 'job' ? ', at work' : ''} today` : next ? `At home · out ${shortDate(next.day, save.calendar)}` : 'At home'
-    return { id, name: nameOf(id), at, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null, where }
+    return { id, name: nameOf(id), at, met, farm, today: talkedToday(save, id), role: null, where }
   })
   const people = town.people.map((p): PersonRow => {
     const at = post.get(p.characterId) ?? null
     return {
-      id: p.characterId, name: nameOf(p.characterId), at, met: false, farm: false, talks: 0, today: false, role: p.role ? CAST[p.role].role : p.does,
+      id: p.characterId, name: nameOf(p.characterId), at, met: false, farm: false, today: false, role: p.role ? CAST[p.role].role : p.does,
       where: at ? `At ${inSentence(named.get(at)!)}, most days` : 'In town',
     }
   })
@@ -121,13 +121,14 @@ export function findPeople(rows: readonly PersonRow[], query: string): PersonRow
   return q === '' ? [...rows] : rows.filter((r) => fold(r.name).includes(q))
 }
 
-/** The People list's sorts: met first (on the farm or in town), then talked most, then by name; or by name. */
-export const PEOPLE_SORTS = [{ value: 'met', label: 'Met first' }, { value: 'name', label: 'Name' }] as const
+/** The People list opens with the strongest relationships, using name for ties. */
+export const PEOPLE_SORTS = [{ value: 'relationship', label: 'Relationship' }, { value: 'name', label: 'Name' }] as const
 export type PeopleSort = typeof PEOPLE_SORTS[number]['value']
-export function sortPeople(rows: readonly PersonRow[], by: PeopleSort): PersonRow[] {
+export function sortPeople(rows: readonly PersonRow[], by: PeopleSort, save: SaveV4): PersonRow[] {
   const byName = (a: PersonRow, b: PersonRow) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)
   if (by === 'name') return [...rows].sort(byName)
-  return [...rows].sort((a, b) => Number(b.met) - Number(a.met) || b.talks - a.talks || Number(!!a.role) - Number(!!b.role) || byName(a, b))
+  const compare = byRelationship(save)
+  return [...rows].sort((a, b) => compare(a.id, b.id) || Number(b.met) - Number(a.met) || Number(!!a.role) - Number(!!b.role) || byName(a, b))
 }
 
 /** A post's menu: what its keeper offers. The general store sells seeds (the shop); the mayor's office takes build

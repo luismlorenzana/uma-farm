@@ -595,11 +595,12 @@ card reads "Off: days are turns".
 
 ### Farm guides
 
-The **ⓘ** buttons open optional guides in context. Each uses three illustrated steps and a short rule.
-**More details** expands existing reference text where available. **Menu → Farm guides** opens the topic index.
-The Farm, Fields, Town, shops and loans, calendar, work board, workshops, relationships, Library and other main
-systems share this format. **All farm guides** from a panel opens the index at that topic. Back returns to where
-you were.
+The **ⓘ** buttons open help for the place or activity you’re using. Each guide explains what you can do there,
+which buttons to use, and which rules matter to that choice. Workflows such as planting use ordered instructions.
+Topics such as Farm Rank explain what to check. Examples show how to budget a day, cook enough meals, or price a loan.
+
+**Menu → Farm guides** opens the topic index. **All farm guides** in a help panel opens the same topic in the index.
+Back returns to where you were.
 
 ### The farm map and the bars
 
@@ -808,12 +809,19 @@ and its two-tone icon. A farm place's page (the Warehouse …) keeps Farm lit.
 
 #### Uma Library
 
-Meeting an Uma places her portrait book in her launch Tier. Each of the five shelves has ten places, with five books on
-each of its two rows at both landscape sizes. Use the shelf arrows or swipe between shelves. An un-met Uma's place stays
-empty. Earlier cast members keep their own books.
+Meeting an Uma unlocks her portrait book. Each shelf holds up to ten books in two rows of five. Use the shelf
+arrows or swipe to page through them. The default **Relationship** sort puts the strongest first. **Cast order**
+packs unlocked books in roster order and **Name (A–Z)** orders the same books alphabetically. **By tier** keeps
+the original launch tiers and their empty positions. Earlier cast members keep their books in every view.
+Covers show her current relationship level and, for eligible spouses, Greater Love or True Love beside the collection count.
+
+**Relationship** is the first page when you open a book. It shows current standing, progress toward the next scene
+and any Greater Love progress. Its date links open the Calendar at her next birthday, anniversary, booked wedding
+or expedition return. The page links to her actions, Ready scene and available night visits.
 
 | Page | What fills it |
 |---|---|
+| Relationship | Current standing, the next scene and its requirements, Greater Love and her calendar dates |
 | Profile | Her name, birthday and schedule as known, gift tastes, signature dish, personal keepsakes and authored facts as their gates are reached |
 | Abilities | Her calling, work ranks, skills and current farm role, with a link to her work orders |
 | Chapters | Her relationship route and the normal links for Ready scenes and relationship actions |
@@ -3660,8 +3668,7 @@ occasion** either: her birthday, a festival's day and night and the story's days
   Café today", "At the Bakery, at work today", "At home · out Spring 7" with her next day out, "On the farm" for a
   spouse in her room, "On the farm today" for a farmhand on her farm day, "At the Café, most days" for a keeper, "In
   town"), and **Met** for
-  anyone you've met. **Find by name** (any case, accents aside) and a sort: **Met first** (met,
-  then talked most, then by name) or **Name**. A tap goes to her: to her place and her menu when she's out, else her
+  anyone you’ve met. **Find by name** handles case and accents. **Relationship** puts closer Umas first. **Name** is alphabetical. A tap goes to her: to her place and her menu when she's out, else her
   menu ("At home today").
 - **Lean:** faces load as they scroll into view.
 
@@ -6213,8 +6220,8 @@ default) and **Work**, the roster's album with **her level in words** ("F7", "R4
 - **The row's line:** Ready, her rung and where it plays ("Ready · Romance 5 · the Pond at night"); a short bar for one
   who lives in town, "Lives in town: find her there"; a short bar, nothing more (the bar says it); otherwise what her next event waits for ("Friendship 3
   · the Fields, when she works there", or her chapter's gate: "Friendship 7 · Opens when the Kitchen is built"); with none of these, a spouse's house ("Rose Cottage") or "Needs a room". Then "+N banked" (cut first on a narrow row), and today's **✓chat** and **✓gift**.
-- **The sort:** Ready first, then the least progress (her next rung's place on the route, then her points), then the
-  cast's order.
+- **The sort.** Relationship stage comes first. Among spouses, Greater Love comes next. Then compare level and
+  current points, with cast order for ties. The Ready filter shows Umas whose next scenes can play.
 - **The filters,** one at a time, each with its count: **Ready**; **Friends** (friendship, and her confession's wait);
   **Partners** (romance, and the proposal's and the wedding's waits); **Married**; **In town**.
 - **With no one met yet:** "No one yet. Go into town and introduce yourself."

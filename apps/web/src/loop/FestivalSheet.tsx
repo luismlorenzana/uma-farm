@@ -1,3 +1,4 @@
+import { byRelationship } from './relationship-order'
 import {
   activeContest, animalPreview, animalName, ANIMALS, aptitudeOf, castDerby, CONTESTS, contestCutoffs, contestDate, CROP_IDS, CUE_WORDS, cupCategory, cupPreview, cupWorkDay,
   dateDayOf, dateOf, derbyMeet, DERBY_TURN_MS, enterAnimal, enterCup, enterDerby, enterFlower, farmRankOf, festivalEntryLock, festivalHandLock, festivalResult,
@@ -161,7 +162,7 @@ function Flower({ save, context, act, nameOf, lock }: FormProps) {
         </label>
         {preview?.hands.length ? <label className="block">Grower
           <select className={SELECT} value={grower} onChange={(e) => setGrower(e.target.value)}>
-            <option value="">No grower named</option>{preview.hands.map((id) => <option key={id} value={id}>{nameOf(id)}</option>)}
+            <option value="">No grower named</option>{[...preview.hands].sort(byRelationship(save)).map((id) => <option key={id} value={id}>{nameOf(id)}</option>)}
           </select></label> : null}
         {preview && <Parts id="flower-show" values={preview.parts} />}
       </div>
@@ -212,7 +213,7 @@ function Derby(props: FormProps) {
   const [crew, setCrew] = useState(['', '', ''])
   const date = contestDate('fishing-derby', dateOf(save.calendar.day, save.calendar).year, context.days, save.calendar) ?? save.calendar.day
   const fish = sharesOn('fishery', spot, dateDayOf(date, save.calendar)).filter(([, share]) => share > 0)
-  const hands = Object.keys(save.roster).filter((id) => save.roster[id]?.farmhand !== undefined)
+  const hands = Object.keys(save.roster).filter((id) => save.roster[id]?.farmhand !== undefined).sort(byRelationship(save))
   return <div className="space-y-2">
     <div className="grid gap-2 sm:grid-cols-2">
       <div className={CARD}><label className="block font-semibold">Fishing spot
@@ -263,7 +264,7 @@ function Animal({ save, context, act, nameOf, lock }: FormProps) {
         </label>
         {preview && <><p>{preview.dates} of 7 days cared for</p>
           <label className="block">Caretaker<select className={SELECT} value={caretaker} onChange={(e) => { setCaretaker(e.target.value); setHandler(false) }}>
-            <option value="">No caretaker named</option>{preview.caretakers.map((id) => <option key={id} value={id}>{nameOf(id)}</option>)}
+            <option value="">No caretaker named</option>{[...preview.caretakers].sort(byRelationship(save)).map((id) => <option key={id} value={id}>{nameOf(id)}</option>)}
           </select></label>
           {caretaker && <label className="flex min-h-11 items-center gap-2"><input type="checkbox" disabled={handLock !== null} checked={handler} onChange={(e) => setHandler(e.target.checked)} /> Bring her as handler</label>}
           <Link className={LINK} to={`/?peek=${ANIMALS[preview.animal.kind].home}`}>Animal’s home ›</Link>
@@ -291,7 +292,7 @@ function Cup(props: FormProps) {
     <div className="grid gap-2 sm:grid-cols-3">
       {entries.map((entry, i) => {
         const kind = category(entry.key)
-        const presenters = kind ? Object.keys(save.roster).filter((id) => cupWorkDay(save, id, kind) !== null && !entries.some((row, j) => j !== i && row.by === id)) : []
+        const presenters = kind ? Object.keys(save.roster).filter((id) => cupWorkDay(save, id, kind) !== null && !entries.some((row, j) => j !== i && row.by === id)).sort(byRelationship(save)) : []
         return <div key={i} className={CARD}>
           <h3 className="font-semibold">Exhibit {i + 1}</h3>
           <select className={SELECT} aria-label={`Exhibit ${i + 1}`} value={entry.key} onChange={(e) => update(i, { key: e.target.value, by: null })}>

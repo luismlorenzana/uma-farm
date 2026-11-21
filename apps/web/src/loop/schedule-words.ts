@@ -1,6 +1,7 @@
 // Where to find her, in short words: her fixed schedule (`scheduleOf`, the story's or the default) as her profile and the
 // town show it, and who's in town on a calendar day. Every placement is the schedule's, never a draw. Names are the
 // town map's (the pack's, else the game's). Pure, so the screens and the tests read the same.
+import { byRelationship } from './relationship-order'
 import {
   atHome, awayOn, dateOf, farmDaysIn, isFarmhand, nextOut, onFarmToday, professionOf, professionShift, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, weekdayShort, whereOn, whereYouMeet,
   type SaveV4, type SeasonPlace, type StoryPack,
@@ -98,15 +99,14 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
   return { today, at, season, lines, farm: false }
 }
 
-/** Who's in town on a calendar day, by place: each place with anyone, in the map's order, her Umas in the cast's order
- * (met first). A day ahead reads the save as it stands (who's on the farm, who's a farmhand). */
+/** Who's in town on a calendar day, by place: each place with anyone, in the map's order, her Umas by relationship. A day ahead reads the save as it stands (who's on the farm, who's a farmhand). */
 export interface TownRow { at: string; name: string; ids: string[] }
-export function townRows(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: Pack, day: number): TownRow[] {
+export function townRows(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Partial<Pick<SaveV4, 'expeditions' | 'longGame'>>, pack: Pack, day: number): TownRow[] {
   const town = townDay(save, pack, day)
   return townLocations(pack).flatMap((l): TownRow[] => {
     const here = town.at.get(l.id) ?? []
     if (here.length === 0) return []
-    const ids = [...here.filter((x) => save.roster[x]), ...here.filter((x) => !save.roster[x])]
+    const ids = [...here].sort(byRelationship(save))
     return [{ at: l.id, name: l.name, ids }]
   })
 }

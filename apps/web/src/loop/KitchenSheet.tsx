@@ -16,6 +16,7 @@ import {
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { byRelationship } from './relationship-order'
 import { GuideButton } from '../guide/Guide'
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
@@ -129,7 +130,7 @@ function TodaysPlay({ save, busy, onPlay }: { save: SaveV4; busy: boolean; onPla
   }
   const useReserve = [...ingredients].some(([id, count]) => (save.farm.reserves?.[id] ?? 0) > 0 && count > availableStock(save, id))
   // The assistant: a farmhand on the farm today (her farm day) with an action tonight.
-  const hands = handsWorking(save, pack).filter((id) => (handDay(save, id)?.actions ?? 0) > 0)
+  const hands = handsWorking(save, pack).filter((id) => (handDay(save, id)?.actions ?? 0) > 0).sort(byRelationship(save))
   const set = (next: MenuLine[]) => setChosen(next)
   const reshare = (lines: MenuLine[]) => {
     if (lines.some((line) => 'inputs' in line)) return lines

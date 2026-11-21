@@ -40,16 +40,16 @@ const segments = (love: Pick<Love, 'stage' | 'level' | 'points'>, state: Pick<Re
 }
 
 describe('the rows', () => {
-  it('sorts Ready first, then the least progress, then the cast’s order', () => {
+  it('sorts highest standing and points first and uses cast order for ties', () => {
     // 9000003 is Ready at Friendship 2; 9000001 and 9000002 wait at Friendship 3, 9000002 with fewer points.
     const save = farm({ [ONE]: { level: 2, points: 100 }, [TWO]: { level: 2, points: 50 }, [THREE]: { level: 1, points: 240 } })
-    expect(heartRows(save, ALL, nameOf).map((r) => [r.id, r.state.ready])).toEqual([[THREE, true], [TWO, false], [ONE, false]])
+    expect(heartRows(save, ALL, nameOf).map((r) => [r.id, r.state.ready])).toEqual([[ONE, false], [TWO, false], [THREE, true]])
     // The same progress and points: the cast's order.
     const tied = farm({ [ONE]: { level: 2, points: 100 }, [TWO]: { level: 2, points: 100 }, [THREE]: { level: 4 } })
-    expect(heartRows(tied, ALL, nameOf).map((r) => r.id)).toEqual([ONE, TWO, THREE])
-    // A further rung sorts after a nearer one, whatever the points.
+    expect(heartRows(tied, ALL, nameOf).map((r) => r.id)).toEqual([THREE, ONE, TWO])
+    // A further rung sorts ahead of a nearer one, even with fewer points.
     const further = farm({ [ONE]: { stage: 'romance', level: 0, points: 10 }, [TWO]: { level: 9, points: 500 } })
-    expect(heartRows(further, ALL, nameOf).map((r) => r.id)).toEqual([THREE, TWO, ONE])
+    expect(heartRows(further, ALL, nameOf).map((r) => r.id)).toEqual([ONE, TWO, THREE])
   })
 
   it('puts each Uma in her filters and counts them', () => {
@@ -224,10 +224,10 @@ describe('the morning’s Hearts section', () => {
 
   it('reads Ready live: no line for an Uma who played an event today', () => {
     const save = farm({ [ONE]: { level: 1, points: 300 }, [THREE]: { level: 0, points: 250 } })
-    expect(readyLines(save, ALL)).toEqual([{ id: THREE, rung: 'f1', place: null }, { id: ONE, rung: 'f2', place: 'the Fields' }])
+    expect(readyLines(save, ALL)).toEqual([{ id: ONE, rung: 'f2', place: 'the Fields' }, { id: THREE, rung: 'f1', place: null }])
     expect(readyLines({ ...save, today: { ...save.today, events: [ONE] } }, ALL).map((l) => l.id)).toEqual([THREE])
     // Unscripted, 9000003 is Ready all the same: her event plays the game's card.
-    expect(readyLines(save, PACK).map((l) => l.id)).toEqual([THREE, ONE])
+    expect(readyLines(save, PACK).map((l) => l.id)).toEqual([ONE, THREE])
   })
 
   it('sends her links to her profile on the Hearts tab, on its Work side for her ranks', () => {

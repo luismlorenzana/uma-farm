@@ -1,6 +1,7 @@
 // The Diary's Memories shelf: each Uma on the farm with her
 // Memories' count, "4 of 26", opening her album (`?album=`). The household scenes and the finale once played, each a
 // replay (`?household=<id>&replay=1`). Loaded on demand with the Diary.
+import { byRelationship } from './relationship-order'
 import { HOUSEHOLD_IDS, householdTitle, type SaveV4 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Panel } from '@luismlorenzana/uma-kit/ui'
@@ -18,7 +19,8 @@ export default function MemoriesShelf({ save }: { save: SaveV4 }) {
   const master = useMaster()
   const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const order = pack ? pack.cast.umas.map((u) => u.characterId) : []
-  const ids = Object.keys(save.roster).sort((a, b) => (order.indexOf(a) + 1 || order.length + 1) - (order.indexOf(b) + 1 || order.length + 1) || a.localeCompare(b))
+  const compare = byRelationship(save)
+  const ids = Object.keys(save.roster).sort((a, b) => compare(a, b) || (order.indexOf(a) + 1 || order.length + 1) - (order.indexOf(b) + 1 || order.length + 1) || a.localeCompare(b))
   const household = HOUSEHOLD_IDS.filter((id) => save.diary.read.includes(id))
   return (
     <Panel label="Memories" data-memories-shelf={ids.length}>

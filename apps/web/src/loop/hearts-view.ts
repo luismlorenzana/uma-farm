@@ -1,5 +1,5 @@
 // The Hearts tab as the screens show it: one row an Uma with her
-// level, the ladder's hearts as a bar, what's banked, today's ticks and chips; Ready first, then the least progress, then
+// level, the ladder's hearts as a bar, what's banked, today's ticks and chips; highest relationship first, then
 // the cast's order; the filters with their counts; the header's "Married n/N"; and her profile's parts (the route as one
 // track, the Next card, the perks, the gifts as learnt, her ties with their bond hearts). The morning's Ready lines and the
 // map's ♥ badges read Ready here too, live (never stored). Pure, from `readiness`, `bar` and
@@ -18,6 +18,7 @@
 //
 // Her chapters (`romance/chapters.ts`): the row's chapter at a glance (`chapterGlance`), and her profile's Chapters
 // (`chaptersView`): each with its events played and to come, the one she's in, a gate's words, and what opens the next.
+import { byRelationship } from './relationship-order'
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
   onFarmToday,
@@ -137,11 +138,6 @@ export interface HeartRow {
    * play her events"; null when her bar says it all. */
   note: string | null
   filters: readonly HeartFilter[]
-  /** Her next rung's place on the route (28 once complete): the sort's least progress. */
-  progress: number
-  points: number
-  /** Her place in the cast's order. */
-  order: number
   /** Her chapter at a glance. */
   chapter: ChapterGlance
 }
@@ -154,34 +150,31 @@ export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, hom
   return readyWords(state, now, nameOf, year)
 }
 
-/** Her place along the route: the domain's, read here for the sort and the perks. */
+/** Her place along the route: the domain's, read here for the perks. */
 export { routeIndex }
 
-/** The sort: Ready first, then the least progress (her rung along the route, then her points), then the cast's
- * order. */
-export const heartOrder = (a: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>, b: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>): number =>
-  Number(b.state.ready) - Number(a.state.ready) || a.progress - b.progress || a.points - b.points || a.order - b.order || a.id.localeCompare(b.id)
+function relationshipOrder(save: SaveV4, pack: Pick<HeartsPack, 'cast'>): string[] {
+  const ids = new Set([...castOrder(pack), ...Object.keys(save.roster)])
+  return [...ids].filter(id => save.roster[id] && save.love[id]).sort(byRelationship(save))
+}
 
 /** Everyone you've met (the roster), on the farm or in town, as the tab's rows, sorted. */
 export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): HeartRow[] {
-  const cast = castOrder(pack)
-  return Object.keys(save.roster).flatMap((id): HeartRow[] => {
-    const love = save.love[id]
-    if (!love) return []
+  return relationshipOrder(save, pack).map((id): HeartRow => {
+    const love = save.love[id]!
     const state = readiness(save, pack, id)
     const now = bar(love)
     // On the farm today: a spouse in her room, or a farmhand on her farm day; anyone else is in town.
     const home = onFarmToday(save, pack, id)
-    const order = cast.indexOf(id)
-    return [{
+    return {
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
       // On the farm today: nothing to find.
       note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf, festivalsOf(pack)) ?? roomNote(save, pack, id),
       filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
-      progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order, chapter: chapterGlance(save, pack, id),
-    }]
-  }).sort(heartOrder)
+      chapter: chapterGlance(save, pack, id),
+    }
+  })
 }
 
 /** Each filter's count, for its chip ("Ready 2"). */
@@ -270,15 +263,11 @@ export interface ReadyLine {
 
 /** Who's Ready today, in the tab's order: read live, never stored. */
 export function readyLines(save: SaveV4, pack: HeartsPack): ReadyLine[] {
-  const cast = castOrder(pack)
-  return Object.keys(save.roster).flatMap((id) => {
-    const love = save.love[id]
-    if (!love) return []
+  return relationshipOrder(save, pack).flatMap((id) => {
     const state = readiness(save, pack, id)
     if (!state.ready) return []
-    const order = cast.indexOf(id)
-    return [{ id, rung: state.rung!, place: beatPlace(pack, id, state.rung), state, progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order }]
-  }).sort(heartOrder).map(({ id, rung, place }) => ({ id, rung, place }))
+    return [{ id, rung: state.rung!, place: beatPlace(pack, id, state.rung) }]
+  })
 }
 
 // --- Her profile -----------------------------------------------------------------------------------------

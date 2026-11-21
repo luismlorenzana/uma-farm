@@ -450,7 +450,7 @@ describe('the town', () => {
   it('sorts by name, and searches without minding case or accents', () => {
     const view = fixture.view!
     const rows = peopleRows(farm(), fixture.pack!, townDay(farm(), fixture.pack!), namer(view, fixture.pack!))
-    expect(sortPeople(rows, 'name').map((r) => r.name)).toEqual(['Aster', 'Beryl', 'Cinder', 'Dune', 'Ember', 'Fable', 'Invented Sister'])
+    expect(sortPeople(rows, 'name', farm()).map((r) => r.name)).toEqual(['Aster', 'Beryl', 'Cinder', 'Dune', 'Ember', 'Fable', 'Invented Sister'])
     expect(findPeople([{ ...rows[0]!, name: 'Éclair' }], 'ecl').length).toBe(1)
   })
 

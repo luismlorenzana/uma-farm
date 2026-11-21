@@ -1,3 +1,4 @@
+import { byRelationship } from './relationship-order'
 import {
   anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, defaultNightScript, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled,
   NIGHT_VISITS, nightAvailable, nightBeatFace, nightVisits, planVisit, setVisitStay, TRUE_LOVE, visitLookKind, visitPortraitKey, visitScript, wantsBirthdayAlone,
@@ -67,9 +68,10 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
       ...(year ? [{ kind: 'anniversary' as const, label: `Anniversary ${year}` }] : []),
     ]
   }
+  const compare = byRelationship(save)
   const spouses = Object.keys(save.love).filter(id => save.love[id]?.stage === 'spouse')
     .map(id => ({ id, offers: celebrations(id) }))
-    .sort((a, b) => Number(b.id === focus) - Number(a.id === focus) || Number(b.offers.length > 0) - Number(a.offers.length > 0))
+    .sort((a, b) => Number(b.id === focus) - Number(a.id === focus) || compare(a.id, b.id))
   const duos = configuredDuos(save, pack).filter(duo => duoReady(save, duo))
   const last = visits.at(-1)
   const stay = save.longGame?.night?.stay && save.homestead.companion === last?.who[0]

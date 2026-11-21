@@ -98,7 +98,7 @@ describe('the rancher\'s and the Coop', () => {
     await click($('[data-buy-animal="chicken"] [data-action="buy-animal"]'))
     expect(save().ranch.animals.map((a) => a.id)).toEqual(['chicken-1'])
     expect(save().gold).toBe(2500)
-    await settle()
+    for (let i = 0; i < 100 && $('[data-rancher-note]')?.textContent !== 'A chicken for the Coop'; i++) await settle()
     expect($('[data-rancher-note]')?.textContent).toBe('A chicken for the Coop')
     await click($('[data-action="buy-fodder"][data-count="10"]'))
     expect(save().ranch.silo).toBe(10)

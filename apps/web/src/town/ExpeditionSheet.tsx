@@ -1,3 +1,4 @@
+import { byRelationship } from '../loop/relationship-order'
 import {
   buildCostWords, buildLock, buildLockWords, dishesHeld, expeditionBlock, expeditionMemberBlock, expeditionMemberPower,
   expeditionCoverage, expeditionPower, expeditionSlots, EXPEDITION_REGIONS, EXPEDITION_WORDS, FAMILY_NAMES, BUILD_PLACES, farmRankOf, handsInOrder,
@@ -103,7 +104,7 @@ export default function ExpeditionSheet({ save, nameOf, talentOf, onClose }: {
             <h3 className="text-micro">{where.name} · {party.length}/{MAX_EXPEDITION_PARTY} farmhands</h3>
             {handsInOrder(save).length === 0 && <p className="text-[13px] text-ink-soft">No farmhands yet.</p>}
             <ul className="divide-y divide-hairline">
-              {handsInOrder(save).map((id) => {
+              {handsInOrder(save).sort(byRelationship(save)).map((id) => {
                 const why = expeditionMemberBlock(save, id)
                 const chosen = party.includes(id)
                 return <li key={id}>
