@@ -5,9 +5,10 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
-Town opens for free. The calendar grid swipes between seasons, with day arrows and a separately scrolling
-details pane. Optional [Farm guides](../game-mechanics.md#farm-guides) show what to do on each screen and give
-examples for the farm’s main systems. Uma books open to Relationship, with personal dates and ranking on the shelves.
+Town opens for free. The calendar shows seven tall day columns at a time. Swipe sideways to browse the season while the
+chosen day's details stay beside it. Optional [Farm guides](../game-mechanics.md#farm-guides) show what to do on each
+screen and give examples for the farm’s main systems. Uma books open to Relationship, with today's availability,
+upcoming dates that open the calendar, and relationship ranking on the shelves.
 
 Birthday and anniversary nights use the shared formal wardrobe. The calendar carries the evenly spread birthdays,
 travel and crew schedules, and wedding dates chosen after confession. The [approved expression

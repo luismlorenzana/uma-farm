@@ -232,32 +232,30 @@ it. The days are read live from the save as it stands and the story's year, neve
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │ Spring 3 · Year 1     [Spring] Summer  Autumn  Winter                   ⏱7 ♥+3    ✕ │
-│ ‹  Spring · Year 1  ›   Today   │ Spring 19 · in 16 days                           │ │
-│ ┌────┬────┬────┬────┬────┬────┐  ┌─────────────────────────────────────────────────┐ │
-│ │1 ✦ │2   │3   │4  •│5   │6   │  │ Spring 19 · in 16 days                           │ │
-│ │New │    │    │Mkt │    │    │  │ ♥ +3 actions for events                         │ │
-│ │Yr  │    │ ●  │ ●● │    │    │  │ 🏆 Flower Show                                  │ │
-│ ├────┼────┼────┼────┼────┼────┤  │    (what happens at it, the story's line)       │ │
-│ │19🏆│20  │21  │22  │23  │24  │  │ With an event, as things stand                  │ │
-│ │Flwr│    │    │    │    │    │  │ (face) Name · Flower Show                       │ │
-│ │●●+3│    │    │    │    │    │  │ (face) Name · Flower Show · Likely ready        │ │
-│ └────┴────┴────┴────┴────┴────┘  │ In town · 34                                    │ │
-│                                  │ The Plaza      (●)(●)(●)(●)(●) +1               │ │
-│                                  │ The Café       (●)(●)(●)                        │ │
-│                                  │ Next festival: … · Day 3 of 120                  │ │
-│                                  └─────────────────────────────────────────────────┘ │
+│ ‹  Spring · Year 1  ›   Today    ┌────────────────────────────────────────────────┐  │
+│ ┌────┬────┬────┬────┬────┬────┬────┐ ‹       Spring 19 · in 16 days              › │  │
+│ │15  │16  │17  │18  │19🏆│20  │21  │ ♥ +3 actions for events                      │  │
+│ │Mon │Tue │Wed │Thu │Fri │Sat │Sun │ 🏆 Flower Show                               │  │
+│ │    │    │    │    │Flwr│    │    │    (what happens at it, the story's line)    │  │
+│ │    │    │    │    │♥+3 │    │    │ With an event, as things stand               │  │
+│ │    │    │    │    │●   │    │    │ (face) Name · Flower Show                    │  │
+│ │    │    │    │    │●   │    │    │ In town                                     │  │
+│ │    │    │    │    │+3  │    │    │ The Plaza      (●)(●)(●)(●)(●) +1            │  │
+│ └────┴────┴────┴────┴────┴────┴────┘ Next festival: … · Day 3 of 120               │  │
+│ ‹          Days 15–21 of 30      › └──────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **On top:** the date and the year; the four seasons, this one marked, each a tap away; the day's actions left, with a
   special day's event actions after them (♥+3); and Close.
 - **Year controls** move the selected season to the previous or next year. **Today** returns to the current farm date.
-- **The season’s 30 days** in a grid of six columns. Scroll vertically for later weeks. Day navigation keeps the selected
-  date in view. Each cell shows its number and its marks: a festival's trophy (and a
+- **The season’s 30 days** in a sideways strip with seven tall columns in view. Swipe the strip or tap the arrows below
+  it to browse seven days at a time. Tap a season tab to change seasons. The arrows next to the chosen date move one day
+  at a time, keeping that date in view. Each column shows its number, weekday and marks: a festival's trophy (and a
   ring in the season's colour), New Year's or a celebration's spark, a holiday's ribbon, a minor day's dot and a wedding
   heart. Under them are a short label for that date and a special day's event actions (♥+3).
   Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
-  and days gone by are faded. Swipe the grid left or right to move a season, including over a year boundary.
+  and days gone by are faded.
 - **The chosen day's panel** (today when the calendar opens): its heading ("Spring 19 · in 16 days"); a special day's
   event actions ("+3 actions for events", today "2 of 3 actions left for events"); New Year's; its festival, with what
   happens at it when the story says; the story's holidays and minor days, each with its line; then everyone with an
@@ -821,7 +819,7 @@ or expedition return. The page links to her actions, Ready scene and available n
 
 | Page | What fills it |
 |---|---|
-| Relationship | Current standing, the next scene and its requirements, Greater Love and her calendar dates |
+| Relationship | Current standing, the next scene, talks left today, shared night visits left, Greater Love and upcoming dates |
 | Profile | Her name, birthday and schedule as known, gift tastes, signature dish, personal keepsakes and authored facts as their gates are reached |
 | Abilities | Her calling, work ranks, skills and current farm role, with a link to her work orders |
 | Chapters | Her relationship route and the normal links for Ready scenes and relationship actions |

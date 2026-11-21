@@ -42,6 +42,7 @@ function useClose(): () => void {
     params.delete('sheet')
     params.delete('weddingPlan')
     params.delete('calendarDay')
+    params.delete('calendarUma')
     const rest = params.toString()
     leave(`${location.pathname}${rest ? `?${rest}` : ''}`)
   }
