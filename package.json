@@ -16,6 +16,7 @@
     "stories:import-pack": "node scripts/story/import-pack.mjs",
     "story:release": "node --no-warnings scripts/story/release.mjs",
     "story:publish": "bash scripts/story/publish.sh",
+    "story:duos": "node --no-warnings scripts/story/duos.mjs",
     "story:ship": "node --no-warnings scripts/story/ship.mjs",
     "story:scaffold": "node --no-warnings scripts/story/scaffold.mjs",
     "story:status": "node --no-warnings scripts/story/status.mjs",

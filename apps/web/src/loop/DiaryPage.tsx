@@ -18,6 +18,7 @@ import WorldPages from './WorldPages'
 
 const Conversations = lazy(() => import('./Conversations'))
 const MemoriesShelf = lazy(() => import('./MemoriesShelf'))
+const NightMemories = lazy(() => import('./NightMemories'))
 
 export default function DiaryPage() {
   const save = useLoopSave()
@@ -58,6 +59,8 @@ export default function DiaryPage() {
         </section>}
         <Suspense fallback={null}><MemoriesShelf save={save} /></Suspense>
         <Suspense fallback={null}><Conversations save={save} /></Suspense>
+        {Object.values(save.longGame?.love ?? {}).some(heart => heart.memories.length > 0) &&
+          <Suspense fallback={null}><NightMemories save={save} /></Suspense>}
       </div>
     </main>
   )

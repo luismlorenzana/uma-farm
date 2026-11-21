@@ -153,9 +153,6 @@ The long game adds [staggered town shifts](game-mechanics.md#town-professions-an
 [the fiftieth-wedding celebration and Greater Festival](game-mechanics.md#celebrations-and-the-greater-festival), and
 [Greater Love and True Love duos](game-mechanics.md#greater-love-and-true-love).
 
-[F105](handoff/tasks/F105-farm-duo-story-sync.md) carries the approved duo story into a complete
-Studio, Story Sandbox and game workflow, including earlier farms, special-night precedence and replay.
-
 How each workshop is built:
 
 - **Planned fresh, one at a time,** live from its first day, opened by Farm Rank and its build, with the default story

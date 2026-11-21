@@ -78,9 +78,19 @@ export async function loadReleasedPack<M = never>(client: Pick<ContentClient, 'p
     index = parseStoryIndex(last)
     fresh = false
   }
-  const pack = await releasedStoryPack(index, async (_name, file) => json(await client.pack(file.path, file)))
+  const read = (release: StoryIndex) => releasedStoryPack(release, async (_name, file) => json(await client.pack(file.path, file)))
+  let pack: StoryPack
+  const last = store.read()
+  try {
+    pack = await read(index)
+  } catch (error) {
+    if (!fresh || last === null) throw error
+    const previous = parseStoryIndex(last)
+    if (previous.release === index.release) throw error
+    return read(previous)
+  }
   if (fresh) {
-    if (arrived && isNewRelease(index, store.read())) arrived(index)
+    if (arrived && isNewRelease(index, last)) arrived(index)
     store.write(index)
   }
   return pack

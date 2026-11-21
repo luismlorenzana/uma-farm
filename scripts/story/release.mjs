@@ -41,7 +41,7 @@ const { parseStoryIndex, releasedStoryPack, shippedIndex, STORY_INDEX, STORY_NAM
 // The marker's check (a piece marked "draft": "default" whose words changed): notes, beside the reader's.
 const { draftNotes } = await import(pathToFileURL(join(DOMAIN, 'story/complete.ts')).href)
 /** The game's own index reader and a ship's stamp, for the ship (`ship.mjs`). */
-export { parseStoryIndex, shippedIndex, STORY_INDEX, STORY_NOTE_MAX }
+export { parseStoryIndex, releasedStoryPack, shippedIndex, STORY_INDEX, STORY_NOTE_MAX }
 
 /** A pack the release refuses (no pack folder, or an index it can't write), with every reason. */
 export class ReleaseRefused extends Error {

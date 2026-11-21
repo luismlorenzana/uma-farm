@@ -1,6 +1,6 @@
 import {
-  actionsLeft, anniversaryOffer, awayOn, birthdayOffer, canPlanWedding, DAYS_PER_YEAR, greaterLoveOf, isAnniversary, isBirthday,
-  LADDER_COLOURS, ladderOf, levelWords, longGameEnabled, nightAvailable, NIGHT_VISITS, nightVisits, occasionsLeft, occasionsOn,
+  actionsLeft, anniversaryOffer, awayOn, birthdayOffer, canPlanWedding, configuredDuos, DAYS_PER_YEAR, duoKey, greaterLoveOf, isAnniversary, isBirthday,
+  LADDER_COLOURS, ladderOf, levelWords, longGameEnabled, nightAvailable, NIGHT_VISITS, nightVisits, occasionsLeft, occasionsOn, partnerLock, wantsBirthdayAlone,
   townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type LadderName, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { Link, useLocation } from 'react-router'
@@ -81,6 +81,8 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
   const availableTonight = nightAvailable(save, pack, id)
   const remaining = availableTonight ? NIGHT_VISITS - visits.length : 0
   const hadVisits = visits.filter(visit => visit.who.includes(id)).length
+  const partners = configuredDuos(save, pack).filter(duo => duo.includes(id))
+  const privateBirthday = (who: string) => wantsBirthdayAlone(pack, who) && isBirthday(days.birthdays, who, today, save.calendar)
   const nightOccasions = [
     birthdayOffer(save, id, days.birthdays) && 'Birthday night',
     anniversaryOffer(save, id) && 'Anniversary night',
@@ -128,6 +130,18 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
           {remaining > 0 && <Link className="lib-button" to={withParam(location, 'visits', id)} state={{ back: true }}>Night visits ›</Link>}
         </>}
       </section>
+      {partners.length > 0 && <section aria-label="Duo partners" className="lib-relationship-card lib-relationship-wide">
+        <h3>Duo partners</h3>
+        <ul className="lib-lines">
+          {partners.map(duo => {
+            const partner = duo.find(who => who !== id)!
+            const lock = partnerLock(save, pack, duo, privateBirthday)
+            return <li key={duoKey(duo)}><strong>{nameOf(partner)}</strong>
+              <small>{lock ? `Partner locked · ${lock}` : 'Ready for duo visits'}</small>
+            </li>
+          })}
+        </ul>
+      </section>}
       <section aria-label="Upcoming dates" className="lib-relationship-card lib-relationship-wide">
         <h3>Upcoming dates together</h3>
         {dates.length ? <ul>

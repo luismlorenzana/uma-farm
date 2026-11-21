@@ -122,6 +122,23 @@ describe('the story pack from farm-api', () => {
     expect(cache.keys()).not.toContain(`https://uma-kit.invalid/release/${api.release.index.files.ties!.sha256}`)
   })
 
+  it('uses the last verified duo roster if a newer release cannot load its household on boot', async () => {
+    const api = server()
+    const store = memoryStore()
+    const content = client(api, memoryCache())
+    const first = await loadReleasedPack(content, store)
+    const path = 'story/household.feedfeed.json'
+    const newer = { ...api.release.index, release: 'feedfeed', number: 2, shippedAt: '2026-11-21T00:00:00.000Z',
+      files: { ...api.release.index.files, household: { ...api.release.index.files.household!, path, sha256: 'feedfeed'.repeat(8) } } }
+    api.release.bytes.set('story.json', new TextEncoder().encode(JSON.stringify(newer)))
+    const arrived = vi.fn()
+    const fallback = await loadReleasedPack(content, store, { arrived })
+    expect(fallback.household).toEqual(first.household)
+    expect(store.kept).toEqual(api.release.index)
+    expect(api.state.asked).toContain(path)
+    expect(arrived).not.toHaveBeenCalled()
+  })
+
   it('refuses an index that is not a release', async () => {
     const release = standInRelease()
     release.bytes.set('story.json', new TextEncoder().encode('{"version":2}'))

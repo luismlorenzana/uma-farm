@@ -23,8 +23,8 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     if (!scheduled) fail(path, 'expected a scheduled celebration')
     game.celebrations[id as Celebration] = int(date, path, scheduled ?? 1, today)
   }
-  const visitOf = (value: unknown): Visit => {
-    const row = object(value, path, ['who', 'kind', 'looks', 'day', 'anniversary', 'birthday'])
+  const visitOf = (value: unknown, memory = false): Visit => {
+    const row = object(value, path, ['who', 'kind', 'looks', 'day', 'anniversary', 'birthday', ...(memory ? ['overnight'] : [])])
     const who = unique(list(row.who, path, 1, 2).map(id => member(id, path, spouses)), path) as Visit['who']
     const day = int(row.day, path, Math.max(...who.map(id => save.love[id]!.wed!)), today)
     const kind = row.kind
@@ -34,14 +34,16 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     if (kind !== 'birthday' && row.birthday !== undefined) fail(path, 'expected a birthday')
     const anniversary = kind === 'anniversary' ? int(row.anniversary, path, 1, yearsSince(save.love[who[0]]!.wed!, day, save.calendar)) : undefined
     const birthday = kind === 'birthday' ? int(row.birthday, path, dateOf(day, save.calendar).year, dateOf(day, save.calendar).year) : undefined
-    return { who, day, kind, looks, ...(anniversary === undefined ? {} : { anniversary }), ...(birthday === undefined ? {} : { birthday }) }
+    if (row.overnight !== undefined && (row.overnight !== true || day >= today)) fail(path, 'expected a past overnight visit')
+    return { who, day, kind, looks, ...(anniversary === undefined ? {} : { anniversary }), ...(birthday === undefined ? {} : { birthday }),
+      ...(row.overnight === true ? { overnight: true } : {}) }
   }
   for (const [id, value] of Object.entries(record(raw.love, path))) {
     member(id, path, spouses)
     const row = object(value, path, ['points', 'pajamas', 'anniversaries', 'trueDay', 'anniversary', 'birthday', 'memories'])
     const points = int(row.points, path, 0, TRUE_LOVE)
     const since = save.love[id]!.wed!
-    const memories = list(row.memories, path, 0, 10_000).map(visitOf)
+    const memories = list(row.memories, path, 0, 10_000).map(value => visitOf(value, true))
     unique(memories.map(visitMemoryKey), path)
     if (memories.some(v => {
       const i = v.who.indexOf(id)
@@ -58,7 +60,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
   if (raw.night !== undefined) {
     const night = object(raw.night, path, ['day', 'visits', 'stay'])
     const day = int(night.day, path, today, today)
-    const visits = list(night.visits, path, 1, NIGHT_VISITS).map(visitOf)
+    const visits = list(night.visits, path, 1, NIGHT_VISITS).map(value => visitOf(value))
     if (visits.some(visit => visit.day !== day)) fail(path, 'expected tonight’s visits')
     if (night.stay !== undefined && (night.stay !== true || visits.length !== NIGHT_VISITS)) fail(path, 'a stay follows the fifth visit')
     game.night = { day, visits, ...(night.stay === true ? { stay: true } : {}) }
