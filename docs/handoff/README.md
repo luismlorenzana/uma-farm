@@ -14,6 +14,9 @@ Birthday and anniversary nights use the shared formal wardrobe. The calendar car
 travel and crew schedules, and wedding dates chosen after confession. The [approved expression
 packet](../design/her-look.md#approved-expression-authoring-packet) covers each face and the review steps for numbered looks.
 
+**Farm Duo story sync** is ready for implementation. The approved pairings, bond scenes and casual visits are in
+story release 21. [F105](tasks/F105-farm-duo-story-sync.md) covers the remaining story and save behavior.
+
 **The rework is in** (the owner, 2026-11-14; F74–F85): the game plays sideways, a day of ten actions on the tile farm,
 the town map where you meet her by introducing yourself, the Uma loop to married life, farmhands and their aptitudes,
 upkeep and loans, the calendar, the ranch and the mine, the dialogue engine, the default Uma, and her illustrations.
