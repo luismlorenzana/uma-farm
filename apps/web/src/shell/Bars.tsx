@@ -7,7 +7,7 @@
 //   the day's last action is spent, End the day opens by itself ("Out of actions").
 // - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse …)
 //   keeps Farm lit.
-import { actionsLeft, MORNING_ACTIONS, dateOf, dayActions, daySetState, eventActionsLeft, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
+import { actionsLeft, crewShiftEnabled, MORNING_ACTIONS, dateOf, dayActions, daySetState, eventActionsLeft, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
 import { AccountBar, BottomBar, withParam, type AccountBarProps, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
 import {
   BookIcon, CarrotIcon, CoinIcon, HeartIcon, MoonIcon, StopwatchIcon, useReducedMotionSetting, VenueIcon,
@@ -34,15 +34,18 @@ function ActionsChip({ save }: { save: FarmSave | null }) {
   const total = save ? dayActions(save) : null
   const events = save && days ? eventActionsLeft(save, days) : 0
   const time = left === null || total === null ? null : left === 0 ? 'Night' : left <= Math.floor(total / 2) ? 'Afternoon' : 'Morning'
-  const phaseLeft = time === 'Morning' ? Math.max(0, MORNING_ACTIONS - (save?.today.actions ?? 0)) : left
+  const split = save && crewShiftEnabled(save)
+  const phaseLeft = split && time === 'Morning' ? Math.max(0, MORNING_ACTIONS - save.today.actions) : left
+  const phaseTotal = split ? time === 'Night' ? null : MORNING_ACTIONS : total
+  const label = left === null ? 'Actions left' : `Actions left: ${phaseLeft}${phaseTotal === null ? '' : ` of ${phaseTotal}`}${events > 0 ? `, and ${events} bonus event actions` : ''}. ${time}`
   return (
-    <span role="img" aria-label={left === null ? 'Actions left' : `Actions left: ${left} of ${total}${events > 0 ? `, and ${events} bonus event actions` : ''}. ${time}` }
+    <span role="img" aria-label={label}
       className="flex min-h-11 shrink-0 items-center justify-center" data-bar-chip="actions" data-day-part={time ?? undefined} data-actions={left ?? undefined} data-event-actions={events > 0 ? events : undefined}>
       <span aria-hidden className={`flex h-8 items-center gap-1 rounded-full border border-hairline bg-panel/90 px-2 text-[13px] shadow-1 ${left === 0 && events === 0 ? 'text-ink-faint' : 'text-ink'}`}>
         <StopwatchIcon size={16} />
         {time && <span className="text-[11px] leading-none text-ink-soft">{time}</span>}
         <span className={`font-display font-semibold tabular-nums ${left === 0 ? 'text-ink-faint' : ''}`}>{phaseLeft === null ? blank : phaseLeft}</span>
-        {total !== null && time !== 'Night' && <span className="text-[11px] text-ink-faint">/{MORNING_ACTIONS}</span>}
+        {phaseTotal !== null && <span className="text-[11px] text-ink-faint">/{phaseTotal}</span>}
         {events > 0 && <span className="flex items-center gap-0.5 pl-0.5 font-display font-semibold text-[#c2385e] tabular-nums"><HeartIcon size={14} />+{events}</span>}
       </span>
     </span>

@@ -122,11 +122,11 @@ describe('the work board in the Book', () => {
     expect($$('[data-hand]').map((c) => c.getAttribute('data-hand'))).toEqual([A, B])
     const card = $(`[data-hand="${A}"]`)!
     expect(card.querySelector('[data-actions]')?.getAttribute('data-actions')).toBe('3')
-    expect(card.querySelector('[data-tonight]')?.textContent).toBe('Tonight · 3 of 3 actions · watered 3 tiles')
+    expect(card.querySelector('[data-tonight]')?.textContent).toBe('Shift forecast · 3 of 3 actions · watered 3 tiles')
     expect([...card.querySelectorAll('[data-task] [data-task-words]')].map((t) => t.textContent)).toEqual(['Water · 9 tiles'])
     expect([...card.querySelectorAll('[data-task] [data-task-aptitude]')].map((t) => t.textContent)).toEqual(['Watering 2'])
     expect($(`[data-hand="${B}"] [data-no-tasks]`)).not.toBeNull()
-    expect($(`[data-hand="${B}"] [data-tonight]`)?.textContent).toBe('Tonight · No tasks: set her tasks')
+    expect($(`[data-hand="${B}"] [data-tonight]`)?.textContent).toBe('Shift forecast · No tasks: set her tasks')
   })
 
   it('offers only the uncovered work and assigns it to the crew with spare actions', async () => {
@@ -211,7 +211,7 @@ describe('the work board in the Book', () => {
     expect(useGame.getState().save!.roster[A]!.tasks).toEqual([{ kind: 'cook' }])
     await render(<BookPage />, '/book')
     // The farmer and A, who works tonight: four meals, one batch of 7 at Cooking 2 (a D talent's start).
-    expect($(`[data-hand="${A}"] [data-tonight]`)?.textContent).toBe('Tonight · 1 of 3 actions · cooked 7 meals')
+    expect($(`[data-hand="${A}"] [data-tonight]`)?.textContent).toBe('Shift forecast · 1 of 3 actions · cooked 7 meals')
     expect($(`[data-hand="${A}"] [data-task-aptitude]`)?.textContent).toBe('Cooking 2')
     expect($('[data-money="food"] [data-figure]')?.textContent).toBe('0g')
     expect(doneWords({ cook: 5, water: 2 })).toEqual(['watered 2 tiles', 'cooked 5 meals'])

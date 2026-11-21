@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router'
 import { byRelationship } from '../loop/relationship-order'
 import { useTalents } from '../loop/talents'
-import { SEASON_COLOR, shortDate } from '../loop/words'
+import { plural, SEASON_COLOR, shortDate } from '../loop/words'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { useStory } from '../story/story'
@@ -122,7 +122,7 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
         {chosen.live && !lines.length && <p className="my-2 text-ink-soft">No crew on the farm this day.</p>}
         {lines.length > 0 && <><h3 className="mt-2 font-semibold">Crew on the farm</h3><ul>
           {lines.map(line => <li key={line.id} className="flex flex-col border-b border-hairline py-1"><strong>{nameOf(line.id)}</strong>
-            <span>{line.spent}/{line.actions} actions · {line.tasks} orders · {line.spent ? nightWords(line) : 'No work completed'}</span>
+            <span>{plural(line.tasks, 'order')} · {line.spent ? nightWords(line) : '0 of ' + plural(line.actions, 'action') + ' used'}</span>
             {!actual && !!line.tasks && <span className="text-ink-soft">{save.roster[line.id]?.tasks?.map(task => taskWords(task, save.fields.plots.length)).join(' · ')}</span>}
           </li>)}
         </ul></>}
