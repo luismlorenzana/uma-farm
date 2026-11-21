@@ -16,7 +16,6 @@ import { setSurplusPlan } from './production'
 import { assistantLock } from '../kitchen/kitchen'
 import { cookLock } from '../kitchen/contest'
 import { castPack } from '../story/authored.fixture'
-import { spendEvening } from '../romance/evening'
 import { goodCount } from '../save/warehouse'
 import { cookMeal } from '../romance/loop'
 import { runNight, type NightContext } from '../night/end-day'
@@ -406,13 +405,13 @@ describe('the plots on the board', () => {
 })
 
 describe('the morning shift', () => {
-  it('produces goods once when a two-action date crosses the boundary, including across a save reload', () => {
+  it('produces goods once when a two-action move crosses the boundary, including across a save reload', () => {
     const pack = castPack([A, B])
     const before = tasks(ripe(farm(), [0, 1, 2]), A, [{ kind: 'harvest', tiles: [0, 1, 2] }])
     const dated: SaveV4 = { ...before, love: { ...before.love, [A]: { ...newLove(), stage: 'romance', level: 1 } } }
     const four = prepareDayChange(dated, spendActions(goToTown(dated), 4))
     expect(morningShiftDue(four)).toBe(false)
-    const six = spendEvening(four, pack, A, 'walk', 75).save
+    const six = spendActions(four, 2)
     expect(six.today.actions).toBe(6)
     expect(morningShiftDue(six)).toBe(true)
     const shift = settleCrewShift(six, talentsD, pack)

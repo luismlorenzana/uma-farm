@@ -1,3 +1,5 @@
+import { isMorningOuting, MORNING_OUTINGS } from './morning-outings'
+import { currentDatePeriod, dateSchedule, outingActionsLeft } from '../town/date-schedule'
 // The evening: the day's one scarce choice. One evening a day across all the Umas, a **hangout** with a friend (an Uma at
 // Friendship 3 or more), a **date** with a sweetheart from Romance 1, or any kind with a spouse, played as one of the date
 // games at its evening length (the heart events' plays), graded and never failed, then her scene for it (`eveningScene`:
@@ -63,7 +65,11 @@ export interface EveningKindDef {
 
 /** The two evenings of their own, which aren't date games, each play as a Pick: Dinner in town (the menu), A night in
  * (the night's tea and blankets). */
-const playFor = (k: EveningKind): PlayAs => (k === FESTIVAL_NIGHT ? PLAY_MAP.walk : k === 'dinner' || k === 'night-in' ? PLAY_MAP.picnic : PLAY_MAP[k])
+const playFor = (k: EveningKind): PlayAs => {
+  if (isMorningOuting(k)) return PLAY_MAP[MORNING_OUTINGS.find(outing => outing.id === k)!.play]
+  if (k === FESTIVAL_NIGHT) return PLAY_MAP.walk
+  return PLAY_MAP[k === 'dinner' || k === 'night-in' ? 'picnic' : k]
+}
 const kind = (k: EveningKind, name: string, short: string, hangout: number | null, date: number, question: string | null, waits: EveningKindDef['waits'] = null): EveningKindDef => ({
   kind: k, name, short, hangout, date, play: playFor(k), waits, question,
 })
@@ -77,6 +83,7 @@ export const NIGHT_IN_FROM = 6
 
 /** The evening kinds, in their order, festival night last. */
 export const EVENINGS: Readonly<Record<EveningKind, EveningKindDef>> = {
+  ...Object.fromEntries(MORNING_OUTINGS.map(({ id, name }) => [id, kind(id, name, name, HANGOUT_FROM, DATE_FROM, null)])) as Record<typeof MORNING_OUTINGS[number]['id'], EveningKindDef>,
   walk: kind('walk', 'Walk at dusk', 'Walk', HANGOUT_FROM, DATE_FROM, 'Walk at dusk tonight?'),
   fishing: kind('fishing', 'Fishing at the Pond', 'Fishing', HANGOUT_FROM, DATE_FROM, 'Fishing tonight?'),
   picnic: kind('picnic', 'A picnic', 'Picnic', HANGOUT_FROM, DATE_FROM, 'A picnic tonight?'),
@@ -98,12 +105,12 @@ export const kindBuilt = (k: EveningKind): boolean => EVENINGS[k].waits === null
 export const isFestivalNight = (k: EveningKind): k is typeof FESTIVAL_NIGHT => k === FESTIVAL_NIGHT
 /** The date games an evening plays as, in the kinds' order: every kind but festival night and the two evenings of their
  * own (Dinner in town, A night in). */
-export const EVENING_GAMES: readonly InviteKind[] = EVENING_KINDS.filter((k): k is InviteKind => k !== FESTIVAL_NIGHT && k !== 'dinner' && k !== 'night-in')
+export const EVENING_GAMES: readonly InviteKind[] = EVENING_KINDS.filter((k): k is InviteKind => !isMorningOuting(k) && k !== FESTIVAL_NIGHT && k !== 'dinner' && k !== 'night-in')
 
 /** An evening's cost: 2 of the day's actions (the cost table's hangout or date). Never a special day's event actions. */
 export const eveningCost = (): number => actionCost('hangout')
 /** Whether the day has the 2 actions an evening takes. */
-export const eveningAffordable = (save: Pick<SaveV4, 'calendar' | 'today'>): boolean => actionsLeft(save) >= eveningCost()
+export const eveningAffordable = (save: Pick<SaveV4, 'calendar' | 'today'>): boolean => outingActionsLeft(save) >= eveningCost()
 
 /** Her scene for an evening (the story's event of that id, else the default story's): Dinner in town's and A night in's
  * own, else `hangout-<kind>` for a friend and `date-<kind>` for a sweetheart or a spouse. */
@@ -207,25 +214,28 @@ export const eveningSlots = (save: Pick<SaveV4, 'calendar' | 'love'> & Partial<P
 /** What's left of today's slots: evenings unspent, and whether festival night is free. */
 export interface SlotsLeft {
   evenings: number
+  morning?: 0 | 1
   festival: boolean
 }
 export function slotsLeft(save: Pick<SaveV4, 'calendar' | 'love' | 'today'> & Partial<Pick<SaveV4, 'homestead'>>, year: readonly Festival[] = FESTIVALS): SlotsLeft {
   const slots = eveningSlots(save, year)
-  const spent = save.today.evenings.filter((e) => !isFestivalNight(e.kind)).length
-  return { evenings: Math.max(0, slots.evenings - spent), festival: (slots.festival !== null || slots.vows) && !save.today.evenings.some((e) => isFestivalNight(e.kind)) }
+  const spent = save.today.evenings.filter(e => !isFestivalNight(e.kind) && !isMorningOuting(e.kind)).length
+  const morning = save.today.evenings.some(e => isMorningOuting(e.kind)) ? 0 : 1
+  return { evenings: Math.max(0, slots.evenings - spent), ...(save.today.dayParts ? { morning } : {}), festival: (slots.festival !== null || slots.vows) && !save.today.evenings.some((e) => isFestivalNight(e.kind)) }
 }
 
 /** The Hearts header's marks: a mark a slot today, ○ free and ● spent, the evenings first, then festival
  * night's. Each spent one names who it was with and the kind. */
 export interface EveningMark {
-  slot: 'evening' | 'festival'
+  slot: 'morning' | 'evening' | 'festival'
   spent: Evening | null
 }
 export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'> & Partial<Pick<SaveV4, 'homestead'>>, year: readonly Festival[] = FESTIVALS): EveningMark[] {
   const slots = eveningSlots(save, year)
-  const spent = save.today.evenings.filter((e) => !isFestivalNight(e.kind))
+  const spent = save.today.evenings.filter(e => !isFestivalNight(e.kind) && !isMorningOuting(e.kind))
   const night = save.today.evenings.find((e) => isFestivalNight(e.kind)) ?? null
   return [
+    ...(save.today.dayParts ? [{ slot: 'morning' as const, spent: save.today.evenings.find(e => isMorningOuting(e.kind)) ?? null }] : []),
     ...Array.from({ length: slots.evenings }, (_, i): EveningMark => ({ slot: 'evening', spent: spent[i] ?? null })),
     ...(slots.festival || slots.vows ? [{ slot: 'festival' as const, spent: night }] : []),
   ]
@@ -237,9 +247,31 @@ export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'> &
  * `eveningAffordable`'s. */
 export function kindsNow(save: SaveV4, pack: EveningPack, id: string): EveningKind[] {
   const love = save.love[id]
-  if (!love || !save.roster[id] || eveningRole(love) === null || !eveningHere(save, pack, id)) return []
+  if (!love || !save.roster[id] || eveningRole(love) === null) return []
   const left = slotsLeft(save, festivalsOf(pack))
-  return EVENING_KINDS.filter((k) => (isFestivalNight(k) ? left.festival : left.evenings > 0 && kindBuilt(k) && kindOpens(love, k)))
+  const here = eveningHere(save, pack, id)
+  const period = currentDatePeriod(save)
+  const available = save.today.dayParts && period ? dateSchedule(save, pack, id)[period].activity === 'free' : !save.today.dayParts && here
+  return EVENING_KINDS.filter(kind => {
+    if (isFestivalNight(kind)) return left.festival && here
+    if (!available || !kindBuilt(kind) || !kindOpens(love, kind)) return false
+    if (isMorningOuting(kind)) return period === 'morning' && left.morning === 1
+    return left.evenings > 0 && (!save.today.dayParts || period === 'afternoon')
+  })
+}
+
+export function outingBlock(save: SaveV4, pack: EveningPack, id: string): string | null {
+  if (!save.today.dayParts) return null
+  const period = currentDatePeriod(save)
+  if (!period) return 'Daytime outings are over.'
+  const slot = dateSchedule(save, pack, id)[period]
+  if (slot.activity === 'farm') return 'She’s working on the farm today.'
+  if (slot.activity === 'town') return `She’s working in town this ${period}.`
+  if (slot.activity === 'away') return 'She’s away on an expedition.'
+  const left = slotsLeft(save, festivalsOf(pack))
+  if (!(period === 'morning' ? left.morning : left.evenings)) return `${period === 'morning' ? 'Morning' : 'Afternoon'} outing spent.`
+  if (!eveningAffordable(save)) return `Needs ${eveningCost()} ${period} actions.`
+  return null
 }
 
 /** Who can spend an evening now (Tonight's picker): the Umas in front of you with a kind to play, in the cast's order;
@@ -301,7 +333,7 @@ export function eveningPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pi
 
 /** Her invitation said yes, still to be paid: the +20 comes with her first evening today. */
 export const inviteDue = (save: Pick<SaveV4, 'today'>, id: string): boolean =>
-  save.today.invites.some((i) => i.id === id && i.answer === 'yes') && !save.today.evenings.some((e) => e.with === id)
+  save.today.invites.some((i) => i.id === id && i.answer === 'yes') && !save.today.evenings.some((e) => e.with === id && !isMorningOuting(e.kind))
 /** The +20 as `addLove` pays it: an invitation is its own act, so her anniversary's ×2 applies. */
 export const invitePoints = (save: Pick<SaveV4, 'calendar' | 'love'>, id: string): number => {
   const love = save.love[id]
@@ -341,10 +373,14 @@ export const eveningSeed = (uid: string, day: number, id: string, k: EveningKind
 export function spendEvening(save: SaveV4, pack: EveningPack & Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'scripted'>>, id: string, k: EveningKind, score: number, birthday = false): { save: SaveV4; card: EveningCard } {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'You haven’t met her yet.')
-  if (!eveningHere(save, pack, id)) throw new SaveRuleError('locked', 'She isn’t here today.')
+  if ((!save.today.dayParts || isFestivalNight(k)) && !eveningHere(save, pack, id)) throw new SaveRuleError('locked', 'She isn’t here today.')
   if (eveningRole(love) === null) throw new SaveRuleError('locked', `Evenings open at Friendship ${HANGOUT_FROM}.`)
   if (!(EVENING_KINDS as readonly string[]).includes(k)) throw new SaveRuleError('bad-count', 'Not an evening.')
   const year = festivalsOf(pack)
+  if (save.today.dayParts && !isFestivalNight(k)) {
+    const blocked = outingBlock(save, pack, id)
+    if (blocked) throw new SaveRuleError(!eveningAffordable(save) ? 'no-actions' : 'locked', blocked)
+  }
   if (!kindsNow(save, pack, id).includes(k)) {
     const left = slotsLeft(save, year)
     if (isFestivalNight(k) ? !left.festival : left.evenings === 0) throw new SaveRuleError('locked', isFestivalNight(k) ? 'Festival night is spent.' : 'Tonight’s evening is spent.')
@@ -353,7 +389,7 @@ export function spendEvening(save: SaveV4, pack: EveningPack & Pick<StoryPack, '
   if (!Number.isInteger(score) || score < 0 || score > 100) throw new SaveRuleError('bad-count', 'A play scores 0–100.')
   const grade = gradeOf(score)
   const factors = eveningFactors(save, pack, id, k, birthday)
-  const due = inviteDue(save, id)
+  const due = !isMorningOuting(k) && inviteDue(save, id)
   const paidFor = spend(save, 'hangout')
   const played = addLove(paidFor, id, EVENING_GRADE_POINTS[grade] * factorOf(factors), 'evening')
   const asked = due ? addLove(played.save, id, INVITE_POINTS, 'invite') : { save: played.save, paid: 0 }
@@ -399,18 +435,19 @@ export function inviteWeight(save: Pick<SaveV4, 'calendar' | 'love' | 'roster'>,
 
 /** Who may invite you this morning: home (a spouse in her room), at Friendship 3 or more, her favourite kind open to her and built.
  * In the cast's order. */
-export function inviteCandidates(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>): string[] {
+export function inviteCandidates(save: SaveV4, pack: EveningPack & Pick<StoryPack, 'bibles'>): string[] {
   return byCast(pack, Object.keys(save.roster)).filter((id) => {
     const love = save.love[id]
     const fav = favouriteKind(pack, id)
     return love !== undefined && homeTonight(save, id) && eveningRole(love) !== null && kindBuilt(fav) && kindOpens(love, fav)
+      && (!save.today.dayParts || dateSchedule(save, pack, id).afternoon.activity === 'free')
   })
 }
 
 /** This morning's invitations: one (two from 10 married), never the same Uma twice, each drawn by weight with
  * `draw(uid, day, 'invite', n)`, asking for her favourite kind, unanswered. Replaces `today.invites`. Pure and seeded: the
  * same save draws the same. */
-export function drawInvites(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>): SaveV4 {
+export function drawInvites(save: SaveV4, pack: EveningPack & Pick<StoryPack, 'bibles'>): SaveV4 {
   const pool = inviteCandidates(save, pack)
   const invites: Invite[] = []
   for (let n = 0; n < invitesFor(marriedCount(save)) && pool.length > 0; n++) {
@@ -435,4 +472,4 @@ export function answerInvite(save: SaveV4, id: string, answer: 'yes' | 'no'): Sa
 
 /** Whether her row shows ✉: her invitation stands unanswered, or said yes and not yet spent. */
 export const invitedNow = (save: Pick<SaveV4, 'today'>, id: string): boolean =>
-  save.today.invites.some((i) => i.id === id && (i.answer === null || (i.answer === 'yes' && !save.today.evenings.some((e) => e.with === id))))
+  save.today.invites.some((i) => i.id === id && (i.answer === null || (i.answer === 'yes' && !save.today.evenings.some((e) => e.with === id && !isMorningOuting(e.kind)))))

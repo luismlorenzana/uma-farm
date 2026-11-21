@@ -1,7 +1,9 @@
+import { WeeklySchedule } from '../loop/WeeklySchedule'
+import { eveningButton } from '../loop/evening-view'
 import {
   actionsLeft, anniversaryOffer, awayOn, birthdayOffer, canPlanWedding, configuredDuos, DAYS_PER_YEAR, duoKey, greaterLoveOf, isAnniversary, isBirthday,
   LADDER_COLOURS, ladderOf, levelWords, longGameEnabled, nightAvailable, NIGHT_VISITS, nightVisits, occasionsLeft, occasionsOn, partnerLock, wantsBirthdayAlone,
-  townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type LadderName, type SpecialDays, type StoryPack,
+  currentDatePeriod, farmPlace, isBuildPlace, outingBlock, readiness, townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type LadderName, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { Link, useLocation } from 'react-router'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -66,6 +68,10 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
   const total = LADDER_HEARTS[ladder]
   const level = love.stage === 'confession' || love.stage === 'proposal' || love.stage === 'wedding' ? total : love.level
   const next = nextCard(save, pack, id, nameOf)
+  const wait = readiness(save, pack, id).waits
+  const project = wait?.kind === 'gate' && wait.gate.kind === 'built' ? farmPlace(wait.gate.place) : undefined
+  const outing = eveningButton(save, pack, id)
+  const period = currentDatePeriod(save)
   const dates = datesFor(save, pack, days, id)
   const heart = love.stage === 'spouse' && longGameEnabled(save, pack) ? greaterLoveOf(save, id) : null
   const today = save.calendar.day
@@ -73,10 +79,10 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
   const away = awayOn(save, id, today)
   const talked = save.today.chats.includes(id)
   const canTalk = !talked && actionsLeft(save) > 0
-  const talks = canTalk && (meet.here || meet.at !== null) ? 1 : 0
+  const talks = canTalk && !away && (save.today.dayParts || meet.here || meet.at !== null) ? 1 : 0
   const town = meet.at ? townLocation(pack, meet.at)?.name ?? 'Town' : null
   const talkStatus = talked ? 'Already talked today' : away ? 'Away on expedition' : !canTalk ? 'No actions left'
-    : meet.here ? 'Costs 1 action' : town ? `Find her in town · ${town}` : 'At home today'
+    : meet.here || save.today.dayParts ? 'Costs 1 action' : town ? `Find her in town · ${town}` : 'At home today'
   const visits = nightVisits(save)
   const availableTonight = nightAvailable(save, pack, id)
   const remaining = availableTonight ? NIGHT_VISITS - visits.length : 0
@@ -107,7 +113,10 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
           label={`${standing}, ${level} of ${total} levels earned`} />
         <strong>{next.title}</strong>
         {next.bar.cost > 0 && <progress className="lib-greater-love" aria-label="Relationship points" value={next.bar.points} max={next.bar.cost} />}
-        {next.words && <p>{next.words}</p>}
+        {isBuildPlace(project) ? <div data-relationship-gate={project.id}>
+          <p>Build the {project.name} to unlock this scene. Available at Farm Rank {project.opens.rank}.</p>
+          <Link className="lib-button" to="/diary" state={{ back: true }}>View farm projects ›</Link>
+        </div> : next.words && <p>{next.words}</p>}
         {next.ready && <Link className="lib-button" to={withParam(location, 'event', id)} state={{ back: true }}>Play scene ›</Link>}
         {heart && <div className="mt-1 grid gap-1 border-t border-hairline pt-2">
           <h3 data-book-love={heart.points}>{heart.points >= TRUE_LOVE ? 'True Love' : 'Greater Love'}</h3>
@@ -122,6 +131,9 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
         <p>{talkStatus}</p>
         {canTalk && !meet.here && meet.at && <Link className="lib-button"
           to={`/town?${new URLSearchParams({ at: meet.at, uma: id })}`} state={{ back: true }}>Find her ›</Link>}
+        {save.today.dayParts && <p>{outing.open ? <Link className="lib-button" to={withParam(location, 'evening', id)} state={{ back: true }}>
+          {period === 'morning' ? 'Morning outing' : 'Afternoon outing'} ›
+        </Link> : outingBlock(save, pack, id) ?? outing.text}</p>}
         {heart && <>
           <p><strong data-visits-left={remaining}>{remaining} of {NIGHT_VISITS} night visits left</strong></p>
           <p>{availableTonight ? 'Shared across spouses' : 'She’s unavailable tonight'}</p>
@@ -130,6 +142,7 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
           {remaining > 0 && <Link className="lib-button" to={withParam(location, 'visits', id)} state={{ back: true }}>Night visits ›</Link>}
         </>}
       </section>
+      <div className="lib-relationship-card lib-relationship-wide"><WeeklySchedule save={save} pack={pack} id={id} /></div>
       {partners.length > 0 && <section aria-label="Duo partners" className="lib-relationship-card lib-relationship-wide">
         <h3>Duo partners</h3>
         <ul className="lib-lines">

@@ -68,8 +68,18 @@ reservations and expedition schedule. A two-action date can cross the boundary. 
 board passes the unused Morning actions and runs the shift. The crew’s produce and gathered goods are ready in the
 Warehouse that afternoon. Loads finish and crops grow at night.
 
+Regular outings happen in two daytime slots. At Friendship 3, hang out over a Morning walk, breakfast, tea by the pond,
+flowers, a sunrise sketch or a bakery stop. At Romance 1 these outings become dates. Each costs two actions in its own
+half-day and the Morning slot is shared across the roster. The Afternoon uses the existing outing allowance.
+
+Each profession’s early-week worker works mornings in town and the late-week worker works afternoons. The other half
+is free for outings. Both halves are free on the profession’s off day. An Uma assigned to the farm that day is busy in
+both halves, including after her Morning crew work settles. Marriage keeps her shifts. The Relationship page and profile
+show her regular week. You can Chat with a met Uma during work hours if you have an action and she is in the valley.
+Special scenes keep their own requirements and bonus actions.
+
 **Start night** opens the existing five shared spouse visits. It passes unused daytime actions and runs the crew shift
-if needed. The fifth visit can still lead to a stay and an extra Greater Love point the next morning. If the farmer
+if needed. Night visits unlock after marriage. The fifth visit can still lead to a stay and an extra Greater Love point the next morning. If the farmer
 ends the day early, the crew shift runs before the bin pays. A save already mid-day when this feature arrives finishes
 that date with the old timing and switches at the next dawn.
 
@@ -5614,7 +5624,7 @@ Every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | Her meeting | In town, where you introduce yourself | Her route’s `arrival` |
 | Her events | Every rung (27), and her life’s: `invited-to-work`, `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
 | Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup`, `derby-night`; it plays `new-year`, `flower-show` and `derby-night` where her route writes none (the rest play only when written: [occasion scenes](#occasion-scenes)) | Her route’s event of that id |
-| The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
+| The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in`, `hangout-morning-walk`, `date-morning-walk`, `hangout-breakfast`, `date-breakfast`, `hangout-tea-by-the-pond`, `date-tea-by-the-pond`, `hangout-flower-market`, `date-flower-market`, `hangout-sunrise-sketch`, `date-sunrise-sketch`, `hangout-bakery-stop`, `date-bakery-stop` | Her route’s event of that id |
 | The night’s companion | 3 morning greetings for each temperament | Her bible’s `mornings` |
 | Meals | 3 lines for breakfast and 3 for dinner | Her bible’s `meals` (`breakfast`, `dinner`) |
 | Her favourite good (`{good}`), the gift she loves | Farming Carrot, Ranch Honeycomb, Mining Button Mushroom, Fishing Trout, Foraging Shiitake, Cooking Basil, Serving Mint, Forging Potato | Her bible’s loved gift |
@@ -5683,7 +5693,7 @@ Every other part of the story, and what plays without it:
 | Her greetings | None: a chat or a talk in town opens on her line |
 | Her small talk | None: a chat is her line alone |
 | Her gift lines | The default story’s gift reactions, by her taste |
-| Her evenings’ scenes | The default story’s 19: a hangout’s and a date’s for each kind, Dinner in town and A night in |
+| Her evenings’ scenes | The default story’s 31: a hangout’s and a date’s for each kind, Dinner in town and A night in |
 | Her morning greetings and meal lines | The default story’s: 3 greetings for each temperament, and 3 lines for each meal |
 | A play’s prompt | Its game’s: “Cast the line together.” |
 | Her chapters | “Getting to know her”, “Together”, “The wedding”, “Married life” |
@@ -7003,6 +7013,12 @@ The kinds, the rung that opens each, and how each plays:
 <!-- live:evening-kinds -->
 | Kind | As a hangout | As a date | Plays as | Her scene | Offered | Her invitation |
 |---|---|---|---|---|---|---|
+| Morning walk | F3 | R1 | Walk | `hangout-morning-walk`, `date-morning-walk` | Yes | — (never asked for) |
+| Breakfast together | F3 | R1 | Pick | `hangout-breakfast`, `date-breakfast` | Yes | — (never asked for) |
+| Tea by the pond | F3 | R1 | Pick | `hangout-tea-by-the-pond`, `date-tea-by-the-pond` | Yes | — (never asked for) |
+| Flower market | F3 | R1 | Pick | `hangout-flower-market`, `date-flower-market` | Yes | — (never asked for) |
+| Sunrise sketch | F3 | R1 | Rhythm with your hands | `hangout-sunrise-sketch`, `date-sunrise-sketch` | Yes | — (never asked for) |
+| Bakery stop | F3 | R1 | Pick | `hangout-bakery-stop`, `date-bakery-stop` | Yes | — (never asked for) |
 | Walk at dusk | F3 | R1 | Walk | `hangout-walk`, `date-walk` | Yes | “Walk at dusk tonight?” |
 | Fishing at the Pond | F3 | R1 | Cast | `hangout-fishing`, `date-fishing` | Yes | “Fishing tonight?” |
 | A picnic | F3 | R1 | Pick | `hangout-picnic`, `date-picnic` (`picnic`) | Yes | “A picnic tonight?” |

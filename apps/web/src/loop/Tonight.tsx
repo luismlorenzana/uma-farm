@@ -51,7 +51,7 @@ export default function Tonight({ save, pack, pending, error, onEnd, onBack }: {
           {(master) => (
             <>
               <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="The evening">
-                {tonightRows(save, pack, (id) => master.album.get(id)?.name ?? 'An Uma').map((row, i) => <li key={`${row.slot}:${i}`}><EveningRow row={row} /></li>)}
+                {tonightRows(save, pack, (id) => master.album.get(id)?.name ?? 'An Uma').map((row, i) => <li key={`${row.slot}:${i}`}><EveningRow row={row} split={save.today.dayParts === true} /></li>)}
               </ul>
               {marriedCount(save) > 0 && <TonightWith rows={companionViews(save, pack, birthdaysOf(pack, master.birthdays), (id) => master.album.get(id)?.name ?? 'An Uma')} />}
             </>
@@ -65,9 +65,9 @@ export default function Tonight({ save, pack, pending, error, onEnd, onBack }: {
 }
 
 /** One slot's row: its name, then who and what, Play › or Pick someone ›. */
-function EveningRow({ row }: { row: TonightRow }) {
+function EveningRow({ row, split }: { row: TonightRow; split: boolean }) {
   const location = useLocation()
-  const label = row.slot === 'festival' ? 'Festival night' : 'Evening'
+  const label = row.slot === 'festival' ? 'Festival night' : row.slot === 'morning' ? 'Morning' : split ? 'Afternoon' : 'Evening'
   const head = (
     <span className="flex w-24 shrink-0 items-center gap-1 text-[13px] font-semibold text-ink-soft">
       <UiMark mark="hearts/evening" fallback={<span aria-hidden>☾</span>} />{label}

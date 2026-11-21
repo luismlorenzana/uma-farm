@@ -5,6 +5,9 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F107** adds six authored Morning outings, Afternoon availability based on shifts, and a weekly timetable on the
+profile and the Library. Relationship shows the farm projects that open blocked route chapters.
+
 Town opens for free. Both calendars show six dates per row in two rows, across days 1–12, 13–24 and 25–30. A festival date shows
 both its bonus pool and regular actions left. The chosen day’s detail stays beside the calendar. Optional [Farm guides](../game-mechanics.md#farm-guides) show what to do on each
 screen and give examples for the farm’s main systems. Uma books open to Relationship, with today's availability,

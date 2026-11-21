@@ -10,7 +10,7 @@
 // `spendEvening` commits once, stamped. A link opens only while her evening is open to her (`mayOpenEvening`), the picker
 // while anyone's is; any other closes quietly. Loaded on demand.
 import {
-  birthdaysOf, duoKey, eveningCost, eveningDuos, eveningIllustration, eveningMoments, eveningRole, EVENINGS, eveningScene, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, kindsNow, LADDER_COLOURS,
+  birthdaysOf, currentDatePeriod, duoKey, eveningCost, eveningDuos, eveningIllustration, eveningMoments, eveningRole, EVENINGS, eveningScene, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, kindsNow, LADDER_COLOURS,
   ladderOf, levelWords, mayOpenEvening, wantsBirthdayAlone,
   type EveningCard, type EveningKind, type EveningRole, type PlayedEvent, type SaveV4, type StoryPack,
 } from '@farm/domain'
@@ -77,7 +77,7 @@ const nameIn = (master: MasterView) => (id: string) => master.album.get(id)?.nam
 function Picker({ save, pack, master, onPick, onClose }: { save: SaveV4; pack: StoryPack; master: MasterView; onPick: (id: string) => void; onClose: () => void }) {
   const rows = pickRows(save, pack, nameIn(master))
   return (
-    <Sheet open onClose={onClose} title="Who tonight?" label="Pick someone for tonight">
+    <Sheet open onClose={onClose} title={save.today.dayParts ? 'Who’s free for an outing?' : 'Who tonight?'} label="Pick someone for an outing">
       <div className="pb-2" data-evening-picker>
         {rows.length === 0 && <p className="py-2 text-ink-soft" data-picker-empty>No one can spend an evening now.</p>}
         <ul className="divide-y divide-hairline">
@@ -135,17 +135,19 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
   if (phase.at === 'card') return <CardLayer card={phase.card} name={name} colour={colour} onContinue={onClose} />
   const rows = kindRows(save, pack, id, birthday)
   const shared = partner ? kindsNow(save, pack, partner) : null
-  const bonus = inviteBonus(save, id)
+  const period = currentDatePeriod(save)
+  const title = save.today.dayParts ? `${period === 'morning' ? 'Morning' : 'Afternoon'} with ${name}` : `An evening with ${name}`
+  const bonus = save.today.dayParts && period === 'morning' ? null : inviteBonus(save, id)
   return (
-    <Sheet open onClose={onClose} title={`An evening with ${name}`} label={`An evening with ${name}`}>
+    <Sheet open onClose={onClose} title={title} label={title}>
       <div className="space-y-3 pb-2" data-evening-kinds={id}>
         <div className="flex items-center gap-3">
           <Avatar id={id} size={48} label={name} />
           <div className="min-w-0 flex-1 text-[13px]">
             <p className="font-semibold" style={{ color: colour }} data-evening-role>{roleWords(save, id)} · {levelWords(love)}</p>
-            {bonus !== null && <p className="flex items-center gap-1 text-[#c2385e]" data-evening-invite><InviteChip /> She asked you: +{bonus} with the evening</p>}
-            {birthday && <p className="text-ink-soft" data-evening-birthday>★ Her birthday: ×1.5 tonight</p>}
-            {isAnniversary(love, save.calendar.day, save.calendar) && <p className="text-ink-soft" data-evening-anniversary>♥ Your anniversary: ×1.5 tonight</p>}
+            {bonus !== null && <p className="flex items-center gap-1 text-[#c2385e]" data-evening-invite><InviteChip /> She asked you: +{bonus} with the outing</p>}
+            {birthday && <p className="text-ink-soft" data-evening-birthday>★ Her birthday: ×1.5 today</p>}
+            {isAnniversary(love, save.calendar.day, save.calendar) && <p className="text-ink-soft" data-evening-anniversary>♥ Your anniversary: ×1.5 today</p>}
           </div>
         </div>
         {duos.length > 0 && <label className="flex items-center gap-2 text-[13px]">Who’s joining
@@ -154,7 +156,7 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
             {duos.map(who => <option key={who} value={who}>Duo · {namer(master, pack)(who)}</option>)}
           </select>
         </label>}
-        {rows.every((r) => r.locked !== null) && <p className="text-ink-soft" data-kinds-empty>Tonight’s evening is spent.</p>}
+        {rows.every((r) => r.locked !== null) && <p className="text-ink-soft" data-kinds-empty>{save.today.dayParts ? 'No outings available this half-day.' : 'Tonight’s evening is spent.'}</p>}
         <ul className="space-y-1.5">
           {rows.map(row => <li key={row.kind} className="relative pr-12">
             <KindButton row={shared && !shared.includes(row.kind) ? { ...row, locked: 'Unavailable for this duo' } : row}
@@ -162,7 +164,7 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
             <PlayHelp kind={row.play} className="[&>summary]:absolute [&>summary]:top-1 [&>summary]:right-0 [&>div]:mt-1" />
           </li>)}
         </ul>
-        <p className="text-[12px] text-ink-faint">One evening a day, {eveningCost()} actions. ★ her favourite kind pays ×1.5. Never failed: a miss is a Fine.</p>
+        <p className="text-[12px] text-ink-faint">{eveningCost()} actions per outing. Her favourite kind pays ×1.5.</p>
       </div>
     </Sheet>
   )

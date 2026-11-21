@@ -8,7 +8,7 @@
 // evening's marks (○ free,
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand.
-import { festivalOn, festivalsOf, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
+import { eveningUmas, festivalOn, festivalsOf, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
 import type { FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -81,17 +81,21 @@ export default function HeartsPage() {
 /** The evening's marks: "Evening" with ○ a free slot and ● a spent one, the evenings first, festival
  * night's in its festival's season colour. */
 function EveningMarks({ save }: { save: SaveV4 }) {
+  const location = useLocation()
   const master = useMaster()
-  const year = festivalsOf(useStory())
+  const pack = useStory()
+  const year = festivalsOf(pack)
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name ?? 'An Uma' : 'An Uma')
   const marks = headerMarks(save, nameOf, year)
   const festival = festivalOn(save.calendar.day, year, save.calendar)
   return (
     <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-ink-soft" data-evening-marks={marks.map((m) => (m.spent ? '●' : '○')).join('')}>
       <UiMark mark="hearts/evening" fallback={<span aria-hidden>☾</span>} />
-      Evening
+      {save.today.dayParts && pack && eveningUmas(save, pack).length > 0
+        ? <Link className="inline-flex min-h-11 items-center text-accent" to={withParam(location, 'evening', 'pick')} state={{ back: true }}>Outings ›</Link>
+        : save.today.dayParts ? 'Outings' : 'Evening'}
       {marks.map((m) => (
-        <span key={m.key} role="img" aria-label={m.label} className="text-[14px] leading-none" data-slot={m.festival ? 'festival' : 'evening'}
+        <span key={m.key} role="img" aria-label={m.label} className="text-[14px] leading-none" data-slot={m.slot}
           style={{ color: m.festival && festival ? SEASON_COLOR[festival.season] : '#c2385e' }}>
           {m.spent ? '●' : '○'}
         </span>

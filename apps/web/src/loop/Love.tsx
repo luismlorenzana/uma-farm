@@ -10,7 +10,7 @@
 // (`?life=invited-to-work:<id>`). Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with
 // the Hearts tab.
 import {
-  actionsLeft, birthdaysOf, canPraise, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isBirthday, isDishId, isFarmhand, LOVE_POINTS, todaysTalk,
+  actionsLeft, awayOn, birthdaysOf, canPraise, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isBirthday, isDishId, isFarmhand, LOVE_POINTS, todaysTalk,
   townLocation, whereYouMeet, workBlock, YOU, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -53,6 +53,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const praise = canPraise(save, id)
   // A talk and a gift each take an action, with her in front of you.
   const out = actionsLeft(save) === 0 || !meet.here
+  const chatBlocked = save.today.dayParts ? actionsLeft(save) === 0 || awayOn(save, id, save.calendar.day) : out
   const work = workBlock(save, id)
   const invite = !isFarmhand(save, id) && work !== `From Friendship ${FRIEND_FROM}` && work !== 'Meet her first.'
   const evening = eveningButton(save, pack, id)
@@ -78,7 +79,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
       {(note || error) && <p role="status" className={`text-[13px] font-semibold ${error ? 'text-danger' : 'text-success'}`} data-love-note>{error ?? note}</p>}
       {!meet.here && <MeetLine pack={pack} id={id} at={meet.at} />}
       <div className="grid grid-cols-3 gap-2">
-        <Button variant="secondary" size="md" className="px-2!" disabled={talked || out} data-action="chat" aria-label={talked ? 'Chat done today' : `Chat, +${LOVE_POINTS.chat}, 1 action`}
+        <Button variant="secondary" size="md" className="px-2!" disabled={talked || chatBlocked} data-action="chat" aria-label={talked ? 'Chat done today' : `Chat, +${LOVE_POINTS.chat}, 1 action`}
           onClick={() => void chatHer(id).then((r) => {
             paid(r.paid, `${gain(r.paid)} ♥`)
             // Today's talk plays on the dialogue engine, over the profile.

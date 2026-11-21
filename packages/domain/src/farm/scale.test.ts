@@ -1207,10 +1207,13 @@ async function playPacedYear(size: 0 | Stage, morningCrew: boolean) {
     }
     for (const id of BALANCE_INGREDIENTS) if (goodCount(save.items, id) >= 2) metrics.exactByAfternoon[id]!++
     if (Object.keys(save.items).some(id => id.startsWith('seed-'))) metrics.seedDays++
-    const outing = kindsNow(save, pack, FOCUS)[0]
+    // Compare the F106 timing pilot with the outing rules it originally held fixed.
+    const historicalOutings: SaveV4 = { ...save, today: { ...save.today, dayParts: undefined } }
+    const outing = kindsNow(historicalOutings, pack, FOCUS)[0]
     if (outing) {
       const role = eveningRole(save.love[FOCUS]!)
-      act(spendEvening(save, pack, FOCUS, outing, 75).save, true)
+      const played = spendEvening(historicalOutings, pack, FOCUS, outing, 75).save
+      act({ ...played, today: { ...played.today, ...(save.today.dayParts ? { dayParts: true } : {}) } }, true)
       if (role === 'date') { metrics.firstDate ||= day; metrics.dates++ }
       else if (role === 'hangout') metrics.hangouts++
     }

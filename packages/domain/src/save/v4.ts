@@ -1,3 +1,4 @@
+import { MORNING_KINDS, type MorningOuting } from '../romance/morning-outings'
 // Save v5: the farm's one save. Every farm starts on it, and any older save the app meets (v1 to v4) starts over as a
 // fresh v5 (`freshV5`), its `account` copied whole, so `updatedAt` moves only with the player's first change (the
 // farmer's name). The new farm is made in the app, never in `parseSave`: the API reads an older save's version and account
@@ -421,13 +422,13 @@ export interface RosterUma {
 
 /** The evening's kinds: the ten date games, Dinner in town and A night in, then festival night, its own slot on a
  * festival day. The rules, names and plays are `romance/evening.ts`'s; the ids live here so the save's parse stays light. */
-export const EVENING_KINDS = ['walk', 'fishing', 'picnic', 'market', 'cooking', 'crafting', 'stargazing', 'dinner', 'dance', 'boat', 'night-in', 'footrace', 'festival'] as const
+export const EVENING_KINDS = [...MORNING_KINDS, 'walk', 'fishing', 'picnic', 'market', 'cooking', 'crafting', 'stargazing', 'dinner', 'dance', 'boat', 'night-in', 'footrace', 'festival'] as const
 export type EveningKind = typeof EVENING_KINDS[number]
 /** Festival night: a walk at the festival ground, the festival day's second evening. */
 export const FESTIVAL_NIGHT = 'festival' satisfies EveningKind
 /** A kind an invitation asks for: her favourite date game, never festival night (and never the two evenings of their
  * own, Dinner in town and A night in, which are no one's favourite). */
-export type InviteKind = Exclude<EveningKind, typeof FESTIVAL_NIGHT>
+export type InviteKind = Exclude<EveningKind, typeof FESTIVAL_NIGHT | MorningOuting>
 /** Two evenings and two invitations from this many married… */
 export const TWO_EVENINGS_MARRIED = 10
 /** …the second evening on days divisible by this. */

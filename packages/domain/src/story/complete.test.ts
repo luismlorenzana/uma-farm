@@ -261,7 +261,7 @@ describe('the status and the check', () => {
     expect(entry({ home: 'cafe', draft: { home: DRAFT }, job: { at: 'cafe' } })).toBe('hers')
     expect(entry({ job: { what: 'Waits tables', at: 'cafe' } })).toBe('hers')
     expect(draftNotes({ cast: { umas: [{ characterId: ONE, home: 'cafe', draft: { home: DRAFT }, routine: [{ at: 'cafe', days: [1, 4, 7, 10], draft: DRAFT }] }] }, umas: {}, routes: {} }, ONE)).toEqual([])
-    expect(leftWords(now)[2]).toMatch(/^route: missing anniversary, blossom-viewing, [^;]*; default f2–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk, fishing, picnic, market, cooking, festival\), dates \(walk, /)
+    expect(leftWords(now)[2]).toMatch(/^route: missing anniversary, blossom-viewing, [^;]*; default f2–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk, fishing, picnic, market, cooking, festival, morning-walk, breakfast, tea-by-the-pond, flower-market, sunrise-sketch, bakery-stop\), dates \(walk, /)
     expect(leftWords(was)[2]).toMatch(/^route: missing f2–f10, confession/)
   })
 
@@ -342,7 +342,7 @@ describe('a complete Uma counts every occasion, her greetings, her small talk an
     expect(['fishing-derby-night', 'cooking-contest-night', 'lantern-scene', 'sweets-day', 'anniversary'].map(state)).toEqual(['hers', 'hers', 'hers', 'missing', 'hers'])
     // The nights she wrote count as hers; a festival with none written has no piece, so it's never missing.
     // 66 pieces (51 events, 8 occasions, the 7 days' scenes) and her 5 nights: 13 occasions and the 5 nights hers.
-    expect(status.parts.route).toEqual({ hers: 18, default: 0, missing: 53, of: 71 })
+    expect(status.parts.route).toEqual({ hers: 18, default: 0, missing: 65, of: 83 })
     expect(state('flower-show-night')).toBe('hers')
     const fewer = umaStatus({ ...files, routes: { [ONE]: { characterId: ONE, events: written([...occasions.filter((e) => !['flower-show-night', 'animal-show-night'].includes(e)), 'lantern-scene']) } } }, ONE)
     expect(fewer.pieces.some((p) => p.piece === 'flower-show-night' || p.piece === 'animal-show-night')).toBe(false)
