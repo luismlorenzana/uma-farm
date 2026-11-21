@@ -153,8 +153,9 @@ The long game adds [staggered town shifts](game-mechanics.md#town-professions-an
 [the fiftieth-wedding celebration and Greater Festival](game-mechanics.md#celebrations-and-the-greater-festival), and
 [Greater Love and True Love duos](game-mechanics.md#greater-love-and-true-love).
 
-[F106 · Day parts and morning crew work](handoff/tasks/F106-day-parts.md) is the next balance pilot for morning farm
-work, afternoon dates and the existing married-life visit budget.
+**F106 is in.** The farm runs its crew shift before Afternoon and keeps the five shared spouse visits at Night.
+The [Work calendar](game-mechanics.md#farmhands) shows allocations and gaps by date. See the
+[first-year day-part pilot](game-mechanics.md#first-year-day-part-pilot) for the balance results.
 
 How each workshop is built:
 

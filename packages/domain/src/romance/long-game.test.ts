@@ -1,3 +1,6 @@
+import { passDayPart } from '../farm/actions'
+import { settleCrewShift } from '../farm/farmhands'
+import { talentsD } from '../farm/talents'
 import { describe, expect, it } from 'vitest'
 import { dateOf, DAYS_PER_YEAR, DAYS_PER_SEASON, FESTIVALS, festivalDayOfYear } from '../farm/calendar'
 import { runNight } from '../night/end-day'
@@ -175,7 +178,10 @@ describe('married life', () => {
   it('takes twenty nights of five visits and a stay for True Love, with no replay or duplicate awards', async () => {
     let save = await wed(newFarm(), a)
     const looks = new Set<number>()
+    save = { ...save, today: { ...save.today, dayParts: true } }
     for (let night = 0; night < 20; night++) {
+      expect(planVisit(save, pack, [a], 'pajamas', noBirthday)).toBeNull()
+      save = settleCrewShift(passDayPart(save, 'night'), talentsD, pack)
       for (let n = 0; n < NIGHT_VISITS; n++) {
         const dated = planVisit(save, pack, [a], 'pajamas', noBirthday)!
         looks.add(dated.looks[0]!)

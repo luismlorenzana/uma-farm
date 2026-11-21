@@ -33,6 +33,7 @@ import { packExpeditions, returnExpeditions } from '../expeditions/expeditions'
 import { dateDayOf, festivalOn, isNewYear, isSeasonStart, dateOf, type FarmClock, type Festival } from '../farm/calendar'
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
 import { PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
+import { recordWorkDay } from '../farm/work-coverage'
 import { talentsD, type TalentOf } from '../farm/talents'
 import { growTiles, setOrchardFruit, tilesToPlant, witherTiles, type Withered } from '../fields/fields'
 import { awardRareSeeds } from '../fields/production'
@@ -67,7 +68,7 @@ import { raiseBuilds } from '../farm/builds'
 import { settleAccounts, type FoodBill } from '../farm/economy'
 import { eatTonight } from '../farm/food'
 import { settleUnfinished } from '../kitchen/kitchen'
-import { aptitudeUps, fedThisMorning, handsTonight } from '../farm/farmhands'
+import { aptitudeUps, fedThisMorning, handsTonight, settleCrewShift } from '../farm/farmhands'
 import type { FarmPlaceId } from '../farm/places'
 import { tendNight } from '../ranch/ranch'
 import type {
@@ -200,7 +201,8 @@ export const payTheBin: NightStep = (night) => {
  * any left over spoil (`farm/food.ts`). */
 export const theFarmEats: NightStep = (night) => {
   const working = night.notes.hands.map((h) => h.id)
-  const { save, pantry, takeout, spoiled, fed, staff } = eatTonight(packExpeditions(night.save), working)
+  const tracked = night.save.today.crew ? recordWorkDay(night.save, night.notes.hands, night.context.story ?? null) : night.save
+  const { save, pantry, takeout, spoiled, fed, staff } = eatTonight(packExpeditions(tracked), working)
   return { ...night, save, notes: { ...night.notes, food: { pantry, takeout, spoiled, fed: fed.length, staff } } }
 }
 /** Step 2, after the farm eats: **the bill.** The night's income (the bin's pay) joins the book's last seven nights;
@@ -352,7 +354,7 @@ export const witherCrops: NightStep = (night) => {
  * already withered crops out of season.
  */
 export const turnCalendar: NightStep = (night) =>
-  ({ ...night, save: setOrchardFruit({ ...night.save, calendar: { ...night.save.calendar, day: night.save.calendar.day + 1 }, today: newTodayV4() }) })
+  ({ ...night, save: setOrchardFruit({ ...night.save, calendar: { ...night.save.calendar, day: night.save.calendar.day + 1 }, today: { ...newTodayV4(), ...(night.before.today.dayParts ? { dayParts: true as const } : {}) } }) })
 
 /** Step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and the morning says so. */
 export const raiseBuildings: NightStep = (night) => {
@@ -590,7 +592,9 @@ export const buildSummary: NightStep = (night) => {
     return card?.day === night.before.calendar.day ? [{ kind: 'festival-result', id, place: card.place, gold: card.gold }] : []
   })
   const work = [...festivals, ...restaurant, ...discoveries, ...prizes, ...notes.hands, ...trips, ...loads, ...notes.ranch, ...grew, ...withered]
-  const ranks = [...notes.ranks, ...aptitudeUps(night.before, save, talentsOf(night))]
+  const later = aptitudeUps(night.before, save, talentsOf(night))
+  const early = night.before.today.crew?.aptitudes ?? []
+  const ranks = [...notes.ranks, ...early.filter(row => !later.some(next => next.outfitId === row.outfitId && next.aptitude === row.aptitude)), ...later]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),
     news: [
@@ -616,7 +620,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 1, name: 'settleThePlay', run: settleThePlay, what: 'An open Restaurant shift pays its completed tickets and returns the unused dishes. A stove play left unfinished settles as Rough, with its output, assistant’s practice and challenges, or Contest judging and prize' },
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step' },
-  { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'Farmhands work their ordered tasks on their farm shifts, in invitation order. Cooks and station hands with orders can use spare actions after later workers bring ingredients in. An action gives a point of practice. Goods go to the Warehouse, meals to the pantry, and each Uma’s main place is where she spent the most actions' },
+  { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'Read the completed morning shift (or run the crew at night for a legacy date). Farmhands work in invitation order. Cooks and station hands with orders can use spare actions after later workers bring ingredients in. An action gives a point of practice. Goods go to the Warehouse, meals to the pantry, and each Uma’s main place is where she spent the most actions' },
   { step: 2, name: 'theFarmEats', run: theFarmEats, what: 'The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil' },
   { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bin’s pay and the Restaurant’s sales and tips join the last seven nights’ income. Takeout (15g a meal), upkeep and arrears have first claim on cash. Loans draw from that night’s income up to the cash left after covering those bills. The farm runs at half pace from a second consecutive short night until the bill is paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
@@ -654,7 +658,9 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
 
 /** The night's steps over a save, unstamped: `endDay` without its stamp. Tests swap a step to stand in for a later one. */
 export function runNight<S extends FarmSave>(save: S, context: NightContext, steps: readonly { run: NightStep }[] = NIGHT_STEPS): S {
-  const start: Night = { before: save, save, context, notes: emptyNotes() }
+  const working = save.today.dayParts
+    ? settleCrewShift(save, context.talentOf ?? talentsD, context.story ?? null) : save
+  const start: Night = { before: working, save: working, context, notes: emptyNotes() }
   return steps.reduce((night, step) => step.run(night), start).save as S
 }
 

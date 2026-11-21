@@ -1,7 +1,7 @@
 // The save's parse helpers for the farm's parts: strict keys, explicit paths, every id checked. Roster ids are checked
 // by form: the API has no master data or story pack, and an id a later release drops still parses. Internal to `save/`:
 // `parse-v4.ts` composes these and re-exports the public names (the work places and their slots).
-import { SEASONS } from '../farm/calendar'
+import { DAYS_PER_YEAR, SEASONS } from '../farm/calendar'
 import { DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
@@ -438,7 +438,7 @@ export function parseDiary(value: unknown, path: string): SaveV6['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'accounts', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'accounts', 'workHistory', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
   'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders'] as const
 
 function parseStationPlans(value: unknown, path: string): NonNullable<SaveV6['farm']['stationPlans']> {
@@ -561,6 +561,18 @@ function parseAccounts(value: unknown, path: string, today: number): NightAccoun
   return records
 }
 
+function parseWorkHistory(value: unknown, path: string, today: number): NonNullable<SaveV6['farm']['workHistory']> {
+  const records = list(value, path, 0, DAYS_PER_YEAR).map((raw, i) => {
+    const at = `${path}.${i}`
+    const row = object(raw, at, ['day', 'allocated', 'covered', 'missing'])
+    const totals = (key: 'covered' | 'missing') =>
+      counts(row[key], `${at}.${key}`, kind => (TASK_KINDS as readonly string[]).includes(kind), 'unknown task')
+    return { day: int(row.day, `${at}.day`, 1, today), allocated: count(row.allocated, `${at}.allocated`), covered: totals('covered'), missing: totals('missing') }
+  })
+  if (records.some((row, i) => i > 0 && row.day <= records[i - 1]!.day)) fail(path, 'expected work days in date order')
+  return records
+}
+
 export function parseFarm(value: unknown, path: string, today: number): SaveV6['farm'] {
   const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
@@ -580,6 +592,7 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV6['
     loans: o.loans === undefined ? [] : parseLoans(o.loans, `${path}.loans`, today), owed, short,
     income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
     ...(o.accounts === undefined ? {} : { accounts: parseAccounts(o.accounts, `${path}.accounts`, today) }),
+    ...(o.workHistory === undefined ? {} : { workHistory: parseWorkHistory(o.workHistory, `${path}.workHistory`, today) }),
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
     // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
     market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isShippableId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),

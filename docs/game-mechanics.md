@@ -6,7 +6,7 @@ the same commit, and where it and the code ever differ, the code wins and this d
 
 **What's live and what isn't.** The deployed game is one game on **save v6**: a day of ten actions on a tile farm the
 farmer works by hand, the ranch's animals and the Mine's and the Quarry's floors (see [the ranch](#the-ranch) and
-[the Mine and the Quarry](#the-mine-and-the-quarry)), and the **farmhands** who work it with him overnight on the tasks he
+[the Mine and the Quarry](#the-mine-and-the-quarry)), and the **farmhands** who work it with him on the morning shift on the tasks he
 sets (see [Farmhands](#farmhands)), its places, the farm growing by building, food (everyone eats, from the first
 night: see [Food](#food)), cooking at the stove and the Kitchen (see [The Kitchen](#the-kitchen)), upkeep and the mayor's
 office's loans, the calendar
@@ -59,22 +59,26 @@ prose here; change a table by changing the rule.
 
 ## Part 1 — The farm's days and work
 
-A farm day is a turn of **ten actions**. The farmer works the farm by hand: each tile cleared, tilled, planted,
-watered or harvested, each forage, chop or catch, each animal fed or cared for and each building's goods collected,
-each face worked at the Mine or the Quarry, each load started at a station, each crate shipped and going into town takes
-one, and so does each of the Umas' events. The farmhands, friends he's invited to work, add their own
-actions overnight on the tasks he sets on the work board, so as they take the farm's work over his own day turns to the
-people. Special days (New Year's, a festival, her birthday) add actions
-for events only, and the calendar shows the year: its festivals, birthdays and the faces of the Umas with an event each
-day. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a week. Ending
-the day runs the night: the bin pays, the farmhands work, meals and upkeep are covered before loan repayments, watered
-crops grow a stage, fed animals leave their goods, the stations' loads finish and the date turns. The morning opens on a
-card of what the night brought, and ten actions again.
+A farm day gives the farmer **five Morning actions and five Afternoon actions**. Manual chores keep their usual
+costs. Travel and browsing are free. Hangouts and dates still take two actions and use the existing outing slots.
+Festival and birthday bonuses count separately.
 
+The **crew shift** runs after the fifth regular action, using each Uma’s town rota, orders, aptitudes, food,
+reservations and expedition schedule. A two-action date can cross the boundary. **Start afternoon** on the Work
+board passes the unused Morning actions and runs the shift. The crew’s produce and gathered goods are ready in the
+Warehouse that afternoon. Loads finish and crops grow at night.
+
+**Start night** opens the existing five shared spouse visits. It passes unused daytime actions and runs the crew shift
+if needed. The fifth visit can still lead to a stay and an extra Greater Love point the next morning. If the farmer
+ends the day early, the crew shift runs before the bin pays. A save already mid-day when this feature arrives finishes
+that date with the old timing and switches at the next dawn.
+
+At night the bin pays, the farm eats and covers its bills, watered crops grow a stage, fed animals leave their goods,
+the stations’ loads finish, and the date turns. The morning card reports the crew’s work, rank and bond credit.
 ```
  the day: 10 actions, one a tap                    End the day ──► the night, in order
    clear · till · plant · water · harvest   a tile               1 the bin pays
-   cut grass for the silo           a weeds tile                 2 the farmhands work; watered crops grow
+   cut grass for the silo           a weeds tile                 2 crew report, the bills, and crop growth
    forage · chop                    the woods' edge              3 animals: the fed leave their goods
    fish                             the pond's edge              4 the stations' loads finish
    feed · care · collect            the Coop, the Barn           5 workshops (none open)
@@ -472,10 +476,8 @@ The night is one fixed run of steps over the save:
 1. **The bin pays.** Everything shipped today pays at its price × stars × demand on the day it was shipped, so a
    season's last night still pays that season's demand. Gold rises and the bin empties. Before it, once anyone is
    married, tonight's house is noted.
-2. **The farmhands work, the farm eats and pays its bill, then crops grow.** First each farmhand on her farm day (one
-   on a town day is in town), in the order you invited her, spends her actions today on her tasks on the work board (see
-   [Farmhands](#farmhands)): her watering grows tonight, her harvests and hauls go into the Warehouse at once, a cook's
-   meals into the pantry, and a load she starts finishes at step 4. **Then the farm eats:** the farmer, every spouse in
+2. **The farm records the crew shift, eats, pays its bill, then grows crops.** The night reads the recorded shift for
+   [Farmhands](#farmhands) or runs an in-progress legacy date’s crew under the old timing. **Then the farm eats:** the farmer, every spouse in
    her room and every farmhand on her farm day, two meals each, from the pantry first; what it's short is takeout
    (see [food](#food)). **Then the bill:** the bin's pay joins the last seven nights' income. Takeout and upkeep are
    covered before any of today's income repays loans (see [upkeep and loans](#upkeep-and-loans)). Then each growing
@@ -512,7 +514,7 @@ The steps as the game lists them:
 | 1 | `settleThePlay` | An open Restaurant shift pays its completed tickets and returns the unused dishes. A stove play left unfinished settles as Rough, with its output, assistant’s practice and challenges, or Contest judging and prize |
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
-| 2 | `farmhandsWork` | Farmhands work their ordered tasks on their farm shifts, in invitation order. Cooks and station hands with orders can use spare actions after later workers bring ingredients in. An action gives a point of practice. Goods go to the Warehouse, meals to the pantry, and each Uma’s main place is where she spent the most actions |
+| 2 | `farmhandsWork` | Read the completed morning shift (or run the crew at night for a legacy date). Farmhands work in invitation order. Cooks and station hands with orders can use spare actions after later workers bring ingredients in. An action gives a point of practice. Goods go to the Warehouse, meals to the pantry, and each Uma’s main place is where she spent the most actions |
 | 2 | `theFarmEats` | The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil |
 | 2 | `settleTheAccounts` | The bin’s pay and the Restaurant’s sales and tips join the last seven nights’ income. Takeout (15g a meal), upkeep and arrears have first claim on cash. Loans draw from that night’s income up to the cash left after covering those bills. The farm runs at half pace from a second consecutive short night until the bill is paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
@@ -1304,7 +1306,7 @@ not any number, and a farm of many Umas spreads them over its places and its oth
 | Its day | Counted in `today.hauls`, cleared with the day at night step 7: a new day starts every place full |
 <!-- /live -->
 
-- **Your hauls come first:** you work by day and the farmhands at night, so four forages of yours at the Woods leave it
+- **Hauls share one daily limit:** four morning forages of yours at the Woods leave it
   thin for a farmhand foraging there tonight. The work board's **Tonight** shows what she'll bring as the farm stands.
 - **Each panel says it:** an area's or a spot's row on the woods' and the pond's panels, and a dig's panel, show "3 full
   hauls left" once a haul is taken today, then **Thin · half hauls** ("half finds" at a dig).
@@ -3653,7 +3655,36 @@ you've talked (`talks`), the last day you talked (`last`) and the last day you g
 any. Met or not is the roster (`roster[id].joined` the day you met her). The gift day grows v5 in place: an older v5's
 record reads it as 0, and nothing moves `updatedAt`.
 
+### First-year day-part pilot
+
+Eight 120-day runs used the same seed, 500g opening balance, build priorities and courtship policy. The solo farmer
+started fresh. In the staffed fixtures, 10, 20 or 50 synthetic hires were available from the first morning and worked
+their staggered town rotas. The bot focused on one invented Uma and spent about four actions a day on that route.
+
+| Farmhands | Friendship 3, old → morning | Confession | First date | Farm Rank | Morning-shift shipping | Ending gold, old → morning | Takeout meals, old → morning |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 9 → 9 | 21 → 21 | 22 → 22 | 3 | 21,805g | 12,430g → 12,430g | 42 → 42 |
+| 10 | 9 → 9 | 22 → 21 | 23 → 22 | 4 | 100,345g | 33,455g → 50,055g | 18 → 80 |
+| 20 | 10 → 9 | 23 → 21 | 24 → 22 | 6 | 339,640g | 67,845g → 77,725g | 109 → 131 |
+| 50 | 10 → 9 | 23 → 21 | 24 → 22 | 7 | 583,605g | 229,830g → 195,815g | 85 → 224 |
+
+The morning-shift runs had zero nights in arrears. The 50-Uma run had 48 tiles wither, down from 60, while shipping
+fell from 616,490g to 583,605g. On the 10-Uma run the build policy reached enough exact base-grade milk on 51 afternoons
+under the old timing and none under the new timing. The morning-run crew had two or more of the exact higher-grade
+carp on 104–113 afternoons across the four sizes. These figures depend on build and stock choices. The run logged all
+nine tracked ingredients, action use and every route milestone reached through Romance 10. A separate married run
+reached True Love on the twentieth night with five visits and one stay each night.
+
 ### Farmhands
+
+Open **Farm → Work → Work calendar** to see 30 days per season in six columns and three rows, with a second page for
+days 19–30. Green counts show standing orders allocated to Umas on that date’s farm shift. Amber counts show the
+priority jobs the shift still leaves open, such as dry crops, harvest, animal care, meals or another station load.
+Select a future date to see the Umas on shift, their orders, and the expected gaps using today’s crops, stock and plans.
+The forecast uses the selected date’s rota and known expeditions. Crops, purchases and meals produced on intervening
+days can change the outcome. The last 120 days of actual records show allocated orders, work performed and jobs still
+open when the day ended. Order edits after the shift apply on the Uma’s next farm day. Contests, the Kitchen and the
+Restaurant can assign only actions left after crew work and other bookings.
 
 A farmhand who is [away on an expedition](#expeditions) misses her farm shifts. Her jobs stay on the work board while she's away.
 
@@ -3661,7 +3692,7 @@ A friend you invite to work is a **farmhand** ([the invitation to work](#the-inv
 town, and comes to the farm on her **farm days**: the days her town schedule (her routine, her part-time job, or the
 default schedule's spot) doesn't put her out in town. On a farm day she's on the farm by day, in front of you for talks,
 gifts and her evening, and off the town's map; she gives the farm a few actions on the tasks you set her on the **work
-board**, in the Book, works them overnight, before the crops grow (so the morning says what she did), and eats her two
+board**, in the Book, works them just before Afternoon, and eats her two
 meals on the farm. On her **town days** she's at her place in town, by her schedule, and doesn't work, eat on the farm
 or cost anything. Nobody but a spouse in her room lives on the farm. Any Uma can do
 any task, and each task has an **aptitude**: a level for her that starts from her talents and rises with every action she
@@ -3671,7 +3702,7 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 ```
  her farm days: the days her town schedule leaves free (20 of 30 on the default schedule; a season with none, the
                 default schedule's other eight); a spouse in her room, every day
- your day (10 actions)                 the night, step 2, first: each farmhand on her farm day, in the order you invited her
+ your day (5 + 5 actions)              at the start of Afternoon: each farmhand on her farm day, in invitation order
    invite her to work · 1 (a friend)     (on a town day she's in town: no work, no meals on the farm)
    the Book: the work board (free)       her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
      her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)

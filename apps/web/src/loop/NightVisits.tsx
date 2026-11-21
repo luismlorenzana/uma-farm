@@ -1,6 +1,6 @@
 import { byRelationship } from './relationship-order'
 import {
-  anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
+  actionsLeft, crewShiftEnabled, passDayPart, anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
   NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, useStoryDuos, visitBeats, wantsBirthdayAlone,
   type Birthdays, type Duo, type FarmSave, type VisitKind, type StoryPack, type Visit,
 } from '@farm/domain'
@@ -59,6 +59,7 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
   const inFlight = useRef(false)
   const [error, setError] = useState<string | null>(null)
   const visits = nightVisits(save)
+  const beforeNight = crewShiftEnabled(save) && actionsLeft(save) > 0
   const full = visits.length === NIGHT_VISITS
   const available = (id: string) => nightAvailable(save, pack, id)
   const availableDuo = (duo: readonly string[]) => duo.every(id => available(id) && !birthday(save, id))
@@ -102,6 +103,10 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
       </div>
       {error && <p role="alert" className="text-danger">{error}</p>}
       {mode === 'editor' ? <DuoEditor save={save} pack={pack} nameOf={nameOf} busy={busy} run={run} />
+        : beforeNight ? <div className="space-y-2 rounded-md border border-hairline bg-panel p-3">
+          <p>Start night to open five spouse visits. This passes the remaining {actionsLeft(save)} daytime {actionsLeft(save) === 1 ? 'action' : 'actions'}.</p>
+          <Button disabled={busy} onClick={() => void run(s => passDayPart(s, 'night'))}>Start night</Button>
+        </div>
         : full && last ? <div className="space-y-2">
           <p>Fifth visit with {last.who.map(nameOf).join(' and ')}</p>
           <div className="flex flex-wrap gap-2">

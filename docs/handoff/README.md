@@ -18,9 +18,9 @@ packet](../design/her-look.md#approved-expression-authoring-packet) covers each 
 birthday and anniversary hosts their own dialogue. The two books and Diary keep the shared visit and any witnessed
 morning. Studio previews pair coverage and applies approved drafts against the current story revision.
 
-**Day parts and earlier crew work** are in [F106](tasks/F106-day-parts.md) for a balance pilot. The bar labels the
-afternoon after five regular actions. The Farm’s Work shortcut, staffing suggestions, date-game guides and nightly
-accounts support playtesting the current rhythm.
+**F106 is implemented.** Five Morning actions lead into the crew shift, five Afternoon actions follow, and the five
+shared spouse visits open at Night. The [Work calendar](../game-mechanics.md#farmhands) shows allocations, gaps and
+recent shift records. The [first-year comparison](../game-mechanics.md#first-year-day-part-pilot) covers all four crew sizes.
 
 **The rework is in** (the owner, 2026-11-14; F74–F85): the game plays sideways, a day of ten actions on the tile farm,
 the town map where you meet her by introducing yourself, the Uma loop to married life, farmhands and their aptitudes,

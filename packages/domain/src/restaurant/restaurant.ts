@@ -4,7 +4,7 @@ import { bookedForExpedition } from '../expeditions/presence'
 import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { draw, mulberry32 } from '../farm/draw'
 import { addMeals, BATCH_MEALS } from '../farm/food'
-import { handDay } from '../farm/farmhands'
+import { handDay, handActionsLeft } from '../farm/farmhands'
 import { placeBuilt } from '../farm/places'
 import { countChallenge } from '../farm/rank-rules'
 import { round5 } from '../farm/round'
@@ -46,7 +46,7 @@ export function serverLock(save: FarmSave, id: string, story: PerkPack | null = 
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (!worksOn(save, story, id)) return 'She’s in town today.'
   if (day.kitchen || save.today.server === id || festivalBooked(save, id)) return 'She’s booked today.'
-  return day.actions < 1 ? 'She has no action left tonight.' : null
+  return handActionsLeft(save, id) > 0 ? null : 'She has no work action left today.'
 }
 
 function previouslyLearned(save: FarmSave, id: string, stage: number): boolean {

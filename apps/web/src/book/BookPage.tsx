@@ -13,7 +13,7 @@ import {
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { GuideButton } from '../guide/Guide'
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -22,6 +22,8 @@ import { useTalents } from '../loop/talents'
 import { dateWords, plural } from '../loop/words'
 import { WorkBoard } from './WorkBoard'
 import MealDishes from '../loop/MealDishes'
+
+const WorkCalendar = lazy(() => import('./WorkCalendar'))
 
 const n = (value: number): string => value.toLocaleString('en-US')
 
@@ -65,6 +67,8 @@ function Book({ save }: { save: FarmSave }) {
         <Link to={workOnly ? '/book' : '/book?view=work'} className="ml-auto inline-flex min-h-11 items-center rounded-md border border-hairline px-3 text-[13px] font-semibold">
           {workOnly ? 'Accounts' : 'Work board'}
         </Link>
+        {workOnly && <Link to={withParam(location, 'workCalendar', '1')} state={{ back: true }}
+          className="inline-flex min-h-11 items-center rounded-md border border-hairline px-3 text-[13px] font-semibold">Work calendar</Link>}
         <GuideButton topic="staff" title="The farm’s book" label="About the book">
           <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who’s on it today and what you can build.</p>
           <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, and each spouse living on the farm. A farmhand costs her meals on her farm days.</p>
@@ -76,6 +80,7 @@ function Book({ save }: { save: FarmSave }) {
       </div>
       {!workOnly && <Money save={save} />}
       <WorkBoard save={save} />
+      {new URLSearchParams(location.search).has('workCalendar') && <Suspense fallback={null}><WorkCalendar save={save} /></Suspense>}
       {!workOnly && <ul className="grid gap-2 @lg:grid-cols-2 @3xl:grid-cols-3" data-book-cards>
         <Card to={withParam(location, 'sheet', 'bin')} title="Gold" figure={`${n(save.gold)}g`} line="The bin pays tonight" data="gold" />
         <Card to={withParam(location, 'sheet', 'rank')} title="Farm Rank" figure={rank} line={`${n(save.farm.points)} points`} data="rank" />

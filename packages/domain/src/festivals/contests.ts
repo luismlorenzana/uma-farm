@@ -5,7 +5,7 @@ import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDay
 import { dateDayOf, dateOf, festivalOn, turnOnDate } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
-import { aptitudeOf, gatherer, handDay } from '../farm/farmhands'
+import { aptitudeOf, gatherer, handDay, handActionsLeft } from '../farm/farmhands'
 import { isFoodId } from '../farm/food'
 import { countChallenge } from '../farm/rank-rules'
 import { round5 } from '../farm/round'
@@ -85,7 +85,7 @@ export function festivalHandLock(save: FarmSave, id: string, story: PerkPack | n
   if (bookedForExpedition(save, id)) return 'She’s booked for an expedition.'
   if (!worksOn(save, story, id)) return 'She’s in town today.'
   if (hand.kitchen || save.today.server === id || festivalBooked(save, id)) return 'She’s booked today.'
-  return hand.actions > 0 ? null : 'She has no work action left.'
+  return handActionsLeft(save, id) > 0 ? null : 'She has no work action left today.'
 }
 
 const requireOpen = (lock: string | null) => { if (lock) throw new SaveRuleError('bad-job', lock) }

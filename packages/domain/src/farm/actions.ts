@@ -84,6 +84,8 @@ export const actionCost = (id: ActionId): number => BY_ID.get(id)!.cost
 /** The day's actions: the farmer's budget, to start 10. More come later from the farm's upgrades and the household. */
 export const dayActions = (_save: Pick<FarmSave, 'calendar'>): number => DAY_ACTIONS
 /** The day's actions left. */
+export const MORNING_ACTIONS = 5
+
 export const actionsLeft = (save: Pick<FarmSave, 'calendar' | 'today'>): number => Math.max(0, dayActions(save) - save.today.actions)
 
 /** Spends `n` of the day's actions: refused (`no-actions`) when fewer are left. Free actions spend nothing. */
@@ -95,6 +97,25 @@ export function spendActions<S extends Pick<FarmSave, 'calendar' | 'today'>>(sav
 }
 /** Spends an action by its id: its cost from the table. */
 export const spend = <S extends Pick<FarmSave, 'calendar' | 'today'>>(save: S, id: ActionId): S => spendActions(save, actionCost(id))
+
+/** Older saves already in the middle of a date finish that date under the old rules. */
+export function crewShiftEnabled(save: Pick<FarmSave, 'calendar' | 'today' | 'longGame'>): boolean {
+  return save.today.dayParts === true
+    || (save.today.actions === 0 && save.longGame?.night?.day !== save.calendar.day)
+}
+
+export function prepareDayChange<S extends FarmSave>(before: FarmSave, after: S): S {
+  if (before.calendar.day !== after.calendar.day || !crewShiftEnabled(before) || after.today.dayParts) return after
+  return { ...after, today: { ...after.today, dayParts: true } }
+}
+
+export const morningShiftDue = (save: Pick<FarmSave, 'today'>): boolean =>
+  save.today.dayParts === true && save.today.actions >= MORNING_ACTIONS && save.today.crew === undefined
+
+export function passDayPart<S extends FarmSave>(save: S, part: 'afternoon' | 'night'): S {
+  const target = part === 'afternoon' ? MORNING_ACTIONS : dayActions(save)
+  return spendActions(save, Math.max(0, target - save.today.actions))
+}
 
 // --- Special days: event actions ---------------------------------------------------------------------------------
 

@@ -9,7 +9,7 @@
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
 // of the initial JS.
 import {
-  payBuild, borrowFor, repayLoan, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
+  passDayPart, crewShiftEnabled, payBuild, borrowFor, repayLoan, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, upgradeStation, waterTile,
@@ -41,11 +41,15 @@ export async function endTheDay(day: number): Promise<boolean> {
   // The cast's birthdays (master data's, the cast's own winning) for the morning's lines.
   const birthdays = birthdaysOf(story, view.birthdays)
   const release = arrivedRelease()
-  const next = endDay(save, { talentOf: talentsFor(view), story, birthdays, release }, nowIso())
-  await commit(libraryChange(save, next, story, { festivals: festivalsOf(story), birthdays }))
+  const working: FarmSave = crewShiftEnabled(save) ? { ...save, today: { ...save.today, dayParts: true } } : save
+  const next = endDay(working, { talentOf: talentsFor(view), story, birthdays, release }, nowIso())
+  const recorded = libraryChange(save, next, story, { festivals: festivalsOf(story), birthdays })
+  await commit({ ...recorded, today: { ...recorded.today, dayParts: true } })
   if (release) forgetArrived(release.number)
   return true
 }
+
+export const enterDayPart = (part: 'afternoon' | 'night') => change(save => passDayPart(save, part))
 
 /** Puts the morning summary away: a player's change. */
 export async function dismissSummary(): Promise<void> {

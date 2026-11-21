@@ -2,7 +2,7 @@
 // town, and comes to the farm on her **farm days**, the days her town schedule (her routine, her part-time job, or the
 // default schedule's spot) doesn't put her out in town (`town/town.ts`'s `farmDaysIn`): in front of you there for talks,
 // gifts and her evening, she gives the farm a few actions on the tasks you set on the work board. She works them
-// overnight, before the crops grow, so the morning reports her work, and eats her two meals on the farm. On her town
+// before afternoon, so her goods are ready to use, and eats her two meals on the farm. On her town
 // days she's in town, and doesn't work, eat on the farm or cost anything. A spouse in her room is on the farm every day.
 //
 //   her day      on her farm day: 3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
@@ -328,8 +328,7 @@ function ripensInTime(crop: CropId, clock: FarmClock): boolean {
 interface Step { save: FarmSave; n: number; items: string[]; events: { activity: Activity; event: ChallengeEvent }[] }
 
 /** What the night's farmhands did. */
-export interface HandsTonight {
-  save: FarmSave
+export interface CrewReceipt {
   /** Each farmhand's day, in the order they worked. */
   lines: FarmhandLine[]
   /** Who worked where today, one place each (where she spent the most actions): the gathering places and the stations. */
@@ -340,6 +339,48 @@ export interface HandsTonight {
   made: MadeTonight[]
   /** The areas and spots worked tonight, for the Diary's depth milestones. */
   gathered: string[]
+  aptitudes?: AptitudeUp[]
+}
+
+export interface HandsTonight extends CrewReceipt {
+  save: FarmSave
+}
+
+function reserved(day: { kitchen?: number; restaurant?: number; festival?: number }): number {
+  return (day.kitchen ?? 0) + (day.restaurant ?? 0) + (day.festival ?? 0)
+}
+
+function spentOnCrew(line: FarmhandLine): number {
+  return Math.max(0, line.spent - reserved(line))
+}
+
+/** Workshop and contest bookings use only the shift's unused actions. */
+export function handActionsLeft(save: FarmSave, id: string): number {
+  const day = handDay(save, id)
+  if (!day) return 0
+  const line = save.today.crew?.lines.find(row => row.id === id)
+  if (save.today.crew && !line) return 0
+  return Math.max(0, (line?.actions ?? day.actions) - reserved(day) - (line ? spentOnCrew(line) : 0))
+}
+
+function crewWithBookings(save: FarmSave, receipt: CrewReceipt): HandsTonight {
+  const lines = receipt.lines.map(line => {
+    const { kitchen: _kitchen, restaurant: _restaurant, festival: _festival, ...actual } = line
+    const day = handDay(save, line.id)
+    if (!day) return line
+    return {
+      ...actual, spent: Math.min(line.actions, spentOnCrew(line) + reserved(day)),
+      ...(day.kitchen ? { kitchen: day.kitchen } : {}),
+      ...(day.restaurant ? { restaurant: day.restaurant } : {}),
+      ...(day.festival ? { festival: day.festival } : {}),
+    }
+  })
+  const present = new Set([...receipt.worked, ...receipt.tended].map(row => row.outfitId))
+  const worked = [...receipt.worked]
+  for (const line of lines) {
+    if (line.kitchen && !present.has(line.id)) worked.push({ outfitId: line.id, place: 'kitchen' })
+  }
+  return { save, ...receipt, lines, worked }
 }
 
 /** Her terms at a gathering place tonight: her rank and talent in its activity, the farm's tool, well fed, her keepsake. */
@@ -537,7 +578,7 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
 }
 
 /**
- * The farmhands' night (step 2, before the crops grow): each farmhand who worked the farm today (`handsWorking`: on her
+ * Forecast or report a crew shift: each farmhand who worked the farm today (`handsWorking`: on her
  * farm day, the day being settled; on a town day she's in town and doesn't work), in the order you invited them, spends
  * her actions today (`handDay`, read from the day as it was left: `day`) on her board's tasks: the field's
  * and the loads first, in your order, each until it's done; then her gathering shares what's left, a turn each. Each
@@ -545,6 +586,7 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
  * step 4); her harvests, hauls and catches count toward her challenges.
  */
 export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 'today' | 'farm'>, talentOf: TalentOf, story: PerkPack | null): HandsTonight {
+  if (save.today.crew) return crewWithBookings(save, save.today.crew)
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
   const finish: (() => void)[] = []
@@ -609,6 +651,14 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   }
   for (const settle of finish) settle()
   return { ...out, save: next, gathered: [...new Set(out.gathered)] }
+}
+
+/** Run a shift once, leaving enough detail for the existing night credit and reporting rules. */
+export function settleCrewShift<S extends FarmSave>(save: S, talentOf: TalentOf, story: PerkPack | null): S {
+  if (save.today.crew) return save
+  const { save: after, ...crew } = handsTonight(save, save, talentOf, story)
+  const aptitudes = aptitudeUps(save, after, talentOf)
+  return { ...after, today: { ...after.today, dayParts: true, crew: { ...crew, aptitudes } } } as S
 }
 
 /** Aptitudes that reached a level between two saves: each farmhand's, the level reached. The morning's §3. */

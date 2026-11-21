@@ -3,7 +3,8 @@ import { assistantLock, staffBlock } from '../kitchen/kitchen'
 import { cookLock } from '../kitchen/contest'
 import { FESTIVALS } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
-import { handsWorking } from '../farm/farmhands'
+import { handsWorking, setTasks, settleCrewShift } from '../farm/farmhands'
+import { talentsD } from '../farm/talents'
 import { starPrice } from '../goods/prices'
 import { goodOf } from '../goods/ids'
 import { runNight } from '../night/end-day'
@@ -40,6 +41,17 @@ function farm(rank = 10, day = 1): FarmSave {
 }
 
 describe('the expedition post', () => {
+  it('keeps an absent worker out of the morning shift and counts her return at dawn', () => {
+    const departure = sendExpedition(setTasks(farm(7, 2), A, [{ kind: 'fish', spot: 'pond' }]), 'echo-cave', [A], [])
+    const shift = (save: FarmSave) => settleCrewShift({ ...save, today: { ...save.today, actions: 5 } }, talentsD, null)
+    const first = shift(departure)
+    expect(first.today.crew!.lines.some(line => line.id === A)).toBe(true)
+    const away = shift(runNight(first, {}))
+    expect(away.today.crew!.lines.some(line => line.id === A)).toBe(false)
+    const returned = runNight(away, {})
+    expect(returned.expeditionLog?.at(-1)?.party).toEqual([A])
+    expect(shift(returned).today.crew!.lines.some(line => line.id === A)).toBe(true)
+  })
   it('projects the lightest farm day using the actual shifts and other booked parties', () => {
     const pack = { ...PACK, town: { professions: [{ id: 'baker', name: 'Baker', at: 'cafe', off: 'wednesday' as const, partners: [A, B] as const }] } }
     const start = farm(7, 4)

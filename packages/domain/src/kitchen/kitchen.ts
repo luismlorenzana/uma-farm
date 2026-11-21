@@ -34,7 +34,7 @@ import { goodName } from '../goods/names'
 import { exactHeld, knowsRestaurantRecipe, restaurantRecipe } from '../restaurant/recipes'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
-import { aptitudeOf, aptitudeYield, handDay } from '../farm/farmhands'
+import { aptitudeOf, aptitudeYield, handDay, handActionsLeft } from '../farm/farmhands'
 import { addMeals, BATCH_MEALS, batchBlock, batchStars, foodHeld, handsAtTable, mouthsTonight, plainBatch, type FoodHeld } from '../farm/food'
 import { placeBuilt } from '../farm/places'
 import { countChallenge, rankBenefits, type PlayGrade } from '../farm/rank-rules'
@@ -289,7 +289,7 @@ export function assistantLock(save: FarmSave, id: string, pack: SchedulePack | n
   if (!worksOn(save, pack, id)) return 'She’s in town today.'
   if (save.today.server === id) return 'She’s serving today.'
   if (festivalBooked(save, id)) return 'She’s booked for the festival.'
-  return day.actions - day.kitchen < 1 ? 'She has no action left tonight.' : null
+  return handActionsLeft(save, id) > 0 ? null : 'She has no work action left today.'
 }
 
 /** A cook's night chores on the Kitchen's play: each cook on the farm today (her line cooking; a spouse in her room, or a
