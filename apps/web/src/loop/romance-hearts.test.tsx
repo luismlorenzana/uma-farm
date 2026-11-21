@@ -152,6 +152,26 @@ describe('the Hearts view', () => {
 })
 
 describe('the Uma Library', () => {
+  it('distinguishes earned hearts, waiting milestones and Greater Love progress', async () => {
+    const base = farm()
+    const setLove = async (stage: SaveV4['love'][string]['stage'], level: number) => act(async () =>
+      useGame.setState({ save: { ...base, love: {
+        ...base.love, [ONE]: { ...base.love[ONE]!, stage, level },
+      }, longGame: { weddings: [], celebrations: {}, love: {
+        [ONE]: { points: 60, pajamas: 0, anniversaries: 0, memories: [] },
+      } } } }))
+    const earned = (label: string) => $$(`[aria-label="${label}"] [data-heart-fill]`).map(el => Number(el.dataset.heartFill))
+    await setLove('friendship', 4)
+    await render(<LibraryPage />, `/library?uma=${ONE}`)
+    await find('[data-library-page="relationship"]')
+    expect(earned('Friendship · F4, 4 of 10 levels earned')).toEqual([1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+    await setLove('wedding', 10)
+    expect(earned('Engaged, 10 of 10 levels earned')).toEqual(Array(10).fill(1))
+    await setLove('spouse', 2)
+    expect(earned('Spouse · S2, 2 of 5 levels earned')).toEqual([1, 1, 0, 0, 0])
+    expect(earned('60 of 120 Greater Love points')).toEqual([1, 1, 0.5, 0, 0])
+  })
+
   it('opens the relationship page, shows personal dates, and switches the shelves to cast order', async () => {
     const base = farm()
     useGame.setState({ save: {
@@ -176,6 +196,7 @@ describe('the Uma Library', () => {
     await find('[data-library-page="relationship"]')
     expect($('[data-relationship-standing]')?.textContent).toBe('Spouse · S1')
     expect($('[data-book-love]')?.textContent).toBe('True Love')
+    expect($$('[aria-label="120 of 120 Greater Love points"] [data-heart-fill="1"]')).toHaveLength(5)
     expect($('[data-talks-left="1"]')?.textContent).toBe('1 talk left')
     expect($('[data-visits-left="4"]')?.textContent).toBe('4 of 5 night visits left')
     const current = save()
