@@ -11,6 +11,7 @@ import { storyPackFrom } from '../story/pack'
 const a = '9900011'
 const b = '9900012'
 const pack = storyPackFrom({
+  umas: {}, routes: {},
   cast: { umas: [{ characterId: a }, { characterId: b }] },
   town: { professions: [{ id: 'supply', name: 'Grocer', at: 'store', off: 'wednesday', partners: [a, b] }] },
 })
