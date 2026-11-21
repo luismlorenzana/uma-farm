@@ -121,7 +121,7 @@ const GUIDE_TOPICS = {
   staff: {
     title: 'Farmhands and shifts', lead: 'At Friendship 3, invite her to work. You can start by handing over one daily job.',
     items: [
-      ['book', 'Give her an order', 'Open Ledger → Work board. Give her the rows to water, the animals to care for, or another job you want to hand off.'],
+      ['book', 'Give her an order', 'Tap Work on the farm. Assign an uncovered job to the suggested Uma, or open Add a task for a quick job or a custom order.'],
       ['time', 'Check the rota', 'She works your land on her farm shifts. Check the Calendar or her profile when deciding who will cover a day.'],
       ['night', 'Read the forecast and report', 'The forecast shows what she can do with today’s stock and time. Check the morning report for what actually got done.'],
     ],
@@ -172,7 +172,7 @@ const GUIDE_TOPICS = {
   calendar: {
     title: 'Calendar', lead: `Open the date chip to see the ${DAYS_PER_SEASON} days of a season and the plans on each date.`,
     items: [
-      ['time', 'Move around the year', 'Swipe the day columns sideways or use the arrows below them to browse all 30 dates. Tap a season tab to change seasons. The arrows by the selected date move one day.'],
+      ['time', 'Move around the year', 'Swipe the grid or use the arrows below it. Days 1–18 fill three rows of six, then days 19–30 fill the next page. Tap a season to change seasons.'],
       ['festival', 'Check a date before you commit', 'The panel shows events, birthdays, work shifts and weddings. Select Today to return to the day you are playing.'],
     ],
   },
@@ -180,7 +180,7 @@ const GUIDE_TOPICS = {
     title: 'Festivals', lead: 'Open the Festival ground before the event to see what you can prepare.',
     items: [
       ['crop', 'Prepare for the contest you picked', 'Mark a crop tile for the Flower Show, care for the animal you plan to show, or set aside exhibits for the Harvest Cup.'],
-      ['heart', 'Choose the helpers who did the work', 'Entries use actual farm evidence and goods. A recent contributor can receive credit if she qualifies. Check the entry preview before spending the event actions.'],
+      ['heart', 'Choose the helpers who did the work', 'Entries use your farm’s goods and recent work. Contests and scenes use bonus actions first, then regular actions. The calendar shows what’s left.'],
     ],
   },
   expeditions: {

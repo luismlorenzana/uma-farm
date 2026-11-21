@@ -82,7 +82,7 @@ describe('the bar', () => {
     expect($(`${bar} a[aria-label^="Gold"]`)?.getAttribute('href')).toBe('/fields?sheet=bin')
     // The day's actions left, of its ten, by End the day: nothing to tap.
     const actions = $('[data-kit="bar-actions"] > [data-bar-chip="actions"]')!
-    expect(actions.getAttribute('aria-label')).toBe('Actions left: 10 of 10')
+    expect(actions.getAttribute('aria-label')).toBe('Actions left: 10 of 10. Morning')
     expect(actions.tagName).toBe('SPAN')
     expect(actions.nextElementSibling?.getAttribute('href')).toBe('/fields?sheet=end')
     expect($('[data-kit="bar-menu"]')?.getAttribute('href')).toBe('/fields?sheet=menu')
@@ -91,9 +91,12 @@ describe('the bar', () => {
 
   it('greys the actions left once they are spent', async () => {
     const spent = farm()
-    useGame.setState({ save: { ...spent, today: { ...spent.today, actions: 10 } } })
+    useGame.setState({ save: { ...spent, today: { ...spent.today, actions: 5 } } })
     await render(onStage(<FarmBar />))
-    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 0 of 10')
+    expect($('[data-bar-chip="actions"]')?.getAttribute('data-day-part')).toBe('Afternoon')
+    await act(async () => useGame.setState({ save: { ...spent, today: { ...spent.today, actions: 10 } } }))
+    await render(onStage(<FarmBar />))
+    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 0 of 10. Night')
     expect($('[data-bar-chip="actions"] > span')?.className).toContain('text-ink-faint')
   })
 
@@ -172,7 +175,7 @@ describe('the Book', () => {
     await render(<BookPage />, '/book')
     const figures = $$('[data-money]').map((f) => [f.getAttribute('data-money'), f.querySelector('[data-figure]')?.textContent, f.querySelector('[data-line]')?.textContent])
     expect(figures).toEqual([
-      ['upkeep', '35g', 'After the bin pays'], ['food', '90g', 'Takeout · 6 meals'], ['income', '120g', 'Average of the last 5 nights'], ['left', '−50g', 'Less food, upkeep and loans'],
+      ['shipping', '0g', 'Cash now · 1,240g'], ['food', '90g', 'Takeout · 6 meals'], ['bills', '165g', 'Food + upkeep + arrears'], ['closing', '1,075g', 'From shipping and tonight’s bills'],
     ])
     expect($('[data-table]')?.textContent).toBe('3 at the table · 6 meals · 0 from the pantryKitchen ›')
     expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 spouses on the farm20g'])
@@ -185,7 +188,7 @@ describe('the Book', () => {
   it('shows a new farm\'s money: nothing to keep up, the farmer\'s takeout and no nights yet', async () => {
     useGame.setState({ save: { ...farm(), roster: {}, love: {} } })
     await render(<BookPage />, '/book')
-    expect($$('[data-money] [data-figure]').map((f) => f.textContent)).toEqual(['0g', '30g', '0g', '−30g'])
+    expect($$('[data-money] [data-figure]').map((f) => f.textContent)).toEqual(['0g', '30g', '30g', '1,210g'])
     // With tonight's meals in the pantry, no takeout.
     useGame.setState({ save: { ...farm(), roster: {}, love: {}, farm: { ...farm().farm, pantry: [{ day: farm().calendar.day, stars: 1, meals: 2 }] } } })
     await render(<BookPage />, '/book')

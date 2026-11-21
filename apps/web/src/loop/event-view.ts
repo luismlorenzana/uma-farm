@@ -84,10 +84,19 @@ export function playTitle(kind: PlayKind, length: PlayLength): string {
 export const PLAY_HOW: Readonly<Record<PlayKind, string>> = {
   cast: 'Tap as the ring meets the mark. Every cast lands a fish.',
   pick: 'Tap the starred ones, her favourites, as they show. Leave the rest.',
-  rhythm: 'Watch her beat first, then tap on it, eight times.',
+  rhythm: 'Watch her beat first, then tap once on each beat.',
   walk: 'At each fork, take the turn toward the place she loves.',
   choose: 'Pick the one she’d like best.',
 }
+/** A specific cue that helps with each minigame before the timer starts. */
+export const PLAY_TIP: Readonly<Record<PlayKind, string>> = {
+  cast: 'Let the ring close in. Aim for the moment the two rings line up.',
+  pick: 'Look for the star on an item. A wrong tap lowers your score.',
+  rhythm: 'Wait through her first four beats. Keep the same pace once it’s your turn. Extra taps cost points.',
+  walk: 'Remember her favourite place before you start. Match its picture at each fork.',
+  choose: 'Pick the gift you think she likes most. The game supplies the choices.',
+}
+
 /** The grades and what each pays, under the play: the length's own, or an evening's with her factors. */
 export function gradeLegend(length: PlayLength, own?: Readonly<Record<Grade, number>>): string {
   const pays = own ?? (length === 'event' ? EVENT_GRADE_POINTS : EVENING_GRADE_POINTS)

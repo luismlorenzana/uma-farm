@@ -31,7 +31,7 @@ import { Frame } from './ScenePlayer'
 import { spendHerEvening } from './evening-actions'
 import { cardSum, inviteBonus, kindRows, paysWords, pickRows, roleWords, type KindRow } from './evening-view'
 import { InviteChip } from './HeartMarks'
-import { PlaySheet, playSpec } from './PlaySheet'
+import { PlayHelp, PlaySheet, playSpec } from './PlaySheet'
 
 const ID = /^\d{1,12}$/
 /** What the URL asks for: the picker, or her kinds sheet. */
@@ -156,8 +156,11 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
         </label>}
         {rows.every((r) => r.locked !== null) && <p className="text-ink-soft" data-kinds-empty>Tonight’s evening is spent.</p>}
         <ul className="space-y-1.5">
-          {rows.map((row) => <li key={row.kind}><KindButton row={shared && !shared.includes(row.kind) ? { ...row, locked: 'Unavailable for this duo' } : row}
-            onPick={() => setPhase({ at: 'play', kind: row.kind, day: save.calendar.day })} /></li>)}
+          {rows.map(row => <li key={row.kind} className="relative pr-12">
+            <KindButton row={shared && !shared.includes(row.kind) ? { ...row, locked: 'Unavailable for this duo' } : row}
+              onPick={() => setPhase({ at: 'play', kind: row.kind, day: save.calendar.day })} />
+            <PlayHelp kind={row.play} className="[&>summary]:absolute [&>summary]:top-1 [&>summary]:right-0 [&>div]:mt-1" />
+          </li>)}
         </ul>
         <p className="text-[12px] text-ink-faint">One evening a day, {eveningCost()} actions. ★ her favourite kind pays ×1.5. Never failed: a miss is a Fine.</p>
       </div>

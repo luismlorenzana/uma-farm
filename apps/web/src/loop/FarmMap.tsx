@@ -132,6 +132,7 @@ function FarmHelp({ onPreview }: { onPreview?: () => void }) {
           <Link to="/guide?topic=actions" state={{ back: true }} className="flex min-h-11 items-center font-semibold text-accent-strong">Daily actions</Link>
         </HelpButton>
       </div>
+      <Link to="/book?view=work" state={{ back: true }} className="inline-flex min-h-11 items-center rounded-full border border-hairline-strong bg-panel/95 px-3 text-[13px] font-semibold shadow-2" data-farm-work>Work</Link>
       {onPreview && typeof WebGL2RenderingContext !== 'undefined' &&
         <Button variant="secondary" className="min-h-11 shadow-2" onClick={onPreview}>Field and Pond</Button>}
     </div>

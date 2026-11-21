@@ -154,6 +154,11 @@ describe('an evening from her profile', () => {
     ])
     // The stand-in's forager has no bible: her favourite is walk, ×1.5.
     expect($('[data-kind="walk"]')?.dataset.favourite).toBe('true')
+    const help = $('[data-kind="walk"]')?.closest('li')?.querySelector('[data-play-help="walk"]')
+    await click(help?.querySelector('summary') as HTMLElement)
+    expect(help?.hasAttribute('open')).toBe(true)
+    expect(help?.textContent).toContain('Match its picture at each fork')
+    expect($('[data-play]')).toBeNull()
     expect($('[data-kind="walk"] [data-pays]')?.textContent).toBe('Fine +90 · Great +150 · Perfect +225')
     expect($('[data-kind="fishing"] [data-pays]')?.textContent).toBe('Fine +60 · Great +100 · Perfect +150')
     await click($('[data-kind="walk"]'))

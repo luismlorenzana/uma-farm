@@ -61,8 +61,8 @@ export function dayHeading(day: Pick<CalendarDay, 'date' | 'day'>, today: number
   return `${name} · ${n >= 0 ? whenWords(n) : n === -1 ? 'yesterday' : `${-n} days ago`}`
 }
 
-/** A special day's event actions: today's left of the day's ("2 of 3 for events"), else the day's ("+3 for events"). */
-export function eventActionWords(day: Pick<CalendarDay, 'eventActions' | 'when'>, left: number): string | null {
+/** The bonus pool and regular actions are both available for a scene on a special day. */
+export function eventActionWords(day: Pick<CalendarDay, 'eventActions' | 'when'>, left: number, regular: number): string | null {
   if (day.eventActions === 0) return null
-  return day.when === 'today' ? `${left} of ${plural(day.eventActions, 'action')} left for events` : `+${plural(day.eventActions, 'action')} for events`
+  return day.when === 'today' ? `${left}/${day.eventActions} bonus · ${regular} regular left` : `+${plural(day.eventActions, 'bonus action')} for events`
 }

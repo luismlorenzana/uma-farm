@@ -9,7 +9,7 @@
 // Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
 // Loaded on demand.
 import {
-  atHome, awayOn, averageIncome, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, knownRestaurantRecipes, loansOwed, onFarmToday, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
+  atHome, awayOn, averageIncome, binTotal, dateDayOf, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, knownRestaurantRecipes, loansOwed, onFarmToday, placeBuilt, settleAccounts, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, worksOn, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { GuideButton } from '../guide/Guide'
@@ -19,7 +19,7 @@ import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { gold, loanWords, projectName, projectNames, upkeepLines } from '../loop/money-words'
 import { useTalents } from '../loop/talents'
-import { plural } from '../loop/words'
+import { dateWords, plural } from '../loop/words'
 import { WorkBoard } from './WorkBoard'
 import MealDishes from '../loop/MealDishes'
 
@@ -49,6 +49,7 @@ function Card({ to, title, figure, line, data }: { to: string; title: string; fi
 
 function Book({ save }: { save: FarmSave }) {
   const location = useLocation()
+  const workOnly = new URLSearchParams(location.search).get('view') === 'work'
   const rank = farmRankOf(save.farm.points)
   const goods = stockTotal(save.items)
   const pack = useStory()
@@ -61,6 +62,9 @@ function Book({ save }: { save: FarmSave }) {
     <main className="@container absolute inset-0 space-y-3 overflow-y-auto overscroll-contain p-4" data-page="book">
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Farm Book</h1>
+        <Link to={workOnly ? '/book' : '/book?view=work'} className="ml-auto inline-flex min-h-11 items-center rounded-md border border-hairline px-3 text-[13px] font-semibold">
+          {workOnly ? 'Accounts' : 'Work board'}
+        </Link>
         <GuideButton topic="staff" title="The farm’s book" label="About the book">
           <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who’s on it today and what you can build.</p>
           <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, and each spouse living on the farm. A farmhand costs her meals on her farm days.</p>
@@ -70,15 +74,15 @@ function Book({ save }: { save: FarmSave }) {
           <p>Tap a card to open its place.</p>
         </GuideButton>
       </div>
-      <Money save={save} />
+      {!workOnly && <Money save={save} />}
       <WorkBoard save={save} />
-      <ul className="grid gap-2 @lg:grid-cols-2 @3xl:grid-cols-3" data-book-cards>
+      {!workOnly && <ul className="grid gap-2 @lg:grid-cols-2 @3xl:grid-cols-3" data-book-cards>
         <Card to={withParam(location, 'sheet', 'bin')} title="Gold" figure={`${n(save.gold)}g`} line="The bin pays tonight" data="gold" />
         <Card to={withParam(location, 'sheet', 'rank')} title="Farm Rank" figure={rank} line={`${n(save.farm.points)} points`} data="rank" />
         <Card to="/warehouse" title="Goods" figure={n(goods)} line="In the Warehouse" data="goods" />
         <Card to="/hearts?view=work" title="On the farm today" figure={here} line={`${n(met)} met`} data="work" />
         <Card to="/diary" title="To build" figure={now} line="At this Farm Rank" data="projects" />
-      </ul>
+      </ul>}
     </main>
   )
 }
@@ -105,21 +109,30 @@ function Money({ save }: { save: FarmSave }) {
   const table = tableTonight(save, talents.of, pack)
   const income = averageIncome(save)
   const nights = save.farm.income.length
-  // The loans' shares come out of the night's income first, and only out of it.
-  const shares = Math.min(income, save.farm.loans.reduce((sum, loan) => sum + Math.min(loan.nightly, loan.owed), 0))
-  const left = income - table.gold - upkeep.gold - shares
+  const shipping = binTotal(save.bin, dateDayOf(save.calendar.day, save.calendar), save.farm.market)
+  const settlement = settleAccounts({ ...save, gold: save.gold + shipping }, shipping, {
+    pantry: table.pantry, spoiled: 0, fed: table.fed, takeout: table.takeout,
+  }).save
+  const projection = settlement.farm.accounts!.at(-1)!
+  const obligations = upkeep.gold + save.farm.owed + table.gold
   const parts = upkeepLines(upkeep)
   const owed = loansOwed(save)
   return (
     <section aria-label="The money" className="space-y-2 rounded-md border border-hairline bg-panel px-3 py-2 shadow-1" data-book="money">
+      <h2 className="font-display text-[18px] font-bold">Tonight’s forecast</h2>
       <div className="grid grid-cols-2 gap-3 @lg:grid-cols-4">
-        <Figure title="Upkeep a night" figure={gold(upkeep.gold)} line={upkeep.gold === 0 ? 'Nothing to keep up yet' : 'After the bin pays'} data="upkeep" />
+        <Figure title="In the bin" figure={gold(shipping)} line={`Cash now · ${gold(save.gold)}`} data="shipping" />
         <Figure title="Food tonight" figure={gold(table.gold)} line={table.takeout > 0 ? `Takeout · ${plural(table.takeout, 'meal')}` : 'From the pantry'} tone={table.takeout > 0 ? undefined : 'good'} data="food" />
-        <Figure title="Income a night" figure={gold(income)} line={nights === 0 ? 'No nights yet' : `Average of the last ${nights === 1 ? 'night' : `${Math.min(nights, INCOME_NIGHTS)} nights`}`} data="income" />
-        <Figure title="Left each night" figure={`${left >= 0 ? '+' : '−'}${gold(Math.abs(left))}`} line={shares > 0 ? 'Less food, upkeep and loans' : 'Income less food and upkeep'} tone={left >= 0 ? 'good' : 'bad'} data="left" />
+        <Figure title="Bills due" figure={gold(obligations)} line={`Food + upkeep${save.farm.owed ? ' + arrears' : ''}`} data="bills" />
+        <Figure title="Cash after bills" figure={gold(settlement.gold)} line={projection.owed ? `${gold(projection.owed)} still owed`
+          : projection.loans ? `Includes ${gold(projection.loans)} repaid` : 'From shipping and tonight’s bills'}
+          tone={projection.owed > 0 ? 'bad' : 'good'} data="closing" />
       </div>
       <div className="grid gap-x-4 gap-y-2 @lg:grid-cols-2">
-        <Nights save={save} upkeep={upkeep.gold + table.gold} />
+        <div className="space-y-2">
+          <p className="text-[13px] text-ink-soft"><strong className="text-ink">Shipping average · {gold(income)}</strong> {nights > 0 ? `over ${plural(Math.min(nights, INCOME_NIGHTS), 'night')}` : 'once the bin pays'}</p>
+          <Nights save={save} upkeep={upkeep.gold + table.gold} />
+        </div>
         <div className="space-y-1">
           {parts.length > 0 && (
             <ul className="text-[13px]" aria-label="What the upkeep counts" data-upkeep-parts>
@@ -150,6 +163,7 @@ function Money({ save }: { save: FarmSave }) {
           Short of upkeep · {gold(save.farm.owed)} owed{halfPace(save) ? ' · farmhands at half pace until it’s paid' : ' · half pace from a second short night'}
         </p>
       )}
+      <Accounts save={save} />
       <div data-loans={save.farm.loans.length}>
         <h2 className="text-micro">Loans{owed > 0 ? ` · ${gold(owed)} owed` : ''}</h2>
         {save.farm.loans.length === 0 ? (
@@ -170,6 +184,28 @@ function Money({ save }: { save: FarmSave }) {
 }
 
 /** The last seven nights' income as bars, oldest first, with tonight's upkeep and food as a line across them. */
+function Accounts({ save }: { save: FarmSave }) {
+  const entries = save.farm.accounts ?? []
+  return <section aria-label="Recent nightly accounts" className="space-y-1 border-t border-hairline pt-2" data-accounts={entries.length}>
+    <h3 className="font-semibold">Recent nights</h3>
+    {entries.length === 0 ? <p className="text-[13px] text-ink-soft">Food, upkeep and loan payments appear after your next night.</p>
+      : <table className="w-full text-left text-[12px] tabular-nums">
+        <thead><tr className="text-ink-soft">{['Night', 'Shipping', 'Food', 'Upkeep', 'Loans', 'Net'].map(label =>
+          <th key={label} scope="col" className="px-1 py-1 font-semibold">{label}</th>)}</tr></thead>
+        <tbody className="divide-y divide-hairline">{[...entries].reverse().map(entry => {
+          const delta = entry.shipping - entry.food - entry.upkeep - entry.loans
+          return <tr key={entry.day} data-account-day={entry.day}>
+            <th scope="row" className="px-1 py-2 font-medium">{dateWords(entry.day, save.calendar)}
+              {entry.owed > 0 && <span className="block text-danger">{gold(entry.owed)} owed</span>}</th>
+            <td className="px-1">{gold(entry.shipping)}</td><td className="px-1">{gold(entry.food)}</td>
+            <td className="px-1">{gold(entry.upkeep)}</td><td className="px-1">{gold(entry.loans)}</td>
+            <td className={`px-1 font-semibold ${delta < 0 ? 'text-danger' : 'text-success'}`}>{delta < 0 ? '−' : '+'}{gold(Math.abs(delta))}</td>
+          </tr>
+        })}</tbody>
+      </table>}
+  </section>
+}
+
 function Nights({ save, upkeep }: { save: FarmSave; upkeep: number }) {
   const nights = save.farm.income
   if (nights.length === 0) return <p className="text-[13px] text-ink-soft" data-nights={0}>Each night’s income shows here after the bin pays.</p>
