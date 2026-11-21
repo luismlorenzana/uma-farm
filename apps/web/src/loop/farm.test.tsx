@@ -157,7 +157,7 @@ describe('the field\'s screen', () => {
     expect($('[data-tile-line]')?.textContent).toBe('0 of 4 nights · watered: it grows tonight')
     expect($('[data-action="water"]')).toBeNull()
     expect(save().today.actions).toBe(4)
-    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 6 of 10')
+    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 6 of 10. Morning')
     expect($('[data-left]')?.textContent).toBe('6 actions left of 10')
     // Closing the panel leaves the page as it was.
     await click('[data-action="close-panel"]')
