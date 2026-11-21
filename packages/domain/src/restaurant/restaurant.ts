@@ -46,7 +46,8 @@ export function serverLock(save: FarmSave, id: string, story: PerkPack | null = 
   if (bookedForExpedition(save, id)) return 'She’s in an expedition party.'
   if (!worksOn(save, story, id)) return 'She’s in town today.'
   if (day.kitchen || save.today.server === id || festivalBooked(save, id)) return 'She’s booked today.'
-  return handActionsLeft(save, id) > 0 ? null : 'She has no work action left today.'
+  if (handActionsLeft(save, id) > 0) return null
+  return save.today.crew ? 'She has no work action left today.' : 'She has no action left tonight.'
 }
 
 function previouslyLearned(save: FarmSave, id: string, stage: number): boolean {

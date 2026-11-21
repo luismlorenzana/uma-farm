@@ -39,7 +39,7 @@ import { talentsD, type TalentOf } from './talents'
 import { growsIn, plantableIn, CROPS } from '../fields/crops'
 import { needsWater } from '../fields/plantables'
 import { plantingPlan, setFieldPlan } from '../fields/production'
-import { harvestTile, plantTile, stagesOf, tillTile, waterTile } from '../fields/fields'
+import { harvestTile, plantTile, seedsInSeason, stagesOf, tillTile, waterTile } from '../fields/fields'
 import { clearPlot, FIELD_PLOTS, plotLock } from '../fields/plots'
 import { digBuilt, stairsLock, takeStairs } from '../gathering/digs'
 import { chop, fish, forage, FULL_HAULS, reachList } from '../gathering/hauls'
@@ -1145,7 +1145,8 @@ function paceFarmAction(save: SaveV4, manualFields: boolean): SaveV4 {
     if (dry >= 0) return waterTile(save, dry)
     const plan = plantingPlan(save, 0)
     const empty = tiles.findIndex(tile => tile.ground === 'tilled' && !tile.crop)
-    if (empty >= 0 && plan?.crop && goodCount(save.items, seedId(plan.crop, plan.grade))) return plantTile(save, empty, seedId(plan.crop, plan.grade))
+    const seed = plan?.crop ? seedsInSeason(save).find(row => row.crop === plan.crop && (row.grade ?? cropBaseGrade(row.crop)) === plan.grade) : undefined
+    if (empty >= 0 && seed) return plantTile(save, empty, seed.id)
     const clear = START_CLEAR.slice(0, 3).find(index => tiles[index]?.ground === 'clear')
     if (clear !== undefined) return tillTile(save, clear)
   }

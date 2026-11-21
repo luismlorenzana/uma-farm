@@ -3663,7 +3663,7 @@ their staggered town rotas. The bot focused on one invented Uma and spent about 
 
 | Farmhands | Friendship 3, old → morning | Confession | First date | Farm Rank | Morning-shift shipping | Ending gold, old → morning | Takeout meals, old → morning |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 0 | 9 → 9 | 21 → 21 | 22 → 22 | 3 | 21,805g | 12,430g → 12,430g | 42 → 42 |
+| 0 | 10 → 10 | 23 → 23 | 24 → 24 | 2 | 8,170g | 3,180g → 3,180g | 102 → 102 |
 | 10 | 9 → 9 | 22 → 21 | 23 → 22 | 4 | 100,345g | 33,455g → 50,055g | 18 → 80 |
 | 20 | 10 → 9 | 23 → 21 | 24 → 22 | 6 | 339,640g | 67,845g → 77,725g | 109 → 131 |
 | 50 | 10 → 9 | 23 → 21 | 24 → 22 | 7 | 583,605g | 229,830g → 195,815g | 85 → 224 |
@@ -3671,7 +3671,7 @@ their staggered town rotas. The bot focused on one invented Uma and spent about 
 The morning-shift runs had zero nights in arrears. The 50-Uma run had 48 tiles wither, down from 60, while shipping
 fell from 616,490g to 583,605g. On the 10-Uma run the build policy reached enough exact base-grade milk on 51 afternoons
 under the old timing and none under the new timing. The morning-run crew had two or more of the exact higher-grade
-carp on 104–113 afternoons across the four sizes. These figures depend on build and stock choices. The run logged all
+carp on 87–110 afternoons across the four sizes. These figures depend on build and stock choices. The run logged all
 nine tracked ingredients, action use and every route milestone reached through Romance 10. A separate married run
 reached True Love on the twentieth night with five visits and one stay each night.
 

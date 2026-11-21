@@ -289,7 +289,8 @@ export function assistantLock(save: FarmSave, id: string, pack: SchedulePack | n
   if (!worksOn(save, pack, id)) return 'She’s in town today.'
   if (save.today.server === id) return 'She’s serving today.'
   if (festivalBooked(save, id)) return 'She’s booked for the festival.'
-  return handActionsLeft(save, id) > 0 ? null : 'She has no work action left today.'
+  if (handActionsLeft(save, id) > 0) return null
+  return save.today.crew ? 'She has no work action left today.' : 'She has no action left tonight.'
 }
 
 /** A cook's night chores on the Kitchen's play: each cook on the farm today (her line cooking; a spouse in her room, or a

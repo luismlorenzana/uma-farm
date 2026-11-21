@@ -144,7 +144,8 @@ export function cookLock(save: FarmSave, id: string, pack: SchedulePack | null =
   if (pack?.town?.professions?.length && !worksOn(save, pack, id)) return 'She has no farm shift today.'
   if (save.today.server === id) return 'She’s serving today.'
   if (festivalBooked(save, id)) return 'She’s booked for the festival.'
-  return handActionsLeft(save, id) > 0 ? null : 'She has no work action left today.'
+  if (handActionsLeft(save, id) > 0) return null
+  return save.today.crew ? 'She has no work action left today.' : 'She has no action left tonight.'
 }
 
 /** The held goods a recipe can take, a row a good and star, the most held first, then fewer stars, then the id: its mains
