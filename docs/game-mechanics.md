@@ -239,20 +239,19 @@ it. The days are read live from the save as it stands and the story's year, neve
 │ Spring · Year 1                 Today   │ Spring 10 · in 7 days      │
 │   1     2    [3]    4     5     6        │ Birthday                  │
 │   7     8     9   [10 ♥] 11    12        │ (face) Uma · Birthday      │
-│  13    14    15    16    17    18        │ In town                   │
-│ ‹         Days 1–18 of 30             ›  │ The Plaza   (face) +2     │
+│ ‹         Days 1–12 of 30             ›  │ The Plaza   (face) +2     │
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
 - **On top:** the date and the year; the four seasons, this one marked, each a tap away; the day's actions left, with a
   special day's event actions after them (♥+3); and Close.
 - **Year controls** move the selected season to the previous or next year. **Today** returns to the current farm date.
-- **The season’s 30 days** in a grid of three rows and six columns. Swipe or use the arrows to browse days 1–18
-  and 19–30. Tap a season tab to change seasons. The arrows next to the chosen date move one day
+- **The season’s 30 days** in a grid of two rows and six columns. Swipe or use the arrows to browse days 1–12,
+  13–24 and 25–30. Tap a season tab to change seasons. The arrows next to the chosen date move one day
   at a time, keeping that date in view. Each column shows its number, weekday and marks: a festival's trophy (and a
   ring in the season's colour), New Year's or a celebration's spark, a holiday's ribbon, a minor day's dot and a wedding
-  heart. Under them are a short label for that date and a special day's event actions (♥+3).
-  Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
+  heart. Under them are a compact label and the date’s event actions (♥+3). Full event wording appears in the day panel.
+  Each tile can show six portraits, or five and a count when more Umas have an event. Today is in the accent colour,
   and days gone by are faded.
 - **The chosen day's panel** (today when the calendar opens): its heading ("Spring 19 · in 16 days"); a special day's
   bonus actions and today’s regular actions left ("2/3 bonus · 7 regular left"); New Year's; its festival, with what
@@ -3677,8 +3676,8 @@ reached True Love on the twentieth night with five visits and one stay each nigh
 
 ### Farmhands
 
-Open **Farm → Work → Work calendar** to see 30 days per season in six columns and three rows, with a second page for
-days 19–30. Green counts show standing orders allocated to Umas on that date’s farm shift. Amber counts show the
+Open **Farm → Work → Work calendar** to see 30 days per season in six columns and two rows. Swipe or use the arrows for days 13–24 and 25–30. Green counts show assigned orders,
+with up to six portraits of Umas on those orders when the shift details are available. Amber counts show the
 priority jobs the shift still leaves open, such as dry crops, harvest, animal care, meals or another station load.
 Select a future date to see the Umas on shift, their orders, and the expected gaps using today’s crops, stock and plans.
 The forecast uses the selected date’s rota and known expeditions. Crops, purchases and meals produced on intervening

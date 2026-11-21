@@ -5,7 +5,7 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
-Town opens for free. The calendar shows six dates per row with pages for days 1–18 and 19–30. A festival date shows
+Town opens for free. Both calendars show six dates per row in two rows, across days 1–12, 13–24 and 25–30. A festival date shows
 both its bonus pool and regular actions left. The chosen day’s detail stays beside the calendar. Optional [Farm guides](../game-mechanics.md#farm-guides) show what to do on each
 screen and give examples for the farm’s main systems. Uma books open to Relationship, with today's availability,
 upcoming dates that open the calendar, and relationship ranking on the shelves.
