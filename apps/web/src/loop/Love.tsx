@@ -53,7 +53,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const praise = canPraise(save, id)
   // A talk and a gift each take an action, with her in front of you.
   const out = actionsLeft(save) === 0 || !meet.here
-  const chatBlocked = save.today.dayParts ? actionsLeft(save) === 0 || awayOn(save, id, save.calendar.day) : out
+  const chatBlocked = save.today.dayParts ? actionsLeft(save) === 0 || !!awayOn(save, id, save.calendar.day) : out
   const work = workBlock(save, id)
   const invite = !isFarmhand(save, id) && work !== `From Friendship ${FRIEND_FROM}` && work !== 'Meet her first.'
   const evening = eveningButton(save, pack, id)
