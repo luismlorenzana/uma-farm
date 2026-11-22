@@ -20,6 +20,7 @@ import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { readPairOnce } from './actions'
 import { parseReadParam } from './hearts-view'
+import { environment, environmentAt } from '../dialogue/scene-context'
 import { Frame, placeName, silent, StepView, WordingChoice } from './ScenePlayer'
 
 export default function PairPlayer({ read }: { read: string }) {
@@ -97,7 +98,7 @@ function Conversation({ save, pair, hearts, steps, place, nameOf, of, leaving, o
   // A choice is wording only: the last one to speak stays on the stage.
   const last = lastSay(shown.slice(0, cursor))
   return (
-    <Frame title={title} label={`${names}: bond ${hearts}`} scene={`pair:${pair.a}-${pair.b}:${hearts}`} onSkip={onSkip} skipping={leaving}>
+    <Frame atmosphere={environmentAt(shown, cursor, environment(save, place ?? 'plaza'))} title={title} label={`${names}: bond ${hearts}`} scene={`pair:${pair.a}-${pair.b}:${hearts}`} onSkip={onSkip} skipping={leaving}>
       {step && 'choice' in step ? (
         <WordingChoice options={step.choice} farmer={save.farmer.name} bust={last ? { ...last, name: nameOf(last.who) } : null}
           onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />

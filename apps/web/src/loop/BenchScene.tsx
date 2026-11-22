@@ -7,6 +7,7 @@ import { BENCH_SCENE, BENCH_SCENE_LINES, onDuty, type SaveV4, type Step } from '
 import { Button, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { environment } from '../dialogue/scene-context'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
@@ -36,7 +37,7 @@ export default function BenchScene({ save }: { save: SaveV4 }) {
   const step = steps[at]
   return (
     <SceneLookProvider value={{ day: save.calendar.day }}>
-      <Frame title={BENCH_SCENE_LINES.title} label={BENCH_SCENE_LINES.title} scene={BENCH_SCENE} onSkip={() => (at < steps.length ? setAt(steps.length) : finish(null))} skipping={leaving}>
+      <Frame atmosphere={environment(save, 'forge', 'morning')} title={BENCH_SCENE_LINES.title} label={BENCH_SCENE_LINES.title} scene={BENCH_SCENE} onSkip={() => (at < steps.length ? setAt(steps.length) : finish(null))} skipping={leaving}>
         {step ? (
           <StepView key={at} steps={steps} at={at} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(at + 1)} />
         ) : (

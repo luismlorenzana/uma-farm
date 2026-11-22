@@ -18,11 +18,13 @@
 // the morning after her night, her wedding day or the morning she moved in, the day you invited her, a meal cooked today
 // that she ate, a talk today); any other closes quietly. Portaled above the sheets (z-60). Loaded on demand.
 import {
-  birthdaysOf, greetingScene, illustrate, illustrationAt, mayPlayLife, mealScene, sceneSteps, todaysTalk, YOU, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step,
+  birthdaysOf, townDay, greetingScene, illustrate, illustrationAt, mayPlayLife, mealScene, sceneSteps, todaysTalk, YOU, type FarmSave, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step,
   type StoryOutfit, type StoryPack,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { EnvironmentProvider, useEnvironment } from '../dialogue/SceneBackground'
+import { environment, environmentAt, type SceneEnvironment } from '../dialogue/scene-context'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
@@ -37,22 +39,18 @@ import { outfitFor, useStory } from '../story/story'
 import { Frame, silent, WordingChoice } from './ScenePlayer'
 import { talentTable } from './talents'
 
-/** A night's backdrop: a lamp-lit room after dark (the wedding night). */
-export const NIGHT_BACKDROP = <span aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #1d2742 0%, #3b3358 65%, #6b4a5e 100%)' }} data-backdrop="night" />
-/** The morning's backdrop: soft light through the curtains (the night's companion's greeting). */
-export const MORNING_BACKDROP = <span aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #f6e3c8 0%, #f3cfc0 60%, #d9b3c4 100%)' }} data-backdrop="morning" />
-
 /**
  * A short scene's steps, played: each line with the speaker's bust; she (`id`) stays on the stage through narration with
  * her last line's face; a choice is wording only, its `then` spliced in. `onDone` at its end, with the steps as played.
  */
-export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null, illustrated = null, onDone, data = {} }: {
-  id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; backdrop?: ReactNode; onDone: (played: readonly Step[]) => void
+export function LifeScene({ id, steps: written, nameOf, farmer, atmosphere, illustrated = null, onDone, data = {} }: {
+  id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; atmosphere?: SceneEnvironment; onDone: (played: readonly Step[]) => void
   /** Which of her illustrated scenes this is (the wedding night, a night in, the morning greeting): her illustrations by
    * the default mapping, unless the story names its own. */
   illustrated?: IllustratedScene | null
   data?: { [key: `data-${string}`]: string | number | boolean | undefined }
 }) {
+  const inherited = useEnvironment()
   const [picks, setPicks] = useState<number[]>([])
   const [at, setAt] = useState(0)
   const steps = useMemo(() => illustrate(illustrated, written), [written, illustrated])
@@ -73,13 +71,14 @@ export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null,
   const bust = speaker ?? id
   const emote = speaker !== null && 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
   const next = nextSay(shown, cursor + 1)
+  const current = environmentAt(shown, cursor, atmosphere ?? inherited)
   if ('choice' in step) {
-    return <>{art}<WordingChoice options={step.choice} farmer={farmer} bust={{ who: bust, name: nameOf(bust), emote }} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} /></>
+    return <EnvironmentProvider value={current}>{art}<WordingChoice options={step.choice} farmer={farmer} bust={{ who: bust, name: nameOf(bust), emote }} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} /></EnvironmentProvider>
   }
   return (
     <>
       {art}
-      <Stage bust={{ who: bust, name: nameOf(bust), emote }} backdrop={backdrop} next={next?.who === YOU ? null : next} onTap={() => setAt(cursor + 1)} data={data}>
+      <Stage bust={{ who: bust, name: nameOf(bust), emote }} environment={current} next={next?.who === YOU ? null : next} onTap={() => setAt(cursor + 1)} data={data}>
         <Line key={cursor} step={step} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
       </Stage>
     </>
@@ -122,6 +121,14 @@ export async function stepsForLife(kind: LifeKind, save: SaveV4, story: StoryPac
   }
 }
 
+export function lifeEnvironment(save: FarmSave, kind: LifeKind | 'wedding-night', day: number, talkAt?: string | null) {
+  if (kind === 'morning') return environment(save, 'bedroom', 'morning', day)
+  if (kind === 'wedding-night') return environment(save, 'bedroom', 'night', day)
+  if (kind === 'moving-in') return environment(save, 'home-threshold', 'morning', day)
+  if (kind === 'breakfast' || kind === 'dinner') return environment(save, 'home-table', kind === 'breakfast' ? 'morning' : 'night', day)
+  return environment(save, kind === 'talk' ? talkAt ?? 'fields' : 'gate', undefined, day)
+}
+
 export default function LifePlayer({ value }: { value: string }) {
   const save = useLoopSave()
   const story = useStory()
@@ -158,12 +165,15 @@ function Played({ kind, id, save, story, master, onClose }: { kind: LifeKind; id
   // A small talk's `you` is the farmer, by name.
   const nameOf = (who: string) => (who === YOU ? save.farmer.name || 'You' : names(who))
   const title = `${TITLES[kind]} · ${nameOf(id)}`
+  const location = useLocation()
+  const talkAt = kind === 'talk' ? (location.pathname === '/town' ? townDay(save, story).where.get(id) ?? 'plaza' : 'fields') : null
+  const atmosphere = lifeEnvironment(save, kind, save.calendar.day, talkAt)
   return (
     <Frame title={title} label={title} scene={`life:${kind}:${id}`} onSkip={onClose} skipping={false}>
       {scene
         ? (
           <SceneLookProvider value={{ own: scene.outfit, moments: MOMENTS[kind], day: save.calendar.day, leads: [id] }}>
-            <LifeScene id={id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={kind === 'morning' ? MORNING_BACKDROP : null} onDone={() => {
+            <LifeScene id={id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} atmosphere={atmosphere} onDone={() => {
               const bible = story.bibles.get(id)
               if (kind === 'moving-in' || kind === 'invited-to-work' || (kind === 'morning' && bible?.mornings?.length)
                 || ((kind === 'breakfast' || kind === 'dinner') && bible?.meals?.[kind]?.length)) {

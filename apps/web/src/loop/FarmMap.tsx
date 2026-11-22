@@ -27,6 +27,7 @@ import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { dismissSummary } from './actions'
+import { RingArt } from '../items/RingArt'
 import { BuildingArt, FieldSignArt, Trees, Water } from './farm-art'
 import { CELL, FIELD, lockOf, MAP_ROWS, mapLots, MIN_CELL, placeLink, POND, WOODS, type Area } from './farm-map'
 import { countsWords } from './farm-view'
@@ -396,6 +397,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
               {part.lines.map((line) => (
                 <li key={line.key}>
                   <Link to={line.to} state={{ back: true }} className="flex min-h-11 items-center gap-2 px-3 text-[15px]" data-line={line.key}>
+                    {line.ring && <RingArt id={line.ring} size={56} />}
                     <span className="min-w-0 flex-1">{line.text}</span>
                     {line.tag && (
                       <span className={`shrink-0 rounded-full px-1.5 text-[11px] font-semibold ${line.warn ? 'bg-danger/15 text-danger' : 'bg-success/15 text-success'}`} data-tag data-warn={line.warn || undefined}>

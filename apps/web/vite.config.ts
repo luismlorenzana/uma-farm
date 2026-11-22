@@ -79,6 +79,12 @@ export default defineConfig(({ mode }) => {
           navigateFallbackDenylist: [/^\/api\//, /^\/__\//],
           runtimeCaching: [
             {
+              // Conversation plates and ring details are fetched only when their scene opens.
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/assets\/[\w-]+\.webp$/.test(url.pathname),
+              handler: 'CacheFirst',
+              options: { cacheName: 'farm-scene-art', expiration: { maxEntries: 70, maxAgeSeconds: 30 * 86400 } },
+            },
+            {
               urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/assets\/field-pond-renderer-[\w-]+\.js$/.test(url.pathname),
               handler: 'CacheFirst',
               options: { cacheName: 'farm-look-renderer', expiration: { maxEntries: 2 } },

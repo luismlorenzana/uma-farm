@@ -25,6 +25,7 @@ import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
 import { playOccasionOnce } from './event-actions'
+import { environment, environmentAt } from '../dialogue/scene-context'
 import { Frame, placeName, silent, WordingChoice } from './ScenePlayer'
 
 export default function OccasionPlayer({ id }: { id: string }) {
@@ -104,7 +105,7 @@ function Scene({ save, id, title, steps, nameOf, leaving, onDone }: {
   const who = step && 'say' in step ? step.say : id
   const emote = step && 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
   return (
-    <Frame title={place ? `${title} · ${placeName(place)}` : title} label={title} scene={`occasion:${id}`} onSkip={onDone} skipping={leaving}>
+    <Frame atmosphere={environmentAt(shown, cursor, environment(save, 'festival'))} title={place ? `${title} · ${placeName(place)}` : title} label={title} scene={`occasion:${id}`} onSkip={onDone} skipping={leaving}>
       {/* Her illustration where the story names one. */}
       <ArtCue owner={id} ask={step ? illustrationAt(shown, cursor) : null} steps={steps} />
       {step && 'choice' in step ? (

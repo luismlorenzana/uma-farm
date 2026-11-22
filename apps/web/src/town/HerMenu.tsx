@@ -21,6 +21,7 @@ import {
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
+import { environment } from '../dialogue/scene-context'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { Line } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
@@ -146,7 +147,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
     })
   }
   return (
-    <Stage bust={{ who: id, name, emote: shown.emote }} data={{ 'data-her': id, 'data-met': met || undefined }}>
+    <Stage environment={environment(save, at ?? (onFarm ? 'fields' : 'plaza'))} bust={{ who: id, name, emote: shown.emote }} data={{ 'data-her': id, 'data-met': met || undefined }}>
       <div className="flex shrink-0 items-baseline gap-2">
         {/* Her name is the line box's speaker; with no line, it's here. */}
         {!(at || onFarm) && <p className="font-display min-w-0 truncate text-[18px] font-bold" data-her-name>{name}</p>}
@@ -210,7 +211,7 @@ function Keeper({ id, pack, save, nameOf, shop }: { id: string; pack: StoryPack;
   const menu = shop ? postMenu(shop) : []
   const name = nameOf(id)
   return (
-    <Stage bust={{ who: id, name, emote: 'happy' }} data={{ 'data-keeper-menu': id }}>
+    <Stage environment={environment(save, shop ?? 'plaza')} bust={{ who: id, name, emote: 'happy' }} data={{ 'data-keeper-menu': id }}>
       <p className="font-display text-[18px] font-bold" data-her-name>{name}</p>
       <p className="text-[14px]" data-keeper-role>
         <span className="font-semibold">{person.role ? CAST[person.role].role : 'Of the town'}</span>

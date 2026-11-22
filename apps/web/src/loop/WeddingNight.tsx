@@ -14,7 +14,7 @@ import { SceneLookProvider } from '../dialogue/Bust'
 import { MasterGate } from '../master/MasterGate'
 import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
-import { LifeScene, NIGHT_BACKDROP } from './LifeScene'
+import { LifeScene, lifeEnvironment } from './LifeScene'
 
 /** Her life's event after the wedding: the wedding night, or moving in. */
 export type AfterWedding = 'wedding-night' | 'moving-in'
@@ -42,7 +42,7 @@ export function WeddingNight({ save, id, event: which = 'wedding-night', onDone 
             void import('./actions').then(actions => actions.readLifeOnce(id, which, save.calendar.day)).catch(() => undefined)
             onDone()
           }} illustrated={which === 'wedding-night' ? 'wedding-night' : null}
-            backdrop={which === 'wedding-night' ? NIGHT_BACKDROP : null} data={which === 'wedding-night' ? { 'data-wedding-night': true } : { 'data-moving-in': true }} />
+            atmosphere={lifeEnvironment(save, which, save.calendar.day)} data={which === 'wedding-night' ? { 'data-wedding-night': true } : { 'data-moving-in': true }} />
         )}
       </MasterGate>
     </SceneLookProvider>

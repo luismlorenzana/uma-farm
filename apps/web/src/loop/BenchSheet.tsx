@@ -6,7 +6,7 @@ import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { ItemIcon } from '../items/ItemIcon'
+import { RingArt } from '../items/RingArt'
 import { useLoopSave } from '../save/game'
 import { changeHomestead } from './homestead-actions'
 import { CreditDetails } from './CreditPurchase'
@@ -55,7 +55,7 @@ function Bench({ save }: { save: FarmSave }) {
     </label>
     <section className="space-y-2 rounded-md border border-hairline p-3">
       <div className="flex items-center gap-2">
-        <ItemIcon id={ringId(grade)} size={36} />
+        <RingArt id={ringId(grade)} size={88} />
         <div>
           <p className="font-semibold">{recipe.name} · {gold(recipe.gold)}</p>
           <p className="text-[13px] text-ink-soft">Ready {ready(save.calendar.day + recipe.days)} · +{grade}% at her line</p>

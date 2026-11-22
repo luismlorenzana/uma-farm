@@ -36,6 +36,9 @@ import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
 import { finishArrivalScene, readSceneOnce, seeIllustrationOnce } from './actions'
 
+import { EnvironmentProvider, useEnvironment } from '../dialogue/SceneBackground'
+import { environment, environmentAt, type SceneEnvironment } from '../dialogue/scene-context'
+
 const BenchScene = lazy(() => import('./BenchScene'))
 
 export default function ScenePlayer({ scene }: { scene: SceneId }) {
@@ -49,14 +52,17 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
 
 /** The sheet's frame: the title line, Skip, and what plays. The pair conversations and the household's scenes play in
  * it too. */
-export function Frame({ title, label, scene, onSkip, skipping, children }: { title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
+export function Frame({ title, label, scene, onSkip, skipping, atmosphere, children }: { atmosphere?: SceneEnvironment; title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
+  const inherited = useEnvironment()
   return (
+    <EnvironmentProvider value={atmosphere ?? inherited}>
     <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
       <ArtHost onSeen={seeIllustrationOnce}>
         <FrameHeader title={title} onSkip={onSkip} skipping={skipping} />
         {children}
       </ArtHost>
     </div>
+    </EnvironmentProvider>
   )
 }
 
@@ -100,7 +106,7 @@ function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
   const step = lines ? shown[cursor] : undefined
   return (
     <SceneLookProvider value={{ day: save.calendar.day }}>
-      <Frame title={title} label="The opening" scene={scene} onSkip={finish} skipping={leaving}>
+      <Frame atmosphere={environmentAt(shown, cursor, environment(save, 'gate', 'morning'))} title={title} label="The opening" scene={scene} onSkip={finish} skipping={leaving}>
         {lines && !step ? <Done onDone={finish} /> : step ? (
           <MasterGate>{(master) => (
             <StepView key={cursor} steps={shown} at={cursor} nameOf={namer(master, story)} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} />
@@ -192,7 +198,7 @@ function Arrival({ save, id, steps: written, master }: { save: SaveV4; id: strin
   // At her choice and at the end, she stays on the stage with her last line's face.
   const herLast = lastSay(shown.slice(0, cursor), id)?.emote ?? null
   return (
-    <Frame title={title} label={`Meeting ${name}`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving}>
+    <Frame atmosphere={environmentAt(shown, cursor, environment(save, atHome(save, id) ? 'gate' : 'plaza'))} title={title} label={`Meeting ${name}`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving}>
       {/* Her illustration while the scene plays; down at its end, where she smiles. */}
       <ArtCue owner={id} ask={done ? null : illustrationAt(shown, cursor)} steps={steps} />
       {done ? <Welcome onDone={finish} id={id} name={name} points={earned} home={atHome(save, id)} />

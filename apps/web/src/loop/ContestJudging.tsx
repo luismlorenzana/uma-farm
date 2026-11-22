@@ -5,6 +5,7 @@
 import { contestBeats, dishName, onDuty, type PlayResult, type Step } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
+import { environment } from '../dialogue/scene-context'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
@@ -32,7 +33,7 @@ export default function ContestJudging({ result, name, onDone }: { result: PlayR
   const dish = result.dishes[0]
   return (
     <SceneLookProvider value={{ day }}>
-      <Frame title={`${name} · The judging`} label={`${name}: the judging`} scene="scene:contest" onSkip={() => (at < steps.length ? setAt(steps.length) : onDone())} skipping={false}>
+      <Frame atmosphere={save ? environment(save, 'festival') : undefined} title={`${name} · The judging`} label={`${name}: the judging`} scene="scene:contest" onSkip={() => (at < steps.length ? setAt(steps.length) : onDone())} skipping={false}>
         {step ? (
           <StepView key={at} steps={steps} at={at} nameOf={nameOf} farmer={save?.farmer.name ?? ''} onNext={() => setAt(at + 1)} />
         ) : (
