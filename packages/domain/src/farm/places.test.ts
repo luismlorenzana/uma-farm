@@ -16,7 +16,9 @@ describe('the farm map', () => {
     for (const p of MAP_PLACES) expect(p.col, p.id).toBe(p.id === 'town' ? 1 : MAP_PLACES.filter((q) => q.row === p.row).indexOf(p))
     expect(TOWN_FIRST_ROW).toBe(8)
     expect(new Set(MAP_PLACES.map((p) => p.frame)).size).toBe(MAP_PLACES.length)
-    expect(MAP_PLACES.filter((p) => p.borrowed).map((p) => p.id)).toEqual(['coop', 'board', 'dock', 'expeditions', 'town'])
+    expect(FARM_PLACES.filter(p => p.borrowed)).toEqual([])
+    const original = ['coop', 'board', 'dock', 'expeditions', 'town', 'boat']
+    for (const id of original) expect(farmPlace(id)?.frame).toBe('building/' + id)
     for (const id of LOOP_WORK_PLACES) expect(farmPlace(id), id).toBeDefined()
   })
 

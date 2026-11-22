@@ -34,6 +34,7 @@ describe('icon frames', () => {
       ...RING_IDS, ...restaurant, 'strawberry-jam', 'preserved-egg', 'carrot-pickles',
       ...TOOL_IDS.flatMap(id => [1,2,3,4,5].map(tier => `tool/${id}/tier-${tier}`)),
       ...HEIRLOOM_IDS.map(id => `heirloom/${id}`),
+      ...['coop', 'board', 'dock', 'expeditions', 'town', 'boat'].map(id => 'building/' + id),
     ]
     const frames = authored.map(id => iconFrame(id))
     expect(frames.every(frame => frame?.sheet === 'farm-items')).toBe(true)
