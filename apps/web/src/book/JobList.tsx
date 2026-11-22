@@ -17,7 +17,7 @@ function JobLine({ row, nameOf, link }: { row: WorkRow; nameOf: (id: string) => 
       {row.label}<span aria-hidden>›</span>
     </Link> : <strong className="block">{row.label}</strong>}
     {assigned && <p className={worked.length || scheduled.length ? 'rounded bg-emerald-100 px-1 text-emerald-900' : 'text-ink-soft'}>{assigned}</p>}
-    <p className={need && !lock ? 'text-amber-900' : 'text-ink-soft'}>{status === 'No work ready' && row.idle ? row.idle : status}</p>
+    <p className={need && !lock ? 'w-fit rounded bg-amber-100 px-1 text-amber-950' : 'text-ink-soft'}>{status === 'No work ready' && row.idle ? row.idle : status}</p>
     {need && <p className="text-ink-soft">{need.need}</p>}
   </li>
 }

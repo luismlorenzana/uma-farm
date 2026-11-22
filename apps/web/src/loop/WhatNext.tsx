@@ -168,8 +168,8 @@ function StarterSteps({ save }: { save: FarmSave }) {
         <GoalBar label={goal.label} have={goal.have} target={goal.target} />
         <p className="text-[12px] text-ink-soft">{goal.detail}</p>
         <div className="flex flex-wrap gap-x-3 text-[13px]">
-          <Action to={goal.to}>{goal.id === 'ship' ? 'Open bin' : goal.id === 'fish' ? 'Visit Pond' : goal.id === 'chop' || goal.id === 'forage' ? 'Visit Woods' : 'Open Fields'}</Action>
-          <Action to={orderLink(goal.key)}>Crew order</Action>
+          <Action to={goal.to}>{goal.place}</Action>
+          <Action to={orderLink(goal.key)}>Assign crew</Action>
         </div>
       </li>)}
     </ul>}
@@ -291,7 +291,6 @@ function Focus({ save }: { save: FarmSave }) {
       <Action to="/book?view=work">Assign production to your crew</Action>
       {(save.buildings.forge ?? 0) > 0 && <ForgeGoals save={save} />}
     </section>
-    <RanchAndHousing save={save} />
     <WeddingPath save={save} />
   </div>
 }
@@ -355,15 +354,16 @@ function FarmPath({ save }: { save: FarmSave }) {
 
 export default function WhatNext({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
-  const [view, setView] = useState<'today' | 'path'>('today')
+  const [view, setView] = useState<'today' | 'ranch' | 'path'>('today')
   if (!save) return null
   return <Sheet open onClose={onClose} title="What Next?" label="What Next?" >
     <div className="space-y-3 pb-2">
-      <div className="flex gap-2" role="group" aria-label="Goal view">
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Goal view">
         <Button size="md" variant={view === 'today' ? 'primary' : 'secondary'} aria-pressed={view === 'today'} onClick={() => setView('today')}>Focus now</Button>
+        <Button size="md" variant={view === 'ranch' ? 'primary' : 'secondary'} aria-pressed={view === 'ranch'} onClick={() => setView('ranch')}>Ranch &amp; homes</Button>
         <Button size="md" variant={view === 'path' ? 'primary' : 'secondary'} aria-pressed={view === 'path'} onClick={() => setView('path')}>Farm path</Button>
       </div>
-      {view === 'today' ? <Focus save={save} /> : <FarmPath save={save} />}
+      {view === 'today' ? <Focus save={save} /> : view === 'ranch' ? <RanchAndHousing save={save} /> : <FarmPath save={save} />}
     </div>
   </Sheet>
 }

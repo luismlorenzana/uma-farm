@@ -4385,7 +4385,7 @@ progress. These targets are guidance and have no extra reward or unlock requirem
 and its crew order. The rest of **Focus now** shows remaining work after the current orders, Farm Rank progress,
 material and gold shortages, and the first wedding path.
 
-**Animals and houses** shows the Coop and Barn’s costs, the rancher’s purchase prices, feed stock, room capacity,
+**Ranch & homes** shows the Coop and Barn’s costs, the rancher’s purchase prices, feed stock, room capacity,
 and the next house and extension. The Coop and its first Chicken open at Rank 2. The Barn opens at Rank 3. House 1
 opens at the first wedding for 8,000g. Houses and extensions cost gold, and the Farmhouse has two rooms from day one.
 

@@ -22,7 +22,7 @@ import { JobList } from './JobList'
 const LAST_PAGE = Math.ceil(DAYS_PER_SEASON / CALENDAR_PAGE_SIZE) - 1
 const coveredTone = 'bg-emerald-100 text-emerald-900'
 const missingTone = 'bg-amber-100 text-amber-950'
-const neutral = 'text-ink-faint'
+const neutral = 'opacity-80'
 const total = (counts: WorkTotals | undefined): number => Object.values(counts ?? {}).reduce((sum, n) => sum + n, 0)
 
 function workOn(save: FarmSave, day: number, pack: StoryPack | null, talents: TalentOf) {
@@ -147,6 +147,8 @@ function WorkDetails({ record }: { record: WorkDayRecord }) {
   const words = (rows: WorkTotals) => Object.entries(rows).map(([task, count]) => count + ' ' + TASK_NAMES[task as keyof typeof TASK_NAMES]).join(' · ')
   return <div className="my-2 space-y-1">
     <div className={'rounded px-1.5 py-1 ' + coveredTone}><strong>✓ {record.allocated} allocated</strong>{total(record.covered) > 0 && <p>{words(record.covered)} worked</p>}</div>
-    <div className={'rounded px-1.5 py-1 ' + missingTone}><strong>! {total(record.missing)} missing</strong>{total(record.missing) > 0 && <p>{words(record.missing)}</p>}</div>
+    <div className={'rounded px-1.5 py-1 ' + (total(record.missing) ? missingTone : 'bg-sunken text-ink-soft')}>
+      <strong>{total(record.missing)} missing</strong>{total(record.missing) > 0 && <p>{words(record.missing)}</p>}
+    </div>
   </div>
 }

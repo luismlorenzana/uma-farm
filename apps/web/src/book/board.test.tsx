@@ -166,6 +166,7 @@ describe('the work board in the Book', () => {
     expect($('[data-next-goal="plant"] progress')?.getAttribute('value')).toBe('0')
     expect($('[data-next-goal="forage"] a[href*="order="]')?.getAttribute('href')).toBe('/book?view=work&order=forage%3Awoods')
     expect($('[data-next-goal="fish"]')?.textContent).toContain('Catch 4 fish')
+    await click($$('button').find(button => button.textContent === 'Ranch & homes') ?? null)
     expect($('[data-next-animal="chicken"]')?.textContent).toContain('Chicken · 500g')
     expect($('[data-next-housing]')?.textContent).toContain('House 1 · 8,000g · Opens with your first wedding')
   })
