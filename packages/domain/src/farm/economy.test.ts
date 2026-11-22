@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { goToTown } from './actions'
 import { buildLock } from './builds'
 import {
-  atPace, averageIncome, borrowFor, buildOrders, halfPace, loanClears, loanFee, loanLimit, loanLockWords, loanNightly, loanSlots, repayLoan, settleAccounts,
+  atPace, averageIncome, borrowFor, buildOrders, halfPace, loanLimit, loanLockWords, loanNightly, loanSlots, repayLoan, settleAccounts,
   UPKEEP_BUILDING, UPKEEP_RESIDENT, upkeepOf,
 } from './economy'
 import { placeBuilt } from './places'
@@ -66,7 +66,7 @@ describe('upkeep', () => {
     expect(sold).toBeGreaterThan(0)
     expect(morning.gold).toBe(100 + sold - 35)
     expect(morning.farm.income).toEqual([sold])
-    expect(morning.farm.accounts).toEqual([{ day: 1, shipping: sold, food: 0, upkeep: 35, loans: 0, owed: 0 }])
+    expect(morning.farm.accounts).toEqual([{ day: 1, shipping: sold, food: 0, upkeep: 35, loans: 0, owed: 0, repaymentBudget: Math.floor((sold - 35) / 5) }])
     expect(parseSaveV6(json({ ...morning, summary: null })).farm.accounts).toEqual(morning.farm.accounts)
     expect(morning.summary!.money).toEqual([ate(save), { kind: 'upkeep', paid: 35, due: 35 }])
     expect(averageIncome(morning)).toBe(sold)
@@ -133,37 +133,36 @@ describe('short of upkeep', () => {
 })
 
 describe('loans at the mayor\'s office', () => {
-  it('lends toward a build in town: what it\'s short, rounded up to 100g, with a 10% fee, and orders it at once', () => {
+  it('finances the exact shortfall in town and orders the build at once', () => {
     const save = farm(640, logs(20))
     expect(() => borrowFor(save, 'mill')).toThrow('The mayor’s office is in town.')
     const town = goToTown(save)
     const [mill] = buildOrders(town)
-    expect(mill).toMatchObject({ project: 'mill', cost: 1000, own: 'Need 360g more', borrow: 400, lock: null })
+    expect(mill).toMatchObject({ project: 'mill', cost: 1000, own: 'Need 360g more', borrow: 360, lock: null })
     const lent = borrowFor(town, 'mill')
-    expect(lent.gold).toBe(40)
+    expect(lent.gold).toBe(0)
     expect(lent.farm.builds).toEqual(['mill'])
     expect(lent.items['pine-log']).toBeUndefined()
-    expect(lent.farm.loans).toEqual([{ for: 'mill', day: 1, lent: 400, fee: 40, owed: 440, nightly: 45 }])
+    expect(lent.farm.loans).toMatchObject([{ for: 'mill', day: 1, lent: 360, fee: 40, owed: 400, nightly: 0, credit: { kind: 'project' } }])
     expect(lent.today.actions).toBe(save.today.actions)
     expect(lent.account).toEqual(save.account)
-    expect(loanClears(lent, lent.farm.loans[0]!)).toEqual({ nights: 10, day: 11 })
     expect(parseSaveV6(json(lent))).toEqual(lent)
   })
 
   it('builds the Mill early and clears the loan from later nights’ income', () => {
-    let save = endDay(borrowFor(goToTown(farm(0, { ...logs(20), carp: [60, 0, 0, 0, 0] })), 'mill'), {}, LATER)
+    let save = endDay(borrowFor(goToTown(farm(0, { ...logs(20), carp: [600, 0, 0, 0, 0] })), 'mill'), {}, LATER)
     expect(placeBuilt(save, 'mill')).toBe(true)
-    expect(save.farm.loans[0]).toMatchObject({ lent: 1000, fee: 100, owed: 1100, nightly: 110 })
+    expect(save.farm.loans[0]).toMatchObject({ lent: 1000, fee: 100, owed: 1100, nightly: 0 })
     // No sales: nothing repaid, and the Mill's upkeep (15g) is short on 0g.
-    expect(save.summary!.money).toEqual([{ kind: 'loan', for: 'mill', paid: 0, left: 1100 }, { kind: 'takeout', meals: 2, paid: 0, due: 30 }, { kind: 'short', owed: 30, nights: 1 }])
+    expect(save.summary!.money).toEqual([{ kind: 'loan', for: 'mill', paid: 0, left: 1100, title: 'Mill' }, { kind: 'takeout', meals: 2, paid: 0, due: 30 }, { kind: 'short', owed: 30, nights: 1 }])
     save = night(save)
     expect(save.summary!.money).toEqual([
-      { kind: 'loan', for: 'mill', paid: 0, left: 1100 }, ate(save), { kind: 'upkeep', paid: 0, due: 45 }, { kind: 'short', owed: 45, nights: 2 },
+      { kind: 'loan', for: 'mill', paid: 0, left: 1100, title: 'Mill' }, ate(save), { kind: 'upkeep', paid: 0, due: 45 }, { kind: 'short', owed: 45, nights: 2 },
     ])
     // Shipping covers the upkeep owed and pays down the loan.
     let nights = 0
-    while (save.farm.loans.length > 0 && nights < 40) {
-      save = night(ship(save, 'carp', 1, 4))
+    while (save.farm.loans.length > 0 && nights < 120) {
+      save = night(ship(save, 'carp', 1, 8))
       nights++
     }
     expect(save.farm.loans).toEqual([])
@@ -191,29 +190,14 @@ describe('loans at the mayor\'s office', () => {
     expect(save.farm).toMatchObject({ owed: 0, short: 0 })
   })
 
-  it('holds one loan at a time, two from Farm Rank 4, and lends up to the Farm Rank\'s limit', () => {
-    expect([loanLimit(farm()), loanSlots(farm())]).toEqual([1000, 1])
-    expect([loanLimit(farm(0, {}, 950)), loanSlots(farm(0, {}, 950))]).toEqual([8000, 2])
-    expect([loanFee(400), loanFee(1050), loanNightly(440), loanNightly(1100)]).toEqual([40, 110, 45, 110])
-    // At Farm Rank 3: the Sawmill on a loan, then the Smokehouse waits for it.
-    const fr3 = goToTown({ ...farm(0, { ...logs(70), carp: [20, 0, 0, 0, 0] }, 250), buildings: { dorm: 1, mill: 1 } })
-    const one = borrowFor(fr3, 'sawmill')
-    expect(one.farm.loans).toHaveLength(1)
-    const smoke = buildOrders(one).find((o) => o.project === 'smokehouse')!
-    expect(loanLockWords(smoke.lock)).toBe('One loan at a time: this one first.')
-    expect(() => borrowFor(one, 'smokehouse')).toThrow('One loan at a time: this one first.')
-    // Past the limit: House 1's 8,000g at Farm Rank 3 (4,000g).
-    const wed = { ...fr3, roster: { 9001: newRosterUma(1) }, love: { 9001: { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1 } } }
-    expect(() => borrowFor(wed, 'house:1', 'Rose Cottage')).toThrow('The office lends up to 4,000g at Farm Rank 3.')
-    // With the gold there, build it yourself; a build's own lock stands.
+  it('offers three slots and 100,000g of credit from the start while retaining project gates', () => {
+    expect([loanLimit(farm()), loanSlots(farm())]).toEqual([100_000, 3])
+    expect([loanNightly(440), loanNightly(1100)]).toEqual([45, 110])
     expect(() => borrowFor(goToTown(farm(1000, logs(20))), 'mill')).toThrow('You have the gold: build it.')
-    expect(() => borrowFor(goToTown(farm(0)), 'mill')).toThrow('Need 20 logs more.')
     expect(() => borrowFor(goToTown(farm(0)), 'sawmill')).toThrow('Opens at Farm Rank 3.')
-    // From Farm Rank 4, two at once.
-    const fr4 = goToTown({ ...farm(0, { ...logs(70), carp: [20, 0, 0, 0, 0] }, 950), buildings: { dorm: 1, mill: 1 } })
-    const two = borrowFor(borrowFor(fr4, 'sawmill'), 'smokehouse')
-    expect(two.farm.loans.map((l) => l.for)).toEqual(['sawmill', 'smokehouse'])
-    expect(two.farm.builds).toEqual(['sawmill', 'smokehouse'])
+    const fr3 = goToTown({ ...farm(0, { ...logs(70), carp: [20, 0, 0, 0, 0] }, 250), buildings: { dorm: 1, mill: 1 } })
+    const two = borrowFor(borrowFor(fr3, 'sawmill'), 'smokehouse')
+    expect(two.farm.loans.map(loan => loan.for)).toEqual(['sawmill', 'smokehouse'])
     expect(buildLock(two, 'smokehouse')).toEqual({ by: 'tonight' })
   })
 
@@ -224,14 +208,13 @@ describe('loans at the mayor\'s office', () => {
     const built = borrowFor(save, 'house:1', 'Rose Cottage')
     expect(built.homestead.houses.map((h) => h.name)).toEqual(['Farmhouse', 'Rose Cottage'])
     expect(built.gold).toBe(0)
-    expect(built.farm.loans).toEqual([{ for: 'house:1', day: 1, lent: 5000, fee: 500, owed: 5500, nightly: 550 }])
+    expect(built.farm.loans).toMatchObject([{ for: 'house:1', day: 1, lent: 5000, fee: 500, owed: 5500, nightly: 0, credit: { kind: 'project' } }])
     expect(parseSaveV6(json(built))).toEqual(built)
   })
 
   it('offers no Dorm level: the Dorm is retired; a loan a save still holds toward one is repaid as any other', () => {
     const save = goToTown(farm(300))
-    // Day 1: the Mill (short of logs, so no loan yet), and nothing else.
-    expect(buildOrders(save).map((o) => [o.project, o.kind, o.borrow, loanLockWords(o.lock)])).toEqual([['mill', 'place', 0, 'Need 20 logs more.']])
+    expect(buildOrders(save).map((o) => [o.project, o.kind, o.borrow, loanLockWords(o.lock)])).toEqual([['mill', 'place', 1700, null]])
     expect(() => borrowFor(save, 'dorm:2')).toThrow('The Dorm is retired.')
     const held = { ...save, gold: 1000, farm: { ...save.farm, loans: [{ for: 'dorm:2', day: 1, lent: 700, fee: 70, owed: 770, nightly: 80 }] } }
     expect(parseSaveV6(json(held))).toEqual(held)
@@ -246,7 +229,7 @@ describe('loans at the mayor\'s office', () => {
     const rich = { ...lent, gold: 1000 }
     expect(() => repayLoan({ ...rich, today: { ...rich.today, town: false } }, 'mill')).toThrow('The mayor’s office is in town.')
     const repaid = repayLoan(rich, 'mill')
-    expect(repaid.gold).toBe(560)
+    expect(repaid.gold).toBe(600)
     expect(repaid.farm.loans).toEqual([])
     expect(() => repayLoan(repaid, 'mill')).toThrow('No loan for that.')
   })
@@ -268,10 +251,11 @@ describe('the save', () => {
     const loan = { for: 'mill', day: 1, lent: 400, fee: 40, owed: 440, nightly: 45 }
     const bad = (farm: object) => () => parseSaveV6(json({ ...save, farm: { ...save.farm, ...farm } }))
     expect(bad({ loans: [loan] })).not.toThrow()
-    expect(bad({ loans: [{ ...loan, for: 'fields' }] })).toThrow('expected a place you build, dorm:2 to dorm:8, or house:1 to house:6')
-    expect(bad({ loans: [{ ...loan, for: 'house:7' }] })).toThrow('expected a place you build, dorm:2 to dorm:8, or house:1 to house:6')
+    expect(bad({ loans: [{ ...loan, for: 'fields' }] })).toThrow('expected a project or credit note id')
+    expect(bad({ loans: [{ ...loan, for: 'house:7' }] })).toThrow('expected a project or credit note id')
     expect(bad({ loans: [loan, loan] })).toThrow('repeated')
-    expect(bad({ loans: [loan, { ...loan, for: 'sawmill' }, { ...loan, for: 'dock' }] })).toThrow('expected 0–2 entries')
+    expect(bad({ loans: [loan, { ...loan, for: 'sawmill' }, { ...loan, for: 'dock' }] })).not.toThrow()
+    expect(bad({ loans: [loan, { ...loan, for: 'sawmill' }, { ...loan, for: 'dock' }, { ...loan, for: 'house:1' }] })).toThrow('expected 0–3 entries')
     expect(bad({ loans: [{ ...loan, owed: 0 }] })).toThrow('expected 1–440')
     expect(bad({ loans: [{ ...loan, day: 2 }] })).toThrow('expected 1–1')
     expect(bad({ owed: 40, short: 0 })).toThrow('expected short nights with upkeep owed, or neither')

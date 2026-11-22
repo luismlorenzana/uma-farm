@@ -4,7 +4,7 @@
 // ring and better ring, and the Forge before the bench. The invented stand-in pack
 // (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { dateOf, farmPlace, meet, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { dateOf, farmPlace, meet, runNight, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -144,36 +144,21 @@ describe('the ring bench', () => {
     await find('[data-bench]')
   })
 
-  it('makes an Iron Ring from three Cedar Planks, a slot swapped first; one a day; no gold', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, { ...bench, items: items(['cedar-plank', 3], ['sardine-fillet', 2], ['salmon-fillet', 3, 2]) }) })
-    const gold = save().gold
+  it('reviews and finances the standard commission, then gets its ring at dawn', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, { ...bench, gold: 2400 }) })
     await render(<div />, '/?sheet=bench')
     await find('[data-bench]')
-    expect($$('[data-bench-row]').map((r) => r.dataset.benchRow)).toEqual(['3', '5'])
-    expect($$('[data-bench-row="3"] [data-slot]').map((s) => s.dataset.input)).toEqual(['cedar-plank@1', 'cedar-plank@1', 'cedar-plank@1'])
-    expect($('[data-bench-row="3"]')?.textContent).toContain('→ Iron Ring')
-    expect($('[data-bench-row="5"]')?.textContent).toContain('→ Cobalt Ring')
-    expect($('[data-forge-recipe]')?.dataset.forgeRecipe).toBe('greyed')
-    expect($('[data-forge-recipe]')?.textContent).toBe('2 ingots + 1 cut gem · Opens when the Smelter and the Cutter are built')
-    expect($('[data-bench-bonus]')?.textContent).toContain('Her bonus once married: +1% a grade')
-    expect($('[data-action="make-ring"]')?.textContent).toBe('Make an Iron Ring · 1 a day')
-    // A tap on a slot offers the grade's other goods; one swapped in.
-    await click($('[data-bench-row="3"] [data-slot="2"]'))
-    expect($$('[data-swap] [data-option]').map((o) => o.dataset.option)).toEqual(['cedar-plank@1', 'sardine-fillet@1'])
-    await click($('[data-swap] [data-option="sardine-fillet@1"]'))
-    expect($$('[data-bench-row="3"] [data-slot]').map((s) => s.dataset.input)).toEqual(['cedar-plank@1', 'cedar-plank@1', 'sardine-fillet@1'])
-    await click($('[data-action="make-ring"]'))
-    await find('[data-bench-note="ring-g3"]')
-    expect($('[data-bench-note]')?.textContent).toContain('Iron Ring · in the Warehouse, ★1')
-    expect(save().items['ring-g3']).toEqual([1, 0, 0, 0, 0])
-    expect(save().items['cedar-plank']).toEqual([1, 0, 0, 0, 0])
-    expect(save().items['sardine-fillet']).toEqual([1, 0, 0, 0, 0])
-    expect(save().today.ring).toBe(3)
-    expect(save().gold).toBe(gold)
-    expect($('[data-bench-made]')?.textContent).toBe('One ring a day. Iron Ring made today ✓')
-    expect($('[data-action="make-ring"]')).toBeNull()
-    // The Warehouse holds it on its own tab.
-    expect(warehouseTabs(save()).find((t) => t.shelf === 'rings')?.rows.map((r) => [r.name, r.facts])).toEqual([['Iron Ring', 'Rings · G3 · made at the ring bench']])
+    expect($('[data-bench]')?.textContent).toContain('Copper Ring · 20,000g')
+    await click($('[data-action="review-ring-credit"]'))
+    expect($('[data-bench] dl')?.textContent).toContain('Total owed19,800g')
+    await click($('[data-action="finance-ring"]'))
+    await find('[data-ring-due]')
+    expect(save().gold).toBe(400)
+    expect(save().items['ring-g1']).toBeUndefined()
+    expect(save().farm.loans[0]?.owed).toBe(19_800)
+    const morning = runNight(save(), {})
+    expect(morning.items['ring-g1']).toEqual([1, 0, 0, 0, 0])
+    expect(warehouseTabs(morning).find(t => t.shelf === 'rings')?.rows[0]?.name).toBe('Copper Ring')
   })
 
   it('stands at the Forge on v4: locked until the first Romance 8, then its quick look leads to the bench', async () => {
@@ -183,7 +168,7 @@ describe('the ring bench', () => {
     expect(placeLink(farm({}, bench), forge)).toBe('/?peek=forge')
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, bench) })
     await render(<BenchPeek save={save()} />, '/?peek=forge')
-    expect($('[data-bench-peek]')?.textContent).toContain('Ring bench · one ring a day')
+    expect($('[data-bench-peek]')?.textContent).toContain('Commission a wedding ring.')
     await click($('[data-action="open-bench"]'))
     expect(path).toBe('/?sheet=bench')
   })

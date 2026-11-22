@@ -32,8 +32,11 @@
 import { describe, expect, it } from 'vitest'
 import { actionCost, actionsLeft, canSpendForEvent, GAME_DAYS, goToTown } from '../farm/actions'
 import { payBuild } from '../farm/builds'
-import { dateOf, DAYS_PER_YEAR } from '../farm/calendar'
-import { borrowFor, buildOrders } from '../farm/economy'
+import { cookBatch, pantryMeals, plainBatch } from '../farm/food'
+import { dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR } from '../farm/calendar'
+import { borrowFor, buildOrders, repayLoan } from '../farm/economy'
+import { commissionRing, RING_DEPOSIT } from './ring-orders'
+import { shipSuggestedSurplus, surplusCrate } from '../farm/production'
 import { handsTonight, setTasks } from '../farm/farmhands'
 import { placeBuilt } from '../farm/places'
 import { talentsD } from '../farm/talents'
@@ -135,6 +138,7 @@ interface Result {
   confession: number | null
   proposal: number | null
   wedding: number | null
+  ringOrder?: { day: number; cash: number }
   /** Days she was out of your reach: before you met her, and after (not on the farm, and not out in town). */
   unmetDays: number
   unreachable: number
@@ -227,22 +231,23 @@ function crate(save: SaveV4): CrateLine[] {
 
 /** The season's quickest seed the shop sells that can still ripen. */
 function quickestSeed(save: SaveV4) {
-  const daysLeft = 12 - dateOf(save.calendar.day).day + 1
+  const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
   return shopLines(save).filter((l) => lineOpen(save, l)).map((l) => ({ line: l, stages: stagesOf(l.id.slice('seed-'.length) as CropId, false) }))
     .filter((s) => s.stages < daysLeft).sort((a, b) => a.stages - b.stages || a.line.price - b.line.price)[0]?.line ?? null
 }
 
 /** The farm with what's left of the day. */
-function farm(start: SaveV4, pack: (typeof PACKS)[Place]): SaveV4 {
+function farm(start: SaveV4, pack: (typeof PACKS)[Place], commissioned = false): SaveV4 {
   let save = start
-  const daysLeft = 12 - dateOf(save.calendar.day).day + 1
+  const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
+  if (commissioned && save.gold < 200 && pantryMeals(save) < 2 && plainBatch(save) && left(save) > 0) save = cookBatch(save)
   for (const [i, t] of fieldTiles(save).entries()) if (t.ready && left(save) > 0) save = harvestTile(save, i).save
   // Her watering tonight, as a farmhand on her farm day: the bot waters only what she won't.
   const hers = isFarmhand(save, HER) ? fieldTiles(handsTonight(save, save, talentsD, pack).save) : null
   for (const i of growing(save)) if (!fieldTiles(save)[i]!.watered && !hers?.[i]!.watered && left(save) > 0) save = waterTile(save, i)
   // The Mill, once its logs are held: his own gold, else a loan in town.
   const mill = buildOrders({ ...save, today: { ...save.today, town: true } }).find((o) => o.project === 'mill')
-  if (mill && !save.farm.builds.includes('mill') && goodCount(save.items, 'pine-log') + goodCount(save.items, 'birch-log') >= MILL_LOGS) {
+  if (!commissioned && mill && !save.farm.builds.includes('mill') && goodCount(save.items, 'pine-log') + goodCount(save.items, 'birch-log') >= MILL_LOGS) {
     if (mill.own === null) save = payBuild(save, 'mill')
     else if (mill.lock === null && (save.today.town || left(save) > 1)) save = borrowFor(goToTown(save), 'mill')
   }
@@ -253,34 +258,41 @@ function farm(start: SaveV4, pack: (typeof PACKS)[Place]): SaveV4 {
   }
   // Seeds: into town for the season's quickest when none are held.
   const seed = quickestSeed(save)
-  if (seedsInSeason(save).length === 0 && seed && save.gold >= seed.price * 3 && (save.today.town || left(save) >= 3)) {
-    save = buy(goToTown(save), seed, Math.min(9, Math.floor(save.gold / seed.price)))
+  const growingTarget = commissioned ? 1 : KEEP_GROWING
+  const seedBudget = save.gold - (commissioned ? 90 : 0)
+  if (seedsInSeason(save).length === 0 && seed && seedBudget >= seed.price * 3 && (save.today.town || left(save) >= 3)) {
+    save = buy(goToTown(save), seed, Math.min(9, Math.floor(seedBudget / seed.price)))
   }
   for (const [i, t] of fieldTiles(save).entries()) {
     const held = seedsInSeason(save)[0]
-    if (!held || t.ground !== 'tilled' || t.crop !== null || growing(save).length >= KEEP_GROWING || left(save) < 2 || stagesOf(held.crop, false) > daysLeft) continue
+    if (!held || t.ground !== 'tilled' || t.crop !== null || growing(save).length >= growingTarget || left(save) < 2 || stagesOf(held.crop, false) > daysLeft) continue
     save = waterTile(plantTile(save, i, held.id), i)
   }
   const tilledEmpty = fieldTiles(save).filter((t) => t.ground === 'tilled' && t.crop === null).length
-  const wanted = Math.min(seedsInSeason(save).reduce((n, s) => n + s.count, 0), KEEP_GROWING) - growing(save).length - tilledEmpty
+  const wanted = Math.min(seedsInSeason(save).reduce((n, s) => n + s.count, 0), growingTarget) - growing(save).length - tilledEmpty
   for (let n = 0; n < wanted && left(save) > 3; n++) {
     const clear = fieldTiles(save).findIndex((t) => t.ground === 'clear')
     save = clear >= 0 ? tillTile(save, clear) : clearTile(save, fieldTiles(save).findIndex((t) => isOvergrown(t.ground))).save
   }
+  if (commissioned) {
+    for (let k = 0; left(save) > 1; k++) save = haul(save, k, pack)
+    if (left(save) && surplusCrate(save, true).length) return shipSuggestedSurplus(save)
+    return left(save) ? haul(save, 0, pack) : save
+  }
   const lines = crate(save)
-  if (lines.reduce((n, l) => n + l.count, 0) >= 6 && left(save) > 0) save = shipCrate(save, lines)
+  if (left(save) > 0 && lines.reduce((n, l) => n + l.count, 0) >= 6) save = shipCrate(save, lines)
   // The rest at the woods and the water: logs while the Mill waits for them. (Her loved Carrot is the season's quickest
   // seed in Spring, so the field grows it.)
   for (let k = 0; left(save) > 0; k++) {
     const logs = goodCount(save.items, 'pine-log') + goodCount(save.items, 'birch-log')
-    if (!placeBuilt(save, 'mill') && !save.farm.builds.includes('mill') && logs < MILL_LOGS) save = chop(save, fresh(save, 'forest', pack)).save
+    if (!commissioned && !placeBuilt(save, 'mill') && !save.farm.builds.includes('mill') && logs < MILL_LOGS) save = chop(save, fresh(save, 'forest', pack)).save
     else save = haul(save, k, pack)
   }
   return save
 }
 
 /** One run: day by day until the wedding night, or the cap. */
-async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)[Place]; onFinish(save: SaveV4): void }): Promise<Result> {
+async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)[Place]; onFinish(save: SaveV4): void }, commissioned?: (wedding: SaveV4) => void): Promise<Result> {
   const pack = library?.pack ?? PACKS[run.place]
   const days = { festivals: festivalsOf(pack), birthdays: birthdaysOf(pack, BIRTHDAYS) }
   const context: NightContext = { story: pack, ...(library ? { days } : { birthdays: birthdaysOf(pack, new Map()) }) }
@@ -328,7 +340,7 @@ async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)
           r.gifts[gift.taste]++
         }
         const love = save.love[HER]!
-        if (!isFarmhand(save, HER) && (love.stage !== 'friendship' || love.level >= 3) && left(save) >= actionCost('invite')) {
+        if (!commissioned && !isFarmhand(save, HER) && (love.stage !== 'friendship' || love.level >= 3) && left(save) >= actionCost('invite')) {
           save = setTasks(inviteToWork(save, HER), HER, [{ kind: 'water', tiles: FIELD }, { kind: 'forage', area: 'woods' }])
           r.farmhand = day
         }
@@ -348,8 +360,15 @@ async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)
       }
       // A ring at the bench once it opens, from three refined goods of one grade: the lowest grade held.
       if (benchOpen(save) && heldRings(save).length === 0 && save.today.ring === 0 && romanceLevel(save) >= 8) {
-        const grade = benchGrades(save)[0]
-        if (grade !== undefined) save = makeRing(save, benchPick(save, grade)!).save
+        if (commissioned) {
+          if (!save.forge?.ringOrder && save.gold >= RING_DEPOSIT + 200) {
+            save = commissionRing(save, 1, true)
+            r.ringOrder = { day, cash: save.gold }
+          }
+        } else {
+          const grade = benchGrades(save)[0]
+          if (grade !== undefined) save = makeRing(save, benchPick(save, grade)!).save
+        }
       }
       // Her event when Ready, from anywhere.
       const state = readiness(save, pack, HER)
@@ -393,10 +412,11 @@ async function simulate(run: Run, seed: string, library?: { pack: (typeof PACKS)
       }
     } else if (r.wedding !== null) {
       // The wedding night: tender, fading to morning. The run ends here, on the day's gold.
+      commissioned?.(save)
       r.gold = save.gold
       return r
     }
-    save = farm(save, pack)
+    save = farm(save, pack, !!commissioned)
     save = runNight(save, context)
     if (save.summary?.money?.some((m) => m.kind === 'short')) r.shortNights++
     if (n % 24 === 0) expect(parseSaveV6(json(save))).toEqual(save)
@@ -503,6 +523,21 @@ describe('a route to marriage, simulated', () => {
       if (process.env.MARRIAGE) console.log(`Library · ${authored ? 'authored' : 'default'} · ${progress.filled}/${progress.available} · day ${save.calendar.day}`)
     } })
     expect(result.stuck).toBeNull()
+  }, 30_000)
+
+  it('F111 earns the deposit and marries on a fresh solo farm', async () => {
+    const result = await simulate({ profile: 'devoted', place: 'home' }, 'f111-first-wedding', undefined, wedding => {
+      expect(isFarmhand(wedding, HER)).toBe(false)
+      expect(wedding.love[HER]?.stage).toBe('spouse')
+      const loan = wedding.farm.loans.find(note => note.credit?.title === 'Copper Ring')!
+      expect(loan.lent).toBe(18_000)
+      const payment = repayLoan(goToTown(wedding), loan.for, 100)
+      expect(payment.farm.loans.find(note => note.for === loan.for)?.owed).toBe(loan.owed - 100)
+      expect(parseSaveV6(json(payment))).toEqual(payment)
+    })
+    console.log(JSON.stringify({ F111: 'solo', ...result }))
+    expect(result.ringOrder?.day).toBeLessThanOrEqual(DAYS_PER_YEAR)
+    expect(result.wedding).toBeLessThanOrEqual(DAYS_PER_YEAR)
   }, 30_000)
 
   it('reaches the wedding night in every run, devoted and casual, on the default schedule and with a home', () => {

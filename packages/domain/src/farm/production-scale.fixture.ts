@@ -36,7 +36,7 @@ const saleGoods = ['cultured-yogurt-grade-3', 'carp-fillet-grade-2', 'carp', 'tr
 const supplyOf = (save: FarmSave, crop: CropId) => goodCount(save.items, seedId(crop)) + goodCount(save.items, seedId(crop, true))
 const sum = (values: readonly number[]) => values.reduce((total, n) => total + n, 0)
 
-function setup(crew: CrewSize) {
+function setup(crew: CrewSize, standard = false) {
   const ids = Array.from({ length: crew }, (_, i) => String(9_700_001 + i))
   const story = castPack(ids)
   const plots = crew >= 50 ? 5 : crew >= 20 ? 3 : crew >= 10 ? 2 : 1
@@ -71,8 +71,10 @@ function setup(crew: CrewSize) {
   save = setStationPlan(save, 'mill', mill)
   save = setStationPlan(save, 'sawmill', [{ output: 'carrot-pickles-grade-2', target: 8 }])
   save = setStationPlan(save, 'smokehouse', [{ output: 'carp-fillet-grade-2', target: 12 }])
-  save = setSurplusPlan(save, { goods: [...saleGoods], limit: 50 })
-  save = setStockReserve(setStockReserve(save, 'milk-grade-3', 2), 'carp-grade-2', 1)
+  if (!standard) {
+    save = setSurplusPlan(save, { goods: [...saleGoods], limit: 50 })
+    save = setStockReserve(setStockReserve(save, 'milk-grade-3', 2), 'carp-grade-2', 1)
+  }
   const field = (plot: number): FarmTask[] => [
     { kind: 'harvest', tiles, ...(plot ? { plot } : {}) },
     { kind: 'water', tiles, ...(plot ? { plot } : {}) },
@@ -103,7 +105,7 @@ function setup(crew: CrewSize) {
       ]
       tasks = work[(i - plots * 2) % work.length]!
     }
-    save = setTasks(save, id, tasks)
+    save = setTasks(save, id, standard ? tasks.filter(task => task.kind !== 'ship-surplus') : tasks)
   })
   return { save, story, ids, plots, width, tiles }
 }
@@ -192,17 +194,18 @@ interface ProductionDay {
   capacity: number; loads: number; gold: number; repeats: number; shipped: number; takeout: number; pantry: number; stock: ReturnType<typeof stash>
 }
 
-export async function playProductionFarm(crew: CrewSize) {
-  const { save: initial, story, ids, plots, width, tiles } = setup(crew)
+export async function playProductionFarm(crew: CrewSize, standard = false) {
+  const { save: initial, story, ids, plots, width, tiles } = setup(crew, standard)
+  const duration = standard ? 1 : 4
   let save = initial
   const days: ProductionDay[] = []
   let missingFarmhands = 0
-  for (let turn = 0; turn < DAYS_PER_YEAR * 4; turn++) {
+  for (let turn = 0; turn < DAYS_PER_YEAR * duration; turn++) {
     const { year, season, day } = dateOf(save.calendar.day)
     const gold = save.gold
     if (day === 1) {
       save = stockSeason(save, season, plots, width)
-      if (crew >= 10 && year > 1) save = shipSeasonalOrder(save)
+      if (!standard && crew >= 10 && year > 1) save = shipSeasonalOrder(save)
     }
     if (crew >= 10 && year === 3 && season === 'summer' && (day === 3 || day === 8)) {
       save = sendExpedition(goToTown(save), 'sky-ruins', [ids[0]!, ids[plots * 2]!, ids[plots * 2 + 2]!], [])
@@ -222,7 +225,7 @@ export async function playProductionFarm(crew: CrewSize) {
         if (save.ranch.silo < 1) save = buyFodder(goToTown(save), Math.min(siloRoom(save), 30))
         if (actionsLeft(save)) save = feedAnimal(save, animal.id)
       }
-      if (actionsLeft(save) && day % 4 === 0 && (crew < 10 || save.gold < 10_000)) save = manualCrate(save)
+      if (!standard && actionsLeft(save) && day % 4 === 0 && (crew < 10 || save.gold < 10_000)) save = manualCrate(save)
     }
     const manual = save.today.actions
     const due = handsTonight(save, save, talentsD, story).save
@@ -248,7 +251,7 @@ export async function playProductionFarm(crew: CrewSize) {
       await setImmediate()
     }
   }
-  const years = Array.from({ length: 4 }, (_, i) => {
+  const years = Array.from({ length: duration }, (_, i) => {
     const year = i + 1
     const inYear = days.filter((d) => d.year === year)
     const covered = sum(inYear.map((d) => d.crew))

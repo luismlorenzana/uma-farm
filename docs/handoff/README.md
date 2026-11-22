@@ -5,6 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F111 is implemented.** The mayor offers shared credit, goods advances and partial payments. The smith commissions wedding rings, and the bin and crew use standard surplus settings from day one. The [playthrough results](../game-mechanics.md#f111-finance-and-default-surplus-playthroughs) cover the solo wedding and rosters of 10, 20 and 50.
+
 **F109** gives gated relationships an alternate scene, keeps original scenes in the Library, adds a six-log starter ring, and exposes the complete Farm Rank path through What Next? beside Work.
 
 **F107** adds six authored Morning outings, Afternoon availability based on shifts, and a weekly timetable on the
@@ -143,7 +145,6 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 | Packet | Work | Status |
 |---|---|---|
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
-| [F111](tasks/F111-project-finance.md) | Project finance, wedding rings, and farm handoffs | Ready for implementation. The packet covers large loans, partial repayment, ring commissions, automatic surplus and roster playthroughs. |
 
 **The Forge is open** (F110). [Shared tools and heirlooms](../game-mechanics.md#the-forge-workshop) have their
 own orders, and the Ring Bench stays available on the Romance 8 path.

@@ -107,7 +107,7 @@ function Loans({ save }: { save: FarmSave }) {
             <Link to="/book" state={{ back: true }} className="flex min-h-11 items-center gap-2 py-1.5" data-project-loan={loan.for}>
               <Check done={false} />
               <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold">{projectName(loan.for, names)}</span>
+                <span className="block text-[15px] font-semibold">{loan.credit?.title ?? projectName(loan.for, names)}</span>
                 <span className="block text-[12px] text-ink-soft">{loanWords(save, loan)}</span>
               </span>
             </Link>

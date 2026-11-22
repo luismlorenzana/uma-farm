@@ -220,6 +220,9 @@ export function ThinMark({ hauls, noun }: { hauls: number; noun?: string }) {
 
 /** A built station's panel: its level and loads a day, today's loads, ready tomorrow; what it can take now while it takes
  * more, each a load of up to eight for one action; and its next level. */
+import { levelLock, levelLockWords, upgradeStation } from '@farm/domain'
+import { CreditPurchase } from './CreditPurchase'
+
 export function StationPanel({ save, station }: { save: FarmSave; station: StationId }) {
   const view = stationView(save, station)
   const { note, error, busy, run } = useAct(station)
@@ -282,6 +285,8 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
           )}
         </div>
       )}
+      {view.next && <CreditPurchase save={save} cost={view.next.cost} title={`${station} level ${view.next.level}`}
+        lock={levelLockWords(levelLock({ ...save, gold: view.next.cost }, station))} order={s => upgradeStation(s, station)} />}
       <ActionsLeft save={save} />
     </div>
   )

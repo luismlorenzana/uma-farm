@@ -228,7 +228,7 @@ describe('her night', () => {
   })
 
   it('loads a station with what it holds most of, up to 8, or 12 once she has the trick', () => {
-    const base = { ...farm(), buildings: { ...farm().buildings, mill: 1 }, items: { ...farm().items, wheat: [20, 3, 0, 0, 0] as [number, number, number, number, number] } }
+    const base = { ...farm(), farm: { ...farm().farm, surplusSettings: { paused: true as const } }, buildings: { ...farm().buildings, mill: 1 }, items: { ...farm().items, wheat: [20, 3, 0, 0, 0] as [number, number, number, number, number] } }
     // A G talent: Milling 1 to start, ×1 yield, so a load comes out as it goes in.
     const G: TalentOf = () => 0
     const load = (n: number) => {

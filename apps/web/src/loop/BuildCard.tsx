@@ -3,9 +3,10 @@
 // morning ("Builds tonight" until then). A place whose game isn't built yet shows what it'll cost and "Not built yet",
 // and can't be bought. In a place's quick look, the stations' pages and the Dock's (the Boat after it). The place is named
 // as the map names it (the pack's `world.json`, else the game's own). Loaded on demand.
-import { buildCostWords, buildGoodsWords, buildLock, buildLockWords, buildNeeds, placeNameOf, type BuildPlace, type FarmSave } from '@farm/domain'
+import { buildOrders, buildCostWords, buildGoodsWords, buildLock, buildLockWords, buildNeeds, placeNameOf, type BuildPlace, type FarmSave } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { useStory } from '../story/story'
 import { buildPlace } from './actions'
 import { theName } from './words'
@@ -47,6 +48,8 @@ export function BuildCard({ save, place, say }: { save: FarmSave; place: BuildPl
         {needs.map((n) => row(`${n.goods.family}:${n.goods.refined}`, buildGoodsWords(n.goods), `${n.have.toLocaleString('en-US')} held`, n.have >= n.goods.count))}
       </ul>
       {why && <p className="text-[13px] text-ink-soft" data-build-lock>{why}</p>}
+      {lock?.by === 'short' && buildOrders({ ...save, today: { ...save.today, town: true } }).some(order => order.project === place.id && !order.lock) &&
+        <Link className="inline-flex min-h-11 items-center font-semibold text-accent-strong" to="/town?at=mayor&sheet=mayor" state={{ back: true }}>Review financing ›</Link>}
       {lock?.by !== 'built' && (
         <Button className="w-full" disabled={lock !== null || busy} data-action="build"
           onClick={() => {

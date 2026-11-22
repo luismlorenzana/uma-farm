@@ -5,9 +5,9 @@
 // Hearts tab's Work view. Every page but Account loads on demand; anything else goes to the farm.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router'
-import { Shell } from '../shell/Shell'
 import { Root } from './Root'
 
+const Shell = lazy(() => import('../shell/Shell').then(module => ({ default: module.Shell })))
 const FarmMap = lazy(() => import('../loop/FarmMap'))
 const FieldScreen = lazy(() => import('../loop/FieldScreen'))
 const HeartsPage = lazy(() => import('../loop/HeartsPage'))
@@ -47,6 +47,6 @@ export const ROUTES: RouteObject[] = [
 export const router = createBrowserRouter([
   {
     element: <Root />,
-    children: [{ element: <Shell />, children: ROUTES }],
+    children: [{ element: loading(<Shell />), children: ROUTES }],
   },
 ])

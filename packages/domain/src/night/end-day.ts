@@ -52,6 +52,7 @@ import { payLines } from '../romance/acts'
 import { chaptersOpened } from '../romance/chapters'
 import { drawInvites } from '../romance/evening'
 import { openBench } from '../romance/bench'
+import { deliverRing } from '../romance/ring-orders'
 import { serveReception } from '../romance/wedding'
 import { heartDays, NO_BIRTHDAYS, type Birthdays } from '../romance/days'
 import { praiseOvernight } from '../romance/praise'
@@ -214,7 +215,7 @@ export const settleTheAccounts: NightStep = (night) => {
   const shift = night.save.workshops.restaurant?.last
   const served = shift?.day === night.before.calendar.day ? shift.sales + shift.tips : 0
   const income = night.notes.sold.reduce((n, sale) => n + sale.gold, served)
-  const { save, lines } = settleAccounts(night.save, income, night.notes.food)
+  const { save, lines } = settleAccounts(night.save, income, night.notes.food, served)
   return { ...night, save, notes: { ...night.notes, money: lines } }
 }
 /** Step 2, first: **the farmhands' night.** Each farmhand on her farm day (the day being settled; on a town day she's
@@ -391,7 +392,7 @@ export const checkGoals: NightStep = (night) => {
 
 /** Step 8, after the goals: the night after the first Romance 8 event anyone played,
  * the Forge's building stands as the ring bench (`buildings.forge = 0`), and the smith's scene is due in the morning. */
-export const openRingBench: NightStep = (night) => ({ ...night, save: openBench(night.save) })
+export const openRingBench: NightStep = (night) => ({ ...night, save: deliverRing(openBench(night.save)) })
 
 /** Step 9, first: today's wedding reception (`today.reception`, cleared by step 7, so
  * read from the day as it was left) feeds everyone on the farm for its days from tomorrow, never shortening a meal
@@ -608,6 +609,7 @@ export const buildSummary: NightStep = (night) => {
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),
     news: [
+      ...(night.before.forge?.ringOrder && !save.forge?.ringOrder ? [{ kind: 'ring-ready' as const, grade: night.before.forge.ringOrder.grade }] : []),
       ...storyNews(night.context), ...newsOf(save.calendar, festivalsOf(night.context.story), night.context.story ?? null),
       ...(notes.townNotes.length > 0 ? [{ kind: 'notes' as const, ids: [...notes.townNotes] }] : []), ...goalNews(notes, save), ...notes.household,
     ],

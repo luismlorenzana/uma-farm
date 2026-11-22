@@ -602,9 +602,18 @@ export interface Loan {
   fee: number
   owed: number
   nightly: number
+  credit?: { title: string; kind: 'gold' | 'goods' | 'project' }
 }
-/** The most loans the farm holds at once: two, from Farm Rank 4. */
-export const MAX_LOANS = 2
+export const MAX_LOANS = 3
+export const CREDIT_LOAN = /^credit:[1-9]\d{0,14}$/
+
+export interface FinanceEntry {
+  day: number
+  for: string
+  title: string
+  kind: 'borrowed' | 'manual' | 'automatic' | 'cleared' | 'purchase'
+  amount: number
+}
 /** The nights of income the farm's book keeps: the last seven. */
 export const INCOME_NIGHTS = 7
 
@@ -612,6 +621,8 @@ export const INCOME_NIGHTS = 7
 export interface NightAccount {
   day: number
   shipping: number
+  restaurant?: number
+  repaymentBudget?: number
   food: number
   upkeep: number
   loans: number
@@ -689,6 +700,7 @@ export interface SaveV6 {
    * flood eased, by its steps (`goods/market.ts`); a save from before the market has none: nothing eased. */
   farm: {
     points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]; accounts?: NightAccount[]; workHistory?: import('../farm/work-coverage').WorkDayRecord[]
+    financeLog?: FinanceEntry[]
     pantry: PantryLot[]; market: Record<string, number>
     /** First production day by exact stock ID. Legacy crop evidence can be read without stamping the save. */
     discoveries?: Record<string, number>
@@ -700,6 +712,10 @@ export interface SaveV6 {
     collectionCaps?: Partial<Record<AnimalKind, import('../goods/production-catalogue').CollectionCap>>
     stationPlans?: Partial<Record<StationId, StationTarget[]>>
     surplus?: SurplusPlan
+    surplusSettings?: { paused?: true; limit?: number; floors?: Record<string, number>; minStars?: Record<string, number> }
+    projectPin?: FarmPlaceId
+    recipePin?: string
+    toolPin?: ToolId
     fishingModes?: Partial<Record<FishingSpotId, import('../goods/production-catalogue').FishMode>>
     manualCatches?: number
     fishRemainders?: Record<string, number>

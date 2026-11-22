@@ -263,10 +263,14 @@ function sourceHint(save: FarmSave, id: string): string {
   return (sources.find((source) => source.rank <= rank && source.seasons.includes(season)) ?? sources[0])?.label ?? 'Cook in the Kitchen'
 }
 
+import { pinRecipeStock } from '@farm/domain'
+import { changeHomestead } from './homestead-actions'
+
 function RecipeBook({ save }: { save: FarmSave }) {
   const next = nextRestaurantStage(save)
   const [stage, setStage] = useState(Math.max(1, save.workshops.restaurant?.cleared ?? next))
   const [filter, setFilter] = useState<'ready' | 'need' | 'stage'>('stage')
+  const [stockMessage, setStockMessage] = useState('')
   const learned = knownRestaurantRecipes(save).length
   const cleared = save.workshops.restaurant?.cleared ?? 0
   const rows = RESTAURANT_RECIPES.flatMap((recipe) => {
@@ -291,6 +295,7 @@ function RecipeBook({ save }: { save: FarmSave }) {
       {filter === 'stage' && <select className={`${PICK} w-full`} value={stage} aria-label="Recipe stage" onChange={(event) => setStage(Number(event.target.value))}>
         {RESTAURANT_STAGES.map((rule, i) => <option key={rule.name} value={i + 1}>{i + 1} · {rule.name}</option>)}
       </select>}
+      {stockMessage && <p role="status" className="text-[13px]">{stockMessage}</p>}
       {rows.length === 0 && <p className="py-2 text-[13px] text-ink-soft">{filter === 'ready' ? 'No recipe can be cooked with the current stock.' : 'No opened recipe is missing ingredients.'}</p>}
       <ul className="grid gap-1.5 sm:grid-cols-2">
         {rows.map(({ recipe, known, shortage, missing }) => (
@@ -303,6 +308,10 @@ function RecipeBook({ save }: { save: FarmSave }) {
             <p className="mt-1 text-[12px] font-semibold">{recipe.grade > cleared ? `Clear Stage ${recipe.grade}` : known
               ? shortage.length ? `Short on ${shortage.map(({ id }) => gradeName(id)).join(', ')}` : 'Ready to cook'
               : 'Produce on the farm'}</p>
+            {recipe.grade <= cleared && <Button variant="secondary" size="sm" onClick={() => void changeHomestead(s => pinRecipeStock(s, recipe.id)).then(
+              () => setStockMessage(save.farm.recipePin === recipe.id ? 'Recipe stock released.' : 'Recipe ingredients protected.'),
+              (error: unknown) => setStockMessage(error instanceof Error ? error.message : 'Could not update recipe stock.'),
+            )}>{save.farm.recipePin === recipe.id ? 'Release recipe stock' : 'Keep ingredients'}</Button>}
             {missing.length > 0 && <ul className="text-[12px] text-ink-soft">
               {missing.map((id) => <li key={id}>{gradeName(id)} · {sourceHint(save, id)}</li>)}
             </ul>}

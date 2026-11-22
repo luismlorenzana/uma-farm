@@ -27,6 +27,7 @@ export interface HeirloomOrder {
 
 export interface ForgeState {
   bench: boolean
+  ringOrder?: { grade: number; due: number }
   legacyLooks: Record<string, number[]>
   tool?: ToolOrder
   installed: ToolOrder[]

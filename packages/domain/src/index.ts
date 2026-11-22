@@ -79,6 +79,10 @@ export * from './farm/builds'
 // Upkeep and loans: the night's upkeep and what it counts, an average night's income, a short night's half pace, and the
 // mayor's office's loans toward a build (`borrowFor`, `repayLoan`, the night's shares).
 export * from './farm/economy'
+export * from './farm/credit'
+export * from './farm/credit-supplies'
+export * from './farm/purchases'
+export * from './farm/restock'
 // Food: who eats, the pantry, the night's meals and takeout, the farmer's batch and the plain rule's goods.
 export * from './farm/food'
 // The stove and the Kitchen: the cooking game's rules (a play's tickets, burners, taps and score, replayed against its
@@ -168,6 +172,7 @@ export * from './romance/loop'
 // The ring bench, the proposal and the wedding: the rings' bench at the Forge, her ring's grade and
 // a better ring, the proposal's ring, the wedding's place, reception and guests, and the smith's scene.
 export * from './romance/bench'
+export * from './romance/ring-orders'
 export * from './romance/wedding'
 // Married life: the homestead's houses, rooms and moves, Sleep at, the night's house and its morning,
 // shared houses' bonds, S2 and S4 at night, the household milestones, scenes, the finale and the Festival of Vows.

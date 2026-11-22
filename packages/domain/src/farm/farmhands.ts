@@ -33,7 +33,7 @@ import { noteCupWork } from '../festivals/evidence'
 import { festivalBooked } from '../festivals/state'
 import { farmhands } from '../romance/loop'
 import { countChallenge, rankBenefits, type ChallengeEvent } from './rank-rules'
-import { shipSurplus } from './production'
+import { shipSurplus, surplusCrate } from './production'
 import type { Activity } from './ranks'
 import { talentYield, type TalentOf, type TalentStep } from './talents'
 import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowTile, stagesOf, tileOf, tillGround, clearGround, wetTile, type Reaper } from '../fields/fields'
@@ -592,6 +592,10 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
   const finish: (() => void)[] = []
+  const finishScheduled: (() => void)[] = []
+  const ship: (() => boolean)[] = []
+  const automatic = !save.farm.surplus && !save.farm.surplusSettings?.paused
+  let reservedShippingAction = false
   for (const id of handsWorking(save, story)) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
@@ -624,12 +628,15 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       return true
     }
     const tasks = next.roster[id]!.tasks ?? []
-    for (const task of tasks.filter((t) => !OPEN_TASKS.includes(t.kind))) {
+    for (const task of tasks.filter((t) => !OPEN_TASKS.includes(t.kind) && (!automatic || t.kind !== 'ship-surplus'))) {
       while (left > 0 && work(task)) { /* until it's done, or her actions are */ }
     }
     let open = tasks.filter((t) => OPEN_TASKS.includes(t.kind))
-    while (left > 0 && open.length > 0) open = open.filter((task) => left > 0 && work(task))
-    finish.push(() => {
+    const reserve = automatic && !reservedShippingAction && left > 0 && open.length > 0 && surplusCrate(next).length > 0 ? 1 : 0
+    if (reserve) reservedShippingAction = true
+    while (left > reserve && open.length > 0) open = open.filter((task) => left > reserve && work(task))
+    ship.push(() => left > 0 && work({ kind: 'ship-surplus' }))
+    finishScheduled.push(() => {
       // An idle cook or station hand can use exact inputs brought in later in the same shift.
       for (const task of tasks) {
         if (left === 0) break
@@ -637,6 +644,9 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
           while (left > 0 && work(task)) { /* use only the actions left from her scheduled work */ }
         }
       }
+    })
+    finish.push(() => {
+      if (reserve && left > 0) open.some(work)
       if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
       out.lines.push({
         kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
@@ -654,6 +664,8 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       for (const [place, keys] of madeAt) out.made.push({ outfitId: id, place, items: keys })
     })
   }
+  for (const settle of finishScheduled) settle()
+  if (automatic) ship.some(send => send())
   for (const settle of finish) settle()
   return { ...out, save: next, gathered: [...new Set(out.gathered)] }
 }

@@ -14,11 +14,11 @@ import { established, orchardOf, RARE_CROPS } from '../fields/plantables'
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
+  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, CREDIT_LOAN, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
   MARKET_FLOOR, MAX_FIELD_TILES, MAX_KITCHEN_BASE, MAX_PLOTS, MEAL_KEEPS, MENU_RECIPES, STATION_MAX_LEVEL, STOVE_PLAYS,
   isDishId, isLegacyDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   EXPEDITION_OUTCOMES, REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig,
-  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type Loan, type MenuLine, type NightAccount, type PantryLot, type PlayInProgress, type RankState, type SaveV6, type StarCounts,
+  type Expedition, type ExpeditionReturn, type Extra, type FestivalResult, type FinanceEntry, type Loan, type MenuLine, type NightAccount, type PantryLot, type PlayInProgress, type RankState, type SaveV6, type StarCounts,
   type StationLoad, type StationTarget, type SurplusPlan, type Tile, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
@@ -439,7 +439,7 @@ export function parseDiary(value: unknown, path: string): SaveV6['diary'] {
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
 const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'accounts', 'workHistory', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
-  'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders'] as const
+  'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders', 'financeLog', 'surplusSettings', 'projectPin', 'recipePin', 'toolPin'] as const
 
 function parseStationPlans(value: unknown, path: string): NonNullable<SaveV6['farm']['stationPlans']> {
   const plans: NonNullable<SaveV6['farm']['stationPlans']> = {}
@@ -507,12 +507,14 @@ function parseCarrotRows(value: unknown, path: string): NonNullable<SaveV6['farm
   }
   return plans
 }
-const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly'] as const
+const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly', 'credit'] as const
 
 /** A loan's project: a place you build, a house on the homestead (`house:1` … `house:6`), or a level of the retired
  * Dorm (`dorm:2` … `dorm:8`) a save may still owe on. */
-const isLoanFor = (id: unknown): id is string => typeof id === 'string' && (isBuildPlace(farmPlace(id)) || DORM_LOAN.test(id) || HOUSE_LOAN.test(id))
-const LOAN_FOR_WORDS = 'expected a place you build, dorm:2 to dorm:8, or house:1 to house:6'
+const isLoanFor = (id: unknown): id is string => typeof id === 'string' && (isBuildPlace(farmPlace(id)) || DORM_LOAN.test(id) || HOUSE_LOAN.test(id) || CREDIT_LOAN.test(id))
+const LOAN_FOR_WORDS = 'expected a project or credit note id'
+const financeTitle = (value: unknown, path: string): string =>
+  typeof value === 'string' && value.length > 0 && value.length <= 120 ? value : fail(path, 'expected a short loan title')
 
 /** The mayor's office's loans: at most two, one a project, each with gold lent, its fee, what's still owed (1 up to both)
  * and a nightly share from 1. */
@@ -522,9 +524,12 @@ function parseLoans(value: unknown, path: string, today: number): Loan[] {
     const l = object(v, at, LOAN_KEYS)
     const lent = int(l.lent, `${at}.lent`, 1, Number.MAX_SAFE_INTEGER)
     const fee = count(l.fee, `${at}.fee`)
+    const credit = l.credit === undefined ? null : object(l.credit, `${at}.credit`, ['title', 'kind'])
+    if (typeof l.for === 'string' && CREDIT_LOAN.test(l.for) && !credit) fail(at, 'missing credit terms')
     return {
       for: isLoanFor(l.for) ? l.for : fail(`${at}.for`, LOAN_FOR_WORDS), day: int(l.day, `${at}.day`, 1, today), lent, fee,
-      owed: int(l.owed, `${at}.owed`, 1, lent + fee), nightly: int(l.nightly, `${at}.nightly`, 1, lent + fee),
+      owed: int(l.owed, `${at}.owed`, 1, lent + fee), nightly: int(l.nightly, `${at}.nightly`, credit ? 0 : 1, credit ? 0 : lent + fee),
+      ...(credit ? { credit: { title: financeTitle(credit.title, `${at}.credit.title`), kind: oneOf(credit.kind, `${at}.credit.kind`, ['gold', 'goods', 'project'] as const) } } : {}),
     }
   }), path, (l) => l.for)
 }
@@ -549,13 +554,25 @@ const MAX_PANTRY_MEALS = 100_000
 
 const ACCOUNT_TOTALS = ['shipping', 'food', 'upkeep', 'loans', 'owed'] as const
 
+function parseFinanceLog(value: unknown, path: string, today: number): FinanceEntry[] {
+  return list(value, path, 0, 28).map((entry, index) => {
+    const at = `${path}.${index}`
+    const row = object(entry, at, ['day', 'for', 'title', 'kind', 'amount'])
+    return { day: int(row.day, `${at}.day`, 1, today), for: key(row.for, `${at}.for`),
+      title: financeTitle(row.title, `${at}.title`), amount: count(row.amount, `${at}.amount`),
+      kind: oneOf(row.kind, `${at}.kind`, ['borrowed', 'manual', 'automatic', 'cleared', 'purchase'] as const) }
+  })
+}
+
 function parseAccounts(value: unknown, path: string, today: number): NightAccount[] {
   const records = list(value, path, 0, INCOME_NIGHTS).map((raw, i): NightAccount => {
     const at = `${path}.${i}`
-    const row = object(raw, at, ['day', ...ACCOUNT_TOTALS])
+    const row = object(raw, at, ['day', ...ACCOUNT_TOTALS, 'restaurant', 'repaymentBudget'])
     const amountOf = (key: typeof ACCOUNT_TOTALS[number]) => count(row[key], `${at}.${key}`)
     return { day: int(row.day, `${at}.day`, 1, today),
-      shipping: amountOf('shipping'), food: amountOf('food'), upkeep: amountOf('upkeep'), loans: amountOf('loans'), owed: amountOf('owed') }
+      shipping: amountOf('shipping'), food: amountOf('food'), upkeep: amountOf('upkeep'), loans: amountOf('loans'), owed: amountOf('owed'),
+      ...(row.restaurant === undefined ? {} : { restaurant: count(row.restaurant, `${at}.restaurant`) }),
+      ...(row.repaymentBudget === undefined ? {} : { repaymentBudget: count(row.repaymentBudget, `${at}.repaymentBudget`) }) }
   })
   if (records.some((record, i) => i > 0 && record.day <= records[i - 1]!.day)) fail(path, 'expected nightly accounts in date order')
   return records
@@ -571,6 +588,16 @@ function parseWorkHistory(value: unknown, path: string, today: number): NonNulla
   })
   if (records.some((row, i) => i > 0 && row.day <= records[i - 1]!.day)) fail(path, 'expected work days in date order')
   return records
+}
+
+function parseSurplusSettings(value: unknown, path: string): NonNullable<SaveV6['farm']['surplusSettings']> {
+  const row = object(value, path, ['paused', 'limit', 'floors', 'minStars'])
+  return {
+    ...(row.paused === undefined ? {} : row.paused === true ? { paused: true as const } : fail(path, 'expected paused')),
+    ...(row.limit === undefined ? {} : { limit: int(row.limit, path, 1, 250) }),
+    ...(row.floors === undefined ? {} : { floors: counts(row.floors, path, isShippableId, 'unknown surplus good', (v, at) => int(v, at, 0, 100)) }),
+    ...(row.minStars === undefined ? {} : { minStars: counts(row.minStars, path, isShippableId, 'unknown surplus good', (v, at) => int(v, at, 2, 5)) }),
+  }
 }
 
 export function parseFarm(value: unknown, path: string, today: number): SaveV6['farm'] {
@@ -592,6 +619,7 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV6['
     loans: o.loans === undefined ? [] : parseLoans(o.loans, `${path}.loans`, today), owed, short,
     income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
     ...(o.accounts === undefined ? {} : { accounts: parseAccounts(o.accounts, `${path}.accounts`, today) }),
+    ...(o.financeLog === undefined ? {} : { financeLog: parseFinanceLog(o.financeLog, `${path}.financeLog`, today) }),
     ...(o.workHistory === undefined ? {} : { workHistory: parseWorkHistory(o.workHistory, `${path}.workHistory`, today) }),
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
     // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
@@ -607,6 +635,10 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV6['
     })) }),
     ...(o.stationPlans === undefined ? {} : { stationPlans: parseStationPlans(o.stationPlans, `${path}.stationPlans`) }),
     ...(o.surplus === undefined ? {} : { surplus: parseSurplus(o.surplus, `${path}.surplus`) }),
+    ...(o.surplusSettings === undefined ? {} : { surplusSettings: parseSurplusSettings(o.surplusSettings, `${path}.surplusSettings`) }),
+    ...(o.projectPin === undefined ? {} : { projectPin: typeof o.projectPin === 'string' && isBuildPlace(farmPlace(o.projectPin)) ? o.projectPin as FarmPlaceId : fail(`${path}.projectPin`, 'expected a build') }),
+    ...(o.recipePin === undefined ? {} : { recipePin: typeof o.recipePin === 'string' && isRestaurantDish(o.recipePin) ? o.recipePin : fail(`${path}.recipePin`, 'expected a Restaurant recipe') }),
+    ...(o.toolPin === undefined ? {} : { toolPin: oneOf(o.toolPin, `${path}.toolPin`, TOOL_IDS) }),
     ...(o.fishingModes === undefined ? {} : { fishingModes: Object.fromEntries(Object.entries(record(o.fishingModes, `${path}.fishingModes`)).map(([id, mode]) => {
       const at = `${path}.fishingModes.${id}`
       return [oneOf(id, at, FISHING_SPOTS), oneOf(mode, at, FISH_MODES)]
@@ -660,8 +692,9 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
         return { kind, mouths: gold(m.mouths, `${at}.mouths`, 1), days: int(m.days, `${at}.days`, 1, 3) }
       }
       case 'loan': {
-        const l = object(v, at, ['kind', 'for', 'paid', 'left'])
-        return { kind, for: isLoanFor(l.for) ? l.for : fail(`${at}.for`, LOAN_FOR_WORDS), paid: gold(l.paid, `${at}.paid`), left: gold(l.left, `${at}.left`) }
+        const l = object(v, at, ['kind', 'for', 'paid', 'left', 'title'])
+        return { kind, for: isLoanFor(l.for) ? l.for : fail(`${at}.for`, LOAN_FOR_WORDS), paid: gold(l.paid, `${at}.paid`), left: gold(l.left, `${at}.left`),
+          ...(l.title === undefined ? {} : { title: financeTitle(l.title, `${at}.title`) }) }
       }
       case 'pantry': {
         const p = object(v, at, ['kind', 'meals', 'spoiled', 'fed'])
@@ -778,7 +811,7 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
 }
 
 /** §5's kinds: the roster's arrivals are §4's hearts. */
-const NEWS_KINDS = ['story', 'season', 'new-year', 'festival', 'days', 'notes', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+const NEWS_KINDS = ['story', 'season', 'new-year', 'festival', 'days', 'notes', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household', 'ring-ready'] as const
 /** A festival's id in the news: one of the game's five, or one of the story's own (its world.json is the pack's, so the
  * save reads the id's shape only). */
 const FESTIVAL_NEWS_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
@@ -792,7 +825,7 @@ const DORM_HOME_NEWS = 20
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
   // A new story release, the season, New Year's, festivals and the story's days (today and tomorrow), the goals' news,
   // the retired Dorm's news (read and dropped), and the household's.
-  const read = list(value, path, 0, 1 + 8 + 4 + 1 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
+  const read = list(value, path, 0, 1 + 8 + 4 + 1 + MAX_GOAL_NEWS + 3 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
     switch (kind) {
@@ -833,6 +866,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       // The retired Dorm's news, a new level or Umas home from a swap: a morning from before its retirement is read and
       // drops it.
       case 'dorm': int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, DORM_MAX_LEVEL); return null
+      case 'ring-ready': return { kind, grade: int(object(v, at, ['kind', 'grade']).grade, `${at}.grade`, 1, 10) }
       case 'home': list(object(v, at, ['kind', 'umas']).umas, `${at}.umas`, 1, DORM_HOME_NEWS).forEach((id, j) => member(id, `${at}.umas.${j}`, roster)); return null
       // A household milestone.
       case 'household': {
@@ -843,7 +877,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       }
     }
   })
-  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'notes' ? n.kind
+  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'notes' || n.kind === 'ring-ready' ? n.kind
     : n.kind === 'festival' || n.kind === 'new-year' || n.kind === 'days' ? `${n.kind}:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
       : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }

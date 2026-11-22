@@ -11,7 +11,9 @@ import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
 import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type BuildPlace, type FarmPlace, type PlaceOpens } from '../farm/places'
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
-import { HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
+import { HALF_PACE_FROM, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
+import { CREDIT_SWEEP, FARM_CREDIT, LOAN_FEE } from '../farm/credit'
+import { RING_COMMISSIONS, RING_DEPOSIT } from '../romance/ring-orders'
 import { NIGHT_STEPS } from '../night/end-day'
 import { ARRIVALS, BURNERS, GREEN_MS, MOST_A_PART, PERFECT_FROM_MS, PERFECT_TO_MS, PLAY_TIERS, SMOKE_MS, STOVE_POINTS, STOVE_SECONDS, TICKET_SHAPES, tierCount } from '../kitchen/stove'
 import { KITCHEN_LEVELS } from '../kitchen/levels'
@@ -93,7 +95,7 @@ import { DATE_FROM, EVENING_FACTOR, eveningCost, eveningMoments, eveningPoints, 
 import { MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, STAGE_NAMES, STAGE_RULES } from '../romance/loop'
 import { MEALS } from '../save/v4'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
-import { BENCH_WORDS, benchTakes, forgeRecipe, RING_INPUTS, ringPercent, STARTER_RING_LOGS } from '../romance/bench'
+import { ringPercent } from '../romance/bench'
 import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_FRIENDS } from '../romance/wedding'
 import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOMESTEAD_ROW_MARRIED, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
 import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
@@ -620,17 +622,13 @@ function tricksBlock(): string {
 
 /** The mayor's office's loans: the limit and the loans at once by Farm Rank, and the terms. */
 function loansBlock(): string {
-  const ranks = LOAN_LIMITS.map((_, i) => String(i + 1))
-  return table(['Farm Rank', ...ranks], [
-    ['Lends up to', ...LOAN_LIMITS.map(g)],
-    ['Loans at once', ...ranks.map((r) => (Number(r) >= TWO_LOANS_FROM ? '2' : '1'))],
-  ]) + `\n\n${table(['Term', 'The rule'], [
-    ['What it lends', `What the build is short of gold, rounded up to ${g(LOAN_STEP)}, never past its cost; you bring the goods`],
-    ['Toward', 'A place offered at your Farm Rank (its game built), or the next house once its wedding has come'],
-    ['The fee', `${Math.round(LOAN_FEE * 100)}% of the loan, rounded up to 10g, owed with it`],
-    ['Each night', `A ${LOAN_NIGHTS === 10 ? 'tenth' : `1/${LOAN_NIGHTS}`} of what’s owed when it’s taken (rounded up to 5g). Capped by the night’s income and by the cash available after bills and arrears`],
-    ['Repay', 'At the office, in full, any time you’re in town; the fee isn’t returned'],
-  ])}`
+  return table(['Term', 'The rule'], [
+    ['Credit', `${g(FARM_CREDIT)} shared outstanding principal from Rank 1, across three open loans`],
+    ['What it lends', 'Gold advances, exact supplier goods, and eligible projects and commissions'],
+    ['The fee', `${Math.round(LOAN_FEE * 100)}% once, rounded up to 10g`],
+    ['Each night', `${Math.round(CREDIT_SWEEP * 100)}% of settled sales left after food, upkeep, and arrears, shared oldest first`],
+    ['Repay', 'Pay any amount at the office. Payments clear the fee first, then free principal. A paid-off loan frees its slot.'],
+  ])
 }
 // --- The Farm Rank, the Diary and the cast ---------------------------------------------------------------------
 
@@ -1169,28 +1167,17 @@ function eveningSlotsBlock(): string {
 
 /** The ten rings, their prices, the bench's cheapest three and the ring's own recipe. */
 function ringsBlock(): string {
-  const cheapest = (grade: number): string => {
-    const good = GOODS.filter((x) => x.grade === grade && benchTakes(false, x.id)).sort((a, b) => a.price - b.price)[0]!
-    return `${RING_INPUTS} ${itemNameOf(good.id)} (${g(good.price)} each)`
-  }
-  return table(['Grade', 'Ring', 'Id', '★1', '★5', 'Her bonus once married', 'Cheapest at the bench', 'Its own recipe (once the Smelter and the Cutter stand)'], RING_GOODS.map((r) => {
-    const recipe = forgeRecipe(r.grade)
-    return [`G${r.grade}`, goodName(r.id), `\`${r.id}\``, g(starPrice(r.id, 1)), g(starPrice(r.id, 5)), `+${ringPercent(r.grade)}%`, cheapest(r.grade),
-      `2 ${itemNameOf(recipe.ingot)} + 1 ${itemNameOf(recipe.gem)}`]
-  }))
+  return table(['Grade', 'Ring', 'Id', '★1 sale', '★5 sale', 'Her bonus once married'], RING_GOODS.map(r => [
+    `G${r.grade}`, goodName(r.id), `\`${r.id}\``, g(starPrice(r.id, 1)), g(starPrice(r.id, 5)), `+${ringPercent(r.grade)}%`,
+  ]))
 }
 /** The bench's rule, its refusals, and what the merge game will add. */
 function benchRecipe(): string {
-  return table(['', 'The ring bench'], [
-    ['Opens', 'The night after the first Romance 8 event anyone plays; the smith’s scene is due the next morning'],
-    ['Starter Copper Ring', `${STARTER_RING_LOGS} Pine Logs, any stars, with no paid building or Farm Rank requirement`],
-    ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand`],
-    ['Cost', 'The goods only: no gold, no game, no assistant, no score'],
-    ['Out', 'The ring, ★1 (a Rough make), into the Warehouse'],
-    ['How often', 'One ring a day (`today.ring`)'],
-    ['Her bonus once married', '+1% at her line a grade, inside her own +35%'],
-    ['Refusals', Object.values(BENCH_WORDS).map((w) => `“${w}”`).join(' · ')],
-  ])
+  return table(['Ring', 'Farm Rank', 'Materials', 'Fee', 'Delivery'], RING_COMMISSIONS.map(recipe => [
+    recipe.name, recipe.rank,
+    recipe.materials.map(line => `${line.count} ${goodName(line.id)}`).join(' + ') + (recipe.grade === 1 ? ' (provided by smith)' : ''),
+    g(recipe.gold), recipe.days === 1 ? 'Next dawn' : `${recipe.days} dawns`,
+  ])) + `\n\nThe Copper Ring can be financed with ${g(RING_DEPOSIT)} down. The Ring Bench accepts one pending order independently of the tool and heirloom counters.`
 }
 /** The smith's scene at the bench, beat by beat. */
 // --- The dialogue engine -----------------------------------------------------------------------------------------

@@ -1,27 +1,13 @@
-// Upkeep and loans: the farm has to pay its way. What you add to the farm costs a little each night, and the mayor's
-// office lends toward a build so it can stand ahead of the gold.
-//
-//   the night, step 1   the bin pays
-//   the night, step 2   the farmhands work ──► the farm eats ──► cover takeout, upkeep and arrears,
-//                       then repay loans from that night's income with the cash left
-//   upkeep a night      15g each place built and each house · 10g each spouse living on the farm (in her room). The
-//                       start's own places are free. A farmhand's cost is her meals on her farm days (`farm/food.ts`).
-//   takeout             15g a meal the pantry was short, from the first night: a new farm's farmer eats two (30g)
-//   short of it         what gold there is pays, takeout first; the rest is owed, takeout and upkeep alike; the first
-//                       short night warns in the morning, and from the second the farmhands work at half pace (`halfPace`)
-//                       until it's paid. Nobody leaves, nobody goes hungry, and nothing is lost: gold never goes below 0.
-//   loans               at the mayor's office, in town: borrow what a place or a house is short of gold (rounded up to 100g), up to the Farm Rank's limit; one loan at a time, two from Farm
-//                       Rank 4; a 10% fee; each night's income repays up to a tenth of it once bills are covered; repay the
-//                       rest at the office any time.
-//
-// The book keeps the bin's pay on each of the last seven nights, so the Book can set an average day's income beside the
-// daily upkeep. Ordering a build stays where it is (its Build card, free, no town needed): the office adds the loan.
-// Pure; never stamps. Loaded with the night, the Book, the projects and the town.
+// The farm settles food, upkeep, arrears, and project credit against actual sales each night.
 import { farmRankOf } from './farm'
 import { BUILD_PLACES, farmPlace, placeBuilt, type BuildPlace, type FarmPlaceId } from './places'
-import { buildLock, buildLockWords, payBuild } from './builds'
+import { buildLock, buildLockWords, buildNeeds, payBuild } from './builds'
 import { buildHouse, houseOpensWords, nextLot } from '../romance/homestead'
-import { spendGold } from '../save/gold'
+import { earnGold, spendGold } from '../save/gold'
+import { GOODS } from '../goods/ids'
+import { addGoods } from '../save/warehouse'
+import { materialQuote, type MaterialQuote } from './credit-supplies'
+import { CREDIT_SWEEP, FARM_CREDIT, creditLeft, issueCredit, payCredit } from './credit'
 import { SaveRuleError } from '../save/rules'
 import { DORM_LOAN, farmHome, HOUSE_LOAN, INCOME_NIGHTS, MAX_LOANS, type FarmSave, type Loan, type NightAccount } from '../save/v4'
 import type { MoneyLine } from '../night/summary'
@@ -68,25 +54,13 @@ export const atPace = (actions: number, save: Pick<FarmSave, 'farm'>): number =>
 
 // --- Loans -----------------------------------------------------------------------------------------------------------
 
-/** The most the office lends at each Farm Rank, 1–10: every place at its rank, and the houses with some gold of your
- * own. */
-export const LOAN_LIMITS: readonly number[] = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000, 50_000, 80_000, 120_000, 160_000]
-/** Two loans at once from this Farm Rank; one before. */
-export const TWO_LOANS_FROM = 4
-/** The fee: a tenth of the loan, rounded up to 10g, owed with it. */
-export const LOAN_FEE = 0.1
+/** Legacy repayment terms remain on loans opened before the shared credit line. */
 /** A night's share: a tenth of what's owed when it's taken, rounded up to 5g, so it clears in ten nights of income. */
 export const LOAN_NIGHTS = 10
-/** A loan is what the build is short of, rounded up to this. */
-export const LOAN_STEP = 100
 
-export const loanLimit = (save: Pick<FarmSave, 'farm'>): number => LOAN_LIMITS[farmRankOf(save.farm.points) - 1] ?? LOAN_LIMITS[0]!
-export const loanSlots = (save: Pick<FarmSave, 'farm'>): number => (farmRankOf(save.farm.points) >= TWO_LOANS_FROM ? MAX_LOANS : 1)
-export const loanFee = (lent: number): number => Math.ceil((lent * LOAN_FEE) / 10) * 10
+export const loanLimit = (_save?: Pick<FarmSave, 'farm'>): number => FARM_CREDIT
+export const loanSlots = (_save?: Pick<FarmSave, 'farm'>): number => MAX_LOANS
 export const loanNightly = (owed: number): number => Math.ceil(owed / LOAN_NIGHTS / 5) * 5
-/** What a build short of `short` gold borrows: rounded up to 100g, never past its cost. */
-export const loanFor = (short: number, cost: number): number => Math.min(cost, Math.ceil(short / LOAN_STEP) * LOAN_STEP)
-
 /** The words for a loan's project: the place's own name (the app swaps in the world's) or "House 2"; a loan a save still
  * holds toward the retired Dorm, "Dorm level 2". */
 export function loanName(project: string): string {
@@ -103,7 +77,7 @@ export type LoanLock =
   | { by: 'build'; words: string }
   | { by: 'enough' }
   | { by: 'slots'; slots: number }
-  | { by: 'limit'; limit: number; rank: number }
+  | { by: 'limit'; limit: number }
 
 /** One build the office can order: a place offered at your Farm Rank (its game built), or the next house once its
  * wedding has come. Its cost, what you'd borrow, and what stands in the way of each way to pay. */
@@ -119,6 +93,8 @@ export interface BuildOrder {
   own: string | null
   /** What a loan would be: the gold short, rounded up to 100g; 0 when the gold is there. */
   borrow: number
+  materials: MaterialQuote[]
+  cash: number
   /** Borrowing toward it: null when you can now. */
   lock: LoanLock | null
 }
@@ -134,29 +110,41 @@ function loanLock(save: FarmSave, build: string | null, borrow: number): LoanLoc
   if (borrow === 0) return { by: 'enough' }
   const slots = loanSlots(save)
   if (save.farm.loans.length >= slots) return { by: 'slots', slots }
-  const limit = loanLimit(save)
-  if (borrow > limit) return { by: 'limit', limit, rank: farmRankOf(save.farm.points) }
+  const limit = creditLeft(save)
+  if (borrow > limit) return { by: 'limit', limit }
   return null
 }
 
 /** A build paid with gold only (a house): its order. */
-function goldOrder(save: FarmSave, project: string, kind: 'house', cost: number): BuildOrder {
-  const borrow = loanFor(Math.max(0, cost - save.gold), cost)
-  return { project, kind, place: null, cost, own: needGold(cost - save.gold), borrow, lock: loanLock(save, null, borrow) }
+function goldOrder(save: FarmSave, project: string, kind: 'house', cost: number, budget: number): BuildOrder {
+  const cash = Math.min(cost, budget)
+  const borrow = cost - cash
+  return { project, kind, place: null, cost, own: needGold(cost - save.gold), borrow, cash, materials: [], lock: loanLock(save, null, borrow) }
 }
 
 /** The builds the office can order today, in the Diary's order: the places offered at your Farm Rank whose games are
  * built and that don't stand yet (one paid today says "Builds tonight"), then the next house once its wedding has come. */
-export function buildOrders(save: FarmSave): BuildOrder[] {
+export function buildOrders(save: FarmSave, deposit = save.gold): BuildOrder[] {
+  const budget = Number.isSafeInteger(deposit) ? Math.max(0, Math.min(save.gold, deposit)) : save.gold
   const rank = farmRankOf(save.farm.points)
   const places = BUILD_PLACES.filter((p) => p.opens.game && p.opens.rank <= rank && !placeBuilt(save, p.id)).map((place): BuildOrder => {
     const cost = place.opens.cost.gold
-    const build = lockButGold(save, place.id)
-    const borrow = build ? 0 : loanFor(Math.max(0, cost - save.gold), cost)
-    return { project: place.id, kind: 'place', place, cost, own: buildLockWords(buildLock(save, place.id)), borrow, lock: loanLock(save, build, borrow) }
+    const lock = buildLock(save, place.id)
+    const lines = buildNeeds(save, place).filter(({ goods, have }) => have < goods.count)
+    const materials = lines.flatMap(({ goods, have }) => {
+      const quotes = GOODS.filter(good => good.family === goods.family && good.refined === goods.refined)
+        .flatMap(good => materialQuote(save, good.id, goods.count - have) ?? [])
+        .sort((a, b) => a.unit - b.unit)
+      return quotes.slice(0, 1)
+    })
+    const build = lock?.by === 'short' && materials.length === lines.length ? null : lockButGold(save, place.id)
+    const total = cost + materials.reduce((sum, line) => sum + line.count * line.unit, 0)
+    const cash = Math.min(budget, total)
+    const borrow = build ? 0 : total - cash
+    return { project: place.id, kind: 'place', place, cost, own: buildLockWords(lock), borrow, cash, materials, lock: loanLock(save, build, borrow) }
   })
   const lot = nextLot(save)
-  const house = lot && lot.open ? [goldOrder(save, `house:${lot.n}`, 'house', lot.cost)] : []
+  const house = lot && lot.open ? [goldOrder(save, `house:${lot.n}`, 'house', lot.cost, budget)] : []
   return [...places, ...house]
 }
 
@@ -167,15 +155,9 @@ export function loanLockWords(lock: LoanLock | null): string | null {
     case 'town': return 'The mayor’s office is in town.'
     case 'build': return `${lock.words}.`
     case 'enough': return 'You have the gold: build it.'
-    case 'slots': return lock.slots === 1 ? 'One loan at a time: this one first.' : 'Two loans at a time: one of these first.'
-    case 'limit': return `The office lends up to ${lock.limit.toLocaleString('en-US')}g at Farm Rank ${lock.rank}.`
+    case 'slots': return 'All three loan slots are in use.'
+    case 'limit': return `You have ${lock.limit.toLocaleString('en-US')}g of credit left.`
   }
-}
-
-/** A new loan: lent `lent` today, its fee owed with it, a tenth a night. */
-export function newLoan(project: string, day: number, lent: number): Loan {
-  const fee = loanFee(lent)
-  return { for: project, day, lent, fee, owed: lent + fee, nightly: loanNightly(lent + fee) }
 }
 
 /** Why a project isn't among today's orders, in words: not offered at this Farm Rank, its game not built, built
@@ -188,32 +170,36 @@ function notAnOrder(save: FarmSave, project: string): string {
   return place && BUILD_PLACES.some((p) => p.id === place.id) ? `${buildLockWords(buildLock(save, place.id)) ?? 'Built'}.` : 'Not something to build.'
 }
 
-/** Borrows toward a build and orders it, in one: the office lends what it's short of gold (rounded up to 100g), and
- * the build is paid at once (a place with the farm's own goods too, standing the next morning; a house, standing at
- * once, named `name`). Free once you're in town. Refused out of town
- * (`locked`), for the build's own lock (`locked`), with the gold already there and with the loans held (`bad-job`), and
- * past the Farm Rank's limit (`locked`). Never stamps. */
-export function borrowFor<S extends FarmSave>(save: S, project: string, name = ''): S {
+/** Buys an eligible build and opens its credit note in the same save change. */
+export function borrowFor<S extends FarmSave>(save: S, project: string, name = '', expected?: number, deposit?: number): S {
   if (!save.today.town) throw new SaveRuleError('locked', loanLockWords({ by: 'town' })!)
-  const order = buildOrders(save).find((o) => o.project === project)
+  if (deposit !== undefined && (!Number.isSafeInteger(deposit) || deposit < 0 || deposit > save.gold)) {
+    throw new SaveRuleError('bad-count', 'Choose a deposit within the gold you hold.')
+  }
+  const order = buildOrders(save, deposit).find((o) => o.project === project)
   if (!order) throw new SaveRuleError('locked', notAnOrder(save, project))
   if (order.lock) throw new SaveRuleError(order.lock.by === 'enough' || order.lock.by === 'slots' ? 'bad-job' : 'locked', loanLockWords(order.lock)!)
-  const lent: S = { ...save, gold: save.gold + order.borrow, farm: { ...save.farm, loans: [...save.farm.loans, newLoan(project, save.calendar.day, order.borrow)] } }
+  if (expected !== undefined && order.borrow !== expected) throw new SaveRuleError('locked', 'The quote changed. Review it again.')
+  const issued = issueCredit(save, loanName(project), 'project', order.cash + order.borrow, order.cash, project)
+  let items = issued.items
+  for (const line of order.materials) items = addGoods(items, line.id, 1, line.count)
+  const prepared = { ...issued, items }
+  const funded = order.cost - order.cash
+  const lent = funded >= 0 ? earnGold(prepared, funded) : spendGold(prepared, -funded)
   switch (order.kind) {
     case 'place': return payBuild(lent, order.place!.id)
     case 'house': return buildHouse(lent, name) as S
   }
 }
 
-/** Repays a loan in full at the office: what's owed leaves the farm's gold, and the loan is cleared. Free once you're in
- * town. Refused out of town (`locked`), for no such loan (`bad-job`) and when gold is short (`no-gold`). Never stamps. */
-export function repayLoan<S extends FarmSave>(save: S, project: string): S {
+/** Pays the full balance or a chosen portion of one note at the office. */
+export function repayLoan<S extends FarmSave>(save: S, project: string, amount?: number): S {
   if (!save.today.town) throw new SaveRuleError('locked', loanLockWords({ by: 'town' })!)
   const loan = save.farm.loans.find((l) => l.for === project)
   if (!loan) throw new SaveRuleError('bad-job', 'No loan for that.')
-  if (save.gold < loan.owed) throw new SaveRuleError('no-gold', `Need ${(loan.owed - save.gold).toLocaleString('en-US')}g more.`)
-  const paid = spendGold(save, loan.owed)
-  return { ...paid, farm: { ...paid.farm, loans: paid.farm.loans.filter((l) => l !== loan) } }
+  const payment = amount ?? loan.owed
+  if (payment > save.gold) throw new SaveRuleError('no-gold', `Need ${(payment - save.gold).toLocaleString('en-US')}g more.`)
+  return payCredit(save, loan, payment, 'manual')
 }
 
 /** The nights a loan still needs at its share a night, and the morning it clears if each night's income covers its
@@ -244,19 +230,31 @@ export interface FoodBill {
  * nights. Takeout, upkeep and arrears reserve their cash first. Each loan draws in order from the night's remaining
  * income and spare cash. When a bill is short, the farm pays takeout first and counts consecutive short nights.
  */
-export function settleAccounts<S extends FarmSave>(save: S, income: number, food: FoodBill | null = null): { save: S; lines: MoneyLine[] } {
+export function settleAccounts<S extends FarmSave>(save: S, income: number, food: FoodBill | null = null, restaurant = 0): { save: S; lines: MoneyLine[] } {
   const lines: MoneyLine[] = []
   let gold = save.gold
   const takeout = (food?.takeout ?? 0) * TAKEOUT_PRICE
   const due = upkeepOf(save).gold + save.farm.owed
   let share = Math.min(income, Math.max(0, gold - takeout - due))
-  const loans: Loan[] = []
-  for (const loan of save.farm.loans) {
-    const paid = Math.min(loan.nightly, loan.owed, share, gold)
-    gold -= paid
+  let account = save
+  const pay = (loan: Loan, amount: number) => {
+    if (amount > 0) account = payCredit(account, loan, amount, 'automatic')
+    gold -= amount
+    lines.push({ kind: 'loan', for: loan.for, paid: amount, left: loan.owed - amount, ...(loan.credit ? { title: loan.credit.title } : {}) })
+  }
+  let afterBills = Math.max(0, income - takeout - due)
+  for (const loan of save.farm.loans.filter(loan => !loan.credit)) {
+    const paid = Math.min(loan.nightly, loan.owed, share)
+    pay(loan, paid)
     share -= paid
-    lines.push({ kind: 'loan', for: loan.for, paid, left: loan.owed - paid })
-    if (loan.owed - paid > 0) loans.push({ ...loan, owed: loan.owed - paid })
+    afterBills = Math.max(0, afterBills - paid)
+  }
+  const repaymentBudget = Math.floor(afterBills * CREDIT_SWEEP)
+  share = Math.min(share, repaymentBudget)
+  for (const loan of save.farm.loans.filter(loan => loan.credit)) {
+    const paid = Math.min(loan.owed, share)
+    pay(loan, paid)
+    share -= paid
   }
   if (food?.staff) lines.push({ kind: 'staff', mouths: food.staff.mouths, days: food.staff.days })
   if (food && (food.pantry > 0 || food.spoiled > 0)) lines.push({ kind: 'pantry', meals: food.pantry, spoiled: food.spoiled, fed: food.fed })
@@ -271,8 +269,8 @@ export function settleAccounts<S extends FarmSave>(save: S, income: number, food
   if (owed > 0) lines.push({ kind: 'short', owed, nights: short })
   else if (save.farm.owed > 0) lines.push({ kind: 'paid-up', owed: save.farm.owed })
   const book = [...save.farm.income, income].slice(-INCOME_NIGHTS)
-  const record: NightAccount = { day: save.calendar.day, shipping: income, food: bought, upkeep: paid,
-    loans: save.gold - gold - bought - paid, owed }
+  const record: NightAccount = { day: save.calendar.day, shipping: income - restaurant, ...(restaurant ? { restaurant } : {}),
+    ...(repaymentBudget ? { repaymentBudget } : {}), food: bought, upkeep: paid, loans: save.gold - gold - bought - paid, owed }
   const accounts = [...(save.farm.accounts ?? []).filter(entry => entry.day < record.day), record].slice(-INCOME_NIGHTS)
-  return { save: { ...save, gold, farm: { ...save.farm, loans, owed, short, income: book, accounts } }, lines }
+  return { save: { ...account, gold, farm: { ...account.farm, owed, short, income: book, accounts } }, lines }
 }
