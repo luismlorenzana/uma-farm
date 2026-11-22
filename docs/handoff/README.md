@@ -143,6 +143,7 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 | Packet | Work | Status |
 |---|---|---|
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
+| [F111](tasks/F111-project-finance.md) | Project finance, wedding rings, and farm handoffs | Ready for implementation. The packet covers large loans, partial repayment, ring commissions, automatic surplus and roster playthroughs. |
 
 **The Forge is open** (F110). [Shared tools and heirlooms](../game-mechanics.md#the-forge-workshop) have their
 own orders, and the Ring Bench stays available on the Romance 8 path.
