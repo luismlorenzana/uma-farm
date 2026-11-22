@@ -138,7 +138,8 @@ extra ore farm-wide that day, even if 20 Umas dig. Show the two kinds of benefit
 The Work calendar shows actual named assignments and their gaps. Add **Forge · [Uma]** for a booked Morning, and
 **Gold Can ready** on the delivery date with updated forecast counts. Use the existing allocation-versus-missing
 styling. Re-evaluate from the same draft save snapshot and same scheduling rules before and after the upgrade.
-Future weather, purchases and choices can change the forecast. For gathering tools, use **2 bonus pieces left today**
+New planting, harvests, purchases and assignment changes can change the forecast. For gathering tools,
+use **2 bonus pieces left today**
 as an explanatory detail at the job, then show any extra items in the existing work receipt.
 
 ### A path for the smithing Uma
