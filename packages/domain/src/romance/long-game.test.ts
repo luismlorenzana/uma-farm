@@ -294,6 +294,27 @@ describe('married life', () => {
     expect(defaults.diary).toEqual(save.diary)
   })
 
+  it('uses every night wardrobe scene with the corresponding saved portrait in live visits and replays', () => {
+    const sceneIds = (beats: ReturnType<typeof visitBeats>) => beats.flatMap(beat =>
+      beat.steps.flatMap(step => 'illustration' in step ? [step.illustration] : []))
+    for (let look = 1; look <= 10; look++) {
+      const visit = { day: 1, kind: 'pajamas' as const, who: [a] as [string], looks: [look] }
+      const parts = visitBeats(pack, visit)
+      expect(sceneIds(parts)).toEqual([`night-pajamas-${look}-couch`, `night-pajamas-${look}-bed`])
+      expect(parts.at(-1)?.portrait).toBe(`pajamas-${look}`)
+      expect(sceneIds(visitBeats(pack, visit, true))).toEqual([])
+    }
+    for (let look = 1; look <= 5; look++) {
+      for (const kind of ['birthday', 'anniversary'] as const) {
+        const visit = { day: 1, kind, who: [a, b] as [string, string], looks: [look, 10] }
+        const parts = visitBeats(pack, visit)
+        expect(sceneIds(parts.filter(part => part.id === a))).toEqual([`night-anniversary-${look}-bed`])
+        expect(parts.find(part => part.id === a)?.portrait).toBe(`wedding-anniversary-${look}`)
+        expect(sceneIds(parts.filter(part => part.id === b))).toEqual(['night-pajamas-10-couch', 'night-pajamas-10-bed'])
+      }
+    }
+  })
+
   it('validates story slots and reciprocal duo data, preserving approved art cues and rejecting unknown entries', () => {
     const ctx = { umas: new Set([...ids, 's9800001']) }
     const script = { sitting: 'The house is quiet tonight.', illustration: 'quiet-room', emotes: { morning: 'tender' } }
@@ -319,7 +340,7 @@ describe('married life', () => {
       expect(visitScript(authored, special, 0)).toEqual(birthday)
       const beats = visitBeats(authored, special)
       expect(beats[0]?.portrait).toBe('wedding-anniversary-1')
-      expect(beats[1]?.portrait).toBe('pajamas-playful')
+      expect(beats[1]?.portrait).toBe('pajamas-1')
       expect(beats[2]?.steps.at(-1)).toMatchObject({ say: a, line: birthday.bedside, emote: 'loving' })
     }
   })

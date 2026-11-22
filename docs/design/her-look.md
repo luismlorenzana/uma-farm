@@ -95,8 +95,8 @@ with the fallback.
 | `dinner` | Dinner dates, birthdays, calendar anniversary scenes and household dinners | `happy`, `laughing`, `surprised`, `thinking`, `shy`, `tender`, `loving`, `tearful-joy` | 9 |
 | `wedding` | Ceremony, vows and player replies | `happy`, `laughing`, `tender`, `loving`, `tearful-joy` | 6 |
 | **`wedding-night`** | The wedding-day scene. Shy opening, flustered realization, quiet affection and the default morning beat. | `shy`, `flustered`, `tender`, `loving`, `sleepy` | **6** |
-| **`pajamas-playful` and pajama slot 1** | A night in, ordinary morning greetings, the first night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
-| **Pajama slots 2–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation | `tender`, `loving` | **3 each** |
+| **`pajamas-playful`** | A night in, ordinary morning greetings, the fallback night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
+| **Pajama slots 1–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation | `tender`, `loving` | **3 each** |
 | **Wedding Anniversary slots 1–5** (`marriedLife.birthday`, `marriedLife.anniversary`) | Spouse birthdays and anniversary nights. The host wears this look. A duo guest uses her pajamas. | `tender`, `loving` | **3 each** |
 | `swimsuit` | Summer shore dialogue around the beach illustration | `happy`, `laughing`, `tender`, `loving` | 5 |
 
@@ -106,7 +106,9 @@ for `tender`, `laughing` or `sleepy` on 126 of 164 spoken steps. The baseline pa
 emotional range, including nighttime heart events. A named calendar `anniversary` scene normally wears `dinner`.
 The five numbered formal looks belong to the married-life player. It uses neutral as the sitting conversation opens,
 tender at the quiet bedside for a pajama visit, and loving at the bedside for a birthday or anniversary. Farewell
-and morning use tender. An authored beat can choose its own expression.
+and morning use tender. An authored beat can choose its own expression. When a released wardrobe retires an old
+base, earlier pajama and wedding-night portrait cues use the first numbered look of their respective wardrobe.
+The prior wedding-day illustration IDs still resolve in those scenes and in saved galleries.
 
 **When a scene calls for more.** Start with the actual fallback. `dreamy` and `sleepy` can use `tender`, `teasing`
 can use `happy`, and `worried` can use `sad`. Approve the exact composition when it supplies the punchline or changes

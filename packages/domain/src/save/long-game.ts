@@ -35,7 +35,7 @@ export interface Visit {
 export const visitLookKind = (visit: Pick<Visit, 'kind'>, index: number): NightKind =>
   index === 0 && visit.kind !== 'pajamas' ? 'anniversary' : 'pajamas'
 export const visitPortraitKey = (kind: NightKind, slot: number): string =>
-  kind === 'pajamas' && slot === 1 ? 'pajamas-playful' : `${kind === 'pajamas' ? 'pajamas' : 'wedding-anniversary'}-${slot}`
+  `${kind === 'pajamas' ? 'pajamas' : 'wedding-anniversary'}-${slot}`
 export interface GreaterLove {
   points: number
   pajamas: number

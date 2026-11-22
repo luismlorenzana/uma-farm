@@ -53,6 +53,15 @@ describe('a line’s pick', () => {
     expect(portraitPick(PORTRAITS, 'spring', 'angry')).toMatchObject({ expression: 'neutral', face: null })
     expect(portraitPick(PORTRAITS, 'spring', 'wistful')).toMatchObject({ expression: 'neutral', face: null })
   })
+  it('uses the first numbered look for a retired legacy pajama or wedding-night cue', () => {
+    const wardrobe = syntheticDialoguePortraits(ID, ['spring', 'pajamas-1', 'pajamas-5', 'wedding-anniversary-1'], ['tender', 'loving'])
+    expect(portraitPick(wardrobe, 'pajamas-playful', 'tender')).toMatchObject({ outfit: 'pajamas-1', expression: 'tender' })
+    expect(portraitPick(wardrobe, 'wedding-night', 'loving')).toMatchObject({ outfit: 'wedding-anniversary-1', expression: 'loving' })
+    expect(portraitPick(wardrobe, 'pajamas-playful', 'neutral', 'pajamas-5').outfit).toBe('pajamas-5')
+    const prior = syntheticDialoguePortraits(ID, ['spring', 'pajamas-playful', 'wedding-night', 'pajamas-1'], ['tender'])
+    expect(portraitPick(prior, 'pajamas-playful', 'tender').outfit).toBe('pajamas-playful')
+    expect(portraitPick(prior, 'wedding-night', 'tender').outfit).toBe('wedding-night')
+  })
   it('an outfit she hasn’t got shows spring', () => {
     expect(portraitPick(PORTRAITS, 'kimono', 'happy')).toMatchObject({ outfit: 'spring', base: PORTRAITS.bases.spring })
   })

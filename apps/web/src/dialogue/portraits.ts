@@ -84,7 +84,11 @@ export function setPortraitSource(next: PortraitSource | null): void {
  * the line's emote, else its nearest she has by the expressions' fallbacks, else neutral (the base alone). */
 export type PortraitPick = ReturnType<typeof dialoguePortraitFor>
 export function portraitPick(p: DialoguePortraits, outfit: ArtOutfit, emote: unknown, preferred?: string): PortraitPick {
-  return dialoguePortraitFor(p, preferred && p.bases[preferred] ? preferred : outfit, faceFor(emote, (e) => p.faces[e] !== undefined))
+  const selected = preferred && p.bases[preferred] ? preferred : outfit
+  // Older story cues can keep their outfit names after this character's base art is retired.
+  const replacement = selected === 'pajamas-playful' ? 'pajamas-1' : selected === 'wedding-night' ? 'wedding-anniversary-1' : selected
+  const key = p.bases[selected] ? selected : replacement
+  return dialoguePortraitFor(p, key, faceFor(emote, (e) => p.faces[e] !== undefined))
 }
 
 /** Warms these pictures (the next line's base and face): loaded, decoded and held while the line before it shows. */

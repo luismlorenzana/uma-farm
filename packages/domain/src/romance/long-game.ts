@@ -181,7 +181,12 @@ export function visitBeats(pack: LifePack, visit: Visit, morning = false) {
   const beats = morning ? ['morning'] as const : NIGHT_BEATS.slice(0, -1)
   return beats.flatMap((beat, phase) => speakers.map(({ id, script, kind, wardrobe, slot }, i) => {
     const steps: Step[] = []
-    if (phase === 0 && script.illustration) steps.push({ illustration: script.illustration })
+    const authored = phase === 0 ? script.illustration : undefined
+    // Each speaker's recorded look drives both live scenes and replays. A missing cue keeps her portrait on stage.
+    const wardrobeArt = script.outfit ? undefined : wardrobe === 'pajamas' && beat === 'sitting' ? `night-pajamas-${slot}-couch`
+      : beat === 'bedside' ? `night-${wardrobe}-${slot}-bed` : undefined
+    const illustration = authored ?? wardrobeArt
+    if (illustration) steps.push({ illustration })
     if (beat === 'bedside' && i === 0) steps.push({ narrate: 'You sit by the bedside as the house grows quiet.' })
     steps.push({ say: id, line: script[beat] ?? defaultNightScript(kind)[beat], emote: script.emotes?.[beat] ?? nightBeatFace(kind, beat) })
     return { id, beat, steps, outfit: script.outfit ?? (wardrobe === 'anniversary' ? 'wedding-night' as const : 'pajamas' as const),
