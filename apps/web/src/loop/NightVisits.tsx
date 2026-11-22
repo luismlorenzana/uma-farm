@@ -1,6 +1,6 @@
 import { byRelationship } from './relationship-order'
 import {
-  actionsLeft, crewShiftEnabled, passDayPart, anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoReady, editDuo, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
+  actionsLeft, crewShiftEnabled, passDayPart, anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoReady, editDuo, formalLooks, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
   NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, useStoryDuos, visitBeats, wantsBirthdayAlone,
   type Birthdays, type Duo, type FarmSave, type VisitKind, type StoryPack, type Visit,
 } from '@farm/domain'
@@ -54,6 +54,7 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
   save: FarmSave; pack: StoryPack; birthdays: Birthdays; birthday: BirthdayCheck; focus: string | null; nameOf: NameOf; onClose: () => void
 }) {
   const [mode, setMode] = useState<Mode>('solo')
+  const [look, chooseLook] = useState<Record<string, number>>({})
   const [active, setActive] = useState<{ visit: Visit; slot: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const inFlight = useRef(false)
@@ -87,7 +88,7 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
     finally { setBusy(false); inFlight.current = false }
   }
   const start = (who: Visit['who'], kind: VisitKind) => {
-    const visit = planVisit(save, pack, who, kind, id => birthday(save, id), birthdays)
+    const visit = planVisit(save, pack, who, kind, id => birthday(save, id), birthdays, kind === 'pajamas' ? undefined : look[who[0]] || undefined)
     if (visit) { setError(null); setActive({ visit, slot: visits.length }) }
   }
   if (active) return <VisitScene save={save} pack={pack} visit={active.visit} nameOf={nameOf} busy={busy} error={error}
@@ -102,6 +103,17 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
           </Button>)}
       </div>
       {error && <p role="alert" className="text-danger">{error}</p>}
+      {!beforeNight && !full && mode !== 'editor' && spouses.some(person => person.offers.length && formalLooks(save, person.id).length > 1) &&
+        <details className="rounded-md border border-hairline px-2">
+          <summary className="flex min-h-11 items-center font-semibold">Choose look</summary>
+          {spouses.filter(person => person.offers.length && formalLooks(save, person.id).length > 1).map(({ id }) =>
+            <label key={id} className="flex min-h-11 flex-wrap items-center gap-2">{nameOf(id)}
+              <select className="min-h-11 bg-panel" value={look[id] ?? 0} onChange={event => chooseLook({ ...look, [id]: Number(event.target.value) })}>
+                <option value={0}>Wardrobe rotation</option>
+                {formalLooks(save, id).map(slot => <option key={slot} value={slot}>Formal look {slot}</option>)}
+              </select>
+            </label>)}
+        </details>}
       {mode === 'editor' ? <DuoEditor save={save} pack={pack} nameOf={nameOf} busy={busy} run={run} />
         : beforeNight ? <div className="space-y-2 rounded-md border border-hairline bg-panel p-3">
           <p>Start night to open five spouse visits. This passes the remaining {actionsLeft(save)} daytime {actionsLeft(save) === 1 ? 'action' : 'actions'}.</p>

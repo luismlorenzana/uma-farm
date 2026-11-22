@@ -37,6 +37,7 @@ const PairPlayer = lazy(() => import('../loop/PairPlayer'))
 const EventPlayer = lazy(() => import('../loop/EventPlayer'))
 const Memories = lazy(() => import('../loop/Memories'))
 const EveningPlayer = lazy(() => import('../loop/EveningPlayer'))
+const ForgeSheet = lazy(() => import('../loop/ForgeSheet'))
 const BenchSheet = lazy(() => import('../loop/BenchSheet'))
 const HomesteadSheet = lazy(() => import('../loop/HomesteadSheet'))
 const NightLevel = lazy(() => import('../loop/NightLevel'))
@@ -101,6 +102,7 @@ export function Shell() {
           {album && free && <Suspense fallback={null}><Memories key={album} /></Suspense>}
           {playing && free && !read && <Suspense fallback={null}><EventPlayer key={playing} /></Suspense>}
           {evening && free && !read && !playing && <Suspense fallback={null}><EveningPlayer key={evening} /></Suspense>}
+          {sheet === 'forge' && free && <Suspense fallback={null}><ForgeSheet /></Suspense>}
           {sheet === 'bench' && free && <Suspense fallback={null}><BenchSheet /></Suspense>}
           {sheet === 'homestead' && free && <Suspense fallback={null}><HomesteadSheet /></Suspense>}
           {level && free && !read && !playing && <Suspense fallback={null}><NightLevel key={level} value={level} /></Suspense>}

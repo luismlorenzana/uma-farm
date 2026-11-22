@@ -46,7 +46,7 @@ export class LocalSaveRepository implements SaveRepository {
       const data = await this.read()
       const row = data[uid]
       const current: SaveEnvelope = row ? { revision: row.revision, save: parseStored(row.save) } : EMPTY_ENVELOPE
-      if (current.revision !== baseRevision || save.version < versionOf(row?.save)) throw new RevisionConflict(current)
+      if (current.revision !== baseRevision || save.version < versionOf(row?.save) || (current.save?.version === 6 && current.save.forge && !save.forge)) throw new RevisionConflict(current)
       if (current.save && 'calendar' in current.save && save.calendar.start !== current.save.calendar.start) {
         throw new RevisionConflict(current)
       }

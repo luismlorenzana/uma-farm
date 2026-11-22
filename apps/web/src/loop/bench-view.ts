@@ -4,7 +4,7 @@
 // once married; and the one button, "Make an Iron Ring · 1 a day". Pure, so the sheet and the tests read the same.
 // Every word says "you". Loaded on demand with the sheet.
 import {
-  benchGrades, benchPick, benchStock, forgeRecipe, goodName, MAKE_BONUS, miningOpen, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
+  benchGrades, benchPick, benchStock, forgeRecipe, goodName, miningOpen, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
 } from '@farm/domain'
 
 /** The sheet's fixed words. */
@@ -12,7 +12,6 @@ export const BENCH_TEXT = {
   title: 'The Forge · ring bench',
   rule: 'A Copper Ring from Pine Logs, or a ring from refined goods of its grade.',
   bonus: `Her bonus once married: +${ringPercent(1)}% a grade`,
-  merge: `(Full Forge deferred. Its ring bonuses: +${MAKE_BONUS.fine} / +${MAKE_BONUS.great} / +${MAKE_BONUS.masterwork} more for a Fine, Great or Masterwork ring)`,
   none: 'For higher grades, use three refined goods of one grade. Try planks from the Sawmill, fillets from the Smokehouse, or flour from the Mill.',
   made: 'One ring a day. Come back tomorrow.',
   help: [

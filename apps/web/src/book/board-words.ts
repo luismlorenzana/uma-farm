@@ -42,7 +42,7 @@ export function taskWords(task: FarmTask, plots = 1): string {
     case 'forage': case 'chop': return `${TASK_NAMES[task.kind]} · ${theName(AREA_NAMES[task.area])}`
     case 'fish': return `Fish · ${theName(SPOT_NAMES[task.spot])}${task.mode ? ` · ${FISH_MODE_NAMES[task.mode]}` : ''}`
     case 'care': return `${task.feedOnly ? 'Feed only' : TASK_NAMES.care} · the ${HOME_NAMES[task.home]}`
-    case 'mine': return `${TASK_NAMES.mine} · the ${DIG_NAMES[task.dig]}`
+    case 'mine': return `${TASK_NAMES.mine} · the ${DIG_NAMES[task.dig]}${task.floor ? ` · Floor ${task.floor}` : ''}`
     case 'cook': return `${TASK_NAMES.cook} · ${KITCHEN}`
     case 'ship-surplus': return TASK_NAMES[task.kind]
     case 'save-seed': return `Save ${itemNameOf(task.crop ?? 'carrot')} seed · G${task.grade}${task.improve ? ` → G${task.grade + 1}` : ''} · keep ${task.target}`
@@ -66,6 +66,7 @@ export function dayChips(day: HandDay): string[] {
     ...(day.fed > 0 ? [`+${day.fed} well fed`] : []), ...(day.half ? ['half pace'] : []), ...(day.kitchen > 0 ? [`${day.kitchen} at the Kitchen`] : []),
     ...(day.restaurant ? ['1 at the Restaurant'] : []),
     ...(day.festival ? ['1 at the festival'] : []),
+    ...(day.forge ? ['1 at the Forge'] : []),
   ]
 }
 

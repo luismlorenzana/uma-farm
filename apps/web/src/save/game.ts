@@ -6,7 +6,7 @@
 // Earlier saves stop at the start-over card. Its button keeps a dirty device copy before starting fresh
 // with the original account. A newer save stops boot and sync and opens the update prompt.
 import {
-  morningShiftDue, prepareDayChange, expandCalendar, freshV6, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
+  activateForge, morningShiftDue, prepareDayChange, expandCalendar, freshV6, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
 } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
@@ -169,6 +169,7 @@ let loadingShift = false
 export async function commit(save: FarmSave): Promise<void> {
   const before = useGame.getState().save
   if (loadingShift) throw new Error('The morning shift is still loading. Try again in a moment.')
+  if (!save.forge) save = { ...save, forge: activateForge(before ?? save).forge }
   if (before) save = prepareDayChange(before, save)
   if (morningShiftDue(save)) {
     loadingShift = true
@@ -295,7 +296,7 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
   if (!(await addSafetyCopy({ uid, reason: 'restore', at: nowIso(), revision, save }))) return false
   await removeSafetyCopy(id)
   useGame.setState({ replacedAt: null })
-  await commit(touched(restored, nowIso()))
+  await commit(touched(activateForge(restored), nowIso()))
   return true
 }
 

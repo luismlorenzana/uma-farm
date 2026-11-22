@@ -152,7 +152,7 @@ describe("the Diary's projects", () => {
     await render(<DiaryPage />, '/diary')
     expect($$('[data-project]').map((p) => [p.dataset.project, p.querySelector('[data-state]')?.textContent])).toEqual([
       ['coop', 'Need 1,500g, 30 logs and 20 vegetables more'], ['sawmill', 'Builds tonight'], ['barn', 'Need 3,000g, 30 logs and 20 vegetables more'],
-      ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more'], ['kitchen', 'Need 2,500g, 40 logs and 20 vegetables more'],
+      ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more'], ['kitchen', 'Need 2,500g, 40 logs and 20 vegetables more'], ['forge', 'Need 500g and 12 logs more'],
     ])
     expect($('[data-waiting]')).toBeNull()
     expect($$('[data-offer]').map((o) => o.dataset.offer)).toEqual(['mine', 'smelter'])
@@ -183,15 +183,12 @@ describe('building a place', () => {
     expect(summaryParts(save().summary!).find((p) => p.section === 'news')!.lines.find(line => line.key === 'built:mill')).toEqual({ key: 'built:mill', text: 'Built overnight · the Mill', to: '/?peek=mill', tag: 'Built' })
   })
 
-  it('shows a place whose game isn\'t built yet as "Not built yet", which can\'t be bought', async () => {
+  it('shows separate entrances for Forge tools and the Romance 8 ring bench', async () => {
     useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 10_000 } } })
     await render(<FarmRoute />, '/?peek=forge')
-    const card = await find('[data-build="forge"]')
-    expect(card.dataset.lock).toBe('game')
-    expect(card.querySelector('[data-build-lock]')).toBeNull()
-    const button = card.querySelector('[data-action="build"]') as HTMLButtonElement
-    expect(button.textContent).toBe('Not built yet')
-    expect(button.disabled).toBe(true)
+    expect((await find('a[href="/?sheet=forge"]')).textContent).toContain('Forge workshop')
+    expect($('[data-action="open-bench"]')).toBeNull()
+    expect(document.body.textContent).toContain('Opens the morning after your first Romance 8.')
   })
 
   it('offers the Boat at the Dock once the Dock stands', async () => {

@@ -19,6 +19,7 @@ import { HOMESTEAD_ROW_MARRIED } from '../romance/homestead'
 import { marriedCount, STATION_MAX_LEVEL, type BuildingId, type FarmSave, type Warehouse } from '../save/v4'
 import { isStation } from '../gathering/ids'
 import { takeGoods } from '../save/warehouse'
+import { activateForge, benchOpen } from '../forge/state'
 
 // --- The goods a build takes -----------------------------------------------------------------------------------------
 
@@ -137,7 +138,7 @@ export function payBuild<S extends FarmSave>(save: S, id: FarmPlaceId, options: 
   const place = farmPlace(id) as BuildPlace
   let items = save.items
   for (const line of place.opens.cost.goods) for (const p of pickFor(items, line)!) items = takeGoods(items, p.id, p.stars, p.count)
-  const paid = spendGold(save, place.opens.cost.gold)
+  const paid = spendGold(id === 'forge' ? activateForge(save) : save, place.opens.cost.gold)
   return { ...paid, items, farm: { ...paid.farm, builds: [...paid.farm.builds, id] } }
 }
 
@@ -152,7 +153,8 @@ export function raiseBuilds<S extends FarmSave>(save: S): { save: S; built: Farm
     const was = buildings[id as BuildingId] ?? 0
     buildings[id as BuildingId] = (isStation(id) || id === 'kitchen') && was >= 1 ? Math.min(STATION_MAX_LEVEL, was + 1) : Math.max(1, was)
   }
-  return { save: { ...save, buildings, farm: { ...save.farm, builds: [] } }, built: [...built] }
+  const current = built.includes('forge') ? activateForge(save) : save
+  return { save: { ...current, buildings, farm: { ...current.farm, builds: [] } }, built: [...built] }
 }
 
 // --- The milestones with the Umas ------------------------------------------------------------------------------------
@@ -173,9 +175,9 @@ export type UmaMilestone =
 
 /** The milestones with the Umas, as the farm stands: the ring bench, the next house to open (House 1 … 6), the
  * homestead's second and third rows, and the Requests board. */
-export function umaMilestones(save: Pick<FarmSave, 'buildings' | 'love' | 'roster' | 'homestead'>): UmaMilestone[] {
+export function umaMilestones(save: Pick<FarmSave, 'buildings' | 'forge' | 'love' | 'roster' | 'homestead'>): UmaMilestone[] {
   const married = marriedCount(save)
-  const bench = save.buildings.forge !== undefined
+  const bench = benchOpen(save)
   const house = Math.min(6, married + 1)
   const out: UmaMilestone[] = [{ kind: 'bench', have: bench ? 1 : 0, need: 1, done: bench }]
   out.push({ kind: 'house', n: house, have: Math.min(married, house), need: house, done: married >= house })

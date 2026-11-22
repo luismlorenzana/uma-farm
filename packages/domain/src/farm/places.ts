@@ -105,7 +105,7 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('restaurant', 'Restaurant', 'workshop', 4, 2, 'party-hall', 'Dishes served for gold and tips.', build(7, 40000, [planks(80), fillets(40), vegetables(30)], true)),
   place('quarry', 'Quarry', 'gathering', 5, 0, 'quarry', 'Stone and gems, floor by floor.', build(5, 12000, [planks(50)], true)),
   place('cutter', 'Cutter', 'station', 5, 1, 'den-workbench', 'Gems cut and polished; stone into blocks.', build(5, 10000, [planks(40), logs(40)], true)),
-  place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'The ring bench: a ring from three refined goods of one grade, one a day.', build(8, 60000, [planks(120), logs(60)], false)),
+  place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'Tools and heirlooms at the workshop. Wedding rings at the Ring Bench.', build(3, 1000, [logs(12)], true)),
   place('bin', 'Shipping bin', 'yard', 6, 0, 'shipping-bin', 'What goes in pays tonight.', START),
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
   place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'met', umas: 5 }, true),

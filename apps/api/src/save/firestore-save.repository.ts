@@ -35,7 +35,7 @@ export class FirestoreSaveRepository implements SaveRepository {
       const snapshot = await tx.get(ref)
       const current = FirestoreSaveRepository.envelope(snapshot)
       const storedVersion = snapshot.exists ? versionOf(storedSave(snapshot.data() as { save?: unknown })) : 0
-      if (current.revision !== baseRevision || save.version < storedVersion) throw new RevisionConflict(current)
+      if (current.revision !== baseRevision || save.version < storedVersion || (current.save?.version === 6 && current.save.forge && !save.forge)) throw new RevisionConflict(current)
       if (current.save && 'calendar' in current.save && save.calendar.start !== current.save.calendar.start) {
         throw new RevisionConflict(current)
       }

@@ -12,6 +12,7 @@
 // ring's bonus once married is its grade in % at her line (+1% a grade, inside her own cap); a better ring may be
 // given any day from the proposal on, the old one back in the Warehouse. Pure. Loaded with the bench's sheet, the night
 // and the events.
+import { benchOpen, forgeState } from '../forge/state'
 import { goodOf, GOODS, isRingId, ringGrade, ringId, RING_IDS, type GoodFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
@@ -23,14 +24,17 @@ import type { Warehouse } from '../save/v4'
 // --- The bench's state -----------------------------------------------------------------------------------
 
 /** Whether the Forge stands as the ring bench: `buildings.forge` set. */
-export const benchOpen = (save: Pick<FarmSave, 'buildings'>): boolean => save.buildings.forge !== undefined
+export { benchOpen } from '../forge/state'
 /** The rung whose first event anywhere opens the bench. */
 export const BENCH_RUNG = 'r8'
 /** Whether the bench opens tonight: not standing yet, and an Uma's Romance 8 is in her Memories. */
-export const benchDue = (save: Pick<SaveV4, 'buildings' | 'memories'>): boolean =>
-  save.buildings.forge === undefined && Object.values(save.memories).some((played) => played.includes(BENCH_RUNG))
+export const benchDue = (save: Pick<SaveV4, 'buildings' | 'memories' | 'forge'>): boolean =>
+  !benchOpen(save) && Object.values(save.memories).some((played) => played.includes(BENCH_RUNG))
 /** Night step 8: the bench stands, `buildings.forge = 0`, once. */
-export const openBench = (save: SaveV4): SaveV4 => (benchDue(save) ? { ...save, buildings: { ...save.buildings, forge: 0 } } : save)
+export function openBench(save: SaveV4): SaveV4 {
+  if (!benchDue(save)) return save
+  return { ...save, buildings: { ...save.buildings, forge: save.buildings.forge ?? 0 }, forge: { ...forgeState(save), bench: true } }
+}
 
 // --- The recipe ------------------------------------------------------------------------------------
 

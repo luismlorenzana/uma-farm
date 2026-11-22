@@ -95,13 +95,13 @@ export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
   ranch: '+5 fondness to her animals each night',
   cooking: 'One more dish on the Kitchen’s next play',
   serving: 'One grace order on today’s Restaurant shift',
-  forging: '5% back on the Forge’s next tool',
+  forging: 'Train Forging by preparing tools or heirlooms',
 }
 
 /** A morning item by her line: what R2 and S2 leave in the Warehouse. */
 export const MORNING_GOOD: Readonly<Record<PerkLine, string>> = {
   farming: 'crop of the season', foraging: 'good from the forest', fishing: 'fish', mining: 'ore', quarry: 'stone or gem', ranch: 'egg, milk or fleece',
-  cooking: 'dish', serving: 'crop of the season', forging: 'Fitting',
+  cooking: 'dish', serving: 'crop of the season', forging: 'crop of the season',
 }
 
 /** A perk in words for her line: "+10% at the forest", "One item from the forest each night". */
@@ -110,7 +110,7 @@ export function perkWords(id: PerkId, line: PerkLine): string {
   switch (id) {
     case 'tastes-loved': return 'Her loved gift shown; her own chats'
     case 'hangouts': return 'Hangouts in the evening'
-    case 'line-10': return `+10% at ${place}`
+    case 'line-10': return line === 'forging' ? '+10% Forging points when assisting' : `+10% at ${place}`
     case 'signature-dish': return 'Her signature dish’s recipe'
     case 'rank-105': return '×1.05 rank points'
     case 'night-chore': return NIGHT_CHORE[line]
@@ -122,7 +122,7 @@ export function perkWords(id: PerkId, line: PerkLine): string {
     case 'morning-item': return `A ★2+ ${MORNING_GOOD[line]} every 4th morning`
     case 'date-stargazing': return 'Date: stargazing'
     case 'closest-bond': return '×1.5 bond with her closest friend'
-    case 'line-20': return `+10% more at ${place} (+20%)`
+    case 'line-20': return line === 'forging' ? '+20% Forging points when assisting' : `+10% more at ${place} (+20%)`
     case 'date-dance-boat': return 'Dates: dance and boat'
     case 'night-chore-2': return 'A second night chore'
     case 'engraving': return 'Her ring’s engraving'

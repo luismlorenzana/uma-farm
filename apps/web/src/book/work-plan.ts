@@ -1,8 +1,20 @@
 import {
-  aptitudeOf, isTileTask, MAX_TASKS, RANCH_HOMES, STATIONS, taskAptitude, taskLock, taskPlot, workNeeds,
+  deliverForge, handsTonight, MEAL_KEEPS, newTodayV4, aptitudeOf, isTileTask, MAX_TASKS, RANCH_HOMES, STATIONS, taskAptitude, taskLock, taskPlot, workNeeds,
   type FarmSave, type FarmTask, type HandsTonight, type StoryPack, type TalentOf, type TileTaskKind,
 } from '@farm/domain'
 import { taskWords } from './board-words'
+
+export function forecastCrewOn(save: FarmSave, day: number, pack: StoryPack | null, talents: TalentOf) {
+  const snapshot = day === save.calendar.day ? save : deliverForge({
+    ...save, calendar: { ...save.calendar, day }, today: newTodayV4(),
+    fields: { plots: save.fields.plots.map(plot => ({ ...plot, tiles: plot.tiles.map(tile => ({ ...tile, watered: false })) })) },
+    ranch: { ...save.ranch, animals: save.ranch.animals.map(animal => ({ ...animal, fed: false, cared: false })) },
+    farm: { ...save.farm, pantry: save.farm.pantry.filter(lot => day - lot.day < MEAL_KEEPS) },
+  })
+  const forecast = handsTonight(snapshot, snapshot, talents, pack)
+  const needs = workNeeds(forecast.save, pack)
+  return { ...forecast, snapshot, needs }
+}
 
 export type JobPreset = { key: string; task: FarmTask; label: string }
 type Gap = { job: JobPreset; priority: number; count: number; need: string; blocked?: true }

@@ -64,7 +64,7 @@ export function workDayRecord(save: FarmSave, lines: readonly FarmhandLine[], ne
     }
   }
   for (const { task } of needs) missing[task.kind] = (missing[task.kind] ?? 0) + 1
-  return { day: save.calendar.day, allocated: lines.reduce((sum, row) => sum + row.tasks, 0), covered, missing }
+  return { day: save.calendar.day, allocated: lines.reduce((sum, row) => sum + row.tasks + (row.forge ?? 0), 0), covered, missing }
 }
 
 export function recordWorkDay(save: FarmSave, lines: readonly FarmhandLine[], pack: SchedulePack | null): FarmSave {

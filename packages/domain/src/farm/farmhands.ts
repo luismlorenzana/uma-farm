@@ -40,12 +40,12 @@ import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowT
 import { CROPS, growsIn, needsWater } from '../fields/crops'
 import { harvestGrade, MAX_SEED_TARGET, plantingPlan, saveCropSeedsAt, SEED_BATCH, seedOutput } from '../fields/production'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
-import { DIG_TOOL, digBuilt, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
+import { brushCapacity, tillCapacity, waterTargets } from '../forge/tools'
+import { digFloorLock, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
-import { gatherQuality, GATHER_TOOL, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
+import { gatherQuality, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
 import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
 import { LOAD_SIZE, loadAt, loadsToday, nextStationLoad } from '../gathering/stations'
-import { TOOL_YIELD } from '../gathering/tables'
 import { canSaveCropSeed, cropBaseGrade, cropGoodId, cropSeedId, goodOf, isCropId, type CropId } from '../goods/ids'
 import { goodCount, parseStockKey, stockKey } from '../save/warehouse'
 import type { AptitudeUp, FarmhandLine } from '../night/summary'
@@ -89,6 +89,7 @@ export interface HandDay {
   kitchen: number
   restaurant?: number
   festival?: number
+  forge?: number
 }
 
 /** Her actions today, or null for one who isn't a farmhand. */
@@ -103,6 +104,7 @@ export function handDay(save: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 't
   const kitchen = Math.min(actions, (save.today.assistant === id ? 1 : 0) + (save.today.cook === id ? 1 : 0))
   return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions, kitchen,
     ...(save.today.server === id && actions > kitchen ? { restaurant: 1 } : {}),
+    ...(save.today.forgeHelper?.id === id ? { forge: 1 } : {}),
     ...(save.workshops && festivalBooked({ calendar: save.calendar, workshops: save.workshops }, id) ? { festival: 1 } : {}) }
 }
 
@@ -165,7 +167,7 @@ export function taskPlace(task: FarmTask): WorkPlace {
 
 /** Why a task can't go on her board, or null: the field's tiles are on a plot the farm has cleared, a load's station, the
  * animals' building and the dig are built, an area or a spot is within the farm's reach. */
-export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields'>, task: FarmTask): string | null {
+export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields' | 'places'>, task: FarmTask): string | null {
   if (isTileTask(task)) {
     if (task.tiles.length === 0) return 'Choose its tiles.'
     const plot = task.plot
@@ -183,7 +185,7 @@ export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields'>, 
     }
     case 'load': return stationBuilt(save, task.station) ? null : 'Build it first.'
     case 'care': return homeBuilt(save, task.home) ? null : 'Build it first.'
-    case 'mine': return digBuilt(save, task.dig) ? null : 'Build it first.'
+    case 'mine': return digFloorLock(save, task.dig, task.floor)
     case 'fish': return reachLock(save, 'fishery', task.spot)
     case 'forage': case 'chop': return reachLock(save, 'forest', task.area)
     case 'cook': return null
@@ -346,8 +348,8 @@ export interface HandsTonight extends CrewReceipt {
   save: FarmSave
 }
 
-function reserved(day: { kitchen?: number; restaurant?: number; festival?: number }): number {
-  return (day.kitchen ?? 0) + (day.restaurant ?? 0) + (day.festival ?? 0)
+function reserved(day: { kitchen?: number; restaurant?: number; festival?: number; forge?: number }): number {
+  return (day.kitchen ?? 0) + (day.restaurant ?? 0) + (day.festival ?? 0) + (day.forge ?? 0)
 }
 
 function spentOnCrew(line: FarmhandLine): number {
@@ -365,7 +367,7 @@ export function handActionsLeft(save: FarmSave, id: string): number {
 
 function crewWithBookings(save: FarmSave, receipt: CrewReceipt): HandsTonight {
   const lines = receipt.lines.map(line => {
-    const { kitchen: _kitchen, restaurant: _restaurant, festival: _festival, ...actual } = line
+    const { kitchen: _kitchen, restaurant: _restaurant, festival: _festival, forge: _forge, ...actual } = line
     const day = handDay(save, line.id)
     if (!day) return line
     return {
@@ -373,6 +375,7 @@ function crewWithBookings(save: FarmSave, receipt: CrewReceipt): HandsTonight {
       ...(day.kitchen ? { kitchen: day.kitchen } : {}),
       ...(day.restaurant ? { restaurant: day.restaurant } : {}),
       ...(day.festival ? { festival: day.festival } : {}),
+      ...(day.forge ? { forge: day.forge } : {}),
     }
   })
   const present = new Set([...receipt.worked, ...receipt.tended].map(row => row.outfitId))
@@ -388,10 +391,10 @@ export function gatherer(save: FarmSave, id: string, place: GatherPlace, kind: '
   const activity: Activity = place === 'forest' ? 'foraging' : 'fishing'
   const rank = save.roster[id]!.ranks[activity].rank
   const talent = talentOf(id, activity)
-  const tool = save.tools[GATHER_TOOL[place]]
+  const tool = 1
   const keepsake = keepsakeAt(save, story, id, place)
   const terms = { rank, talent, tool, wellFed: fed ? 1 : 0, ...(keepsake ? { keepsake } : {}) }
-  const many = count * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * aptitudeYield(level)
+  const many = count * rankBenefits(rank).yield * talentYield(talent) * aptitudeYield(level)
   const before = save.farm.counts[HOME_COUNT[place]] ?? 0
   return {
     q: round6(gatherQuality(terms, fed) + aptitudeQuality(level)),
@@ -405,11 +408,11 @@ export function gatherer(save: FarmSave, id: string, place: GatherPlace, kind: '
 function digger(save: FarmSave, id: string, dig: DigId, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null) {
   const rank = save.roster[id]!.ranks.mining.rank
   const talent = talentOf(id, 'mining')
-  const tool = save.tools[DIG_TOOL[dig]]
+  const tool = 1
   const keepsake = keepsakeAt(save, story, id, dig)
   const terms = { rank, talent, tool, wellFed: fed ? 1 : 0, ...(keepsake ? { keepsake } : {}) }
   const finds = FACE_FINDS + (level >= TRICK_AT.digThree ? 1 : 0)
-  const many = finds * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * aptitudeYield(level)
+  const many = finds * rankBenefits(rank).yield * talentYield(talent) * aptitudeYield(level)
   return {
     q: round6(gatherQuality(terms, fed) + aptitudeQuality(level)),
     count: drawnCount(many, draw(save.account.uid, save.calendar.day, `hand-dig:${id}`, save.farm.counts[dugCount(dig)] ?? 0)),
@@ -433,7 +436,7 @@ function careStep(save: FarmSave, id: string, { home, feedOnly }: Extract<FarmTa
     const done = collectAt(save, home, round6(aptitudeQuality(level) + keepsakeAt(save, story, id, home)), level)
     return { save: noteCupWork(done.save, id, 'ranch'), n: 0, items: done.collected.items, events: [] }
   }
-  const lonely = animals.filter((a) => !a.cared).slice(0, level >= TRICK_AT.careTwo ? 2 : 1)
+  const lonely = animals.filter((a) => !a.cared).slice(0, Math.max(brushCapacity(save.tools.brush), level >= TRICK_AT.careTwo ? 2 : 1))
   if (lonely.length === 0) return null
   const next = noteCupWork(lonely.reduce((s, a) => careAt(s, a.id, level - 1, id), save), id, 'ranch')
   const events = lonely.map((a) => ({ activity: 'ranch' as const, event: { kind: 'hearts' as const, hearts: heartsOf(next.ranch.animals.find((x) => x.id === a.id)!.fondness) } }))
@@ -476,10 +479,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
     case 'water': {
       const dry = tiles.filter((i) => needsWater(at(i)))
       if (dry.length === 0) return null
-      // A row an action from Watering 6: every dry tile of hers in the first row that has one. A field index's row,
-      // ⌊i / 8⌋, is its plot's own row (a plot is whole rows), so the row stays on her plot.
-      const row = Math.floor(dry[0]! / FIELD_COLUMNS)
-      const some = level >= TRICK_AT.waterRow ? dry.filter((i) => Math.floor(i / FIELD_COLUMNS) === row) : dry.slice(0, tilesAnAction('water', level))
+      const some = waterTargets(dry, save.tools['watering-can'], level, FIELD_COLUMNS)
       return { save: some.reduce((s, i) => wetTile(s, i, id), save), n: some.length, items: [], events: [] }
     }
     case 'plant': {
@@ -523,7 +523,9 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
         if (cleared.found) items.push(`${cleared.found}@1`)
         if (level < TRICK_AT.tillInOne) return { save: next, n: 1, items, events: [] }
       }
-      return { save: tillGround(next, i), n: 1, items, events: [] }
+      const rest = isOvergrown(at(i).ground) ? [] : tiles.filter(target => target !== i && at(target).ground === 'clear')
+      const some = [i, ...rest].slice(0, tillCapacity(save.tools.hoe))
+      return { save: some.reduce((state, target) => tillGround(state, target), next), n: some.length, items, events: [] }
     }
     case 'load': {
       const load = nextStationLoad(save, task.station, loadSizeAt(level))
@@ -564,9 +566,9 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return { save: noteCupWork(addBatch(save, goods, meals), id, 'kitchen'), n: meals, items: [], events: [] }
     }
     case 'mine': {
-      if (!digBuilt(save, task.dig)) return null
-      const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story))
-      return { save: done.save, n: 1, items: done.face.items, events: [{ activity: 'mining', event: { kind: 'dig', floor: done.face.floor, items: done.face.items.length } }] }
+      if (digFloorLock(save, task.dig, task.floor)) return null
+      const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story), task.floor)
+      return { save: done.save, n: 1, items: done.face.items, events: [{ activity: 'mining', event: { kind: 'dig', floor: done.face.floor, items: done.face.items.length - (done.face.bonus ? 1 : 0) } }] }
     }
   }
 }
@@ -594,7 +596,9 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
     const festival = festivalBooked(save, id) ? 1 : 0
-    let left = Math.max(0, hand.actions - hand.kitchen - (hand.restaurant ?? 0) - festival)
+    const helper = save.today.forgeHelper?.id === id ? save.today.forgeHelper : undefined
+    let left = Math.max(0, hand.actions - hand.kitchen - (hand.restaurant ?? 0) - festival - (helper ? 1 : 0))
+    if (helper) next = countChallenge(next, id, 'forging', { kind: 'forge-piece', tier: helper.tier })
     const done: Partial<Record<TaskKind, number>> = {}
     const spentAt = new Map<WorkPlace, number>(hand.kitchen > 0 ? [['kitchen', hand.kitchen]] : [])
     if (hand.restaurant) spentAt.set('restaurant', hand.restaurant)
@@ -639,6 +643,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
         ...(hand.kitchen > 0 ? { kitchen: hand.kitchen } : {}),
         ...(hand.restaurant ? { restaurant: hand.restaurant } : {}),
         ...(festival ? { festival } : {}),
+        ...(helper ? { forge: 1 } : {}),
       })
       // Her place today: where she spent the most actions, the first she worked on a tie.
       const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)

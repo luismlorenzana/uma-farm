@@ -136,7 +136,7 @@ export type ChallengeEvent =
   /** Serving: guests served. */
   | { kind: 'guests'; guests: number }
   /** Forging: a tool upgrade, or a Mythril tool. */
-  | { kind: 'forged'; tool: 'upgrade' | 'mythril' }
+  | { kind: 'forge-piece'; tier: number }
   /** Expeditions: a return home, its result and its region's level. */
   | { kind: 'expedition'; result: ExpeditionResult; level: number; region: RegionId }
   /** 1st at a festival: the Flower Show, the Fishing Derby, the Cooking Contest (its judging, for its cook:
@@ -216,11 +216,11 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(5, 1000, 'Serve 1,000 guests', 'the Restaurant’s shift, its server', on('guests', (e) => e.guests)),
   ],
   forging: [
-    row(1, 5, 'Assist 5 Forge plays', 'the Forge’s workshop (not built yet)', on('play', () => 1)),
-    row(2, 1, 'Assist a Fine merge', 'the Forge’s workshop (not built yet)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
-    row(3, 1, 'Forge a tool upgrade', 'the Forge’s workshop (not built yet)', on('forged', () => 1)),
-    row(4, 1, 'Assist a Masterwork', 'the Forge’s workshop (not built yet)', on('play', (e) => yes(e.grade === 'masterwork'))),
-    row(5, 1, 'Forge a Mythril tool', 'the Forge’s workshop (not built yet)', on('forged', (e) => yes(e.tool === 'mythril'))),
+    row(1, 5, 'Prepare 5 pieces', 'the Forge', on('forge-piece', () => 1)),
+    row(2, 4, 'Prepare 4 Iron or better pieces', 'the Forge', on('forge-piece', e => yes(e.tier >= 3))),
+    row(3, 4, 'Prepare 4 Gold or better pieces', 'the Forge', on('forge-piece', e => yes(e.tier >= 4))),
+    row(4, 4, 'Prepare 4 Mythril pieces', 'the Forge', on('forge-piece', e => yes(e.tier === 5))),
+    row(5, 6, 'Prepare 6 Mythril pieces', 'the Forge', on('forge-piece', e => yes(e.tier === 5))),
   ],
   expeditions: [
     row(1, 2, 'Return from 2 expeditions', 'the Expedition post', on('expedition', () => 1)),
@@ -265,7 +265,7 @@ export interface WorkedDay {
 }
 /** Her talent in an activity and whether it's her favourite, read by the night, and a mentor's factor at her place
  * today. */
-export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: TalentStep; favourite: boolean; mentor?: number }
+export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: TalentStep; favourite: boolean; mentor?: number; line?: number }
 
 /**
  * Step 6's ranks: first each Uma who worked today earns a day's points in its activity, once (one day
@@ -282,7 +282,8 @@ export function tickRankRules<S extends FarmSave>(save: S, worked: readonly Work
     const uma = roster[day.outfitId]
     if (!uma || seen.has(day.outfitId)) continue
     seen.add(day.outfitId)
-    const points = rankPointsForDay({ ...termsOf(day.outfitId, day.activity), wellFed: uma.wellFed > 0, heartsFactor: heartsFactorOf(save, day.outfitId) })
+    const terms = termsOf(day.outfitId, day.activity)
+    const points = round6(rankPointsForDay({ ...terms, wellFed: uma.wellFed > 0, heartsFactor: heartsFactorOf(save, day.outfitId) }) * (terms.line ?? 1))
     const state = uma.ranks[day.activity]
     roster[day.outfitId] = { ...uma, ranks: { ...uma.ranks, [day.activity]: { ...state, points: round6(state.points + points) } } }
     paid.push({ ...day, points })

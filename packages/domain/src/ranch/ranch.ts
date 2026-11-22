@@ -12,6 +12,7 @@
 // hungry night takes 10. A good's quality is its animal's hearts ÷ 2.5 (`heartsQuality`), so ten hearts is always ★5.
 // Every star is a seeded draw numbered by the farm's count of the ranch's goods, so every device draws alike. Pure; never
 // stamps. Loaded with the ranch's screens and the night.
+import { brushCapacity } from '../forge/tools'
 import { noteAnimalCare } from '../festivals/evidence'
 import { inTown, spend } from '../farm/actions'
 import { draw } from '../farm/draw'
@@ -171,8 +172,10 @@ export function feedAt<S extends FarmSave>(save: S, id: string): S {
 /** Cares for an animal (a brush, a talk): one action, once a day, +8 fondness at once. Refused cared for already
  * (`bad-job`). */
 export function careFor<S extends FarmSave>(save: S, id: string): S {
-  if (animalAt(save, id).cared) throw new SaveRuleError('bad-job', 'Cared for already today.')
-  return careAt(spend(save, 'animal'), id, 0)
+  const animal = animalAt(save, id)
+  if (animal.cared) throw new SaveRuleError('bad-job', 'Cared for already today.')
+  const others = animalsIn(save, ANIMAL_HOME[animal.kind]).filter(row => row.id !== id && !row.cared).map(row => row.id)
+  return [id, ...others].slice(0, brushCapacity(save.tools.brush)).reduce((next, target) => careAt(next, target, 0), spend(save, 'animal'))
 }
 /** A care itself, spending nothing: +8 fondness and `extra` (a farmhand's aptitude), held to the top. */
 export function careAt<S extends FarmSave>(save: S, id: string, extra: number, by: string | null = null): S {

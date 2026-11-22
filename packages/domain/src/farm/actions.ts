@@ -24,7 +24,7 @@ export const ACTION_IDS = [
   'load', 'ship',
   'town', 'shop',
   'introduce', 'talk', 'gift', 'invite', 'hangout', 'event',
-  'festival', 'batch', 'kitchen', 'restaurant', 'expedition', 'cook', 'companion',
+  'festival', 'batch', 'kitchen', 'restaurant', 'expedition', 'cook', 'companion', 'forge',
 ] as const
 export type ActionId = typeof ACTION_IDS[number]
 
@@ -73,6 +73,7 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('batch', 'The kitchen', 'Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove', 1),
   rule('kitchen', 'The Kitchen', 'Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day', 1),
   rule('restaurant', 'The Restaurant', 'Serve a shift from a stocked menu of dishes, once a day', 1),
+  rule('forge', 'The Forge', 'Commission a tool or heirloom', 1),
   rule('expedition', 'The Expedition post', 'Send a party for 2–5 days, with up to eight dishes', 1),
   rule('cook', 'The household', 'Cook a meal for the household: breakfast or dinner (it cooks a batch too)', 1),
   rule('companion', 'The household', 'Choose tonight’s companion, at the day’s end', 0),

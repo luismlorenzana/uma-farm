@@ -12,22 +12,24 @@
 // forest's: floor 5 at Farm Rank 1, 10 at 2, 15 at 4, 20 at 6, 25 at 8 and 30 at 10. A farmhand works the deepest floor
 // too, and her faces count toward its stairs; the farmer takes them. Every pick is a seeded draw numbered by the farm's
 // count of finds at the dig. Pure; never stamps. Loaded with the dig's screen and the night.
+import { takeToolCharge } from '../forge/tools'
 import { spend } from '../farm/actions'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
 import { RANK_BENEFITS } from '../farm/rank-rules'
+import { discoverStock } from '../goods/discovery'
 import { GOODS, type GoodsFamily } from '../goods/ids'
-import { drawStars, quality, toolQuality } from '../goods/stars'
+import { drawStars } from '../goods/stars'
 import { SaveRuleError } from '../save/rules'
-import { DEEPEST_FLOOR, type Dig, type DigId, type FarmSave, type ToolId } from '../save/v4'
+import { DEEPEST_FLOOR, type Dig, type DigId, type FarmSave } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { FARMER_REACH, haulAt, haulsToday } from './hauls'
 
 /** The digs' names. */
 export const DIG_NAMES: Readonly<Record<DigId, string>> = { mine: 'Mine', quarry: 'Quarry' }
 /** The tool each dig uses: the Pick, the Hammer. */
-export const DIG_TOOL: Readonly<Record<DigId, ToolId>> = { mine: 'pick', quarry: 'hammer' }
+export const DIG_TOOL = { mine: 'pick', quarry: 'hammer' } as const
 /** A face's finds. */
 export const FACE_FINDS = 2
 /** Floors to a grade. */
@@ -83,7 +85,7 @@ export interface Digger {
   count: number
 }
 /** The farmer's: Novice D with the farm's Pick or Hammer (★1 at Basic), two finds. */
-export const farmerDigger = (save: Pick<FarmSave, 'tools'>, dig: DigId): Digger => ({ q: quality({ tool: toolQuality(save.tools[DIG_TOOL[dig]]) }), count: FACE_FINDS })
+export const farmerDigger = (_save: Pick<FarmSave, 'tools'>, _dig: DigId): Digger => ({ q: 0, count: FACE_FINDS })
 
 /** What a face brought: its floor, its finds (stock keys) and whether it found the stairs. */
 export interface Face {
@@ -91,21 +93,28 @@ export interface Face {
   floor: number
   items: string[]
   stairs: boolean
+  bonus?: true
 }
 
 /** Works a face: one action on the deepest floor reached. Refused before the dig stands (`locked`). */
-export function workFace<S extends FarmSave>(save: S, dig: DigId): { save: S; face: Face } {
-  if (!digBuilt(save, dig)) throw new SaveRuleError('locked', 'Build it first.')
-  return faceAt(spend(save, 'mine'), dig, farmerDigger(save, dig))
+export function digFloorLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'places'>, dig: DigId, floor?: number): string | null {
+  if (!digBuilt(save, dig)) return 'Build it first.'
+  if (floor !== undefined && (!Number.isInteger(floor) || floor < 1 || floor > digFloor(save.places[dig]) || floor > reachFloor(save))) return 'Choose a reached floor.'
+  return null
+}
+
+export function workFace<S extends FarmSave>(save: S, dig: DigId, floor?: number): { save: S; face: Face } {
+  const lock = digFloorLock(save, dig, floor)
+  if (lock) throw new SaveRuleError('locked', lock)
+  return faceAt(spend(save, 'mine'), dig, farmerDigger(save, dig), floor)
 }
 
 /** A face itself, spending nothing: `by.count` finds on the deepest floor (their grade `draw(uid, day, 'dig:<dig>', n)`,
  * at the Quarry their kind `'dig-kind:<dig>'`, their stars `'dig-stars:<dig>'`, n the farm's count of finds there), into
  * the Warehouse; the floor reached, and a face more toward its stairs. A dig thins as an area does: full finds its
  * first four faces a day, then half (`haulAt`). */
-export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger): { save: S; face: Face } {
+export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger, floor = digFloor(save.places[dig])): { save: S; face: Face } {
   const at = save.places[dig]
-  const floor = digFloor(at)
   const before = save.farm.counts[dugCount(dig)] ?? 0
   const u = (what: string, k: number) => draw(save.account.uid, save.calendar.day, `${what}:${dig}`, before + k)
   let items = save.items
@@ -117,13 +126,21 @@ export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger): { s
     items = addGoods(items, good, stars, 1)
     got.push(stockKey(good, stars))
   }
-  const need = floor < DEEPEST_FLOOR ? stairsAfter(floor) : 0
-  const stairs = Math.min(need, at.stairs + 1)
+  const bonus = takeToolCharge(save, DIG_TOOL[dig])
+  if (bonus.roll) {
+    const good = findOn(dig, floor, bonus.roll('grade'), bonus.roll('kind'))
+    const stars = drawStars(by.q, bonus.roll('stars'))
+    items = addGoods(items, good, stars, 1)
+    got.push(stockKey(good, stars))
+  }
+  const atFront = floor === digFloor(at)
+  const need = atFront && floor < DEEPEST_FLOOR ? stairsAfter(floor) : 0
+  const stairs = atFront ? Math.min(need, at.stairs + 1) : at.stairs
   const places = { ...save.places, [dig]: { deepest: Math.max(at.deepest, floor), stairs } }
-  const counts = { ...save.farm.counts, [dugCount(dig)]: before + got.length }
+  const counts = { ...save.farm.counts, [dugCount(dig)]: before + finds }
   return {
-    save: { ...save, items, places, farm: { ...save.farm, counts }, today: { ...save.today, hauls: { ...save.today.hauls, [dig]: haulsToday(save, dig) + 1 } } },
-    face: { dig, floor, items: got, stairs: need > 0 && at.stairs < need && stairs >= need },
+    save: discoverStock({ ...bonus.save, items, places, farm: { ...save.farm, counts }, today: { ...bonus.save.today, hauls: { ...save.today.hauls, [dig]: haulsToday(save, dig) + 1 } } }, got),
+    face: { dig, floor, items: got, stairs: need > 0 && at.stairs < need && stairs >= need, ...(bonus.roll ? { bonus: true as const } : {}) },
   }
 }
 

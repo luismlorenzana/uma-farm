@@ -32,7 +32,7 @@ const { castLens } = await import('../story/load')
 const { Shell } = await import('../shell/Shell')
 const { default: HeartsPage } = await import('./HeartsPage')
 const { BenchPeek } = await import('./BenchSheet')
-const { BENCH_LOCK, lockOf, placeLink } = await import('./farm-map')
+const { lockOf, placeLink } = await import('./farm-map')
 const { BENCH_TEXT, makeWords, withArticle } = await import('./bench-view')
 const { CAKE_WORDS, guestsLine, marriedWords, PICKER_WORDS, STAGE_WORDS, stageOpens } = await import('./event-view')
 const { warehouseTabs } = await import('./goods-view')
@@ -178,7 +178,7 @@ describe('the ring bench', () => {
 
   it('stands at the Forge on v4: locked until the first Romance 8, then its quick look leads to the bench', async () => {
     const forge = farmPlace('forge')!
-    expect(lockOf(farm(), forge)).toBe(BENCH_LOCK)
+    expect(lockOf(farm(), forge)).toBe('Farm Rank 3')
     expect(lockOf(farm({}, bench), forge)).toBeNull()
     expect(placeLink(farm({}, bench), forge)).toBe('/?peek=forge')
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, bench) })
@@ -347,7 +347,7 @@ describe('the words', () => {
 describe('before the bench', () => {
   it('locks the Forge until the first Romance 8, closes the bench sheet, and shows no rings tab without rings', async () => {
     const fresh = newSave('u1', AT)
-    expect(lockOf(fresh, farmPlace('forge')!)).toBe('your first Romance 8')
+    expect(lockOf(fresh, farmPlace('forge')!)).toBe('Farm Rank 3')
     expect(lockOf({ ...fresh, buildings: { ...fresh.buildings, forge: 0 } }, farmPlace('forge')!)).toBeNull()
     expect(warehouseTabs(fresh).map((t) => t.shelf)).not.toContain('rings')
     useGame.setState({ uid: 'u1', status: 'ready', save: fresh })

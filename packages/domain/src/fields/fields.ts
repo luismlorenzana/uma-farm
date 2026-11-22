@@ -16,6 +16,7 @@
 // (`fieldTiles`): plot 1's tiles are 0–39 as they always were, plot 2's 40–79, so a draw keyed by the index (`harvest:<i>`)
 // replays the same on plot 1.
 import { clearFlowerMark, flowerGrew, flowerHarvested, flowerPlanted, flowerWatered } from '../festivals/evidence'
+import { hoeQuality, hoeSeedsBack, tillCapacity, waterTargets } from '../forge/tools'
 import { spend } from '../farm/actions'
 import { dateDayOf, dateOf, DAYS_PER_SEASON, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -23,12 +24,12 @@ import type { PlaceOpens } from '../farm/places'
 import { rankBenefits, rankQuality } from '../farm/rank-rules'
 import type { Rank } from '../farm/ranks'
 import { talentQuality, type TalentStep } from '../farm/talents'
-import { cropLevelQuality, drawStars, quality, TENDED_QUALITY, toolQuality, WELL_FED_QUALITY } from '../goods/stars'
+import { cropLevelQuality, drawStars, quality, TENDED_QUALITY, WELL_FED_QUALITY } from '../goods/stars'
 import { cropBaseGrade, cropGoodId, cropGrades, cropSeedId, seedId, seedOf, type CropId } from '../goods/ids'
 import { discoverOutput } from '../goods/discovery'
 import { itemNameOf } from '../items/lines'
 import { SaveRuleError } from '../save/rules'
-import { bareTile, FIELD_TILES, fieldTiles, isOvergrown, plotOf, tileInPlot, type FarmSave, type Overgrowth, type Plot, type Tile } from '../save/v4'
+import { bareTile, FIELD_COLUMNS, FIELD_TILES, fieldTiles, isOvergrown, plotOf, tileInPlot, type FarmSave, type Overgrowth, type Plot, type Tile } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import { CROPS, established, GROWTH_SLACK, growsIn, plantableIn, readyAt, SHOP_SEEDS } from './crops'
 
@@ -66,7 +67,7 @@ export interface HarvestTerms {
  * worker's terms, her rank, talent, +0.25 for her care, well fed's +0.25 and her keepsake. The farmer's at crop level
  * 1 with a Basic Hoe is 0: always ★1. */
 export function harvestQuality(worker: HarvestTerms | null, level: number, hoeTier = 1): number {
-  const farm = { cropLevel: cropLevelQuality(level), tool: toolQuality(hoeTier) }
+  const farm = { cropLevel: cropLevelQuality(level), tool: hoeQuality(hoeTier) }
   if (!worker) return quality(farm)
   return quality({
     ...farm, rank: rankQuality(worker.rank), talent: talentQuality(worker.talent), care: TENDED_QUALITY, ...(worker.wellFed ? { boost: WELL_FED_QUALITY } : {}),
@@ -77,7 +78,7 @@ export function harvestQuality(worker: HarvestTerms | null, level: number, hoeTi
 /** Seeds back: 5% for the farmer, a worker's by her rank (10% at Novice … 35% at Legend), and +5% a Hoe tier above
  * Basic either way. */
 export const FARMER_SEEDS_BACK = 0.05
-export const HOE_SEEDS_BACK = 0.05
+export const HOE_SEEDS_BACK = hoeSeedsBack(2)
 export function seedsBackChance(rank: Rank | null, hoeTier = 1): number {
   return Math.round(((rank === null ? FARMER_SEEDS_BACK : rankBenefits(rank).seedsBack) + HOE_SEEDS_BACK * (hoeTier - 1)) * 1e6) / 1e6
 }
@@ -150,7 +151,9 @@ export function clearGround<S extends FarmSave>(save: S, index: number): { save:
  * tilled. */
 export function tillTile<S extends FarmSave>(save: S, index: number): S {
   tillable(tileAt(save, index))
-  return tillGround(spend(save, 'till'), index)
+  const first = Math.floor(index / FIELD_TILES) * FIELD_TILES
+  const others = fieldTiles(save).slice(first, first + FIELD_TILES).flatMap((tile, i) => tile.ground === 'clear' && first + i !== index ? [first + i] : [])
+  return [index, ...others].slice(0, tillCapacity(save.tools.hoe)).reduce((next, target) => tillGround(next, target), spend(save, 'till'))
 }
 function tillable(tile: Tile): void {
   if (isOvergrown(tile.ground)) throw new SaveRuleError('bad-slot', 'Clear it first.')
@@ -192,7 +195,13 @@ export function sowTile<S extends FarmSave>(save: S, index: number, seed: string
  * it's watered today. */
 export function waterTile<S extends FarmSave>(save: S, index: number): S {
   wettable(tileAt(save, index))
-  return wetTile(spend(save, 'water'), index)
+  const first = Math.floor(index / FIELD_TILES) * FIELD_TILES
+  const others = fieldTiles(save).slice(first, first + FIELD_TILES).flatMap((tile, i) => {
+    const target = first + i
+    return target !== index && tile.crop !== null && !tile.ready && !tile.watered && !established(tile) ? [target] : []
+  })
+  const targets = waterTargets([index, ...others], save.tools['watering-can'], 0, FIELD_COLUMNS)
+  return targets.reduce((next, target) => wetTile(next, target), spend(save, 'water'))
 }
 function wettable(tile: Tile): void {
   if (tile.crop === null) throw new SaveRuleError('bad-slot', 'Nothing grows there.')

@@ -49,7 +49,7 @@ describe('building a place', () => {
     expect(raiseBuilds(morning).built).toEqual([])
   })
 
-  it('says what stands in the way: its Farm Rank, what it lacks, the place before it, a game not built yet', () => {
+  it('says what stands in the way: its Farm Rank, what it lacks, the place before it, the Forge’s restoration materials', () => {
     expect(buildLock(farm(), 'sawmill')).toEqual({ by: 'farm-rank', rank: 3 })
     expect(buildLockWords(buildLock(farm(), 'sawmill'))).toBe('Opens at Farm Rank 3')
     const short = buildLock(farm(600, { 'pine-log': [8, 0, 0, 0, 0] }), 'mill')
@@ -58,7 +58,7 @@ describe('building a place', () => {
     expect(() => payBuild(farm(1000), 'mill')).toThrow('Need 20 logs more.')
     expect(buildLockWords(buildLock(farm(), 'coop'))).toBe('Opens at Farm Rank 2')
     expect(buildLockWords(buildLock(farm(), 'restaurant'))).toBe('Opens at Farm Rank 7')
-    expect(() => payBuild(farm(99_999, {}, 30_000), 'forge')).toThrow('Not built yet.')
+    expect(() => payBuild(farm(99_999, {}, 30_000), 'forge')).toThrow('Need 12 logs more.')
     const rich = farm(99_999, { 'pine-plank': [99, 0, 0, 0, 0], carp: [99, 0, 0, 0, 0], 'carp-fillet': [99, 0, 0, 0, 0] }, 30_000)
     expect(buildLock(rich, 'boat')).toEqual({ by: 'after', place: 'dock' })
     expect(buildLockWords(buildLock(rich, 'boat'))).toBe('After the Dock')
@@ -94,7 +94,7 @@ describe('the farm\'s projects', () => {
     expect(day1.next).toMatchObject({ rank: 2, points: 150 })
     expect(day1.next!.places.map((p) => p.id)).toEqual(['coop'])
     const rank3 = farmProjects({ ...farm(), farm: { ...farm().farm, points: 300 }, buildings: { dorm: 1, mill: 1 } })
-    expect(rank3.now.map((p) => p.place.id)).toEqual(['coop', 'sawmill', 'barn', 'smokehouse', 'kitchen'])
+    expect(rank3.now.map((p) => p.place.id)).toEqual(['coop', 'sawmill', 'barn', 'smokehouse', 'kitchen', 'forge'])
     expect(rank3.waiting.map((p) => p.id)).toEqual([])
     expect(rank3.next!.places.map((p) => p.id)).toEqual(['mine', 'smelter'])
     expect(farmProjects({ ...farm(), farm: { ...farm().farm, points: 30_000 } }).next).toBeNull()

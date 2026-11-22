@@ -84,6 +84,7 @@ export interface FarmhandLine {
   kitchen?: number
   restaurant?: number
   festival?: number
+  forge?: number
 }
 
 /** §2 Work done: the Coop's or the Barn's night: its animals fed today (each made its good), those that went hungry (and

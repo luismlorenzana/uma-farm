@@ -1,5 +1,5 @@
 import {
-  ANIMALS, ANIMAL_KINDS, bar, benchOpen, binTotal, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
+  forgeMaterialRows, HEIRLOOMS, TOOL_IDS, TOOL_NAMES, toolTierName, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, binTotal, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
   BUILD_PLACES, EXPEDITION_REGIONS, farmPlace, farmRankOf, farmRankOpens, FARM_RANK_POINTS, FIELD_PLOTS,
   goodCount, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
   HOUSE_COSTS, readyTiles, rungName, STARTER_RING_GOOD, STARTER_RING_LOGS, STATION_LEVELS, STATIONS, umaMilestones,
@@ -154,8 +154,27 @@ function Focus({ save }: { save: FarmSave }) {
       {projects.length ? projects.map(project => <Project key={project.id} save={save} project={project} />)
         : <p className="text-[13px] text-ink-soft">All available buildings are finished. Check land and upgrades in the Farm path.</p>}
       <Action to="/book?view=work">Assign production to your crew</Action>
+      {(save.buildings.forge ?? 0) > 0 && <ForgeGoals save={save} />}
     </section>
     <WeddingPath save={save} />
+  </div>
+}
+
+function ForgeGoals({ save }: { save: FarmSave }) {
+  const pack = useStory()
+  const needs = workNeeds(save, pack)
+  const due = save.forge?.tool
+  const priority = needs.some(need => need.task.kind === 'water') ? 'watering-can' : needs.some(need => need.task.kind === 'care') ? 'brush' : 'hoe'
+  const tool = save.tools[priority] < 5 ? priority : TOOL_IDS.find(id => save.tools[id] < 5)
+  const goal = save.forge?.tracked
+  const tracked = goal && HEIRLOOMS[goal.piece]
+  const missing = tracked && forgeMaterialRows(save, tracked.materials).reduce((n, row) => n + Math.max(0, row.count - row.free), 0)
+  return <div className="space-y-1">
+    {(due || tool) && <Action to={`/?sheet=forge&tool=${due?.tool ?? tool}`}>{due ? `${toolTierName(due.tier)} ${TOOL_NAMES[due.tool]} on order` : `Plan a ${TOOL_NAMES[tool!]} upgrade`}</Action>}
+    {goal && tracked && <Action to={`/?sheet=forge&tab=heirlooms&recipient=${goal.recipient}&piece=${goal.piece}`}>{tracked.name} · {missing ? `${missing} materials needed` : 'Materials ready'}</Action>}
+    {farmRankOf(save.farm.points) >= 8 && <Action to="/?sheet=forge&tab=heirlooms">Plan an heirloom commission</Action>}
+    {save.forge?.heirlooms.filter(order => order.ready && !order.gifted).map(order => <p key={`${order.recipient}:${order.piece}`}>
+      <Action to={`/?sheet=forge&tab=heirlooms&recipient=${order.recipient}&piece=${order.piece}`}>{HEIRLOOMS[order.piece].name} ready to give</Action></p>)}
   </div>
 }
 

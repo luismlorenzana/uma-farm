@@ -9,6 +9,7 @@
 // reach is the Farm Rank's: each depth an Uma's rank opened (Novice … Legend) opens for him at Farm Rank 1, 2, 4, 6, 8
 // and 10, the sea's spots once their place stands too. Every pick is a seeded draw, numbered by the farm's lifetime
 // count of what came home, so each haul draws anew and every device draws alike. Pure; never stamps.
+import { takeToolCharge } from '../forge/tools'
 import { dateDayOf } from '../farm/calendar'
 import { spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
@@ -22,7 +23,7 @@ import type { FarmSave } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, type FishingSpotId, type ForestAreaId } from './ids'
 import {
-  fishSize, GATHER_TOOL, gatherQuality, HOME_COUNT, pickOn, pickShare, sharesOn, sizeRecord, sizeSkill, starsOn, type GatherPlace, type Measured,
+  fishSize, gatherQuality, HOME_COUNT, pickOn, pickShare, sharesOn, sizeRecord, sizeSkill, starsOn, type GatherPlace, type Measured,
   type WorkTerms,
 } from './kinds'
 import { FISHERY, FOREST } from './tables'
@@ -39,7 +40,7 @@ export const FARMER_REACH: readonly number[] = [1, 2, 4, 6, 8, 10]
 export const LOGS_CHOPPED = 'logs-chopped'
 
 /** The farmer's terms at a gathering place: Novice, a D talent, the farm's Axe or Rod. */
-export const farmerTerms = (save: Pick<FarmSave, 'tools'>, place: GatherPlace): WorkTerms => ({ rank: 0, talent: TALENT_D, tool: save.tools[GATHER_TOOL[place]], wellFed: 0 })
+export const farmerTerms = (_save: Pick<FarmSave, 'tools'>, _place: GatherPlace): WorkTerms => ({ rank: 0, talent: TALENT_D, tool: 1, wellFed: 0 })
 
 /** The Farm Rank an area or a spot opens at for the farmer. */
 export const reachOf = (place: GatherPlace, where: string): number =>
@@ -152,22 +153,29 @@ export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer):
     items = addGoods(items, log, stars, 1)
     got.push(stockKey(log, stars))
   }
-  const counts = bump(bump(save.farm.counts, LOGS_CHOPPED, got.length), HOME_COUNT.forest, got.length)
-  return { save: discoverStock({ ...save, items, today: hauled(save, area), farm: { ...save.farm, counts } }, got), haul: { where: area, items: got } }
+  const bonus = takeToolCharge(save, 'axe', !thinToday(save, area))
+  if (bonus.roll) {
+    const log = pickShare(woods, bonus.roll('kind'))
+    const stars = starsOn(save, by.q, 'tool:axe:stars', save.today.toolCharges?.axe ?? 0)
+    items = addGoods(items, log, stars, 1)
+    got.push(stockKey(log, stars))
+  }
+  const counts = bump(bump(save.farm.counts, LOGS_CHOPPED, many), HOME_COUNT.forest, many)
+  return { save: discoverStock({ ...bonus.save, items, today: hauled(bonus.save, area), farm: { ...save.farm, counts } }, got), haul: { where: area, items: got } }
 }
 
 /** Fishes a spot: one action, one catch of its season's fish (`draw(uid, day, 'fish:<spot>', n)`, its stars
  * `'fish-stars:<spot>'`, numbered from the farm's count home from the Fishery), measured as it lands (`'size:farmer'`):
  * the biggest of each kind is kept in `diary.records`. A thin spot's cast lands a fish half the time: `caught` is null
  * when nothing bit. Refused where his reach doesn't go yet. */
-export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured | null } {
+export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured | null; extra: Measured | null } {
   open(save, 'fishery', spot)
   const mode = save.farm.fishingModes?.[spot as FishingSpotId] ?? 'standard'
   const done = fishAt(spend(save, 'fish'), spot, farmerGatherer(save, 'fishery', 1), mode, undefined, true)
-  return { save: done.save, haul: done.haul, caught: done.caught[0] ?? null }
+  return { save: done.save, haul: done.haul, caught: done.caught[0] ?? null, extra: done.extra }
 }
 /** A cast itself, spending nothing: `by.count` fish (half at a thin spot, `haulAt`), each measured as it lands. */
-export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, mode: FishMode = 'standard', aptitude?: number, manual = false): { save: S; haul: Haul; caught: Measured[] } {
+export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, mode: FishMode = 'standard', aptitude?: number, manual = false): { save: S; haul: Haul; caught: Measured[]; extra: Measured | null } {
   let next: S = { ...save, today: hauled(save, spot) }
   const caught: Measured[] = []
   const casts = haulAt(save, spot, by.count)
@@ -184,7 +192,19 @@ export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, 
       farm: { ...next.farm, counts: bump(next.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...next.diary, records } }
     caught.push({ fish: good, stars, cm, record: cm > best, ...(picked.id === good ? {} : { gradeId: picked.id }) })
   }
-  return { save: next, haul: { where: spot, items: caught.map((c) => stockKey(c.gradeId ?? c.fish, c.stars)) }, caught }
+  const bonus = takeToolCharge(next, 'rod', casts > 0 && !thinToday(save, spot))
+  let extra: Measured | null = null
+  if (bonus.roll) {
+    const index = save.today.toolCharges?.rod ?? 0
+    const good = pickOn(next, 'fishery', spot, `tool:rod:fish:${spot}`, index)
+    const stars = starsOn(next, by.q, `tool:rod:stars:${spot}`, index)
+    const cm = fishSize(good, by.skill, bonus.roll('size'))
+    const picked = catchGrade(bonus.save, good, mode, aptitude, manual, bonus.roll('promotion'))
+    next = discoverOutput({ ...picked.save, items: addGoods(picked.save.items, picked.id, stars, 1) }, picked.id)
+    extra = { fish: good, stars, cm, record: false, ...(picked.id === good ? {} : { gradeId: picked.id }) }
+  }
+  const landed = extra ? [...caught, extra] : caught
+  return { save: next, haul: { where: spot, items: landed.map((c) => stockKey(c.gradeId ?? c.fish, c.stars)) }, caught, extra }
 }
 
 /** The areas or spots in their order, each with its name, the Farm Rank it opens at and what holds it back now. */

@@ -157,6 +157,8 @@ The long game adds [staggered town shifts](game-mechanics.md#town-professions-an
 The [Work calendar](game-mechanics.md#farmhands) shows allocations and gaps by date. See the
 [first-year day-part pilot](game-mechanics.md#first-year-day-part-pilot) for the balance results.
 
+**F110 is in.** The [Forge](game-mechanics.md#the-forge-workshop) upgrades seven tools shared with the crew, and its four heirlooms unlock formal looks alongside Greater Love. The Ring Bench opens independently.
+
 How each workshop is built:
 
 - **Planned fresh, one at a time,** live from its first day, opened by Farm Rank and its build, with the default story
@@ -185,7 +187,6 @@ How each workshop is built:
 
 These items are outside the active roadmap and the finish criteria.
 
-- **The Forge:** Workshop gameplay and tool upgrades are deferred pending a redesign.
 - **Sound:** Music, sound effects, mute and volume.
 - **Accessibility:** The planned VoiceOver, motion, and text size pass.
 - **Browser playthrough in CI:** A headless browser playing the first days on every push.

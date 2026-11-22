@@ -73,7 +73,7 @@ describe('the Farm Rank', () => {
     ])
     expect(farmRankOpens(3)).toEqual([
       'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (3,500g · 30 logs · 20 vegetables)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)',
-      'The Kitchen to build (3,000g · 40 logs · 20 vegetables)', 'Plot 2 to clear (2,500g)', 'Station level 2 (2 loads a day)',
+      'The Kitchen to build (3,000g · 40 logs · 20 vegetables)', 'The Forge to build (1,000g · 12 logs)', 'Plot 2 to clear (2,500g)', 'Station level 2 (2 loads a day)',
       'Ducks, Cows and Sheep at the rancher’s', 'New seeds at the shop',
     ])
     expect(farmRankOpens(4)).toEqual([

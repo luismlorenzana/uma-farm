@@ -193,7 +193,7 @@ export const BUILDING_IDS = [
 export type BuildingId = typeof BUILDING_IDS[number]
 export const BUILDING_MAX_LEVEL = 10
 
-/** The farm's tools, tiers 1–5 (Basic, Copper, Iron, Gold, Mythril). */
+/** The farm's tools, tiers 1–5 (Basic, Fitted, Iron, Gold, Mythril). */
 export const TOOL_IDS = ['watering-can', 'hoe', 'brush', 'pick', 'hammer', 'rod', 'axe'] as const
 export type ToolId = typeof TOOL_IDS[number]
 export type ToolTier = 1 | 2 | 3 | 4 | 5
@@ -390,7 +390,7 @@ export type FarmTask =
   | { kind: 'forage' | 'chop'; area: ForestAreaId }
   | { kind: 'fish'; spot: FishingSpotId; mode?: import('../goods/production-catalogue').FishMode }
   | { kind: 'care'; home: RanchHome; feedOnly?: true }
-  | { kind: 'mine'; dig: DigId }
+  | { kind: 'mine'; dig: DigId; floor?: number }
   | { kind: 'cook' }
   | { kind: 'ship-surplus' }
 /** The most tasks one farmhand's board holds. */
@@ -458,6 +458,8 @@ export interface TodayV4 {
   dayParts?: true
   /** Actual farmhand output, carried until the night consumes it. */
   crew?: import('../farm/farmhands').CrewReceipt
+  forgeHelper?: { id: CharacterId; tier: import('../forge/state').UpgradeTier }
+  toolCharges?: Partial<Record<import('../forge/tools').BonusTool, number>>
   /** The day's actions spent: the farm's tasks and outings (`farm/actions.ts`). */
   actions: number
   /** A special day's event actions spent: only events spend them. */
@@ -665,6 +667,7 @@ export interface SaveV6 {
   places: Record<DigId, Dig>
   buildings: Partial<Record<BuildingId, number>>
   tools: Record<ToolId, ToolTier>
+  forge?: import('../forge/state').ForgeState
   /** The workshops: the day of each one's last play (the Kitchen's, once a day), the play at the stove under way, the
    * recipes learnt (her signature dishes and those bought; the Kitchen's first three are known once it stands) and each
    * workshop's best score. A save from before the stove has no play under way. */
