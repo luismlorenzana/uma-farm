@@ -2,6 +2,7 @@
 
 **Status · Authoring draft for owner review.** The Forge remains deferred on the active roadmap. Prices,
 gates, action savings and crafting rules below are proposed. Ring integration is a separate approval.
+The [heirloom jewelry addendum](F110-heirloom-jewelry.md) specifies the endgame commissions and formal outfit rewards.
 
 ## Why
 
@@ -269,6 +270,8 @@ paths and no-smith states. Follow the existing local playthrough and required Gi
 Approve the early restoration, the four tiers and whether tempering is worth a first build. Pick the ring layout
 separately. Start by splitting access checks and implementing the Fitted Can. Validate solo and staffed coverage
 before wiring the other six tools and remaining tiers. Enable commissioned assistance and practice, then add
-tempering if approved. Compare all roster sizes with the live balance before locking values. Update the active
+tempering if approved. Add exact-floor sourcing before validating the advanced tool recipes and the
+[heirloom endgame](F110-heirloom-jewelry.md). Compare all roster sizes with the live balance before locking values.
+Update the active
 roadmap only when implementation starts. Ship via a Farm PR with regenerated mechanics, test evidence and a verified
 hosted build, and remove the completed handoff packet with the implementation.
