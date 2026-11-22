@@ -11,7 +11,7 @@
 //      picture (`Avatar.tsx`);
 //   3. a role no one plays: its lettered disc.
 // While her portraits load, the panel holds her place, so a pilot's bust never flashes blank. Loaded with the players.
-import { CAST, dateDayOf, dressOf, faceFor, isCastId, isSister, sisterOutfit, type CastId, type SceneLook } from '@farm/domain'
+import { CAST, dateDayOf, dressOf, faceFor, isCastId, isSister, sceneSpeaker, sisterOutfit, type CastId, type SceneLook } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { useArtUrl, type ArtSource } from '@luismlorenzana/uma-kit/content'
 import { useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
@@ -34,12 +34,20 @@ export function SceneLookProvider({ value, children }: { value: SceneLook; child
 }
 export const useSceneLook = (): SceneLook => useContext(LookContext)
 
+/** Resolve speaker aliases using the live schedule, the expedition roster, and the scene's leads. */
+export function useSceneSpeaker(who: string | null): string | null {
+  const story = useStory()
+  const calendar = useGame(state => state.save?.calendar)
+  const expeditions = useGame(state => state.save?.expeditions)
+  const { leads } = useSceneLook()
+  return story && who ? sceneSpeaker(story, { calendar: calendar ?? { day: 1 }, expeditions: expeditions ?? [] }, who, leads) : who
+}
+
 /** What a speaker shows for a line: who she is once roles are filled, her portrait's pick (null without portraits), and
  * whether her portraits are still loading. */
 export function useBustPick(who: string | null, emote: unknown): { id: string | null; pick: PortraitPick | null; loading: boolean } {
-  const story = useStory()
   const look = useSceneLook()
-  const id = who === null ? null : whoIs(story, who)
+  const id = useSceneSpeaker(who)
   const portraits = usePortraitsState(id && !isCastId(id) ? id : null)
   const ready = portraits !== 'loading' ? portraits : null
   return { id, pick: ready && id ? portraitPick(ready, dressOf(look, id), emote, look.portrait) : null, loading: portraits === 'loading' }
@@ -77,10 +85,11 @@ export function RoleDisc({ id, size }: { id: CastId; size: number }) {
  * blank bust in that outfit with the line's face, else a role's disc. */
 export function SceneBust({ who, name, emote = null, size }: { who: string; name: string; emote?: string | null; size: number }) {
   const { id, pick, loading } = useBustPick(who, emote)
-  if (id && isCastId(id)) return <RoleDisc id={id} size={Math.round(size * 0.74)} />
+  if (id === null) return null
+  if (isCastId(id)) return <RoleDisc id={id} size={Math.round(size * 0.74)} />
   if (pick) return <Portrait key={`${id}:${pick.base.path}`} pick={pick} art={portraitArt()} label={name} height="100%" />
   if (loading) return <span aria-hidden className="block shrink-0" style={{ height: '100%', aspectRatio: `${BLANK_BASE.width} / ${BLANK_BASE.height}` }} data-bust-art="loading" />
-  return <SceneBlank id={id ?? who} name={name} emote={emote} />
+  return <SceneBlank id={id} name={name} emote={emote} />
 }
 
 /** The blank bust in the scene's outfit, with the line's face: every one of the 22 is drawn, so the emote shows as written

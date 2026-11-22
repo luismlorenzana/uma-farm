@@ -22,6 +22,7 @@ import { castPack } from '../story/authored.fixture'
 import { LAUNCH_CAST, withLaunchProfessions } from '../story/launch'
 import { readStoryPack, storyPackFrom } from '../story/pack'
 import { eventOf, townOf } from '../story/placeholders'
+import { sceneSpeaker } from '../story/speakers'
 import { onDuty, professionOf, professionShift, WEEKDAYS, weekdayOf } from './professions'
 import { farmDaysIn, onFarmToday, townDay, townLineOf, townsfolk, whereYouMeet, worksOn } from './town'
 
@@ -66,6 +67,24 @@ describe('town professions', () => {
       expect(read.errors.some(error => error.includes('professions'))).toBe(true)
       expect(read.pack.town?.professions).toBeUndefined()
     }
+  })
+
+  it('resolves old speakers to the current staff or narration and keeps the mayor and playable cast', () => {
+    const retired = '9000996'
+    const pack = { ...PACK, town: { ...PACK.town, people: [...(PACK.town?.people ?? []), { characterId: retired, game: 'marta-quill' }] } }
+    const base = newSave('town-speakers', AT)
+    const at = (day: number) => ({ ...base, calendar: { day } })
+    expect(sceneSpeaker(pack, at(1), retired)).toBeNull()
+    expect(sceneSpeaker(pack, at(2), retired)).toBe(ONE)
+    expect(sceneSpeaker(pack, at(5), 'marta-quill')).toBe(TWO)
+    expect(sceneSpeaker(pack, at(2), retired, [ONE])).toBeNull()
+    expect(sceneSpeaker(pack, { ...at(2), expeditions: [{ left: 1, back: 4, party: [ONE] }] as FarmSave['expeditions'] }, retired)).toBeNull()
+    expect(sceneSpeaker(pack, at(2), TWO)).toBe(TWO)
+    expect(sceneSpeaker(pack, at(2), 'you')).toBe('you')
+    expect(sceneSpeaker(pack, at(2), '9000998')).toBe('9000998')
+    expect(sceneSpeaker(pack, at(2), 'hollis-pryor')).toBe('9000998')
+    expect(sceneSpeaker(pack, at(2), 'marta-quill', [ONE])).toBeNull()
+    expect(sceneSpeaker(pack, at(2), 'ida-stone')).toBeNull()
   })
 
   it('opens the counter on actual duty, uses the free-day outing and lets the farmer meet and hire its worker', () => {

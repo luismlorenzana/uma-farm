@@ -5,15 +5,22 @@
 // bust: the line or the choices sit in the text box over the picture's lower edge, and a tap on the picture is the
 // line's tap. Loaded with the players.
 import type { ReactNode } from 'react'
-import { PreloadLine, SceneBust } from './Bust'
+import { PreloadLine, SceneBust, useSceneSpeaker } from './Bust'
 import { useArtMode } from './Illustration'
+import { useMaster } from '../master/master'
+import { nameOfAnyone } from '../story/people'
+import { useStory } from '../story/story'
 
 /** Who's on the stage: the speaker (or the scene's own Uma), her name and the line's emote. */
 export interface OnStage { who: string; name: string; emote?: string | null }
 type Data = { [key: `data-${string}`]: string | number | boolean | undefined }
 
 /** The bust's panel: its backdrop, and her bust standing on its foot. A tap on it is the line's tap. */
-export function BustPanel({ bust, backdrop = null, onTap, data = {} }: { bust: OnStage | null; backdrop?: ReactNode; onTap?: () => void; data?: Data }) {
+export function BustPanel({ bust: written, backdrop = null, onTap, data = {} }: { bust: OnStage | null; backdrop?: ReactNode; onTap?: () => void; data?: Data }) {
+  const who = useSceneSpeaker(written?.who ?? null)
+  const master = useMaster()
+  const story = useStory()
+  const bust = who && written ? { ...written, who, name: who === written.who ? written.name : nameOfAnyone(master.status === 'ready' ? master.view : null, story, who) } : null
   return (
     <div className={`relative flex w-[40%] max-w-[380px] shrink-0 items-end justify-center self-stretch overflow-hidden ${backdrop ? 'rounded-lg border border-hairline' : ''}`}
       onClick={onTap} aria-hidden={bust ? undefined : true} data-bust={bust ? bust.who : 'narrator'} data-stage-bust {...data}>

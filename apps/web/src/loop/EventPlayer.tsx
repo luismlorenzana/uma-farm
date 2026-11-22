@@ -30,7 +30,7 @@
 import {
   actionCost, alternateRouteDay, alternateRouteSteps, askSteps, beatOf, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
   mayAsk, mayPlayEvent, mayReplayMemory, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
-  readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
+  readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, sceneSpeaker, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   dateDayOf, type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
@@ -300,7 +300,10 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
 
   const seed = (k: number) => playSeed(save.account.uid, save.calendar.day, id, mode === 'replay' ? `replay-${rung}` : rung, k)
   const activePlay = playNow ?? extraNow
-  const lines = logLines(shown.slice(0, cursor + (choiceNow || playNow ? 0 : 1)), picks, nameOf, save.farmer.name)
+  const lines = logLines(shown.slice(0, cursor + (choiceNow || playNow ? 0 : 1)), picks, (who) => {
+    const speaker = sceneSpeaker(pack, save, who, [id])
+    return speaker ? nameOf(speaker) : ''
+  }, save.farmer.name)
   const love = save.love[id]
 
   // Before the proposal, which ring; before the wedding, where.

@@ -3579,7 +3579,8 @@ presence through `town/town.ts`. Personal time uses the authored outing, routine
 - **A spot** holds everyone the schedules put there; the map shows a crowded one by its count and "+n" ([the
   map](#the-map)).
 - **The posts:** the mayor's assigned post is permanent. Town professions show the cast members working that day,
-  and an uncovered counter offers self-service.
+  and an uncovered counter offers self-service. Only a playable Uma or the mayor has a town menu. Old links to
+  retired town portraits open the map.
 - **On the farm:** a farmhand comes on her farm shifts. A spouse with a room comes home at night, including after
   her town shifts. A spouse waiting for a room keeps her current residence and schedule.
 
@@ -4940,8 +4941,9 @@ so no name is in git. They live in town, never on the farm, and keep its spots (
 | The bell’s keeper | `bell-keeper` | Keeps the chapel bell |
 <!-- /live -->
 
-- **In a scene,** a `say` by one of them, by her character id or by her role's (`ida-stone`), shows her name and bust.
-  With no one playing a role (no master data), the role speaks in words ("The smith") on a lettered disc.
+- **In a scene,** a legacy worker's character id or role id resolves to the playable Uma on duty. A vacant
+  role uses narration, including when the scheduled worker is the scene's lead or is away. The mayor keeps
+  her civic scenes and playable Umas keep their own named lines. Live scenes and Library replays use the same rule.
 - **The smith** speaks at the ring bench, and **the cook** judges the Cooking Contest ([its lines](#the-cooking-contest)).
   The others have no lines of the game's; the opening is the story's, and any of
   the town's people may speak in it.
