@@ -13,6 +13,7 @@ import {
 import { clearPlot, rowOfPlot } from '../fields/plots'
 import { talentsD, type TalentOf } from './talents'
 import { setSurplusPlan } from './production'
+import { workCatalog, workNeeds } from './work-coverage'
 import { assistantLock } from '../kitchen/kitchen'
 import { cookLock } from '../kitchen/contest'
 import { castPack } from '../story/authored.fixture'
@@ -206,6 +207,55 @@ describe('her night', () => {
     // On a season's last day, a Carrot can't ripen: she plants nothing.
     const late = { ...save, calendar: { day: 30 } }
     expect(handsTonight(late, late, talentsD, null).lines[0]!.done.plant).toBeUndefined()
+  })
+
+
+  it('harvests, replants, and waters overlapping tiles in crop order even on a reversed board', () => {
+    const save = tasks(ripe(farm(), [0]), A, [
+      { kind: 'water', tiles: [0] }, { kind: 'plant', crop: 'carrot', tiles: [0] }, { kind: 'harvest', tiles: [0] },
+    ])
+    const shift = settleCrewShift(save, talentsD, null)
+    expect(shift.today.crew?.jobs?.map(job => job.key)).toEqual(['harvest:0', 'plant:0', 'water:0'])
+    expect(fieldTiles(shift)[0]).toMatchObject({ crop: 'carrot', watered: true, ready: false })
+    expect(parseSaveV6(json(shift))).toEqual(shift)
+  })
+
+  it('preserves a deliberate water pass before crop work when a second pass follows it', () => {
+    const tiles = [0, 1, 2, 3]
+    const water = { kind: 'water', tiles } as const
+    const save = tasks(growing(ripe(farm(), [0]), [1, 2, 3]), A, [
+      water, { kind: 'harvest', tiles }, { kind: 'plant', tiles }, water,
+    ])
+    const shift = handsTonight(save, save, talentsD, null)
+    expect(shift.lines[0]?.done).toEqual({ water: 3 })
+    expect(fieldTiles(shift.save)[0]?.ready).toBe(true)
+  })
+
+  it('lets earlier hands finish later hands’ field work before spending their spare actions gathering', () => {
+    const C = '303'
+    const base = ripe(farm(), [0])
+    const save = tasks(tasks(tasks({
+      ...base, roster: { ...base.roster, [C]: { ...newRosterUma(1), farmhand: 1 } }, love: { ...base.love, [C]: newLove() },
+    }, A, [{ kind: 'water', tiles: [0] }, { kind: 'fish', spot: 'pond' }]),
+    B, [{ kind: 'plant', tiles: [0] }, { kind: 'fish', spot: 'pond' }]), C, [{ kind: 'harvest', tiles: [0] }])
+    const result = handsTonight(save, save, talentsD, null)
+    expect(result.jobs?.filter(job => ['harvest:0', 'plant:0', 'water:0'].includes(job.key))).toEqual([
+      { id: C, key: 'harvest:0', actions: 1 }, { id: B, key: 'plant:0', actions: 1 }, { id: A, key: 'water:0', actions: 1 },
+    ])
+    expect(fieldTiles(result.save)[0]).toMatchObject({ crop: 'carrot', watered: true })
+    expect(result.save.today.hauls?.pond).toBe(4)
+    expect(result.lines.map(row => row.spent)).toEqual([3, 3, 1])
+  })
+
+  it('reports crop, food and gathering work from real stock and shared haul capacity', () => {
+    const base = growing(farm(), [0])
+    const save = { ...base, today: { ...base.today, hauls: { woods: 3, pond: 4 } } }
+    const gaps = workNeeds(save, null, true)
+    expect(gaps).toContainEqual(expect.objectContaining({ task: { kind: 'water', tiles: [0] } }))
+    expect(gaps.find(gap => gap.task.kind === 'cook')?.blocked).toBe(true)
+    expect(gaps.filter(gap => gap.task.kind === 'forage' || gap.task.kind === 'chop').map(gap => gap.count)).toEqual([1, 1])
+    expect(gaps.some(gap => gap.task.kind === 'fish')).toBe(false)
+    expect(workCatalog(save)).toContainEqual({ kind: 'fish', spot: 'deep-sea' })
   })
 
   it('opens her tricks as she levels: two tiles an action, a row watered in one, a field tile cleared and tilled in one', () => {

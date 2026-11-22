@@ -9,9 +9,9 @@
 // Book.
 import { byRelationship } from '../loop/relationship-order'
 import {
-  digFloor, gradeAt, crewShiftEnabled, MORNING_ACTIONS, aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
+  digFloor, gradeAt, crewShiftEnabled, DAYS_PER_SEASON, MORNING_ACTIONS, aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
   canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
-  MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES,
+  MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES, plotWork, workNeeds,
   MAX_SEED_TARGET, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
   ANIMAL_HOME, availableStock, baseGoodId, CATALOGUE, fieldChores, fieldTiles, FISH_MODES, FISH_MODE_NAMES, FISH_PROMOTION, goodCount, goodName, goodOf,
   harvestGrade, HOME_NAMES, loadsLeft, loadsToday, MAX_SURPLUS, needsWater, parseStockKey, seedOutput, stationJobUnits, type FishMode, type FishingSpotId,
@@ -23,7 +23,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
-import { copyHandTask, enterDayPart, planSurplus, setHandTasks } from '../loop/actions'
+import { copyHandTask, copyHandTasks, enterDayPart, planSurplus, setHandTasks } from '../loop/actions'
 import { configureSurplus, defaultCrateLimit, SURPLUS_LIMIT_MAX } from '@farm/domain'
 import { changeHomestead } from '../loop/homestead-actions'
 import { RestockList } from '../loop/RestockList'
@@ -34,11 +34,12 @@ import { useMaster } from '../master/master'
 import { daysWords } from '../loop/schedule-words'
 import { useStory } from '../story/story'
 import { dayChips, jobWords, KITCHEN, nightWords, rowTiles, runsOn, taskWords } from './board-words'
-import { hasPreset, workPresets, workSuggestions, type WorkSuggestion } from './work-plan'
+import { hasPreset, orderLink, workPresets, workRows, workSuggestions, type WorkRow, type WorkSuggestion } from './work-plan'
+import { JobList } from './JobList'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 /** A season's farm days in words: "2, 3, 5, 6, 8, 9, 11, 12", "1–6, 9", "every day". */
-const daysList = (days: readonly number[]): string => (days.length === 12 ? 'every day' : daysWords(days))
+const daysList = (days: readonly number[]): string => (days.length === DAYS_PER_SEASON ? 'every day' : daysWords(days))
 
 /** The board: a card for each farmhand, in the order they work. */
 export function WorkBoard({ save }: { save: FarmSave }) {
@@ -51,8 +52,13 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const hands = handsInOrder(save).sort(byRelationship(save))
   const forecast = useMemo(() => handsTonight(save, save, talents.of, pack), [save, talents.of, pack])
-  const suggestions = useMemo(() => workSuggestions(save, forecast, pack, talents.of), [save, forecast, pack, talents.of])
+  const needs = useMemo(() => workNeeds(forecast.save, pack, true), [forecast, pack])
+  const suggestions = useMemo(() => workSuggestions(save, forecast, needs, talents.of), [save, forecast, needs, talents.of])
   const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
+  const rows = useMemo(() => workRows(save, forecast, needs), [save, forecast, needs])
+  const order = rows.find(row => row.key === new URLSearchParams(location.search).get('order'))
+  const budget = forecast.lines.reduce((sum, line) => sum + line.actions, 0)
+  const spent = forecast.lines.reduce((sum, line) => sum + line.spent, 0)
   const canStart = crewShiftEnabled(save) && save.today.actions < MORNING_ACTIONS
   const passes = MORNING_ACTIONS - save.today.actions
   const [starting, setStarting] = useState(false)
@@ -76,12 +82,13 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-display text-[18px] font-bold text-ink">Work board</h2>
         <GuideButton topic="staff" title="The work board" label="About the work board">
-          <p>A friend you invite to work is a farmhand. She keeps her life in town, and comes to the farm on her farm days, the days it leaves free. There she gives the farm 3 actions: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
-          <p>At the start of Afternoon she works your orders: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The crew’s goods are ready for the afternoon. Watered crops grow at night.</p>
+          <p>A friend you invite to work is a farmhand. She keeps her life in town, and comes to the farm on her farm days, the days it leaves free. There she gives the farm 3 actions: one more after 12 days, two more once she’s your spouse, one more the day after a household meal.</p>
+          <p>At the start of Afternoon the crew shares the same crops and stock. On overlapping tiles, crop care goes from harvest to preparation, planting and watering. A hand with actions left can pick up work that another hand opened. Gathering shares each location’s full hauls. Watered crops grow at night.</p>
           <p>Production tasks train her aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
+          <p>You still buy seeds, fodder and animals, order construction, and take the stairs in the mines.</p>
         </GuideButton>
       </div>
       {canStart && <div className="flex flex-wrap items-center gap-2 rounded-md border border-hairline bg-panel p-2">
@@ -90,7 +97,15 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       </div>}
       {save.today.crew && <p className="text-[13px] text-ink-soft">Morning shift complete. Order changes apply on each Uma’s next farm shift.</p>}
       {shiftError && <p role="alert" className="text-danger">{shiftError}</p>}
+      <p className="rounded border border-hairline bg-panel p-2 text-[13px]" data-work-budget>
+        <strong>{plural(forecast.lines.length, 'worker')} on shift</strong> · {spent}/{budget} crew actions {save.today.crew ? 'used' : 'forecast'} · {budget - spent} free
+      </p>
+      {order && <AssignOrder key={order.key} row={order} save={save} hands={hands} forecast={tonight} nameOf={nameOf} />}
       <Coverage suggestions={suggestions} nameOf={nameOf} />
+      <details className="rounded-md border border-hairline bg-panel px-2">
+        <summary className="min-h-11 cursor-pointer py-2 font-semibold">Browse jobs by place</summary>
+        <JobList rows={rows} nameOf={nameOf} />
+      </details>
       <RestockList save={save} />
       {hands.length > 0 && <ProductionForecast before={save} after={forecast.save} pack={pack} />}
       <SurplusEditor save={save} />
@@ -112,6 +127,41 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   )
 }
 
+function AssignOrder({ row, save, hands, forecast, nameOf }: {
+  row: WorkRow; save: FarmSave; hands: string[]; forecast: ReadonlyMap<string, FarmhandLine>; nameOf: (id: string) => string
+}) {
+  const [user, choose] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
+  const candidates = hands.filter(id => {
+    const orders = save.roster[id]?.tasks ?? []
+    return orders.length < MAX_TASKS && !hasPreset(orders, row.task)
+  }).sort((a, b) => free(b) - free(a))
+  function free(id: string) {
+    const day = forecast.get(id)
+    return save.today.crew || !day ? 0 : day.actions - day.spent
+  }
+  const selected = candidates.includes(user) ? user : candidates[0]
+  return <section aria-label="Assign a work order" className="space-y-2 rounded border border-hairline bg-panel p-2">
+    <h3 className="font-semibold">{row.label}</h3>
+    {row.lock ? <p>{row.lock}</p> : candidates.length ? <>
+      <label className="flex flex-wrap items-center gap-2 text-[13px]">Worker
+        <select value={selected} onChange={event => choose(event.currentTarget.value)} className="min-h-11 bg-panel px-2">
+          {candidates.map(id => <option key={id} value={id}>{nameOf(id)}{free(id) ? ' · ' + plural(free(id), 'free action') : ' · next available shift'}</option>)}
+        </select>
+      </label>
+      <Button disabled={busy || !selected} onClick={() => {
+        if (!selected) return
+        setBusy(true)
+        setNotice('')
+        void copyHandTask(selected, row.task).then(() => setNotice('Assigned to ' + nameOf(selected) + '.'),
+          error => setNotice(errorWords(error))).finally(() => setBusy(false))
+      }}>Assign order</Button>
+    </> : <p className="text-[13px] text-ink-soft">{hands.length ? 'This order is already assigned or the boards are full.' : 'Invite a farmhand at Friendship 3 to assign this order.'}</p>}
+    {notice && <p role="status" className="text-[13px]">{notice}</p>}
+  </section>
+}
+
 function Coverage({ suggestions, nameOf }: { suggestions: WorkSuggestion[]; nameOf: (id: string) => string }) {
   const [assigning, setAssigning] = useState(false)
   const [error, setError] = useState('')
@@ -120,16 +170,21 @@ function Coverage({ suggestions, nameOf }: { suggestions: WorkSuggestion[]; name
     setError('')
     void copyHandTask(worker, task).catch(err => setError(errorWords(err))).finally(() => setAssigning(false))
   }
+  const next = suggestions.find(item => item.worker && !item.blocked)
+  const open = suggestions.filter(item => !item.optional)
   return <section aria-label="Work that needs coverage" data-work-coverage className="space-y-1 rounded-md border border-hairline bg-panel p-2.5">
     <h3 className="font-semibold">Needs coverage</h3>
-    {suggestions.length ? <ul className="divide-y divide-hairline">
-      {suggestions.slice(0, 5).map(({ worker, need, job, blocked }) => <li key={job.key} className="flex min-h-11 items-center justify-between gap-2 py-1">
+    {next?.worker && <Button variant="secondary" disabled={assigning} onClick={() => assign(next.worker!, next.job.task)}>
+      Assign next job · {next.job.label} · {nameOf(next.worker)}
+    </Button>}
+    {open.length ? <ul className="divide-y divide-hairline">
+      {open.map(({ worker, need, job, blocked }) => <li key={job.key} className="flex min-h-11 items-center justify-between gap-2 py-1">
         <span><strong className="block text-[13px]">{job.label}</strong><small className="text-ink-soft">{need} after assigned work</small></span>
         {worker ? <Button variant="secondary" disabled={assigning} onClick={() => assign(worker, job.task)}>Assign {nameOf(worker)}</Button>
-          : <small className="shrink-0 text-ink-soft">{blocked ? "Needs supplies" : "No free worker"}</small>}
+          : blocked ? <small className="shrink-0 text-ink-soft">Needs supplies</small>
+          : <Link className="inline-flex min-h-11 shrink-0 items-center text-accent" to={orderLink(job.key)}>Plan order ›</Link>}
       </li>)}
     </ul> : <p className="text-[13px] text-ink-soft">Current assignments cover the priority jobs we can do with today’s supplies.</p>}
-    {suggestions.length > 5 && <p className="text-[12px] text-ink-soft">{suggestions.length - 5} more jobs after these</p>}
     {error && <p role="alert" className="text-[13px] text-danger">{error}</p>}
   </section>
 }
@@ -360,11 +415,12 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           : kind === 'mine' ? { kind, dig: where as DigId, ...(floor ? { floor } : {}) }
             : kind === 'fish' ? { kind, spot: where as FishingSpotId, ...(fishMode ? { mode: fishMode } : {}) } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
   const pick = (next: TaskKind) => { setKind(next); setWhere(null); setFloor(0); setError(null) }
-  const assign = (pick: FarmTask) => {
+  const assignMany = (picks: readonly FarmTask[]) => {
     setBusy(true)
     setError(null)
-    void copyHandTask(id, pick).then(onClose, (e: unknown) => setError(errorWords(e))).finally(() => setBusy(false))
+    void copyHandTasks(id, picks).then(onClose, (e: unknown) => setError(errorWords(e))).finally(() => setBusy(false))
   }
+  const assign = (pick: FarmTask) => assignMany([pick])
   const add = () => { if (task) assign(task) }
   const assigned = save.roster[id]!.tasks ?? []
   const presets = workPresets(save)
@@ -382,6 +438,24 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
         </div>
       )}>
       <div className="space-y-3 pb-1" data-add-task={id}>
+        <details className="rounded-md border border-hairline px-2">
+          <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Combined plot orders</summary>
+          <p className="text-[12px] text-ink-soft">Orders run on the same tiles in crop order. Use separate orders when you want different workers on each step.</p>
+          {save.fields.plots.map(({ tiles }, index) => <fieldset key={index} className="my-2 space-y-1">
+            <legend className="text-[13px] font-semibold">{plotName(index)}</legend>
+            <div className="flex flex-wrap gap-1">
+              {([
+                { label: 'Harvest + water', kinds: ['harvest', 'water'] },
+                { label: 'Plant + water', kinds: ['plant', 'water'] },
+                { label: 'Full crop care', kinds: ['harvest', 'till', 'plant', 'water'] },
+              ] as const).map(({ label, kinds }) => {
+                const picks = kinds.map(kind => plotWork(kind, index, tiles.map((_, tile) => tile))).filter(pick => !hasPreset(assigned, pick))
+                return <Button key={label} variant="secondary" disabled={busy || !picks.length || assigned.length + picks.length > MAX_TASKS}
+                  onClick={() => assignMany(picks)}>{label}</Button>
+              })}
+            </div>
+          </fieldset>)}
+        </details>
         <details className="rounded-md border border-hairline px-2">
           <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Quick jobs</summary>
           <ul className="mb-2 grid grid-cols-2 gap-1.5">

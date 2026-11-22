@@ -257,7 +257,7 @@ function parseOccasions(value: unknown, path: string, roster: ReadonlySet<string
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): CrewReceipt {
-  const o = object(value, path, ['lines', 'worked', 'tended', 'made', 'gathered', 'aptitudes'])
+  const o = object(value, path, ['lines', 'worked', 'tended', 'made', 'gathered', 'aptitudes', 'jobs'])
   const lines = parseWorkLines(o.lines, `${path}.lines`, roster).map(line =>
     line.kind === 'farmhand' ? line : fail(`${path}.lines`, 'expected a farmhand'))
   unique(lines.map(line => line.id), `${path}.lines`)
@@ -282,6 +282,12 @@ function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): C
     })),
     gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length)
       .map((value, i) => oneOf(value, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),
+    ...(o.jobs === undefined ? {} : { jobs: rows('jobs', crew.size * (MAX_TASKS + 1), ['id', 'key', 'actions'], (row, at) => ({
+      id: member(row.id, at + '.id', crew),
+      key: typeof row.key === 'string' && /^[a-z][a-z0-9-]*(?::[a-z0-9-]+){0,3}$/.test(row.key) && row.key.length <= 80
+        ? row.key : fail(at + '.key', 'expected a work order'),
+      actions: int(row.actions, at + '.actions', 1, 7),
+    })) }),
     ...(o.aptitudes === undefined ? {} : { aptitudes: rows('aptitudes', crew.size * APTITUDE_IDS.length,
       ['kind', 'outfitId', 'aptitude', 'level'], (row, at) => ({
         kind: oneOf(row.kind, `${at}.kind`, ['aptitude'] as const),

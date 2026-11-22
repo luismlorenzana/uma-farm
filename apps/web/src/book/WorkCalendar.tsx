@@ -15,18 +15,19 @@ import { plural, SEASON_COLOR, shortDate } from '../loop/words'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { useStory } from '../story/story'
-import { nightWords, taskWords } from './board-words'
-import { forecastCrewOn } from './work-plan'
+import { nightWords } from './board-words'
+import { forecastCrewOn, workRows } from './work-plan'
+import { JobList } from './JobList'
 
 const LAST_PAGE = Math.ceil(DAYS_PER_SEASON / CALENDAR_PAGE_SIZE) - 1
 const coveredTone = 'bg-emerald-100 text-emerald-900'
 const missingTone = 'bg-amber-100 text-amber-950'
-const neutral = 'text-ink-faint'
+const neutral = 'opacity-80'
 const total = (counts: WorkTotals | undefined): number => Object.values(counts ?? {}).reduce((sum, n) => sum + n, 0)
 
 function workOn(save: FarmSave, day: number, pack: StoryPack | null, talents: TalentOf) {
-  const { snapshot, lines, needs } = forecastCrewOn(save, day, pack, talents)
-  return { record: workDayRecord(snapshot, lines, needs), lines, needs }
+  const forecast = forecastCrewOn(save, day, pack, talents)
+  return { ...forecast, record: workDayRecord(forecast.snapshot, forecast.lines, forecast.needs) }
 }
 
 export default function WorkCalendar({ save }: { save: FarmSave }) {
@@ -42,23 +43,27 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
   const [page, setPage] = useState(Math.floor((current.day - 1) / CALENDAR_PAGE_SIZE))
   const touch = useRef<{ x: number; y: number } | null>(null)
   const { year, season } = selected
+  const first = page * CALENDAR_PAGE_SIZE
   const days = useMemo(() => {
     const history = new Map(save.farm.workHistory?.map(row => [row.day, row]))
     const compare = byRelationship(save)
-    return Array.from({ length: DAYS_PER_SEASON }, (_, i) => {
-      const day = turnOnDate({ year, season, day: i + 1 }, save.calendar)
+    return Array.from({ length: Math.min(CALENDAR_PAGE_SIZE, DAYS_PER_SEASON - first) }, (_, i) => {
+      const day = turnOnDate({ year, season, day: first + i + 1 }, save.calendar)
       const live = day !== null && day >= today ? workOn(save, day, story, talents) : null
       live?.lines.sort((a, b) => compare(a.id, b.id))
       return { day, live, record: live?.record ?? (day !== null ? history.get(day) : undefined) }
     })
-  }, [year, season, save, today, story, talents])
+  }, [first, year, season, save, today, story, talents])
   const choose = (s: Season, y = year, n = s === current.season && y === current.year ? current.day : 1) => {
     setSelected({ season: s, year: y, day: n })
     setPage(Math.floor((n - 1) / CALENDAR_PAGE_SIZE))
   }
   const changePage = (step: -1 | 1) => setPage(value => Math.max(0, Math.min(LAST_PAGE, value + step)))
-  const first = page * CALENDAR_PAGE_SIZE
-  const chosen = days[selected.day - 1]!
+  const chosenNumber = selected.day > first && selected.day <= first + days.length ? selected.day : first + 1
+  const chosen = days[chosenNumber - first - 1]!
+  const rows = chosen.live ? workRows(chosen.live.snapshot, chosen.live, chosen.live.needs) : []
+  const budget = chosen.live?.lines.reduce((sum, line) => sum + line.actions, 0) ?? 0
+  const spent = chosen.live?.lines.reduce((sum, line) => sum + line.spent, 0) ?? 0
   const isToday = chosen.day === today
   const actual = isToday && !!save.today.crew
   const recorded = chosen.day !== null && chosen.day < today
@@ -88,18 +93,18 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
             const dx = end.clientX - start.x
             if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(end.clientY - start.y)) changePage(dx < 0 ? 1 : -1)
           }}>
-          {days.slice(first, first + CALENDAR_PAGE_SIZE).map(({ day, record, live }, i) => {
+          {days.map(({ day, record, live }, i) => {
             const n = first + i + 1
             const covered = record ? total(record.covered) : null
             const missing = record ? total(record.missing) : null
             const crew = live?.lines.filter(line => line.tasks > 0 || line.forge) ?? []
             const { shown, more } = cellFaces(crew)
             return <li key={n} className="min-h-0 min-w-0">
-              <button type="button" aria-pressed={n === selected.day} onClick={() => choose(season, year, n)}
+              <button type="button" aria-pressed={n === chosenNumber} onClick={() => choose(season, year, n)}
                 aria-label={SEASON_NAMES[season] + ' ' + n + (record ? ', ' + record.allocated + ' allocated, ' + missing + ' missing' : ', no record')}
                 data-work-day={n} data-allocated={record?.allocated} data-covered={covered ?? undefined} data-missing={missing ?? undefined}
                 className={'flex min-h-11 h-full w-full flex-col gap-1 overflow-hidden rounded-sm border border-hairline p-1 text-left '
-                  + (day === today ? 'bg-accent text-accent-ink' : 'bg-panel') + (n === selected.day ? ' ring-2 ring-inset ring-ink/65' : '')}>
+                  + (day === today ? 'bg-accent text-accent-ink' : 'bg-panel') + (n === chosenNumber ? ' ring-2 ring-inset ring-ink/65' : '')}>
                 <span className="flex items-baseline gap-1"><strong className="font-display text-[16px] leading-none">{n}</strong>{day && <small className="text-[9px] opacity-75">{weekdayShort(weekdayOf(day))}</small>}</span>
                 {record ? <span className="grid gap-0.5 text-[10px] leading-tight font-bold tabular-nums">
                   <span className={'flex justify-between gap-0.5 rounded px-0.5 ' + coveredTone}><span>Orders</span>{record.allocated}</span>
@@ -117,17 +122,19 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
         </div>
       </section>
       <aside className="min-w-0 flex-[2] overflow-y-auto rounded-md border border-hairline bg-panel p-2 text-[13px]" aria-label="Selected day's work" data-work-day-detail>
-        <h2 className="font-display text-[17px] font-bold">{chosen.day !== null ? shortDate(chosen.day, save.calendar) : SEASON_NAMES[season] + ' ' + selected.day}</h2>
+        <h2 className="font-display text-[17px] font-bold">{chosen.day !== null ? shortDate(chosen.day, save.calendar) : SEASON_NAMES[season] + ' ' + chosenNumber}</h2>
         <p className="text-ink-soft">{recorded ? 'End-of-day record' : actual ? 'Morning shift complete' : isToday ? 'Today’s shift forecast' : chosen.day === null ? 'Date added later' : 'Forecast using current crops, stock and orders'}</p>
         {[...save.forge?.installed ?? [], ...save.forge?.tool ? [save.forge.tool] : []].filter(order => order.due === chosen.day).map(order =>
           <Link key={order.tool} className="flex min-h-11 items-center font-semibold" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} ready ›</Link>)}
         {chosen.record ? <WorkDetails record={chosen.record} /> : <p className="py-2">No shift recorded.</p>}
-        {!!chosen.live?.needs.length && <ul className="my-2 space-y-1">{chosen.live.needs.map(({ task, need }) => <li key={JSON.stringify(task)}>{taskWords(task, save.fields.plots.length)} · {need}</li>)}</ul>}
+        {chosen.live && <>
+          <p className="mb-2" data-calendar-action-budget>{plural(lines.length, 'worker')} · {spent}/{budget} actions {actual ? 'used' : 'forecast'} · {budget - spent} free</p>
+          <JobList rows={rows} nameOf={nameOf} />
+        </>}
         {chosen.live && !lines.length && <p className="my-2 text-ink-soft">No crew on the farm this day.</p>}
         {lines.length > 0 && <><h3 className="mt-2 font-semibold">Crew on the farm</h3><ul>
           {lines.map(line => <li key={line.id} className="flex flex-col border-b border-hairline py-1"><strong>{nameOf(line.id)}</strong>
             <span>{plural(line.tasks + (line.forge ?? 0), 'order')}{line.forge ? ' · Forge assistant' : ''} · {line.spent ? nightWords(line) : '0 of ' + plural(line.actions, 'action') + ' used'}</span>
-            {!actual && !!line.tasks && <span className="text-ink-soft">{save.roster[line.id]?.tasks?.map(task => taskWords(task, save.fields.plots.length)).join(' · ')}</span>}
           </li>)}
         </ul></>}
         {chosen.live && <Link to="/book?view=work" className="mt-2 inline-flex min-h-11 items-center font-semibold text-accent">Edit work orders</Link>}
@@ -140,6 +147,8 @@ function WorkDetails({ record }: { record: WorkDayRecord }) {
   const words = (rows: WorkTotals) => Object.entries(rows).map(([task, count]) => count + ' ' + TASK_NAMES[task as keyof typeof TASK_NAMES]).join(' · ')
   return <div className="my-2 space-y-1">
     <div className={'rounded px-1.5 py-1 ' + coveredTone}><strong>✓ {record.allocated} allocated</strong>{total(record.covered) > 0 && <p>{words(record.covered)} worked</p>}</div>
-    <div className={'rounded px-1.5 py-1 ' + missingTone}><strong>! {total(record.missing)} missing</strong>{total(record.missing) > 0 && <p>{words(record.missing)}</p>}</div>
+    <div className={'rounded px-1.5 py-1 ' + (total(record.missing) ? missingTone : 'bg-sunken text-ink-soft')}>
+      <strong>{total(record.missing)} missing</strong>{total(record.missing) > 0 && <p>{words(record.missing)}</p>}
+    </div>
   </div>
 }

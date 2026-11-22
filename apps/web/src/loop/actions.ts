@@ -200,11 +200,15 @@ export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
 
 /** A farmhand's tasks on the work board, in your order: free. */
 export const setHandTasks = (id: string, tasks: readonly FarmTask[]) => change((s) => setTasks(s, id, tasks))
-export const copyHandTask = (id: string, task: FarmTask) => change((s) => {
-  const tasks = s.roster[id]?.tasks ?? []
-  if (tasks.some((existing) => JSON.stringify(existing) === JSON.stringify(task))) throw new SaveRuleError('bad-job', 'She already has that task.')
-  return setTasks(s, id, [...tasks, task])
+export const copyHandTasks = (id: string, orders: readonly FarmTask[]) => change((s) => {
+  const tasks = [...s.roster[id]?.tasks ?? []]
+  for (const order of orders) {
+    if (tasks.some(existing => JSON.stringify(existing) === JSON.stringify(order))) throw new SaveRuleError('bad-job', 'She already has that task.')
+    tasks.push(order)
+  }
+  return setTasks(s, id, tasks)
 })
+export const copyHandTask = (id: string, task: FarmTask) => copyHandTasks(id, [task])
 
 // --- The start ------------------------------------------------------------------------------------------------
 

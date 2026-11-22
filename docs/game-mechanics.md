@@ -3705,8 +3705,8 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
    invite her to work · 1 (a friend)     (on a town day she's in town: no work, no meals on the farm)
    the Book: the work board (free)       her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
      her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)
-     harvest · water · plant ·           the field's tasks, the loads and the animals' care first, in your order, each
-     clear and till   (a plot's rows)      until it's done; then her gathering and digging share what's left, a turn each
+     harvest · water · plant ·           field work, station loads and animal care first, with crop orders coordinated
+     clear and till   (a plot's rows)      on shared tiles; gathering and digging share what's left, a turn each
      load (a station)                    every action: a point of practice in its aptitude; her goods into the Warehouse
      forage · chop (an area)             her place today (where she spent the most) pays rank points, bonds, her line
      fish (a spot)                     then the farm eats (her two meals), then the crops grow: her watering counts
@@ -3756,13 +3756,23 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 
 #### The work board
 
-**Work** on either Farm view opens the Book’s work board. **Needs coverage** runs the crew forecast, then shows
-the highest-priority gaps left by existing orders. It prioritizes animal feed, cooking, harvest, water, other
-animal work and planned station loads. Tap the suggested Uma to add the order to her list. The suggestion uses
-spare actions on today’s shift and relevant aptitude. It updates after each assignment.
+**Work** on either Farm view opens the Book’s work board. **Needs coverage** forecasts the current assignments and
+lists the work left, with supply shortages marked separately. **Assign next job** picks the highest-priority available
+job and a worker with spare actions, using aptitude to break ties. Animal feed, meals, harvest and watering come first.
+The number of spare actions and the recommendations update as assignments change. A job link opens the worker picker
+for that job, including after the shift when it can be planned for the worker’s next farm day.
 
-**Quick jobs** in Add a task are one-tap, repeating orders for the whole plot or a built location. The detailed
-editor still handles exact seeds, rows, collection targets and locations.
+**Jobs by place** includes the plots, all forage and chopping areas, fishing spots, mines, animals, station loads,
+cooking, seed saving and surplus shipping. **Show all jobs** also shows locked and idle locations. **Quick jobs** repeat
+each shift. **Combined plot orders** adds Harvest + water, Plant + water or the full crop routine in one step. The
+detailed editor still handles exact seeds, individual rows, collection targets and locations. Buying seeds, animals and
+fodder, constructing buildings and taking the stairs in a dig are farmer actions.
+
+The **Work calendar** uses the same job list for the selected day. Before a shift it shows the forecast and scheduled
+workers. Afterward it shows who used actions on each order when the shift has a detailed record. Free actions and jobs
+that still need staff are shown separately from jobs that need supplies. Gathering opportunities show the full hauls
+left. Future dates use the crew’s schedules and the farm’s current stock and crops, with daily work reset for the date.
+Past dates show their saved totals.
 
 The Book's **Work board** has a card for each farmhand, in the order they work: her face and name (a tap opens her
 profile's Work side), her job and the day she started, her farm days this season ("Farm days · 2, 3, 5, 6, 8, 9, 11,
@@ -3798,10 +3808,13 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Ship surplus | Exact goods on the surplus plan | Move one shared crate of up to 50 goods into the bin for the following day | After one crate, or when no stock is above reserve | — | — |
 <!-- /live -->
 
-- **Her night, in order:** the field's tasks, the loads, the animals' care and the cooking first, in your order, each
-  until it's done for the day or her actions run out; then her gathering and digging tasks share what's left, a turn each. With nothing left to do she idles, and the
-  morning says "Nothing to do tonight" (or "No tasks: set her tasks", tagged **No tasks**, with an empty board).
-- **Two farmhands on the same tiles** don't double up: the second finds them watered.
+- **Her shift, in order:** the field, loads, animal care and cooking usually follow her list. On the same tiles the
+  order is harvest, clear and till, plant, then water. Existing boards with a watering order before and after crop
+  work keep their explicit water-first routine. An Uma with actions left can finish work opened by another worker later in the
+  shift before using those actions on gathering. With nothing ready she idles.
+- **Shared orders** read the current farm after every action. The next worker can pick up where the first stopped.
+  A watered tile, collected animal product or occupied station slot is already done. Gathering shares daily full
+  hauls across workers and the farmer. When those are used, further work on that spot yields thin hauls.
 - **Cook:** a batch an action from two goods of food, until the pantry holds tonight's meals; then her other tasks
   ([food](#food)). The morning says "cooked 10 meals". The farm eats right after the farmhands work, so her meals feed
   everyone tonight.
@@ -4366,12 +4379,19 @@ Your life with the Umas opens the homestead and the town:
 
 #### What Next?
 
-Open **What Next?** beside Work or in the menu. **Focus now** shows the next Farm Rank, what is queued to ship,
-ripe crops, current projects, and the path to the first wedding. Open a project for current Warehouse counts,
-gold still needed, and links to gather or process its materials. **Farm path** shows all ten ranks, projects,
-field plots, station and Kitchen upgrades, gathering, livestock and seed unlocks. The Boat needs the Dock.
-Planks come from the Sawmill and fillets from the Smokehouse. Projects and station upgrades finish overnight.
-The homestead and bench follow relationship milestones.
+Open **What Next?** beside Work or in the menu. The starter goals track planting, harvesting, foraging, fishing,
+chopping, clearing and shipping using the farm’s existing lifetime counts. Either the farmer or the crew can make
+progress. These targets are guidance and have no extra reward or unlock requirement. Each goal links to its place
+and its crew order. The rest of **Focus now** shows remaining work after the current orders, Farm Rank progress,
+material and gold shortages, and the first wedding path.
+
+**Ranch & homes** shows the Coop and Barn’s costs, the rancher’s purchase prices, feed stock, room capacity,
+and the next house and extension. The Coop and its first Chicken open at Rank 2. The Barn opens at Rank 3. House 1
+opens at the first wedding for 8,000g. Houses and extensions cost gold, and the Farmhouse has two rooms from day one.
+
+**Farm path** shows all ten ranks, projects, field plots, station and Kitchen upgrades, livestock and seed unlocks.
+The Boat needs the Dock. Planks come from the Sawmill and fillets from the Smokehouse. Projects and station upgrades
+finish overnight. The homestead and bench follow relationship milestones.
 
 #### The farm's projects
 
