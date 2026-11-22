@@ -95,8 +95,8 @@ with the fallback.
 | `dinner` | Dinner dates, birthdays, calendar anniversary scenes and household dinners | `happy`, `laughing`, `surprised`, `thinking`, `shy`, `tender`, `loving`, `tearful-joy` | 9 |
 | `wedding` | Ceremony, vows and player replies | `happy`, `laughing`, `tender`, `loving`, `tearful-joy` | 6 |
 | **`wedding-night`** | The wedding-day scene. Shy opening, flustered realization, quiet affection and the default morning beat. | `shy`, `flustered`, `tender`, `loving`, `sleepy` | **6** |
-| **`pajamas-playful` and pajama slot 1** | A night in, ordinary morning greetings, the first night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
-| **Pajama slots 2–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation | `tender`, `loving` | **3 each** |
+| **`pajamas-playful`** | A night in, ordinary morning greetings, the fallback night-visit look and authored nighttime heart events | `happy`, `laughing`, `surprised`, `thinking`, `sad`, `tender`, `loving`, `tearful-joy`, `sleepy` | **10** |
+| **Pajama slots 1–10** (`marriedLife.pajamas`) | Numbered Night visits and their morning continuation | `tender`, `loving` | **3 each** |
 | **Wedding Anniversary slots 1–5** (`marriedLife.birthday`, `marriedLife.anniversary`) | Spouse birthdays and anniversary nights. The host wears this look. A duo guest uses her pajamas. | `tender`, `loving` | **3 each** |
 | `swimsuit` | Summer shore dialogue around the beach illustration | `happy`, `laughing`, `tender`, `loving` | 5 |
 

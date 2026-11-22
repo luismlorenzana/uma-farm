@@ -41,7 +41,8 @@ const AT = '2026-11-11T10:00:00.000Z'
 const DAY = 21
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 /** Her synthetic illustrations: one per moment, each id its moment's. */
-const ILLS = syntheticIllustrations(Number(ONE), [...ILLUSTRATION_MOMENTS])
+const NIGHT_ART = ['night-pajamas-1-couch', 'night-pajamas-1-bed'] as const
+const ILLS = syntheticIllustrations(Number(ONE), [...ILLUSTRATION_MOMENTS, ...NIGHT_ART])
 const ART = { artUrl: async (path: string) => `blob:${path}`, hold: () => () => undefined }
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
@@ -101,6 +102,23 @@ async function tapUntil(selector: string) {
   }
   return find(selector)
 }
+
+describe('numbered night art', () => {
+  it('shows both pajama splashes and saves their gallery receipts from a visit replay', async () => {
+    const prior = farm({ stage: 'spouse', wed: 1, house: 0 })
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...prior, longGame: {
+      weddings: [ONE], celebrations: {}, love: { [ONE]: { points: 2, pajamas: 1, anniversaries: 0,
+        memories: [{ day: DAY - 1, kind: 'pajamas', who: [ONE], looks: [1] }] } },
+    } } })
+    await render(<p>Farm</p>, '/?visitReplay=' + ONE + ':0')
+    await find('[data-illustration-picture="night-pajamas-1-couch"]')
+    await tapUntil('[data-visit-beat="bedside"]')
+    await find('[data-illustration-picture="night-pajamas-1-bed"]')
+    await until(() => NIGHT_ART.every(id => save().library?.[ONE]?.first['art:' + id] === DAY))
+    expect(save().longGame?.love[ONE]?.memories).toHaveLength(1)
+    expect(save().longGame?.love[ONE]?.points).toBe(2)
+  })
+})
 
 beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)

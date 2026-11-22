@@ -741,8 +741,12 @@ dialogue for the shared formal look. Each slot takes up to 160 characters per be
 }
 ```
 
-Without a script outfit override, the portrait resolver tries `pajamas-playful` for pajama slot 1, `pajamas-2`
-through `pajamas-10` for later slots and `wedding-anniversary-1` through `wedding-anniversary-5` for formal slots.
+Published numbered splashes follow the recorded look through night visits and Library replays. Pajamas have a couch
+and a bedside splash. Birthday and anniversary hosts share the formal look's bedside splash, and any partner uses her
+own pajama scenes. An explicit script illustration can still set the opening cue. Missing art leaves the portrait up.
+
+Without a script outfit override, the portrait resolver tries `pajamas-1`
+through `pajamas-10` for pajama slots and `wedding-anniversary-1` through `wedding-anniversary-5` for formal slots.
 `outfit` can instead choose a supported story outfit. `illustration` names a scene ID from her private gallery
 manifest. Missing lines and portrait assets use their defaults. Follow the [expression packet](design/her-look.md#approved-expression-authoring-packet)
 when preparing and reviewing the art.

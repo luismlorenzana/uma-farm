@@ -7501,9 +7501,11 @@ rotation. Existing saves retain earlier unlocked looks. The recorded visit prese
 farm year and can be played later for the most recent anniversary. If both fall on the same date, each can be played
 once and uses one visit slot. Their default scene beats use neutral, tender and loving. A story can choose the
 expression for each beat. Numbered portraits load by slot, with the standard pajamas or wedding-night portrait as
-fallback. Married Life in the Uma Library shows the looks, earned memories and True Love date. Both books and the
-Diary can replay a shared visit and its morning after a stay. Replays keep the original participants, host and numbered
-looks. They cost no slots and grant no points, unlocks or rewards.
+fallback. A published pajama look can show a couch and a bedside splash. Birthdays and anniversaries share a formal
+bedside splash for the host. Each illustration joins the Scene Gallery when it first appears. Married Life in the Uma
+Library shows the looks, earned memories and True Love date. Both books and the Diary can replay a shared visit and
+its morning after a stay. Replays keep the original participants, host and numbered looks. They cost no slots and grant
+no relationship points or visit rewards.
 
 **True Love** is 120 points. Both spouses need True Love, their own rooms and to be home before a duo can visit.
 Their Relationship pages show their partners and what still holds a pairing back. The Duo editor starts with the story
