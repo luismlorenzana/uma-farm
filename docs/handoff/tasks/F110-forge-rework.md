@@ -30,7 +30,8 @@ Start with [building and rank](../../game-mechanics.md#building), [farmhands](..
 
 Restore the workbench from **Farm Rank 3** for **1,000g and 12 logs** of any grade or stars. Pay from Farm, open
 the following morning. Sawmill access starts at Rank 3 and is the ordinary first tool supply path. Workshop
-restoration has no relationship condition, and the first tool requires no Mine. The Rank 3 item in **What Next?**
+restoration has no relationship condition, and the first tool requires no Mine. Order fees cover running costs,
+so the restored workshop adds no nightly upkeep. The Rank 3 item in **What Next?**
 shows the workbench, Sawmill and first recipe as separate prerequisites, then records the first delivery.
 
 | Tool tier | Earliest rank | Exact inputs per tool, any stars | Payment | Ready | How you find it |
@@ -227,7 +228,9 @@ even if the room-layout decision is still open.
   one action and booking, consume once, and never reserve the same Uma action twice. Closing mid-play leaves the
   standard order. Apply a due delivery once, at the existing night-to-morning handoff before forecast or crew
   settlement. Handle a decoded pending order already past due on its next local settlement. Preserve charge resets,
-  grade lots and report attribution across retries, reload and sync. All gameplay mutations stay on device.
+  grade lots and report attribution across retries, reload and sync. Verify that resuming a previous app build
+  cannot erase a paid order. If older writers drop the new state, use the existing newer-save handling with a
+  migrated version before rollout. All gameplay mutations stay on device.
 - **Player surfaces.** Keep screens lazy, fit the 844×390 and 667×375 landscape frames with safe areas and 44 pt
   actions. Use contextual help near the costs and gaps. Display rank, shortages, due status and tier cap in words.
   Refresh generated mechanics pages in the implementation commit. Keep startup size ≤180 KB gzip.
