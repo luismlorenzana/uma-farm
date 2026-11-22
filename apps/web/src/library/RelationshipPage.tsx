@@ -3,12 +3,13 @@ import { eveningButton } from '../loop/evening-view'
 import {
   actionsLeft, anniversaryOffer, awayOn, birthdayOffer, canPlanWedding, configuredDuos, DAYS_PER_YEAR, duoKey, greaterLoveOf, isAnniversary, isBirthday,
   LADDER_COLOURS, ladderOf, levelWords, longGameEnabled, nightAvailable, NIGHT_VISITS, nightVisits, occasionsLeft, occasionsOn, partnerLock, wantsBirthdayAlone,
-  currentDatePeriod, farmPlace, isBuildPlace, outingBlock, readiness, townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type LadderName, type SpecialDays, type StoryPack,
+  currentDatePeriod, festivalsOf, outingBlock, readiness, townLocation, TRUE_LOVE, whereYouMeet, type FarmSave, type LadderName, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { Link, useLocation } from 'react-router'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { HeartIcon } from '@luismlorenzana/uma-kit/ui'
 import { LADDER_HEARTS, nextCard } from '../loop/hearts-view'
+import { routeRequirementWords } from '../loop/event-view'
 import { dateWords } from '../loop/words'
 
 const rankSize = { friendship: 14, romance: 16, spouse: 20 } as const satisfies Record<LadderName, number>
@@ -68,8 +69,7 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
   const total = LADDER_HEARTS[ladder]
   const level = love.stage === 'confession' || love.stage === 'proposal' || love.stage === 'wedding' ? total : love.level
   const next = nextCard(save, pack, id, nameOf)
-  const wait = readiness(save, pack, id).waits
-  const project = wait?.kind === 'gate' && wait.gate.kind === 'built' ? farmPlace(wait.gate.place) : undefined
+  const event = readiness(save, pack, id)
   const outing = eveningButton(save, pack, id)
   const period = currentDatePeriod(save)
   const dates = datesFor(save, pack, days, id)
@@ -113,11 +113,15 @@ export function RelationshipPage({ save, pack, days, id, nameOf }: {
           label={`${standing}, ${level} of ${total} levels earned`} />
         <strong>{next.title}</strong>
         {next.bar.cost > 0 && <progress className="lib-greater-love" aria-label="Relationship points" value={next.bar.points} max={next.bar.cost} />}
-        {isBuildPlace(project) ? <div data-relationship-gate={project.id}>
-          <p>Build the {project.name} to unlock this scene. Available at Farm Rank {project.opens.rank}.</p>
-          <Link className="lib-button" to="/diary" state={{ back: true }}>View farm projects ›</Link>
-        </div> : next.words && <p>{next.words}</p>}
-        {next.ready && <Link className="lib-button" to={withParam(location, 'event', id)} state={{ back: true }}>Play scene ›</Link>}
+        {next.words && <p>{next.words}</p>}
+        {event.alternate && <p data-alternate-event>The original will be in her Library when its requirements are met.</p>}
+        {event.alternate?.map((reason, index) => <p key={index} className="text-[13px] text-ink-soft">
+          {routeRequirementWords(reason, nameOf, festivalsOf(pack))}
+        </p>)}
+        {next.ready && <div className="lib-actions">
+          <Link className="lib-button" to={withParam(location, 'event', id)} state={{ back: true }}>{event.alternate ? 'Play alternate scene ›' : 'Play scene ›'}</Link>
+          {!event.alternate && event.rung && /^[frs][0-9]+$/.test(event.rung) && <Link className="lib-button" to={`${withParam(location, 'event', id)}&routeAlt=1`} state={{ back: true }}>Alternate scene ›</Link>}
+        </div>}
         {heart && <div className="mt-1 grid gap-1 border-t border-hairline pt-2">
           <h3 data-book-love={heart.points}>{heart.points >= TRUE_LOVE ? 'True Love' : 'Greater Love'}</h3>
           <RankHearts earned={greaterLoveHearts * heart.points / TRUE_LOVE} total={greaterLoveHearts} size={24} colour={greaterLoveColour}

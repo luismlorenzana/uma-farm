@@ -1,5 +1,5 @@
 import {
-  bookScenes, eventOf, galleryOf, illustrationCues, ILLUSTRATION_RULES, kindsNow, occasionWith, readiness, sceneFor,
+  bookScenes, eventOf, festivalsOf, galleryOf, illustrationCues, ILLUSTRATION_RULES, kindsNow, occasionWith, readiness, routeRequirements, sceneFor,
   type BookReplay, type BookScene, type FarmSave, type IllustratedScene, type SceneGroup, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import type { Illustration } from '@luismlorenzana/uma-data'
@@ -7,6 +7,8 @@ import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import { useIllustrationsState, usePicture } from '../dialogue/illustrations'
+import { routeRequirementWords } from '../loop/event-view'
+import { namer } from '../story/people'
 import { Avatar } from '../dialogue/Avatar'
 import type { MasterView } from '../master/master'
 import { libraryDate } from './LibraryPage'
@@ -86,7 +88,7 @@ export default function LibraryScenes({ save, pack, days, id, master }: {
   useEffect(() => {
     if (!openedScene || availableArt.length === 0) return
     let live = true
-    const scripts = openedScene.variants.filter(entry => entry.source === 'route' || entry.source === 'script')
+    const scripts = openedScene.variants.filter(entry => (entry.source === 'route' && !entry.script.startsWith('alt-')) || entry.source === 'script')
     void Promise.all(scripts.map(entry => eventOf(pack, id, entry.script))).then(events => {
       if (live) setCues({ tile: openedScene.key, art: events.flatMap(event => illustrationCues(event.steps)) })
     }, () => undefined)
@@ -134,9 +136,13 @@ export default function LibraryScenes({ save, pack, days, id, master }: {
     </nav>}
     {openedScene && <section aria-label={openedScene.title} data-scene-details={openedScene.key} className="lib-lines">
       <h3>{openedScene.title}</h3>
+      {openedScene.variants.length === 1 && openedScene.variants[0]?.script.startsWith('alt-') &&
+        routeRequirements(save, pack, id, openedScene.key.slice('route:'.length)).map((reason, index) =>
+          <p className="text-[13px] text-ink-soft" key={index}>{routeRequirementWords(reason, namer(master, pack), festivalsOf(pack))}</p>)}
       {openedScene.variants.length === 0 && <p>Replay unavailable.</p>}
       <div className="lib-actions">{openedScene.variants.map((entry, _, all) => <Link key={entry.key} className="lib-button" to={playHref(entry)} state={{ back: true }}
-        data-replay={entry.key}>{all.length > 1 ? `Replay · ${entry.title}` : 'Replay'}</Link>)}
+        data-replay={entry.key}>{entry.title === 'Original scene' ? (entry.day === null ? 'See original scene' : 'Replay original scene')
+          : all.length > 1 ? `Replay · ${entry.title}` : 'Replay'}</Link>)}
       {(() => {
         const matched = cues?.tile === openedScene.key
           ? cues.art.flatMap(cue => sceneFor(availableArt, cue) ?? []) : []

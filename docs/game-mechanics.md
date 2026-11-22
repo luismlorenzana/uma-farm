@@ -4374,6 +4374,15 @@ Your life with the Umas opens the homestead and the town:
 - **The ring bench** is the romance's: see [the ring bench](#the-ring-bench).
 - **The houses and the rows** are the homestead's: see [the homestead](#the-homestead).
 
+#### What Next?
+
+Open **What Next?** beside Work or in the menu. **Focus now** shows the next Farm Rank, what is queued to ship,
+ripe crops, current projects, and the path to the first wedding. Open a project for current Warehouse counts,
+gold still needed, and links to gather or process its materials. **Farm path** shows all ten ranks, projects,
+field plots, station and Kitchen upgrades, gathering, livestock and seed unlocks. The Boat needs the Dock.
+Planks come from the Sawmill and fillets from the Smokehouse. Projects and station upgrades finish overnight.
+The homestead and bench follow relationship milestones.
+
 #### The farm's projects
 
 The Diary's **Projects** card gathers what's next:
@@ -6172,8 +6181,7 @@ profile, an action each:
 |---|---|---|
 | 1 | Her bar is full for the rung; a waiting rung opens the day after the rung before, the proposal needs a ring, and a planned wedding waits for its date | `bar`, `day`, `ring`, `wedding-day` |
 | 2 | She hasn’t played one of her events today | `today` |
-| 3 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters) |
-| 4 | Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival) | `gate`: “Opens when the Kitchen is built” |
+| 3 | A chapter requirement or Warehouse item or bond decides the scene version, once the event is Ready | Play an alternate now. The original can be viewed in the Library when its requirements are met. |
 <!-- /live -->
 
 A setup is never an hour, the weather, a season or a festival; her chapter's gate may be a season or a festival (see
@@ -6185,29 +6193,17 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 | 1 | `done` | Her route is complete (S5 has played) |
 | 2 | `night` | S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar` |
 | 3 | `friend` | She said “Not yet” at her confession: you ask her again from her profile |
-| 4 | `gate` | Her next event opens her chapter, and its gate doesn’t hold yet |
-| 5 | `bar` | Her bar isn’t full for the rung |
-| 6 | `day` | A waiting rung, on the day the rung before played |
-| 7 | `wedding-day` | The wedding is scheduled for a later day |
-| 8 | `ring` | The proposal, with no ring in the Warehouse |
-| 9 | `today` | She played one of her events today |
-| 10 | `setup` | Its day setup isn’t met today |
+| 4 | `bar` | Her bar isn’t full for the rung |
+| 5 | `day` | A waiting rung, on the day the rung before played |
+| 6 | `wedding-day` | The wedding is scheduled for a later day |
+| 7 | `ring` | The proposal, with no ring in the Warehouse |
+| 8 | `today` | She played one of her events today |
 <!-- /live -->
 
-- **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
-  the Fishery today") is met every day, farmhand or not, and whether or not its place is built (the Restaurant, the
-  Forge, the Kitchen, the Mine), so her event never waits on work she may not do and **a route never dead-ends on a
-  setup**. The farm gates her only through [her chapters](#her-chapters)' gates, which the story chooses: a place built
-  or a Farm Rank there holds her chapter's first event, by name. A pack's beat that still names a
-  chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
-  chapters](#her-chapters).
-- **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
-  Warehouse.
-- **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines,
-  her pip on the map and the calendar's faces all read it as they show. The calendar reads a day ahead the same way,
-  from the save as it stands with the date moved ([the calendar screen](#the-calendar-screen)).
-- **Ready is hers, the action is yours:** Ready never reads the day's actions, and playing her event costs one (the
-  special day's event actions first; [a day of ten actions](#a-day-ten-actions)).
+- **Scene versions.** A chapter's place, Farm Rank, seasonal requirement, Warehouse item or bond can select the
+  alternate scene at the farm gate. It moves the same relationship by one step, costs one action and awards the
+  usual milestone or perk. The original can be viewed from that scene's tile in the Library once its requirements
+  are met, and earns a first-view date without spending an action or paying again.
 
 #### The People page
 
@@ -6381,13 +6377,10 @@ R1–R10, the proposal and the wedding, married life S1–S5), and so do the poi
  her cast entry's `chapters` ──► her chapters along her route ──► the one she's in: the chapter holding her next rung
    (else the four defaults)       in the order of their first events      │
                                                                           ▼
- a chapter's gate (optional) ──► holds back its first event ──► Ready says "gate": "Opens when the Kitchen is built"
-                                    │ the gate holds and the rung before has played
+ an original scene’s requirement ──► original scene if met, alternate scene otherwise
+                                    │ either version records the same relationship step
                                     ▼
-                        the chapter opens ──► the morning: "A new chapter with ‹name› · Kitchen days"
-                                    │ its events play as Ready allows
-                                    ▼
-                        Spouse 5 ──► her last chapter closes; the household goes on after it
+           original available later ──► See original scene in the Library
 ```
 
 - **Her chapters** are her cast entry's `chapters`: how many, their titles, which of her rungs each holds and an
@@ -6407,13 +6400,11 @@ R1–R10, the proposal and the wedding, married life S1–S5), and so do the poi
   two counts in the first, and a chapter holding no rung the game plays is left out. A chapter without a title shows
   as "Chapter 2". S2 and S4, which come at night, count with S1 and S3.
 - **The one she's in** is the chapter holding her next rung. **A chapter opens when its first event can play:** the
-  rung before it has played and its gate holds.
-- **A chapter's gate** asks the farm for something, from [the trigger menu](story-pack.md#the-trigger-menu): a place
-  built, a Farm Rank, a good shipped, another's event, a season or a festival (the town's kinds, talks, a gift and a
-  spot, are meeting her own: a gate of one is an error, and skipped). Until it holds, the chapter's first event waits,
-  whatever her bar: Ready's `gate` says it ahead of a short bar. Once that event has played the chapter is open, and its
-  other events follow as Ready allows, even when a season's or a festival's day has passed. A gate on the chapter
-  holding her meeting scene never holds the scene back (her `meet` says when she's met): it holds her first event.
+  rung before it has played. Requirements choose the scene version.
+- **The original scene’s gate** can ask for a built place, Farm Rank, goods shipped, another event, a season or a
+  festival. If it is unmet, the chapter can begin with an alternate once the ordinary relationship conditions
+  are met. The original opens in the Library when the gate and any item or bond setup hold. The ring bench
+  counts as the Forge setting for these scenes. Introductions keep their usual town rules.
 
 <!-- live:chapter-gates -->
 | Gate (`gate`) | Holds | Her profile says |
@@ -7169,12 +7160,17 @@ household's meals and the night's companion ([the Uma loop](#the-uma-loop)) alon
 
 #### The ring bench
 
+A solo farmer can court one Uma through the first wedding. Start with six Pine Logs from the Woods.
+Play Romance 8 and end the day, make a Copper Ring at the bench, then propose after Romance 10.
+The farmhouse can cook from Day 1 and has room at the wedding.
+
 The bench's rule, in full:
 
 <!-- live:bench-recipe -->
 |  | The ring bench |
 |---|---|
 | Opens | The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and the smith’s scene the next morning |
+| Starter Copper Ring | 6 Pine Logs, any stars, with no paid building or Farm Rank requirement |
 | A ring of grade g | 3 refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand |
 | Cost | The goods only: no gold, no game, no assistant, no score |
 | Out | The ring, ★1 (a Rough make), into the Warehouse |

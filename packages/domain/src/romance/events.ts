@@ -36,6 +36,7 @@ import { choosePlan, chooseScore } from './plays/choose'
 import { EVENT_GRADE_POINTS, gradeOf, playSeed, type Grade, type PlayKind } from './plays/grade'
 import { playOf, togetherPlay, type PlayAs } from './plays/which'
 import { readiness } from './ready'
+import { alternateRouteSteps } from './route-variants'
 import { receptionOf, vowFlag, weddingGuests, weddingPlaceFlag, type Reception } from './wedding'
 import { takeRoom } from './homestead'
 
@@ -112,6 +113,7 @@ export interface PlayScore {
  * score in order (the path's `play` steps, then the extra one). */
 export interface EventOutcome {
   event: { id: string; steps: readonly Step[] }
+  alternate?: true
   picks: readonly number[]
   plays: readonly PlayScore[]
   /** The proposal's ring: a ring in the Warehouse, used. */
@@ -207,8 +209,10 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   const love = save.love[id]!
   const day = save.calendar.day
   const beat = beatOf(pack, id, rung)
-  const extra = extraPlay(outcome.event.steps, beat?.together)
-  const path = walkScene(outcome.event.steps, outcome.picks, { flags: love.flags, plays: outcome.plays.map((p) => gradeOf(p.score) !== 'fine') })
+  if (state.alternate && !outcome.alternate) throw new SaveRuleError('not-ready', 'Choose the alternate scene or meet the original requirements.')
+  const script = outcome.alternate ? alternateRouteSteps(pack, id, rung) : outcome.event.steps
+  const extra = outcome.alternate ? null : extraPlay(script, beat?.together)
+  const path = walkScene(script, outcome.picks, { flags: love.flags, plays: outcome.plays.map((p) => gradeOf(p.score) !== 'fine') })
   if (!path.done) throw new SaveRuleError('not-ready', 'Her event isn’t over yet.')
   const plays = pathPlays(path.steps, extra)
   if (outcome.plays.length !== plays.length || outcome.plays.some((p, i) => p.kind !== plays[i]!.kind || !Number.isInteger(p.score) || p.score < 0 || p.score > 100)) {
@@ -255,7 +259,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     const days = receptionOf({ ...save, items }, outcome.reception)
     if (outcome.reception) items = takeGoods(items, outcome.reception.dish, outcome.reception.stars, 1)
     wedding = { place, dish: outcome.reception?.dish ?? null, stars: outcome.reception?.stars ?? null, days, guests: weddingGuests(save, pack, id), house: null }
-    const vowAt = choices.indexOf(outcome.event.steps[answerAt(outcome.event.steps)] as { choice: ChoiceOption[] })
+    const vowAt = choices.indexOf(script[answerAt(script)] as { choice: ChoiceOption[] })
     kept.push(weddingPlaceFlag(place), ...(vowAt >= 0 ? [vowFlag(outcome.picks[vowAt]! + 1)] : []))
   }
   const lines: PlayLine[] = outcome.plays.map((p) => ({ kind: p.kind, score: p.score, grade: gradeOf(p.score), points: EVENT_GRADE_POINTS[gradeOf(p.score)] }))
@@ -291,7 +295,8 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
   let next = spendForEvent(roomed?.save ?? dish?.save ?? played, actionCost('event'), days)
   next = recordLibrary(next, id, `route:${rung}`)
-  if (pack.scripted.get(id)?.has(rung)) next = recordLibrary(next, id, `route:${rung}:authored`)
+  if (outcome.alternate) next = recordLibrary(next, id, `route:${rung}:alternate`)
+  else if (pack.scripted.get(id)?.has(rung)) next = recordLibrary(next, id, `route:${rung}:authored`)
   if (rung === 'confession' && !notYet) next = recordLibrary(next, id, 'milestone:confession')
   for (const item of learnt) next = recordLibrary(next, id, `fact:gift:${item}`)
   const after = bar(next.love[id]!)

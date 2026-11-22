@@ -10,13 +10,13 @@ import {
 /** The sheet's fixed words. */
 export const BENCH_TEXT = {
   title: 'The Forge · ring bench',
-  rule: 'A ring of grade g: 3 refined goods of grade g, any family',
+  rule: 'A Copper Ring from Pine Logs, or a ring from refined goods of its grade.',
   bonus: `Her bonus once married: +${ringPercent(1)}% a grade`,
-  merge: `(Soon, the Forge’s merge game: +${MAKE_BONUS.fine} / +${MAKE_BONUS.great} / +${MAKE_BONUS.masterwork} more for a Fine, Great or Masterwork ring)`,
-  none: 'Nothing to make yet. Three refined goods of one grade make a ring: planks from the Sawmill, fillets from the Smokehouse, flour from the Mill.',
+  merge: `(Full Forge deferred. Its ring bonuses: +${MAKE_BONUS.fine} / +${MAKE_BONUS.great} / +${MAKE_BONUS.masterwork} more for a Fine, Great or Masterwork ring)`,
+  none: 'For higher grades, use three refined goods of one grade. Try planks from the Sawmill, fillets from the Smokehouse, or flour from the Mill.',
   made: 'One ring a day. Come back tomorrow.',
   help: [
-    'The town’s smith opened the old Forge as a ring bench: three refined goods of one grade make a ring of that grade. No gold, one ring a day.',
+    'The bench opens the morning after anyone’s Romance 8 scene. Six Pine Logs make a Copper Ring. Three refined goods of one grade make a ring of that grade. No gold, one ring a day.',
     'Any ring makes the proposal Ready once she’s at Romance 10. Once she’s your spouse, her ring adds +1% at her line a grade.',
     'Give her a better ring from her profile any day: she keeps the best, and the old one comes back to the Warehouse.',
   ],

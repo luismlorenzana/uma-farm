@@ -2,7 +2,7 @@
 // grade's goods), "→ Iron Ring"; the recipe greyed until the Smelter and the Cutter stand; her bonus once married; and **Make an Iron
 // Ring · 1 a day** in the thumb zone. A made ring is ★1 in the Warehouse; the bench says "One ring a day." until tomorrow.
 // Also the Forge's quick look once the bench stands (`BenchPeek`). Loaded on demand.
-import { benchOpen, BENCH_WORDS, goodName, ringName, type BenchInput, type SaveV4 } from '@farm/domain'
+import { benchOpen, BENCH_WORDS, goodCount, goodName, ringName, starterRingLock, STARTER_RING_GOOD, STARTER_RING_LOGS, type BenchInput, type SaveV4 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
-import { makeRingOnce } from './bench-actions'
+import { makeRingOnce, makeStarterRingOnce } from './bench-actions'
 import { BENCH_TEXT, benchRows, forgePairWords, forgeRecipeWords, makeWords, pickWords, swapOptions, type BenchRow } from './bench-view'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
@@ -49,12 +49,13 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   const story = useStory()
   const smith = namer(master.status === 'ready' ? master.view : null, story)('ida-stone')
   const forge = forgeRecipeWords(save)
-  const make = async () => {
-    if (!row || busy) return
+  const starterLock = starterRingLock(save)
+  const make = async (starter = false) => {
+    if (busy || (!starter && !row) || (starter && starterLock)) return
     setBusy(true)
     setError(null)
     try {
-      const ring = await makeRingOnce(row.pick)
+      const ring = starter ? await makeStarterRingOnce() : await makeRingOnce(row!.pick)
       setNote({ ring })
       setSwapped({})
       setOpen(null)
@@ -75,7 +76,7 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
           {error && <p className="text-[13px] text-danger" data-bench-error>{error}</p>}
           {madeToday
             ? <p className="text-center text-[14px] font-semibold text-ink-soft" data-bench-made={save.today.ring}>{BENCH_WORDS.today} {ringName(save.today.ring)} made today ✓</p>
-            : <Button className="w-full" disabled={!row || busy} onClick={() => void make()} data-action="make-ring">{row ? makeWords(row.grade) : 'Nothing to make yet'}</Button>}
+            : row && <Button className="w-full" disabled={busy} onClick={() => void make()} data-action="make-ring">{makeWords(row.grade)}</Button>}
         </div>
       }
     >
@@ -95,7 +96,14 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
             <ItemIcon id={note.ring} size={28} /> {goodName(note.ring)} · in the Warehouse, ★1
           </p>
         )}
-        {rows.length === 0 && !note && <p className="text-[14px] text-ink-soft" data-bench-none>{BENCH_TEXT.none}</p>}
+        {!madeToday && <section className="space-y-1 rounded-md border border-hairline p-3" aria-label="Starter ring">
+          <p className="font-semibold">Copper Ring from the Woods</p>
+          <p className="text-[13px] text-ink-soft">Pine Logs · {Math.min(goodCount(save.items, STARTER_RING_GOOD), STARTER_RING_LOGS)}/{STARTER_RING_LOGS}. Any stars. No gold.</p>
+          {starterLock
+            ? <Link to="/?peek=forest" state={{ back: true }} className="flex min-h-11 items-center font-semibold text-accent-strong">{starterLock} ›</Link>
+            : <Button variant="secondary" disabled={busy} onClick={() => void make(true)} data-action="starter-ring">Make a Copper Ring</Button>}
+        </section>}
+        {rows.length === 0 && starterLock && !note && <p className="text-[14px] text-ink-soft" data-bench-none>{BENCH_TEXT.none}</p>}
         {rows.length > 0 && (
           <ul className="space-y-2" data-bench-rows={rows.length}>
             {rows.map((r) => (

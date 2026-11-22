@@ -127,6 +127,7 @@ export * from './romance/acts'
 export * from './romance/praise'
 export * from './romance/days'
 export * from './romance/ready'
+export * from './romance/route-variants'
 // Her chapters: the pack's or the four defaults along her route, the one she's in, a chapter's gate, and the morning one
 // opens; read live, never stored.
 export * from './romance/chapters'

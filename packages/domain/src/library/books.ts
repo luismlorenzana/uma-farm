@@ -7,6 +7,7 @@ import { isMorningOuting } from '../romance/morning-outings'
 import { EVENINGS, eveningMoments, eveningScene, kindBuilt, type EveningRole } from '../romance/evening'
 import { householdTitle, isHouseholdId } from '../romance/household'
 import { rungName } from '../romance/love'
+import { alternateRouteDay, originalRouteAvailable, originalRouteDay } from '../romance/route-variants'
 import { DEFAULT_OCCASION_SCENES, occasionMoments, occasionPlayed, occasionsOn, type Occasion, type OccasionKind } from '../romance/occasions'
 import { EVENING_KINDS, type EveningKind, type FarmSave } from '../save/v4'
 import { FESTIVAL_NIGHTS, RUNGS } from '../story/authored'
@@ -87,8 +88,14 @@ export function bookScenes(save: FarmSave, pack: StoryPack, id: string, days: Sp
     const lastStep = rung === last && (love.stage !== 'spouse' || rung === `s${love.level}`)
     const day = firstDate(first, key) ?? (rung === 'wedding' ? love.wed ?? null : lastStep ? love.last || null : null)
     const retired = first[`${key}:authored`] !== undefined && !pack.scripted.get(id)?.has(rung)
+    const alternative = alternateRouteDay(save, id, rung)
+    const variants: BookReplay[] = []
+    if (seen.has(rung) && alternative !== undefined) variants.push({ key: `${key}:alternate`, title: 'Alternate scene', source: 'route', script: `alt-${rung}`, day: alternative })
+    if (seen.has(rung) && !retired && (alternative === undefined || originalRouteAvailable(save, pack, id, rung))) {
+      variants.push({ key, title: alternative === undefined ? title : 'Original scene', source: 'route', script: rung, day: alternative === undefined ? day : originalRouteDay(save, id, rung) ?? null })
+    }
     return { key, title: retired ? 'Archived scene' : title, group: 'route', core: true, earned: seen.has(rung),
-      ...(day === null ? {} : { day }), variants: !retired && seen.has(rung) ? [{ key, title, source: 'route', script: rung, day }] : [] }
+      ...(day === null ? {} : { day }), variants }
   })
   const archived: BookScene[] = []
   const archive = (key: string, day: number) => archived.push({

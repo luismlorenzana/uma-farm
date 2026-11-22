@@ -5,6 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F109** gives gated relationships an alternate scene, keeps original scenes in the Library, adds a six-log starter ring, and exposes the complete Farm Rank path through What Next? beside Work.
+
 **F107** adds six authored Morning outings, Afternoon availability based on shifts, and a weekly timetable on the
 profile and the Library. Relationship shows the farm projects that open blocked route chapters.
 

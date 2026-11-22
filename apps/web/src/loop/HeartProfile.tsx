@@ -34,7 +34,7 @@ import { useIllustrationsOf } from '../dialogue/illustrations'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
 import { nameOfAnyone } from '../story/people'
-import { memoryCount, setupAdvice } from './event-view'
+import { memoryCount } from './event-view'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
   chaptersView, friendLoved, fromHer, giftSlots, lovedWords, nextCard, perkList, profileLine, reachedWords, readParam, ringView, routeTrack, rungLadder, tieRows, type FromHer, type GiftSlot,
@@ -169,13 +169,13 @@ export function ProfileChapters({ save, pack, id, card, nameOf }: { save: SaveV4
   const perks = perkList(save, pack, id, nameOf)
   const location = useLocation()
   const played = track.filter((c) => c.state === 'played').length
-  const advice = setupAdvice(readiness(save, pack, id).waits, nameOf)
+  const event = readiness(save, pack, id)
   const ring = ringView(save, pack, id)
   const chapters = chaptersView(save, pack, id, nameOf)
   return (
     <div className="space-y-4 pb-2">
       <RouteTrack cells={track} label={`Her route: ${played} of ${track.length} played${card.rung ? `, ${card.title.toLowerCase()}` : ''}`} />
-      <NextSection card={card} advice={advice} bench={card.waits === 'ring' && ring?.bench === true}
+      <NextSection card={card} alternate={!!event.alternate} bench={card.waits === 'ring' && ring?.bench === true}
         play={card.ready ? withParam(location, 'event', id) : null}
         ask={card.waits === 'friend' ? (canAsk(save, id) ? withParam(location, 'ask', id) : 'asked') : null} />
       <ChaptersSection view={chapters} colour={LADDER_COLOURS[ladderOf(love.stage)]} />
@@ -308,7 +308,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 /** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for; **Play · 1 ›**
  * when her event is Ready, what to do when its setup isn't met, and **Ask her** after a "Not yet" (once a
  * day; `ask` is 'asked' once asked today). */
-function NextSection({ card, advice = null, play = null, ask = null, bench = false }: { card: NextCard; advice?: string | null; play?: string | null; ask?: string | null; bench?: boolean }) {
+function NextSection({ card, alternate = false, play = null, ask = null, bench = false }: { card: NextCard; alternate?: boolean; play?: string | null; ask?: string | null; bench?: boolean }) {
   const colour = LADDER_COLOURS[card.rung ? rungLadder(card.rung) : 'spouse']
   const share = card.bar.cost > 0 ? Math.min(1, card.bar.points / card.bar.cost) : card.rung ? 1 : 0
   return (
@@ -320,7 +320,7 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
           {card.perk.opens !== null && <span className="text-ink-faint"> · {opensWhenBuilt(card.perk.opens)}</span>}
         </p>
       )}
-      {card.hint && <p className="text-[13px]" data-next-hint><span className="text-ink-soft">Event · </span>{card.hint}</p>}
+      {card.hint && !alternate && <p className="text-[13px]" data-next-hint><span className="text-ink-soft">Event · </span>{card.hint}</p>}
       {card.rung && (
         <div className="space-y-0.5">
           <span aria-hidden className="block h-2.5 overflow-hidden rounded-full bg-sunken">
@@ -335,11 +335,11 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
       <p className={`text-[14px] ${card.ready ? 'font-bold' : 'font-semibold text-ink-soft'}`} style={card.ready ? { color: colour } : undefined} data-next-words={card.waits ?? 'ready'}>
         {card.words}
       </p>
-      {advice && <p className="text-[13px] text-ink-soft" data-setup-advice>{advice}</p>}
+      {alternate && <p className="text-[13px] text-ink-soft">The original scene will open in her Library when its requirements are met.</p>}
       {bench && <Link to="/?sheet=bench" state={{ back: true }} className="block min-h-11 py-2 text-[14px] font-semibold text-accent-strong" data-action="to-bench">Make one at the Forge’s bench ›</Link>}
       {play && (
         <Link to={play} state={{ back: true }} aria-label="Play her event · 1 action" className="font-display grid min-h-12 place-items-center rounded-md text-[16px] font-bold text-white" style={{ background: colour }} data-action="play-event">
-          Play · 1 ›
+          {alternate ? 'Play alternate · 1 ›' : 'Play · 1 ›'}
         </Link>
       )}
       {ask === 'asked' && <p className="text-[13px] text-ink-soft" data-asked>You asked her today. Ask again tomorrow.</p>}

@@ -3,10 +3,10 @@
 // plays' words, the level-up card's lines, the stage-up screen's list, a setup's advice and her Memories' album. Pure, so
 // the player and the tests read the same. Loaded on demand with the player.
 import {
-  CAKE_DAYS, captionOf, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
+  CAKE_DAYS, captionOf, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, gateWords, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
   ringName, ringPercent, rungName, NIGHT_RUNGS, SEASON_NAMES,
   type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type FarmClock, type SaveV4, type Season, type StageUp,
-  type StoryPack, type Wait, type WeddingCard,
+  type Festival, type RouteRequirement, type StoryPack, type Wait, type WeddingCard,
 } from '@farm/domain'
 import { placeWords } from './hearts-view'
 import { WORK_PLACE } from './love-words'
@@ -236,6 +236,14 @@ export const PICKER_WORDS = {
 // --- Setups -----------------------------------------------------------------------------------------------------
 
 /** What to do when her setup isn't met: "Assign her to the Fishery, then come back." */
+export function routeRequirementWords(requirement: RouteRequirement, nameOf: (id: string) => string, year: readonly Festival[]): string {
+  if (requirement.kind === 'gate') return requirement.gate.kind === 'built' && requirement.gate.place === 'forge'
+    ? 'Original scene opens with the ring bench after Romance 8.' : gateWords(requirement.gate, nameOf, year)
+  const setup = requirement.setup
+  return setup.kind === 'item' ? `Original scene needs ${goodName(setup.good)} in the Warehouse.`
+    : `Original scene needs a bond of ${setup.level} with ${nameOf(setup.with)}.`
+}
+
 export function setupAdvice(waits: Wait | null, nameOf: (id: string) => string): string | null {
   if (waits?.kind !== 'setup') return null
   const s = waits.setup
