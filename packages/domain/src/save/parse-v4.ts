@@ -37,11 +37,12 @@ export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
 export type { LoopPlaceId } from './parse-loop'
 
 import { parseLongGame } from './parse-long-game'
+import { parseForge, parseForgeHelper, parseToolCharges } from './parse-forge'
 import { MAX_LODGE_WINGS } from './long-game'
 
 export const SAVE_V5_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'fields', 'loads', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library', 'longGame',
+  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library', 'longGame', 'forge',
 ] as const
 
 /** The most actions a day can hold: well past any budget the farm grows to. */
@@ -114,7 +115,10 @@ function parseTask(value: unknown, path: string): FarmTask {
       if (o.feedOnly !== undefined && o.feedOnly !== true) fail(`${path}.feedOnly`, 'expected true')
       return { kind, home: oneOf(o.home, `${path}.home`, RANCH_HOMES), ...(o.feedOnly === true ? { feedOnly: true as const } : {}) }
     }
-    case 'mine': return { kind, dig: oneOf(object(value, path, ['kind', 'dig']).dig, `${path}.dig`, DIGS) }
+    case 'mine': {
+      const data = object(value, path, ['kind', 'dig', 'floor'])
+      return { kind, dig: oneOf(data.dig, `${path}.dig`, DIGS), ...(data.floor === undefined ? {} : { floor: int(data.floor, `${path}.floor`, 1, 30) }) }
+    }
     case 'cook': case 'ship-surplus': return (object(value, path, ['kind']), { kind })
   }
 }
@@ -288,7 +292,7 @@ function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): C
 }
 
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server'])
+  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server', 'forgeHelper', 'toolCharges'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + (o.dayParts === true ? 2 : 1)).map((v, i) => {
@@ -339,6 +343,8 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     // The Cooking Contest's cook today: absent with none (the save grows it in place).
     ...(o.cook === undefined ? {} : { cook: member(o.cook, `${path}.cook`, roster) }),
     ...(o.server === undefined ? {} : { server: member(o.server, `${path}.server`, roster) }),
+    ...(o.forgeHelper === undefined ? {} : { forgeHelper: parseForgeHelper(o.forgeHelper, `${path}.forgeHelper`, roster) }),
+    ...(o.toolCharges === undefined ? {} : { toolCharges: parseToolCharges(o.toolCharges, `${path}.toolCharges`) }),
   }
 }
 
@@ -645,6 +651,7 @@ function parseFarmSave(value: unknown, path: string, version: 5 | 6): SaveV6 {
   }
   checkFestivalSave(save, path)
   if (o.longGame !== undefined) save.longGame = parseLongGame(o.longGame, `${path}.longGame`, save)
+  if (o.forge !== undefined) save.forge = parseForge(o.forge, `${path}.forge`, save)
   const service = save.workshops.restaurant
   const played = save.workshops.played.restaurant
   if (service?.shift && (service.shift.day !== today || played !== today || save.workshops.current || (service.last?.day ?? 0) >= today)) {

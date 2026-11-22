@@ -5,12 +5,13 @@
 //   action, two finds), the stairs' progress and Take the stairs, free, once found and in the Farm Rank's reach.
 // Each says what the action brought, and the day's actions left.
 import {
-  actionsLeft, animalName, ANIMALS, animalsIn, DIG_NAMES, digFloor, floorFinds, gradeAt, haulsToday, heartsOf, HOME_NAMES, HOME_ROOM, itemNameOf, readyIn, SILO_ROOM,
+  actionsLeft, toolChargesLeft, brushCapacity, animalName, ANIMALS, animalsIn, DIG_NAMES, digFloor, floorFinds, gradeAt, haulsToday, heartsOf, HOME_NAMES, HOME_ROOM, itemNameOf, readyIn, SILO_ROOM,
   stairsAfter, stairsFound, stairsLock, type Animal, type DigId, type FarmSave, type RanchHome,
   COLLECTION_CAPS, goodOf, gradeStepId, ranchProduct, type CollectionCap,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
+import { useState } from 'react'
 import { GuideButton } from '../guide/Guide'
 import { ItemIcon } from '../items/ItemIcon'
 import { careForOne, collectAt, faceAt, feedOne, pickCollectionCap, stairsAt } from './actions'
@@ -104,7 +105,7 @@ function AnimalRow({ save, animal, busy, out, run }: { save: FarmSave; animal: A
         <Button size="sm" className="flex-1" disabled={busy || out || animal.fed || save.ranch.silo === 0} data-action="feed"
           onClick={() => run(feedOne(animal.id).then(() => `Fed ${name}: its ${itemNameOf(rule.good).toLowerCase()} by morning`))}>Feed · 1</Button>
         <Button size="sm" variant="secondary" className="flex-1" disabled={busy || out || animal.cared} data-action="care"
-          onClick={() => run(careForOne(animal.id).then(() => `Cared for ${name}: fonder`))}>Care · 1</Button>
+          onClick={() => run(careForOne(animal.id).then(() => `Cared for ${name}${save.tools.brush > 1 ? ' and nearby animals' : ': fonder'}`))}>{save.tools.brush > 1 ? `Care for up to ${brushCapacity(save.tools.brush)} · 1` : 'Care · 1'}</Button>
       </div>
     </li>
   )
@@ -113,13 +114,17 @@ function AnimalRow({ save, animal, busy, out, run }: { save: FarmSave; animal: A
 /** The Mine's or the Quarry's panel: the floor you're on, a face, the stairs. */
 export function DigPanel({ save, dig }: { save: FarmSave; dig: DigId }) {
   const at = save.places[dig]
-  const floor = digFloor(at)
+  const deepest = digFloor(at)
+  const [params] = useSearchParams()
+  const [target, choose] = useState(() => Number(params.get('floor')) || 0)
+  const floor = Number.isInteger(target) && target > 0 && target <= deepest ? target : deepest
   const finds = floorFinds(dig, floor)
   const lock = stairsLock(save, dig)
   const found = stairsFound(at)
   const { note, error, busy, run } = useAct(dig)
   const out = actionsLeft(save) === 0
-  const need = stairsAfter(floor)
+  const need = stairsAfter(deepest)
+  const bonus = toolChargesLeft(save, dig === 'mine' ? 'pick' : 'hammer')
   return (
     <div className="space-y-2.5 p-4" data-dig={dig} data-floor={floor}>
       <div className="flex items-center justify-between gap-2">
@@ -128,20 +133,27 @@ export function DigPanel({ save, dig }: { save: FarmSave; dig: DigId }) {
         <ThinMark hauls={haulsToday(save, dig)} noun="face" />
         <GuideButton topic="mining" label="How mining works" />
       </div>
+      {deepest > 1 && <label className="flex items-center gap-2">Work floor
+        <select className="min-h-11 bg-panel" value={floor === target ? target : 0} onChange={event => choose(Number(event.target.value))}>
+          <option value={0}>Deepest reached</option>
+          {Array.from({ length: deepest }, (_, i) => <option key={i + 1} value={i + 1}>Floor {i + 1} · G{gradeAt(i + 1)}</option>)}
+        </select>
+      </label>}
+      {bonus > 0 && <p className="text-ink-soft">{plural(bonus, 'bonus piece')} left today</p>}
       <div className="flex flex-wrap gap-1" aria-label={`Finds: ${finds.map((id) => itemNameOf(id)).join(', ')}`}>
         {finds.map((id) => <ItemIcon key={id} id={id} size={24} label={itemNameOf(id)} />)}
       </div>
       <Notes note={note} error={error} />
       <Button className="w-full" disabled={busy || out} data-action="face"
-        onClick={() => run(faceAt(dig).then((f) => `Floor ${f.floor} · +${goodsWords(f.items)}${f.stairs ? ' · the stairs!' : ''}`))}>Work a face · 1 action</Button>
+        onClick={() => run(faceAt(dig, floor).then((f) => `Floor ${f.floor} · +${goodsWords(f.items)}${f.stairs ? ' · the stairs!' : ''}`))}>Work a face · 1 action</Button>
       <div className="space-y-1 rounded-sm border border-hairline bg-panel px-2.5 py-2" data-stairs={found ? 'found' : `${at.stairs}/${need}`}>
         <p className="text-[13px]">
           <span className="font-semibold">The stairs · </span>
-          <span className="text-ink-soft">{floor >= 30 ? 'the deepest floor' : found ? 'found' : `${plural(need - at.stairs, 'face')} to find them`}</span>
+          <span className="text-ink-soft">{deepest >= 30 ? 'the deepest floor' : found ? 'found' : `${plural(need - at.stairs, 'face')} to find them`}</span>
         </p>
         {found && (lock === null ? (
           <Button size="sm" variant="secondary" className="w-full" disabled={busy} data-action="stairs"
-            onClick={() => run(stairsAt(dig).then(() => `Down to floor ${floor + 1}`))}>Take the stairs · free</Button>
+            onClick={() => run(stairsAt(dig).then(() => { choose(0); return `Down to floor ${deepest + 1}` }))}>Take the stairs · free</Button>
         ) : <p className="text-[12px] text-ink-soft" data-stairs-lock>{lock.replace(/\.$/, '')}</p>)}
       </div>
       <p className="text-[12px] text-ink-faint">The {DIG_NAMES[dig]} keeps the deepest floor reached.</p>

@@ -117,9 +117,9 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
         <p className={`text-[13px] ${forge.open ? 'text-ink' : 'text-ink-faint'}`} data-forge-recipe={forge.open ? 'open' : 'greyed'}>
           {forge.text}{forge.open && row ? ` (G${row.grade}: ${forgePairWords(row.grade)})` : ''}
         </p>
+        <Link to="/?sheet=forge" state={{ back: true }} className="inline-flex min-h-11 items-center text-accent-strong">Forge workshop ›</Link>
         <div className="rounded-md border border-hairline p-3 text-[13px]" data-bench-bonus>
           <p className="font-semibold" style={{ color: RING }}>{BENCH_TEXT.bonus}</p>
-          <p className="text-ink-soft">{BENCH_TEXT.merge}</p>
         </div>
       </div>
     </Sheet>

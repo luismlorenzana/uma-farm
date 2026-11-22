@@ -217,7 +217,7 @@ describe('harvesting', () => {
 
   it('brings an own seed back 5% of the time, over a seeded sample', () => {
     expect(seedsBackChance(null)).toBe(0.05)
-    expect(seedsBackChance(null, 2)).toBe(0.1)
+    expect(seedsBackChance(null, 2)).toBe(0.07)
     expect([0, 5].map((r) => seedsBackChance(r as 0))).toEqual([0.1, 0.35])
     let seeds = 0
     const tile = START_CLEAR[0]!

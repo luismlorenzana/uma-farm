@@ -17,13 +17,14 @@ export function setFishingMode<S extends FarmSave>(save: S, spot: FishingSpotId,
 }
 
 /** Manual qualifications count landed fish only. A worker brings her actual aptitude. */
-export function catchGrade<S extends FarmSave>(save: S, species: string, mode: FishMode, aptitude?: number, manual = false): { save: S; id: string } {
+export function catchGrade<S extends FarmSave>(save: S, species: string, mode: FishMode, aptitude?: number, manual = false, bonus?: number): { save: S; id: string } {
   const previous = save.farm.manualCatches ?? 0
-  let next = manual ? { ...save, farm: { ...save.farm, manualCatches: previous + 1 } } : save
+  let next = manual && bonus === undefined ? { ...save, farm: { ...save.farm, manualCatches: previous + 1 } } : save
   if (mode === 'standard') return { save: next, id: species }
   const rule = FISH_PROMOTION[mode]
   const upgrade = gradeVariants(species)[rule.step]
   if (!upgrade || (manual ? previous < rule.manual : (aptitude ?? 0) < rule.aptitude)) return { save: next, id: species }
+  if (bonus !== undefined) return { save, id: bonus < 1 / rule.every ? upgrade.id : species }
   const key = `${species}:${rule.step}`
   const count = ((next.farm.fishRemainders?.[key] ?? 0) + 1) % rule.every
   next = { ...next, farm: { ...next.farm, fishRemainders: { ...next.farm.fishRemainders, [key]: count } } }

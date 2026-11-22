@@ -13,7 +13,7 @@
 // is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
 // gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
-  ANIMAL_HOME, chapterTitle, farmPlace, fieldCounts, FIELD_COLUMNS, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt,
+  ANIMAL_HOME, benchOpen, HEIRLOOMS, TOOL_NAMES, toolTierName, chapterTitle, farmPlace, fieldCounts, FIELD_COLUMNS, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt,
   STATIONS, type BuildPlace, type DigId, type FarmPlace, type FarmPlaceId, type FarmSave, type RanchHome, type StationId,
 } from '@farm/domain'
 import { PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -301,7 +301,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           words={{ close: 'Close', about: `About ${theName(peekWords.name)}`, backTo: 'Back to the farm' }}
           focusKey={`${previewReady ? '[data-field-pond] ' : ''}[data-place="${peek.id}"]`}
         >
-          {peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
+          {peek.id === 'forge' ? <ForgeEntrance save={save} />
             : peek.id === 'forest' || peek.id === 'fishery' ? <GatherPanel save={save} place={peek.id} />
               : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
                 : isStation(peek.id) && placeOpen(save, peek) && stationBuilt(save, peek.id) ? <StationPanel save={save} station={peek.id} />
@@ -313,6 +313,14 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
       <Morning save={save} open={!covered} />
     </>
   )
+}
+
+function ForgeEntrance({ save }: { save: FarmSave }) {
+  return <div className="space-y-2 p-3">
+    <Link to="/?sheet=forge" state={{ back: true }} className="grid min-h-11 place-items-center rounded-md border border-hairline bg-panel font-semibold">Forge workshop ›</Link>
+    {benchOpen(save) ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
+      : <p className="text-ink-soft">Ring Bench · Opens the morning after your first Romance 8.</p>}
+  </div>
 }
 
 /** A place's quick look while its page isn't wired up: what it is, and what opens it; a place to build, its Build card
@@ -363,6 +371,8 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const world = useMemo(() => (pack ? worldWords(pack) : NO_WORLD), [pack])
   const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf, noteOf, world) : []), [summary, nameOf, ready, pairs, home, chapterOf, noteOf, world])
   if (!summary) return null
+  const tools = save.forge?.installed.filter(order => order.due === summary.day) ?? []
+  const jewels = save.forge?.heirlooms.filter(order => order.ready === summary.day) ?? []
   return (
     <Sheet
       open={open}
@@ -373,7 +383,12 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
       footer={<Button className="w-full" onClick={() => void dismissSummary()} data-action="start-day">Start the day</Button>}
     >
       <div className="space-y-3 pb-1" data-summary={summary.day}>
-        {parts.length === 0 && <p className="text-ink-soft">A quiet night.</p>}
+        {(tools.length > 0 || jewels.length > 0) && <section className="space-y-1" aria-label="Forge deliveries">
+          <h3 className="text-micro">Forge deliveries</h3>
+          {tools.map(order => <Link key={order.tool} className="block min-h-11" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} installed{order.assistant ? ` · Prepared with ${nameOf(order.assistant)}` : ''}</Link>)}
+          {jewels.map(order => <Link key={`${order.recipient}:${order.piece}`} className="block min-h-11" to={`/?sheet=forge&tab=heirlooms&recipient=${order.recipient}&piece=${order.piece}`}>{HEIRLOOMS[order.piece].name} for {nameOf(order.recipient)} · Ready to give</Link>)}
+        </section>}
+        {parts.length === 0 && tools.length === 0 && jewels.length === 0 && <p className="text-ink-soft">A quiet night.</p>}
         {parts.map((part) => (
           <section key={part.section} data-section={part.section} aria-label={part.title}>
             <h3 className="text-micro pb-1">{part.title}</h3>

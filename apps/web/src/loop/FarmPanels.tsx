@@ -2,7 +2,7 @@
 // silo), the woods' edge (forage or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
 // brought, and the day's actions left. Part of the farm map's chunk.
 import {
-  actionsLeft, CROPS, cropBaseGrade, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
+  actionsLeft, toolChargesLeft, toolEffect, CROPS, cropBaseGrade, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
   type HarvestReceipt,
   baseGoodId, FISH_MODES, FISH_MODE_NAMES, FISH_PROMOTION, goodCount, gradeVariants, MAX_PRODUCTION_TARGET, MAX_STATION_TARGETS,
   stationRecipes, type FishingSpotId, type FishMode, type StationId, type StationTarget,
@@ -10,7 +10,7 @@ import {
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import { GuideButton } from '../guide/Guide'
 import { ItemIcon } from '../items/ItemIcon'
 import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, pickFishingMode, planStation, plantAt, removeOrchardAt, tillAt, upgradeAt, waterAt } from './actions'
@@ -72,9 +72,9 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
   const doIt = (a: TileAction) => {
     switch (a.kind) {
       case 'clear': return run(clearAt(index).then((found) => (found ? `Cleared · +1 ${itemNameOf(found)}` : 'Cleared')))
-      case 'till': return run(tillAt(index).then(() => 'Tilled'))
+      case 'till': return run(tillAt(index).then(() => save.tools.hoe > 1 ? toolEffect('hoe', save.tools.hoe) : 'Tilled'))
       case 'plant': return run(plantAt(index, a.seed).then(() => `Planted ${a.name}`))
-      case 'water': return run(waterAt(index).then(() => 'Watered: it grows tonight'))
+      case 'water': return run(waterAt(index).then(() => save.tools['watering-can'] > 1 ? toolEffect('watering-can', save.tools['watering-can']) : 'Watered: it grows tonight'))
       case 'harvest': return run(harvestAt(index).then(harvestWords))
     }
   }
@@ -148,6 +148,7 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
     <div className="space-y-2.5 p-4" data-gather={place}>
       <div className="flex justify-end"><GuideButton topic="gathering" label="How gathering works" /></div>
       <Notes note={note} error={error} />
+      {toolChargesLeft(save, place === 'forest' ? 'axe' : 'rod') > 0 && <p className="text-ink-soft">{plural(toolChargesLeft(save, place === 'forest' ? 'axe' : 'rod'), 'bonus piece')} left today</p>}
       <ul className="space-y-1.5">
         {rows.map((row) => (
           <li key={row.id} className={`space-y-1.5 rounded-sm border border-hairline bg-panel px-2.5 py-2 ${row.lock ? 'opacity-60' : ''}`} data-where={row.id}>
@@ -172,7 +173,7 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
                   <div className="w-full space-y-1.5">
                     <CatchMode save={save} spot={row.id as FishingSpotId} species={row.finds} busy={busy} run={run} />
                     <Button size="sm" className="w-full" disabled={busy || out} data-action="fish"
-                      onClick={() => run(fishAt(row.id).then((c) => (c ? `${goodName(c.gradeId ?? c.fish)} ★${c.stars} · ${c.cm} cm${c.record ? ', a record' : ''}` : 'Nothing bit: it’s thin here today')))}>Fish · 1</Button>
+                      onClick={() => run(fishAt(row.id).then(({ caught: c, extra }) => c ? `${goodName(c.gradeId ?? c.fish)} ★${c.stars} · ${c.cm} cm${c.record ? ', a record' : ''}${extra ? ` · Bonus ${goodName(extra.gradeId ?? extra.fish)} ★${extra.stars}` : ''}` : 'Nothing bit: it’s thin here today'))}>Fish · 1</Button>
                   </div>
                 )}
               </div>
@@ -289,18 +290,24 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
 function StationTargets({ save, station, level }: { save: FarmSave; station: StationId; level: number }) {
   const targets = save.farm.stationPlans?.[station] ?? []
   const choices = stationRecipes(station, level).filter((g) => targets.every((entry) => entry.output !== g.id))
-  const [output, choose] = useState('')
-  const [count, setCount] = useState(4)
+  const [params] = useSearchParams()
+  const wanted = params.get('output')
+  const proposed = Number(params.get('quantity'))
+  const planned = Number.isInteger(proposed) && proposed > 0 && proposed <= MAX_PRODUCTION_TARGET && choices.some(good => good.id === wanted)
+  const [output, choose] = useState(planned ? wanted! : '')
+  const [count, setCount] = useState(planned ? proposed : 4)
   const { note, error, busy, run } = useAct(station)
   const valid = Number.isInteger(count) && count > 0 && count <= MAX_PRODUCTION_TARGET
   const edit = (next: StationTarget[]) => run(planStation(station, next).then(() => { choose(''); return null }))
   return (
-    <details className="rounded-md border border-hairline px-2 text-[13px]">
+    <details open={wanted ? true : undefined} className="rounded-md border border-hairline px-2 text-[13px]">
       <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Roster load targets · {targets.length || 'Automatic'}</summary>
       <div className="space-y-2 pb-2">
         {targets.map((entry, i) => (
           <div key={entry.output} className="flex items-center gap-1">
             <p className="min-w-0 flex-1">{goodName(entry.output)} · {goodCount(save.items, entry.output)}/{entry.target}</p>
+            {wanted === entry.output && Number.isInteger(proposed) && proposed > entry.target && proposed <= MAX_PRODUCTION_TARGET &&
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => edit(targets.map(target => target === entry ? { ...entry, target: proposed } : target))}>Keep {proposed}</Button>}
             {i > 0 && <Button size="sm" variant="secondary" disabled={busy} aria-label={`Prioritize ${goodName(entry.output)}`}
               onClick={() => edit(targets.map((t, k) => k === i - 1 ? entry : k === i ? targets[i - 1]! : t))}>↑</Button>}
             <Button size="sm" variant="secondary" disabled={busy} aria-label={`Remove ${goodName(entry.output)} target`}

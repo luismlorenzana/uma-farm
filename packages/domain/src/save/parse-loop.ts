@@ -716,7 +716,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
       return { kind, home: oneOf(r.home, `${at}.home`, RANCH_HOMES), fed: animals(r.fed, `${at}.fed`), hungry: animals(r.hungry, `${at}.hungry`), ready: animals(r.ready, `${at}.ready`) }
     }
     if (kind === 'farmhand') {
-      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen', 'restaurant', 'festival'])
+      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen', 'restaurant', 'festival', 'forge'])
       const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
       return {
         kind, id: member(f.id, `${at}.id`, roster), actions, spent: int(f.spent, `${at}.spent`, 0, actions), half: bool(f.half, `${at}.half`), fed: bool(f.fed, `${at}.fed`),
@@ -726,6 +726,7 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
         ...(f.kitchen !== undefined ? { kitchen: int(f.kitchen, `${at}.kitchen`, 1, actions) } : {}),
         ...(f.restaurant !== undefined ? { restaurant: int(f.restaurant, `${at}.restaurant`, 1, 1) } : {}),
         ...(f.festival !== undefined ? { festival: int(f.festival, `${at}.festival`, 1, 1) } : {}),
+        ...(f.forge !== undefined ? { forge: int(f.forge, `${at}.forge`, 1, 1) } : {}),
       }
     }
     if (kind === 'load') {

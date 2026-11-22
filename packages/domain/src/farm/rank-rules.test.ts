@@ -205,7 +205,7 @@ describe('the challenges', () => {
     const targets = Object.fromEntries(ACTIVITIES.map((a) => [a, CHALLENGES[a].map((c) => c.target)]))
     expect(targets).toEqual({
       farming: [30, 40, 1, 30, 1], ranch: [10, 1, 1, 1, 1], mining: [40, 1, 1, 1, 1], fishing: [30, 10, 10, 10, 1], foraging: [50, 20, 20, 20, 20],
-      cooking: [5, 1, 10, 1, 1], serving: [5, 1, 100, 1, 1000], forging: [5, 1, 1, 1, 1], expeditions: [2, 1, 1, 1, 1],
+      cooking: [5, 1, 10, 1, 1], serving: [5, 1, 100, 1, 1000], forging: [5, 4, 4, 4, 6], expeditions: [2, 1, 1, 1, 1],
     })
   })
 
@@ -225,8 +225,8 @@ describe('the challenges', () => {
     expect(count('cooking', 3, { kind: 'play', grade: 'fine' })).toBe(0)
     expect(count('cooking', 2, { kind: 'dishes', stars: [3, 4, 5] })).toBe(2)
     expect(count('serving', 4, { kind: 'guests', guests: 120 })).toBe(120)
-    expect(count('forging', 4, { kind: 'forged', tool: 'upgrade' })).toBe(0)
-    expect(count('forging', 4, { kind: 'forged', tool: 'mythril' })).toBe(1)
+    expect(count('forging', 4, { kind: 'forge-piece', tier: 2 })).toBe(0)
+    expect(count('forging', 4, { kind: 'forge-piece', tier: 5 })).toBe(1)
     expect(count('ranch', 2, { kind: 'hearts', hearts: 7 })).toBe(1)
     expect(count('ranch', 0, { kind: 'care' })).toBe(1)
     expect(count('expeditions', 0, { kind: 'expedition', result: 'failure', level: 1, region: 'old-fort-ruins' })).toBe(1)
@@ -252,7 +252,7 @@ describe('what a rank gives', () => {
     expect(ranks.map((r) => seedsBackChance(r))).toEqual([0.1, 0.15, 0.2, 0.25, 0.3, 0.35])
     expect(ranks.map(rankQuality)).toEqual([0, 0.5, 1, 1.5, 2, 2.5])
     expect(ranks.map((r) => harvestQuality({ rank: r, talent: TALENT_D, wellFed: false }, 1))).toEqual(ranks.map((r) => quality({ rank: rankQuality(r), care: TENDED_QUALITY, cropLevel: cropLevelQuality(1) })))
-    expect(harvestQuality({ rank: 3, talent: 6, wellFed: true }, 4, 3)).toBe(3.55)
+    expect(harvestQuality({ rank: 3, talent: 6, wellFed: true }, 4, 3)).toBe(3.3)
     expect(talentQuality(6)).toBe(0.75)
     expect(ranks.map((r) => `${rankBenefits(r).deepest.floor} · ${AREA_NAMES[rankBenefits(r).deepest.forest]} · ${SPOT_NAMES[rankBenefits(r).deepest.fishery]}`)).toEqual([
       '5 · the Woods · the Pond', '10 · the Hills · the River', '15 · the Old Forest · the Lake', '20 · the Mountain · the Falls',

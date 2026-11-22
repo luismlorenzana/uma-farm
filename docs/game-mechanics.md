@@ -440,6 +440,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove | 1 | Now |
 | The Kitchen | Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day | 1 | Now |
 | The Restaurant | Serve a shift from a stocked menu of dishes, once a day | 1 | Now |
+| The Forge | Commission a tool or heirloom | 1 | Now |
 | The Expedition post | Send a party for 2–5 days, with up to eight dishes | 1 | Now |
 | The household | Cook a meal for the household: breakfast or dinner (it cooks a batch too) | 1 | Now |
 | The household | Choose tonight’s companion, at the day’s end | Free | Now |
@@ -498,7 +499,7 @@ The night is one fixed run of steps over the save:
 4. **The stations' loads finish.** Every load started today is done: its goods go into the Warehouse at their stars and
    the station is free for the morning. Side by side's and the perks' extras and foragers' and fishers' night chores go
    straight into the Warehouse too.
-5. **Workshops.** Nothing changes: no workshop is open.
+5. **Workshops.** Nothing changes on the starter farm.
 6. **Ranks and bonds.** Every farmhand who worked today earns a day's rank points in her place's activity and ranks
    up where her challenge is met; farmhands at the same place tick their bonds, and her line pays. Shared houses pay,
    spouses level, and well-fed days count down by one.
@@ -545,7 +546,7 @@ The steps as the game lists them:
 | 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
 | 8 | `unlockTownNotes` | Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them |
-| 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning |
+| 8 | `openRingBench` | The Ring Bench opens the morning after the first Romance 8 event and its smith’s scene becomes due. The tool workshop installs paid orders and completes heirlooms on their due dawn |
 | 8 | `householdMilestones` | Household milestones: the first wedding and each set of five through fifty are news once. Five spouses bring the furniture set. The closing celebration is Ready on the fiftieth wedding day. Earlier celebrations open the morning after their milestone wedding |
 | 8 | `festivalPreparations` | A pledged Greater Festival contribution uses the next matching exact-grade farmhand output or expedition return in its preparation window and credits its producer or party |
 | 9 | `serveTheReception` | A wedding’s reception: everyone who lives on the farm (the spouses in their rooms) well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running |
@@ -678,7 +679,7 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Restaurant | `party-hall` | Farm Rank 7, then built |
 | Quarry | `quarry` | Farm Rank 5, then built |
 | Cutter | `den-workbench` | Farm Rank 5, then built |
-| Forge | `forge` | Farm Rank 8, then built (not built yet) |
+| Forge | `forge` | Farm Rank 3, then built |
 | Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
 | Requests board | `card-library` (borrowed) | 5 Umas met |
@@ -709,14 +710,11 @@ What a tap does:
 | Every other place | Its quick look: what it is, and what opens it; a place to build, its Build card |
 
 **Locks.** A locked place shows a lock, and its quick look says why:
-- **A place to build** (see [Building](#building)): "Farm Rank 3" before its rank offers it; "Not built" once it does,
-  its quick look showing its Build card; "Builds tonight" once paid; and **"Not built yet"** for a place whose game isn't
-  built (the Kitchen, the Restaurant, the expedition post, the Forge's merge game), whose Build card shows its cost and
-  can't be bought.
+- **A place to build** (see [Building](#building)): "Farm Rank 3" before its rank offers it. "Not built" leads to its Build card, and "Builds tonight" marks a paid build.
 - **The Requests board:** "Opens with 5 Umas met"; then "Opens soon", its game not built.
 - **"Opens soon":** a place that stands while its game is still in development.
-- **The Forge** opens as the ring bench the night after the first Romance 8 event ("Opens with your first Romance 8"
-  before that); its merge game is a build at Farm Rank 8, not built yet.
+- **The Forge** has two entrances on its quick look. The workshop can be restored at Farm Rank 3.
+  The Ring Bench opens the morning after the first played Romance 8 event.
 
 **Tags.** A station with a load today says **Ready tomorrow**. A ripe tile shows its crop ripe, and the Menu counts the ripe tiles.
 
@@ -1129,9 +1127,9 @@ left. A weeds tile's panel also offers **Cut grass for the silo · 1 action** on
 #### Harvesting
 
 - **Each crop draws its own stars.** A tile gives its yield in crops, and each draws its stars from the harvest's
-  quality points: the crop's level (+0.1 a level above 1) and the Hoe (+0.25 a tier above Basic). At crop level 1
-  that's always ★1. Every farm has the Basic Hoe, and nothing on the farm upgrades it yet.
-- **Seeds back:** each harvest may drop one own seed of its crop: 5%, and +5% a Hoe tier above Basic.
+  quality points: the crop's level (+0.1 a level above 1) and the Hoe (+0.125 a tier above Basic). At crop level 1
+  that's always ★1. Every farm starts with a Basic Hoe and can upgrade it at the Forge.
+- **Seeds back:** each harvest may drop one own seed of its crop: 5%, and +2 percentage points per Hoe tier above Basic.
 - **Crop points:** each harvested tile adds 1 point to its crop, or 2 if it was planted from own seeds.
 - **The tile stays tilled** and empty, ready to plant again.
 
@@ -1552,8 +1550,7 @@ planks), with its Cutter. Each is 15g of upkeep a night once it stands.
 
 Thirty floors each. A find's grade is the floor's 70% of the time, the grade below 20% (the floor's own on floors 1–3)
 and the grade above 10% (held to G10); at the Quarry it's a stone 70% or a gem 30% of that grade. Each find draws its
-stars from the farmer's quality: a Novice D with the farm's Pick (the Mine) or Hammer (the Quarry), so ★1 until the tools
-improve. Every pick is seeded by the farm's count of finds at the dig (`draw(uid, day, 'dig:<dig>', n)`, its kind
+stars from the farmer's quality (Novice D and ★1) or the working Uma's terms. Every pick is seeded by the farm's count of finds at the dig (`draw(uid, day, 'dig:<dig>', n)`, its kind
 `'dig-kind:<dig>'` and its stars `'dig-stars:<dig>'`).
 
 <!-- live:dig-floors -->
@@ -4065,7 +4062,7 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 | Foraging | Gather 50 items | Gather 20 items in the Hills | Gather 20 items in the Old Forest | Gather 20 items on the Mountain | Gather 20 items in the Misty Vale | The night’s hauls (night step 4) |
 | Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; the Cooking Contest’s judging, its cook |
 | Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant’s shift, its server |
-| Forging | Assist 5 Forge plays | Assist a Fine merge | Forge a tool upgrade | Assist a Masterwork | Forge a Mythril tool | The Forge’s workshop (not built yet) |
+| Forging | Prepare 5 pieces | Prepare 4 Iron or better pieces | Prepare 4 Gold or better pieces | Prepare 4 Mythril pieces | Prepare 6 Mythril pieces | The Forge |
 | Expeditions | Return from 2 expeditions | A Success at level 10+ | A Success at level 20+ | A Great at level 20+ | A Success at the Sky Ruins | The Expedition post |
 <!-- /live -->
 
@@ -4200,12 +4197,12 @@ stations' levels, the shop's seed tiers), so the sheet and the morning can't dri
 |---|---|---|
 | 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs) |
 | 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, New seeds at the shop |
-| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, New seeds at the shop |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), The Forge to build (1,000g · 12 logs), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, New seeds at the shop |
 | 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, New seeds at the shop |
 | 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s |
 | 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, New seeds at the shop |
 | 7 | 6,250 | The Restaurant to build (40,000g · 80 planks · 40 fillets · 30 vegetables), The Expedition post to build (25,000g · 60 planks · 40 fillets), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play) |
-| 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
+| 8 | 9,750 | Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 | Plot 8 to clear (50,000g) |
 | 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
 <!-- /live -->
@@ -4331,6 +4328,7 @@ A place whose game isn't built yet shows what it'll be: its Build card has its c
 | Barn | 3 | 3,500g | 30 logs, 20 vegetables | Yes |
 | Smokehouse | 3 | 2,000g | 30 logs, 20 fish | Yes |
 | Kitchen | 3 | 3,000g | 40 logs, 20 vegetables | Yes |
+| Forge | 3 | 1,000g | 12 logs | Yes |
 | Mine | 4 | 10,000g | 60 planks | Yes |
 | Smelter | 4 | 8,000g | 40 planks, 40 logs | Yes |
 | Quarry | 5 | 12,000g | 50 planks | Yes |
@@ -4339,7 +4337,6 @@ A place whose game isn't built yet shows what it'll be: its Build card has its c
 | Boat | 6 | 30,000g | 60 planks, 30 fillets | Yes, after the Dock |
 | Restaurant | 7 | 40,000g | 80 planks, 40 fillets, 30 vegetables | Yes |
 | Expedition post | 7 | 25,000g | 60 planks, 40 fillets | Yes |
-| Forge | 8 | 60,000g | 120 planks, 60 logs | Not built yet |
 <!-- /live -->
 
 - **Refusals:** built already or paid today ("Builds tonight."); not built yet ("Not built yet."); its Farm Rank ("Opens
@@ -4359,7 +4356,7 @@ Your life with the Umas opens the homestead and the town:
 <!-- live:uma-milestones -->
 | Milestone | Opens | Read from |
 |---|---|---|
-| The first Romance 8 anyone plays | The ring bench at the Forge (the night after) | `memories`, then `buildings.forge = 0` |
+| The first Romance 8 anyone plays | The ring bench at the Forge (the night after) | `memories`, then `forge.bench` |
 | The first wedding | House 1 to build (8,000g), the house before it standing | Spouses in `love` |
 | The second wedding | House 2 to build (20,000g), the house before it standing | Spouses in `love` |
 | The third wedding | House 3 to build (40,000g), the house before it standing | Spouses in `love` |
@@ -6487,7 +6484,7 @@ shows what the place-bound ones say for every line.
 | Ranch | the ranch | +10% at the ranch | +5 fondness to her animals each night | A ★2+ egg, milk or fleece | When the Coop or the Barn is built |
 | Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | When the Kitchen is built |
 | Serving | the Restaurant | +10% at the Restaurant | One grace order on today’s Restaurant shift | A ★2+ crop of the season | When the Restaurant is built |
-| Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | When the Forge is built |
+| Forging | the Forge | +10% Forging points when assisting | Train Forging by preparing tools or heirlooms | A ★2+ crop of the season | When the Forge is built |
 <!-- /live -->
 
 #### What each perk does
@@ -6528,7 +6525,7 @@ Each perk, what it does, and where in the day it acts:
 
 Each place-bound template means one thing at each line's place. **Every line whose place stands acts:** farming,
 foraging and fishing from day 1, mining once the Mine (or a quarrier's Quarry) stands, the ranch once the Coop or the Barn
-does, cooking once the Kitchen stands, and Serving once the Restaurant stands. The Forge's line waits for its game.
+does, cooking once the Kitchen stands, and Serving once the Restaurant stands. Forging rewards an assistant on a Forge job.
 A workshop line's morning item is a crop of the season. **Her
 line** is her favourite (her bible's, else her calling's, else master data's), as for every line; her +10% acts where
 her work is that line's place (the board's task she's set, at night), and her chores and morning items while she's on
@@ -6545,7 +6542,7 @@ the farm: a spouse in her room every day, a farmhand on her farm days.
 | Ranch | The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars | +5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3) | A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none) | Yes, once the Coop or the Barn stands |
 | Cooking | As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes | +1 dish on every Kitchen play while she’s on the farm: a spouse in her room, or a farmhand on her farm day (the chores don’t bank: a day without a play makes none) | A ★2+ dish (a crop of the season for now: the dishes come to the morning items later) | Yes, once the Kitchen stands: its +10% and its chores (the morning item later) |
 | Serving | +10 percentage points to the tip rate and +0.75 s per ticket as the Restaurant’s server, again at R5 | One 4 s grace order per chore on the day’s shift | A ★2+ crop of the season | Yes, once the Restaurant stands |
-| Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season meanwhile) | Not yet: once the Forge’s game is built |
+| Forging | +10% Forging points when assisting | Prepare tools, heirlooms or practice fittings | A ★2+ crop of the season | Yes, when she assists at the Forge |
 <!-- /live -->
 
 - **Seeded:** a fraction becomes a whole item by a seeded draw on the account, the day and her id, so a night replays the
@@ -6656,7 +6653,7 @@ line's best place now:
 | Ranch | Cake | The top grade of the goods the farm’s animals give (an Egg G1 … Cashmere Fleece G7); G1 with none | Honeycomb Cake |
 | Cooking | Tart | The top grade of the dishes the Kitchen has cooked (`farm.counts['cooked:<dish>']`); G1 before its first play | Apple Tart |
 | Serving | Cookies | The last Restaurant stage cleared, G1 before the first clear | Peanut Cookies |
-| Forging | Bread | G1 until the Forge’s game is built | Wheat Bread |
+| Forging | Bread | G1 crop of the season | Wheat Bread |
 
 Her loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).
 <!-- /live -->
@@ -7139,7 +7136,7 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
 
 ### The ring, the wedding, and married life
 
-The proposal needs a ring, so the old Forge opens early as a ring bench with no game. After the wedding comes the
+The proposal needs a ring. The Ring Bench at the Forge opens from Romance 8, independently of the tool workshop. After the wedding comes the
 wedding night, then she moves in (the homestead), and married life goes on to the household's finale, with the
 household's meals and the night's companion ([the Uma loop](#the-uma-loop)) along the way.
 
@@ -7160,6 +7157,71 @@ household's meals and the night's companion ([the Uma loop](#the-uma-loop)) alon
  her room at once · that night everyone on the farm is well fed from tomorrow · her ring +1% a grade at her line
 ```
 
+### The Forge workshop
+
+One farm location has a **Forge workshop** and a **Ring Bench**. Restore the workshop at Farm Rank 3 for
+1,000g and 12 logs. It opens the next morning, with no additional nightly upkeep. The Ring Bench opens after
+the first played Romance 8 and uses its own daily allowance. Either counter can open first.
+
+#### Shared tools
+
+One upgrade applies to all Umas and the player. You order one tool at a time. Orders cost one daytime action,
+the fee and exact materials. The old tool works through delivery, and the new tier installs automatically at dawn.
+Tool ingredients take any stars of the named material, drawing lower stars first. Protected stock takes an
+explicit override. The workshop previews the crew's assignments against the delivery date and current stock.
+What Next? links to restoration or a suggested tool. Work calendar shows the delivery date and includes installed
+tiers in its forecast. Morning reports link back to delivered tools.
+
+| Tier | Farm Rank | Exact materials for one upgrade | Fee | Lead time |
+|---|---:|---|---:|---|
+| Fitted | 3 | 6 Pine Planks | 300g | 1 dawn |
+| Iron | 4 | 4 Iron Ingots, 4 Pine Planks | 1,200g | 1 dawn |
+| Gold | 6 | 6 Gold Ingots, 4 Iron Ingots | 3,600g | 2 dawns |
+| Mythril | 8 | 8 Mythril Ingots, 4 Gold Ingots | 9,000g | 2 dawns |
+
+| Tool | Fitted | Iron | Gold | Mythril |
+|---|---|---|---|---|
+| Watering Can | 2 dry tiles | 1 dry row | 2 dry rows | 3 dry rows |
+| Hoe | 2 clean tiles | 2 clean tiles | 3 clean tiles | 4 clean tiles |
+| Brush | 2 animals cared for | 3 animals | 4 animals | 5 animals |
+| Axe | 1 extra log/day | 2/day | 3/day | 4/day |
+| Pick | 1 extra ore/day | 2/day | 3/day | 4/day |
+| Hammer | 1 extra find/day | 2/day | 3/day | 4/day |
+| Rod | 1 extra fish/day | 2/day | 3/day | 4/day |
+
+Tile and animal capacities apply per action on one plot or in one animal home, and crew skill can supply a
+higher capacity. The Hoe groups clear ground and adds 0.125 quality and 2 percentage points of seed return per
+tier above Basic. The Brush affects care, while feed and collection use their own actions. Gathering charges
+are shared farm-wide, with at most one extra item per eligible action. Ordinary seasonal and depth draws still
+set item grades. An extra catch or log comes from a full haul. Bonus items use separate rolls and ordinary
+work alone supplies challenge and stair credit. Fishing modes apply to extra fish too.
+
+The Mine and Quarry can work reached floors by hand or as a Work order. Earlier floors share the day's
+thinning and tool charges with the deepest floor. Stair progress comes from the deepest floor. Forge shortages
+link to the right supplier and a proposed exact station target. Confirm that target at the station before it
+changes crew refining.
+
+Select an eligible farmhand before the Morning shift to reserve one of her actions for the order. Forging
+counts that preparation and pays rank points at night. Practice fittings use an assistant action and two Pine
+Planks at Fitted, or one Pine Plank and one of the tier's ingots at Iron or higher. Choose a tier already
+installed on a tool. Tempering a tool order is optional. Five short Ready cues and three hits earn a
+decorative maker's stamp. Skipping, leaving midway or missing the cues delivers the standard finish on time.
+
+#### Heirloom commissions
+
+The workshop's Heirlooms tab opens at Rank 8 with the Mine, Quarry, Smelter and Cutter built. Select a spouse
+and one of her four keepsake slots. An order costs one daytime action and consumes its exact materials and fee.
+One commission can run at Rank 8 or 9 and two can run at Rank 10, alongside any tool order or daily wedding ring.
+The numbered look has to be in the published wardrobe before ordering. Delivery frees its slot, and the
+finished piece waits in her book or the workshop for **Give to her**. Gifting is free and marks the gift date.
+
+| Heirloom | Rank | Materials (any stars) | Fee | Lead time | Look |
+|---|---:|---|---:|---|---:|
+| Diamond Earrings | 8 | 16 Titanium Ingots, 12 Cut Diamonds, 8 Gold Ingots | 24,000g | 2 dawns | 2 |
+| Starstone Necklace | 8 | 24 Mythril Ingots, 16 Cut Starstones, 12 Cut Diamonds | 40,000g | 3 dawns | 3 |
+| Orichalcum Bracelet | 10 | 32 Orichalcum Ingots, 20 Cut Philosopher's Stones, 12 Mythril Ingots, 12 Runestone Blocks | 64,000g | 4 dawns | 4 |
+| Philosopher's Brooch | 10 | 44 Orichalcum Ingots, 28 Cut Philosopher's Stones, 20 Cut Starstones, 16 Meteorite Blocks | 96,000g | 5 dawns | 5 |
+
 #### The ring bench
 
 A solo farmer can court one Uma through the first wedding. Start with six Pine Logs from the Woods.
@@ -7171,18 +7233,18 @@ The bench's rule, in full:
 <!-- live:bench-recipe -->
 |  | The ring bench |
 |---|---|
-| Opens | The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and the smith’s scene the next morning |
+| Opens | The night after the first Romance 8 event anyone plays; the smith’s scene is due the next morning |
 | Starter Copper Ring | 6 Pine Logs, any stars, with no paid building or Farm Rank requirement |
 | A ring of grade g | 3 refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand |
 | Cost | The goods only: no gold, no game, no assistant, no score |
 | Out | The ring, ★1 (a Rough make), into the Warehouse |
 | How often | One ring a day (`today.ring`) |
-| Her bonus once married | +1% at her line a grade, inside her own +35%; the Forge’s merge game (not built yet) adds +1, +3 or +5 for a Fine, Great or Masterwork make |
+| Her bonus once married | +1% at her line a grade, inside her own +35% |
 | Refusals | “The ring bench opens with your first Romance 8.” · “Three refined goods of one grade.” · “Ingots, blocks and cut gems open when the Smelter and the Cutter are built.” · “One ring a day.” · “Not enough in the Warehouse.” |
 <!-- /live -->
 
-- **On the map:** until the bench stands the Forge's lock says "Opens with your first Romance 8". Then its quick look
-  reads **Ring bench · one ring a day** with **Make a ring ›** ("See the bench ›" once today's is made).
+- **On the map:** open the Forge and choose its Ring Bench once Romance 8 opens it. **Make a ring ›** opens the
+  counter. It reads **See the bench ›** once today's ring is made.
 - **The smith's scene:** the morning after, once the summary is put away (after the opening, before the meeting scenes), seven
   short lines and a card with **See the bench** or **Later**; read once.
 - **The bench's sheet:** the smith's face and name (the Uma who plays the role) and the rule; one row a grade you can make now, lowest first, each with **the
@@ -7456,10 +7518,12 @@ Regular evenings keep their own costs and slots.
 | Wardrobe | Greater Love points for each look |
 |---|---|
 | Pajamas | 0, 6, 14, 24, 36, 48, 60, 75, 90, 105 |
-| Anniversary outfits | 0, 24, 48, 72, 96 |
+| Birthday and anniversary outfits | 0, 24, 48, 72, 96, plus the corresponding heirloom for looks 2–5 |
 
 Each wardrobe rotates in order through its unlocked looks. Birthdays and anniversaries share the formal wardrobe
-cursor. A birthday visit opens on the spouse's birthday once per farm year. Anniversary night opens after a full
+cursor. The formal baseline comes with marriage. Looks 2 through 5 each need the matching gifted heirloom
+and its Greater Love threshold. Choose an eligible formal look when you start an occasion, or use the automatic
+rotation. Existing saves retain earlier unlocked looks. The recorded visit preserves the look used in replay. A birthday visit opens on the spouse's birthday once per farm year. Anniversary night opens after a full
 farm year and can be played later for the most recent anniversary. If both fall on the same date, each can be played
 once and uses one visit slot. Their default scene beats use neutral, tender and loving. A story can choose the
 expression for each beat. Numbered portraits load by slot, with the standard pajamas or wedding-night portrait as

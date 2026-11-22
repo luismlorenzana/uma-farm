@@ -9,7 +9,7 @@
 // Book.
 import { byRelationship } from '../loop/relationship-order'
 import {
-  crewShiftEnabled, MORNING_ACTIONS, aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
+  digFloor, gradeAt, crewShiftEnabled, MORNING_ACTIONS, aptitudeOf, APTITUDE_NAMES, atHome, awayOn, farmDaysIn, farmPlace, nextFarmDay, professionOf, professionShift, weekdayShort, worksOn, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handsTonight, isOvergrown, itemNameOf,
   canSaveCropSeed, CROP_IDS, cropBaseGrade, cropGoodId, cropGrades, established, plantingPlan, plotLock, plotLockWords, plotName, taskTiles,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   MAX_SEED_TARGET, type CropId, type DigId, type FarmhandLine, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
@@ -332,6 +332,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   const [target, setTarget] = useState(1)
   const [where, setWhere] = useState<string | null>(null)
   const [fishMode, setFishMode] = useState<FishMode | ''>('')
+  const [floor, setFloor] = useState(0)
   const [feedOnly, setFeedOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -347,9 +348,9 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
     : where === null ? null
       : kind === 'load' ? { kind, station: where as StationId }
         : kind === 'care' ? { kind, home: where as RanchHome, ...(feedOnly ? { feedOnly: true } : {}) }
-          : kind === 'mine' ? { kind, dig: where as DigId }
+          : kind === 'mine' ? { kind, dig: where as DigId, ...(floor ? { floor } : {}) }
             : kind === 'fish' ? { kind, spot: where as FishingSpotId, ...(fishMode ? { mode: fishMode } : {}) } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
-  const pick = (next: TaskKind) => { setKind(next); setWhere(null); setError(null) }
+  const pick = (next: TaskKind) => { setKind(next); setWhere(null); setFloor(0); setError(null) }
   const assign = (pick: FarmTask) => {
     setBusy(true)
     setError(null)
@@ -470,7 +471,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
             <ul className="grid grid-cols-2 gap-1.5">
               {places.map((p) => (
                 <li key={p.id}>
-                  <Chip className="w-full" selected={where === p.id} aria-pressed={where === p.id} disabled={p.lock !== null} onClick={() => setWhere(p.id)} data-where={p.id}>
+                  <Chip className="w-full" selected={where === p.id} aria-pressed={where === p.id} disabled={p.lock !== null} onClick={() => { setWhere(p.id); setFloor(0) }} data-where={p.id}>
                     <span className="block text-left">
                       <span className="block">{capital(p.name)}</span>
                       {p.lock && <span className="block text-[11px] text-ink-faint">{p.lock}</span>}
@@ -479,6 +480,12 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
                 </li>
               ))}
             </ul>
+            {kind === 'mine' && where && <label className="flex min-h-11 flex-wrap items-center gap-2">Work floor
+              <select className="min-h-11 bg-panel" value={floor} onChange={event => setFloor(Number(event.target.value))}>
+                <option value={0}>Deepest reached</option>
+                {Array.from({ length: digFloor(save.places[where as DigId]) }, (_, i) => i + 1).map(n => <option key={n} value={n}>Floor {n} · G{gradeAt(n)}</option>)}
+              </select>
+            </label>}
             {kind === 'care' && <label className="flex min-h-11 items-center gap-2 text-[14px]">
               <input type="checkbox" checked={feedOnly} onChange={(e) => setFeedOnly(e.currentTarget.checked)} /> Feed only
             </label>}

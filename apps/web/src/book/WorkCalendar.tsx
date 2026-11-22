@@ -1,6 +1,6 @@
 import {
-  dateOf, DAYS_PER_SEASON, handsTonight, MEAL_KEEPS, newTodayV4, SEASON_NAMES, SEASONS, TASK_NAMES, turnOnDate, weekdayOf, weekdayShort,
-  workDayRecord, workNeeds, type FarmSave, type Season, type StoryPack, type TalentOf, type WorkDayRecord, type WorkTotals,
+  dateOf, DAYS_PER_SEASON, TOOL_NAMES, toolTierName, SEASON_NAMES, SEASONS, TASK_NAMES, turnOnDate, weekdayOf, weekdayShort,
+  workDayRecord, type FarmSave, type Season, type StoryPack, type TalentOf, type WorkDayRecord, type WorkTotals,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '@luismlorenzana/uma-kit/ui'
@@ -16,6 +16,7 @@ import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { nightWords, taskWords } from './board-words'
+import { forecastCrewOn } from './work-plan'
 
 const LAST_PAGE = Math.ceil(DAYS_PER_SEASON / CALENDAR_PAGE_SIZE) - 1
 const coveredTone = 'bg-emerald-100 text-emerald-900'
@@ -24,15 +25,8 @@ const neutral = 'text-ink-faint'
 const total = (counts: WorkTotals | undefined): number => Object.values(counts ?? {}).reduce((sum, n) => sum + n, 0)
 
 function workOn(save: FarmSave, day: number, pack: StoryPack | null, talents: TalentOf) {
-  const snapshot: FarmSave = day === save.calendar.day ? save : {
-    ...save, calendar: { ...save.calendar, day }, today: newTodayV4(),
-    fields: { plots: save.fields.plots.map(plot => ({ ...plot, tiles: plot.tiles.map(tile => ({ ...tile, watered: false })) })) },
-    ranch: { ...save.ranch, animals: save.ranch.animals.map(animal => ({ ...animal, fed: false, cared: false })) },
-    farm: { ...save.farm, pantry: save.farm.pantry.filter(lot => day - lot.day < MEAL_KEEPS) },
-  }
-  const forecast = handsTonight(snapshot, snapshot, talents, pack)
-  const needs = workNeeds(forecast.save, pack)
-  return { record: workDayRecord(snapshot, forecast.lines, needs), lines: forecast.lines, needs }
+  const { snapshot, lines, needs } = forecastCrewOn(save, day, pack, talents)
+  return { record: workDayRecord(snapshot, lines, needs), lines, needs }
 }
 
 export default function WorkCalendar({ save }: { save: FarmSave }) {
@@ -98,7 +92,7 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
             const n = first + i + 1
             const covered = record ? total(record.covered) : null
             const missing = record ? total(record.missing) : null
-            const crew = live?.lines.filter(line => line.tasks > 0) ?? []
+            const crew = live?.lines.filter(line => line.tasks > 0 || line.forge) ?? []
             const { shown, more } = cellFaces(crew)
             return <li key={n} className="min-h-0 min-w-0">
               <button type="button" aria-pressed={n === selected.day} onClick={() => choose(season, year, n)}
@@ -125,12 +119,14 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
       <aside className="min-w-0 flex-[2] overflow-y-auto rounded-md border border-hairline bg-panel p-2 text-[13px]" aria-label="Selected day's work" data-work-day-detail>
         <h2 className="font-display text-[17px] font-bold">{chosen.day !== null ? shortDate(chosen.day, save.calendar) : SEASON_NAMES[season] + ' ' + selected.day}</h2>
         <p className="text-ink-soft">{recorded ? 'End-of-day record' : actual ? 'Morning shift complete' : isToday ? 'Today’s shift forecast' : chosen.day === null ? 'Date added later' : 'Forecast using current crops, stock and orders'}</p>
+        {[...save.forge?.installed ?? [], ...save.forge?.tool ? [save.forge.tool] : []].filter(order => order.due === chosen.day).map(order =>
+          <Link key={order.tool} className="flex min-h-11 items-center font-semibold" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} ready ›</Link>)}
         {chosen.record ? <WorkDetails record={chosen.record} /> : <p className="py-2">No shift recorded.</p>}
         {!!chosen.live?.needs.length && <ul className="my-2 space-y-1">{chosen.live.needs.map(({ task, need }) => <li key={JSON.stringify(task)}>{taskWords(task, save.fields.plots.length)} · {need}</li>)}</ul>}
         {chosen.live && !lines.length && <p className="my-2 text-ink-soft">No crew on the farm this day.</p>}
         {lines.length > 0 && <><h3 className="mt-2 font-semibold">Crew on the farm</h3><ul>
           {lines.map(line => <li key={line.id} className="flex flex-col border-b border-hairline py-1"><strong>{nameOf(line.id)}</strong>
-            <span>{plural(line.tasks, 'order')} · {line.spent ? nightWords(line) : '0 of ' + plural(line.actions, 'action') + ' used'}</span>
+            <span>{plural(line.tasks + (line.forge ?? 0), 'order')}{line.forge ? ' · Forge assistant' : ''} · {line.spent ? nightWords(line) : '0 of ' + plural(line.actions, 'action') + ' used'}</span>
             {!actual && !!line.tasks && <span className="text-ink-soft">{save.roster[line.id]?.tasks?.map(task => taskWords(task, save.fields.plots.length)).join(' · ')}</span>}
           </li>)}
         </ul></>}

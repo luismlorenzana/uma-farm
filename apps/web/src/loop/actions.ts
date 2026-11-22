@@ -135,9 +135,9 @@ export const chopAt = (area: string): Promise<Haul> => act((s) => {
   return { save: done.save, result: done.haul }
 })
 /** Fishes a spot: the catch, measured; null when nothing bit (a thin spot). */
-export const fishAt = (spot: string): Promise<Measured | null> => act((s) => {
+export const fishAt = (spot: string): Promise<{ caught: Measured | null; extra: Measured | null }> => act((s) => {
   const done = fish(s, spot)
-  return { save: done.save, result: done.caught }
+  return { save: done.save, result: { caught: done.caught, extra: done.extra } }
 })
 /** Starts a load at a station, ready the next morning. */
 export const loadAt = (station: StationId, item: string, count: number, useReserved = false) => change((s) => startLoad(s, station, item, count, useReserved))
@@ -168,8 +168,8 @@ export const buyAnimalOf = (kind: AnimalKind): Promise<Animal> => act((s) => {
 /** Buys fodder for the silo at the rancher's: free in town. */
 export const buyFodderOf = (count: number) => change((s) => buyFodder(s, count))
 /** Works a face at a dig: an action; what it brought. */
-export const faceAt = (dig: DigId): Promise<Face> => act((s) => {
-  const done = workFace(s, dig)
+export const faceAt = (dig: DigId, floor?: number): Promise<Face> => act((s) => {
+  const done = workFace(s, dig, floor)
   return { save: done.save, result: done.face }
 })
 /** Takes a dig's stairs: free. */

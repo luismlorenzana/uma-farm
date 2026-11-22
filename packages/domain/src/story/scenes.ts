@@ -4,6 +4,7 @@
 // them, once the summary is put away: right after you introduce yourself in town. The opening and the bench's scene go in `diary.read`, a meeting scene in `arrivals`. Light on
 // purpose: the shell reads it, and the scenes' lines and the player load on demand; the opening's lines are the pack's
 // (`openingOf`), the bench scene's `story/bench.ts`'.
+import { benchOpen } from '../forge/state'
 import type { FarmSave } from '../save/v4'
 
 /** The opening's id, as `diary.read` keeps it. An older v4's `scene:1:close` there is read and means nothing now. */
@@ -17,7 +18,7 @@ export type SceneId = OpeningSceneId | typeof BENCH_SCENE | `arrival:${string}`
 /** The Uma a meeting scene belongs to, or null for the opening or the bench's. */
 export const arrivalOf = (id: SceneId): string | null => (id.startsWith('arrival:') ? id.slice('arrival:'.length) : null)
 
-type DueSave = Pick<FarmSave, 'roster' | 'diary' | 'summary' | 'farmer' | 'arrivals' | 'buildings'>
+type DueSave = Pick<FarmSave, 'roster' | 'diary' | 'summary' | 'farmer' | 'arrivals' | 'buildings' | 'forge'>
 
 /** Everyone met whose meeting scene hasn't played, by the day you met her, then the cast's order (`order`, the pack's),
  * then her id. */
@@ -35,7 +36,7 @@ export function sceneDue(save: DueSave, order: readonly string[] = []): SceneId 
   if (save.farmer.name === '') return null
   if (!save.diary.read.includes(OPENING_SCENE_ID)) return OPENING_SCENE_ID
   if (save.summary !== null) return null
-  if (save.buildings.forge !== undefined && !save.diary.read.includes(BENCH_SCENE)) return BENCH_SCENE
+  if (benchOpen(save) && !save.diary.read.includes(BENCH_SCENE)) return BENCH_SCENE
   const waiting = unwelcomed(save, order)[0]
   return waiting ? `arrival:${waiting}` : null
 }

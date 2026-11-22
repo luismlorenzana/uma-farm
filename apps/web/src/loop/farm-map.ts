@@ -4,7 +4,7 @@
 // town at the far end. The field itself is its own screen, a plot a page (`/field`); the map shows its sign, a lot's
 // size, with its counts. Where a tap goes, and why a place is locked. Pure, so the map and the tests read the same.
 import {
-  farmRankOf, placeBuilt, placeOpen, type FarmPlace, type FarmPlaceId, type HomesteadPlace, type PlaceOpens, type FarmSave,
+  benchOpen, farmRankOf, placeBuilt, placeOpen, type FarmPlace, type FarmPlaceId, type HomesteadPlace, type PlaceOpens, type FarmSave,
 } from '@farm/domain'
 
 /** The map's height in cells: three lots of two, and a path's row. */
@@ -97,7 +97,7 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
 
 /** Where a tap on a place goes: its screen once it's open and landed, else its quick look. The Forge's ring bench
  * opens in its quick look. */
-export function placeLink(save: Pick<FarmSave, 'farm' | 'buildings' | 'roster'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, string> = PLACE_SCREENS): string {
+export function placeLink(save: Pick<FarmSave, 'farm' | 'buildings' | 'roster' | 'forge' | 'forge'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, string> = PLACE_SCREENS): string {
   if (place.id === 'expeditions' && (farmRankOf(save.farm.points) >= 7 || placeBuilt(save, 'expeditions'))) return '/town?at=expeditions&sheet=expeditions'
   return lockOf(save, place, screens) === null ? screens.get(place.id) ?? `/?peek=${place.id}` : `/?peek=${place.id}`
 }
@@ -127,7 +127,7 @@ export const NOT_BUILT = 'Not built'
  * the first Romance 8. */
 export function lockOf(save: Pick<FarmSave, 'farm' | 'buildings' | 'roster'>, place: FarmPlace,
   screens: ReadonlyMap<FarmPlaceId, unknown> | ReadonlySet<FarmPlaceId> = PLACE_SCREENS): string | null {
-  if (place.id === 'forge') return save.buildings.forge !== undefined ? null : BENCH_LOCK
+  if (place.id === 'forge' && (benchOpen(save) || placeBuilt(save, 'forge'))) return null
   const opens = place.opens
   if (opens.by === 'build' && !placeBuilt(save, place.id)) {
     if (save.farm.builds.includes(place.id)) return 'Builds tonight'

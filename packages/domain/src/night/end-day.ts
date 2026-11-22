@@ -64,6 +64,7 @@ import { castOrder, type StoryPack } from '../story/pack'
 import { favouriteOf, festivalsOf, storyDaysOn } from '../story/placeholders'
 import { unlockNotes } from '../town/notes'
 import { checkGoalsNight, type GoalsTonight } from '../farm/diary'
+import { deliverForge } from '../forge/orders'
 import { raiseBuilds } from '../farm/builds'
 import { settleAccounts, type FoodBill } from '../farm/economy'
 import { eatTonight } from '../farm/food'
@@ -294,12 +295,20 @@ export const resetWorkshops: NightStep = same
  * ×1.25 well fed, ×1.05 or ×1.10 for her friendship. Then every Uma ranks up where her points and challenge are both met,
  * one rank a night.
  */
+function forgingLine(save: FarmSave, id: string): number {
+  const love = save.love[id]
+  if (!love) return 1
+  if (love.stage === 'spouse' || love.stage === 'wedding' || love.stage === 'proposal' || (love.stage === 'romance' && love.level >= 5)) return 1.2
+  return love.stage !== 'friendship' || love.level >= 2 ? 1.1 : 1
+}
+
 export const tickRanks: NightStep = (night) => {
   const talentOf = talentsOf(night)
   const { story } = night.context
   const favourites = new Map(Object.keys(night.save.roster).map((id) => [id, story ? favouriteOf(story, id) : null]))
   // The server's workshop gets her rank credit tonight, even if she spent more time on another job.
   const worked: WorkedDay[] = [
+    ...night.notes.hands.flatMap((hand): WorkedDay[] => hand.forge ? [{ outfitId: hand.id, activity: 'forging' }] : []),
     ...night.notes.hands.flatMap((hand): WorkedDay[] => hand.restaurant ? [{ outfitId: hand.id, activity: 'serving' }] : []),
     ...night.notes.worked.map((w) => ({ outfitId: w.outfitId, activity: PLACE_ACTIVITY[w.place] })),
     ...night.notes.tended.map((t): WorkedDay => ({ outfitId: t.outfitId, activity: 'farming' })),
@@ -308,6 +317,7 @@ export const tickRanks: NightStep = (night) => {
   const mentors = story ? mentorsTonight(night.save, story, night.notes.worked, night.notes.tended) : null
   const { save, lines } = tickRankRules(night.save, worked, (outfitId, activity) => ({
     talent: talentOf(outfitId, activity), favourite: favourites.get(outfitId) === activity, ...(mentors?.has(outfitId) ? { mentor: mentors.get(outfitId)! } : {}),
+    ...(activity === 'forging' && favourites.get(outfitId) === activity ? { line: forgingLine(night.save, outfitId) } : {}),
   }), night.before.roster)
   return { ...night, save, notes: { ...night.notes, ranks: lines } }
 }
@@ -359,7 +369,7 @@ export const turnCalendar: NightStep = (night) =>
 /** Step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and the morning says so. */
 export const raiseBuildings: NightStep = (night) => {
   const { save, built } = raiseBuilds(night.save)
-  return { ...night, save, notes: { ...night.notes, built } }
+  return { ...night, save: deliverForge(save), notes: { ...night.notes, built } }
 }
 
 /** Step 8, after the goals: the world's Town notes whose unlock holds on the morning's date (a season, a festival,
@@ -642,7 +652,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 8, name: 'raiseBuildings', run: raiseBuildings, what: 'Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news' },
   { step: 8, name: 'checkGoals', run: checkGoals, what: 'The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources' },
   { step: 8, name: 'unlockTownNotes', run: unlockTownNotes, what: 'Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them' },
-  { step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning' },
+  { step: 8, name: 'openRingBench', run: openRingBench, what: 'The Ring Bench opens the morning after the first Romance 8 event and its smith’s scene becomes due. The tool workshop installs paid orders and completes heirlooms on their due dawn' },
   { step: 8, name: 'householdMilestones', run: householdMilestones, what: 'Household milestones: the first wedding and each set of five through fifty are news once. Five spouses bring the furniture set. The closing celebration is Ready on the fiftieth wedding day. Earlier celebrations open the morning after their milestone wedding' },
   { step: 8, name: 'festivalPreparations', run: festivalPreparations, what: 'A pledged Greater Festival contribution uses the next matching exact-grade farmhand output or expedition return in its preparation window and credits its producer or party' },
   { step: 9, name: 'serveTheReception', run: serveTheReception, what: 'A wedding’s reception: everyone who lives on the farm (the spouses in their rooms) well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running' },
