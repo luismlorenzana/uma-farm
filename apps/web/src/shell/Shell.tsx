@@ -51,7 +51,7 @@ const ContestSheet = lazy(() => import('../loop/Contest'))
 const FestivalSheet = lazy(() => import('../loop/FestivalSheet'))
 const StovePlayer = lazy(() => import('../loop/StovePlayer'))
 
-const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
+const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank', 'next'] as const
 type LoopSheet = typeof SHEETS[number]
 const isLoopSheet = (sheet: string | null): sheet is LoopSheet => (SHEETS as readonly (string | null)[]).includes(sheet)
 

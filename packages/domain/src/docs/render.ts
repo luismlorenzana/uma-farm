@@ -93,7 +93,7 @@ import { DATE_FROM, EVENING_FACTOR, eveningCost, eveningMoments, eveningPoints, 
 import { MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, STAGE_NAMES, STAGE_RULES } from '../romance/loop'
 import { MEALS } from '../save/v4'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
-import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, RING_INPUTS, ringPercent } from '../romance/bench'
+import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, RING_INPUTS, ringPercent, STARTER_RING_LOGS } from '../romance/bench'
 import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_FRIENDS } from '../romance/wedding'
 import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOMESTEAD_ROW_MARRIED, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
 import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
@@ -1182,6 +1182,7 @@ function ringsBlock(): string {
 function benchRecipe(): string {
   return table(['', 'The ring bench'], [
     ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and the smith’s scene the next morning'],
+    ['Starter Copper Ring', `${STARTER_RING_LOGS} Pine Logs, any stars, with no paid building or Farm Rank requirement`],
     ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand`],
     ['Cost', 'The goods only: no gold, no game, no assistant, no score'],
     ['Out', 'The ring, ★1 (a Rough make), into the Warehouse'],

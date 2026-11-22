@@ -31,6 +31,7 @@ import { householdReady, isHouseholdId } from './household'
 import { mealEaters, mealsCooked, mealSpeaker } from './loop'
 import { occasionWith } from './occasions'
 import { readiness } from './ready'
+import { alternateRouteDay, originalRouteAvailable } from './route-variants'
 
 /** Her life's short scenes at `?life=`: the night's companion's morning, moving in, the invitation to work, a meal, and
  * today's talk with her. */
@@ -88,9 +89,14 @@ export function mayPlayEvent(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cas
 export const mayAsk = (save: Pick<SaveV4, 'roster' | 'love' | 'today'>, id: string): boolean => met(save, id) && canAsk(save, id)
 
 /** `?memory=<id>:<rung>`: a Memory already played: her meeting scene, or a rung of her route. */
-export function mayReplayMemory(save: Pick<SaveV4, 'roster' | 'love' | 'arrivals' | 'memories'>, id: string, rung: string): boolean {
+export function mayReplayMemory(save: SaveV4, id: string, rung: string, pack?: Parameters<typeof originalRouteAvailable>[1]): boolean {
   if (!met(save, id)) return false
-  return rung === 'arrival' ? save.arrivals.includes(id) : (save.memories[id] ?? []).includes(rung)
+  if (rung === 'arrival') return save.arrivals.includes(id)
+  const alternate = rung.startsWith('alt-')
+  const original = alternate ? rung.slice(4) : rung
+  if (!save.memories[id]?.includes(original)) return false
+  const playedAlternate = alternateRouteDay(save, id, original) !== undefined
+  return alternate ? playedAlternate : !playedAlternate || (!!pack && originalRouteAvailable(save, pack, id, original))
 }
 
 /** `?evening=<id>`: her evening is open to her now (in front of you: home on the farm, a farmhand there on her farm day, or out in

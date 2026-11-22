@@ -28,7 +28,7 @@
 // default mapping: her confession's question and her yes, the wedding, a summer date at the shore; and the wedding
 // night's two. Each one seen joins her gallery.
 import {
-  actionCost, askSteps, beatOf, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
+  actionCost, alternateRouteDay, alternateRouteSteps, askSteps, beatOf, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
   mayAsk, mayPlayEvent, mayReplayMemory, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   dateDayOf, type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
@@ -49,7 +49,7 @@ import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
 import { seeIllustrationOnce } from './actions'
-import { askHerOnce, playHerEvent } from './event-actions'
+import { askHerOnce, playHerEvent, seeOriginalRoute } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
 import { eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords, type PlaceCard } from './event-view'
 import { marriedOf, placeWords } from './hearts-view'
@@ -59,7 +59,7 @@ import { silent } from './ScenePlayer'
 import { WeddingNight } from './WeddingNight'
 
 type Mode = 'event' | 'ask' | 'replay'
-interface Request { mode: Mode; id: string; rung: string | null; from: number | null }
+interface Request { mode: Mode; id: string; rung: string | null; from: number | null; alternate?: true }
 
 const ID = /^s?\d{1,12}$/
 /** What the URL asks the player for: `?event=`, `?ask=` or `?memory=<id>:<rung>[@<n>]`. */
@@ -68,14 +68,14 @@ export function parseRequest(params: URLSearchParams): Request | null {
   if (event && ID.test(event)) return { mode: 'event', id: event, rung: null, from: null }
   const ask = params.get('ask')
   if (ask && ID.test(ask)) return { mode: 'ask', id: ask, rung: 'confession', from: null }
-  const m = /^(s?\d{1,12}):([a-z0-9]{1,16})(?:@(\d{1,2}))?$/.exec(params.get('memory') ?? '')
+  const m = /^(s?\d{1,12}):([a-z0-9-]{1,16})(?:@(\d{1,2}))?$/.exec(params.get('memory') ?? '')
   if (m) return { mode: 'replay', id: m[1]!, rung: m[2]!, from: m[3] ? Number(m[3]) : null }
   return null
 }
 /** `?memory=` for a Memory: from the top, or from its `from`th choice point. */
 export const memoryParam = (id: string, rung: string, from: number | null = null): string => `${id}:${rung}${from ? `@${from}` : ''}`
 /** The player's params, all dropped on close. */
-export const PLAYER_PARAMS = ['event', 'ask', 'memory'] as const
+export const PLAYER_PARAMS = ['event', 'ask', 'memory', 'routeAlt'] as const
 
 /** The location without the player's params. */
 function without(location: { pathname: string; search: string }): string {
@@ -112,16 +112,21 @@ export default function EventPlayer() {
       const state = readiness(save, story, asked.id)
       if (!mayPlayEvent(save, story, asked.id) || !state.rung) return fail()
       if (!canSpendForEvent(save, actionCost('event'), special ?? GAME_DAYS)) return setSpent(true)
-      return setReq({ ...asked, rung: state.rung })
+      const alternate = state.alternate || (params.get('routeAlt') === '1' && /^[frs][0-9]+$/.test(state.rung))
+      return setReq({ ...asked, rung: state.rung, ...(alternate ? { alternate: true } : {}) })
     }
-    if (asked.mode === 'ask') return mayAsk(save, asked.id) ? setReq({ ...asked, rung: 'confession' }) : fail()
+    if (asked.mode === 'ask') return mayAsk(save, asked.id)
+      ? setReq({ ...asked, rung: 'confession', ...(alternateRouteDay(save, asked.id, 'confession') !== undefined ? { alternate: true } : {}) })
+      : fail()
     const rung = asked.rung!
-    return mayReplayMemory(save, asked.id, rung) ? setReq({ ...asked, rung }) : fail()
-  }, [asked, save, story, req])
+    if (!mayReplayMemory(save, asked.id, rung, story)) return fail()
+    return setReq(rung.startsWith('alt-') ? { ...asked, rung: rung.slice(4), alternate: true } : { ...asked, rung })
+  }, [asked, save, story, req, params])
   useEffect(() => {
     if (!req || !story) return
     let live = true
-    void herEventOf(story, req.id, req.rung).then(({ steps: found, outfit: own }) => {
+    const load = req.alternate ? Promise.resolve({ steps: alternateRouteSteps(story, req.id, req.rung), outfit: undefined }) : herEventOf(story, req.id, req.rung)
+    void load.then(({ steps: found, outfit: own }) => {
       if (!live) return
       const from = req.from ? choicePointsOf(found)[req.from - 1] ?? null : null
       setOutfit(own)
@@ -215,10 +220,10 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const wedding = rung === 'wedding' && mode !== 'ask'
   // The guests, settled as the wedding starts (she isn't a spouse yet), and their line before its first.
   const guests = useMemo(() => (wedding && mode === 'event' ? weddingGuests(save, pack, id) : []), []) // eslint-disable-line react-hooks/exhaustive-deps
-  const beat = beatOf(pack, id, rung)
+  const beat = req.alternate ? undefined : beatOf(pack, id, rung)
   // Her illustrations, by the default mapping (her confession, the wedding, a summer date at the shore) unless the story
   // names its own. The shore is where the event plays: her beat's place, else its first place step.
-  const illustrated = eventIllustration({ rung, place: beat?.place ?? firstPlace(script), day: dateDayOf(save.calendar.day, save.calendar) })
+  const illustrated = req.alternate ? null : eventIllustration({ rung, place: beat?.place ?? firstPlace(script), day: dateDayOf(save.calendar.day, save.calendar) })
   const steps = useMemo((): readonly Step[] => illustrate(illustrated, wedding
     ? [...(mode === 'event' ? [{ narrate: guestsLine(guests.map(nameOf)) } as Step] : []), ...script.filter((s) => !('place' in s))]
     : script), [script]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -259,7 +264,10 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   useEffect(() => {
     if (!ended || extraNow || phase !== 'scene' || finishing.current) return
     finishing.current = true
-    if (mode === 'replay') return setPhase('replayed')
+    if (mode === 'replay') {
+      if (!req.alternate) void seeOriginalRoute(id, rung).catch((e: unknown) => setError(words(e)))
+      return setPhase('replayed')
+    }
     if (mode === 'ask') {
       const chosen = shown.filter((s): s is { choice: ChoiceOption[] } => 'choice' in s).map((s, i) => s.choice[picks[i]!]?.answer).find((a) => a !== undefined) ?? 'not-yet'
       setAnswer(chosen)
@@ -274,7 +282,7 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const commitEvent = (reception: Reception) => {
     setPhase('saving')
     const extra = rung === 'proposal' && ring ? { ring } : wedding && chosenPlace ? { place: chosenPlace, reception } : {}
-    void playHerEvent(id, { event: { id: rung, steps }, picks, plays, ...extra })
+    void playHerEvent(id, { event: { id: rung, steps }, alternate: req.alternate, picks, plays, ...extra })
       .then((done) => { setCard(done); setPhase('card') }, (e: unknown) => { setError(words(e)); setPhase('card') })
   }
 
@@ -319,7 +327,7 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
         {phase === 'moving' && <WeddingNight key="moving" save={save} id={id} event="moving-in" onDone={() => setPhase('stage')} />}
         {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save) : null} save={save} onContinue={onClose} />}
         {phase === 'asked' && <EndNote text={error ?? (answer === 'not-yet' ? `${name} smiles. “Whenever you’re ready.” Ask again tomorrow.` : '')} onDone={onClose} />}
-        {phase === 'replayed' && <EndNote text="A Memory, replayed. Replays give no points." onDone={onClose} />}
+        {phase === 'replayed' && <EndNote text={error ?? 'A Memory, replayed. Replays give no points.'} onDone={onClose} />}
         {log && <LogSheet lines={lines} onClose={() => onLog(false)} />}
       </Shell>
     )

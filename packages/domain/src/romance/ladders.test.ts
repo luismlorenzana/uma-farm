@@ -405,10 +405,10 @@ describe('Ready', () => {
     expect(readiness(save, packWithTrigger({ kind: 'working', activity: 'foraging' }), ONE).ready).toBe(true)
     expect(readiness(save, packWithTrigger({ kind: 'working', activity: 'farming' }), ONE).ready).toBe(true)
     const item = packWithTrigger({ kind: 'item', good: 'golden-carrot' })
-    expect(readiness(save, item, ONE).waits).toMatchObject({ kind: 'setup' })
+    expect(readiness(save, item, ONE)).toMatchObject({ ready: true, alternate: [{ kind: 'setup' }] })
     expect(readiness(give(save, 'golden-carrot', 4), item, ONE).ready).toBe(true)
     const bond = packWithTrigger({ kind: 'bond', with: TWO, level: 2 })
-    expect(readiness({ ...save, bonds: { [pairKey(ONE, TWO)]: 149 } }, bond, ONE).waits).toMatchObject({ kind: 'setup' })
+    expect(readiness({ ...save, bonds: { [pairKey(ONE, TWO)]: 149 } }, bond, ONE)).toMatchObject({ ready: true, alternate: [{ kind: 'setup' }] })
     expect(readiness({ ...save, bonds: { [pairKey(ONE, TWO)]: 150 } }, bond, ONE).ready).toBe(true)
     expect(BOND_HEARTS.map(bondHearts)).toEqual([1, 2, 3, 4, 5])
     const mine = packWithTrigger({ kind: 'working', activity: 'mining' })
@@ -452,7 +452,7 @@ describe('Ready', () => {
   })
 
   it('documents every wait, in the order it\'s said', () => {
-    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'gate', 'night', 'ring', 'setup', 'today', 'wedding-day'])
+    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'night', 'ring', 'today', 'wedding-day'])
   })
 })
 

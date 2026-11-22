@@ -21,7 +21,7 @@ import { BENCH_SCENE, readScene, sceneDue } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { joinCast } from './meeting.fixture'
 import {
-  BENCH_WORDS, benchDue, benchGrades, benchOpen, benchPick, benchStock, betterRings, forgeRecipe, giveRing, heldRings, makeRing, MAKE_BONUS, ringPercent,
+  BENCH_WORDS, benchDue, benchGrades, benchOpen, benchPick, benchStock, betterRings, forgeRecipe, giveRing, heldRings, makeRing, makeStarterRing, MAKE_BONUS, ringPercent, STARTER_RING_LOGS,
   type BenchInput,
 } from './bench'
 import { playEvent, type EventOutcome, type PlayScore } from './events'
@@ -62,6 +62,21 @@ const engagedSoon = (day = 20): SaveV4 => withLove(farm(day), { stage: 'proposal
 const engaged = (day = 21): SaveV4 => withLove(farm(day), { stage: 'wedding', level: 10, points: 0, last: day - 1, ring: 3 })
 
 describe('the rings', () => {
+  it('makes a starter ring on a Rank 1 farm with no refined goods or cash', () => {
+    const fresh = { ...farm(), gold: 0 }
+    const supplied = give(give(fresh, 'pine-log', 1, STARTER_RING_LOGS - 2), 'pine-log', 3, 2)
+    expect(() => makeStarterRing(supplied)).toThrow(BENCH_WORDS.closed)
+    const done = makeStarterRing(bench(supplied))
+    expect(done.ring).toBe('ring-g1')
+    expect(heldRings(done.save)).toEqual(['ring-g1'])
+    expect(goodCount(done.save.items, 'pine-log')).toBe(0)
+    expect(done.save.gold).toBe(0)
+    expect(done.save.today.ring).toBe(1)
+    expect(done.save.today.actions).toBe(fresh.today.actions)
+    expect(() => makeStarterRing(done.save)).toThrow(BENCH_WORDS.today)
+    expect(parseSaveV6(json(done.save))).toEqual(done.save)
+  })
+
   it('are ten goods at their ★1 prices, Copper to Orichalcum Ring, apart from the 260 goods', () => {
     expect(RING_IDS).toEqual(['ring-g1', 'ring-g2', 'ring-g3', 'ring-g4', 'ring-g5', 'ring-g6', 'ring-g7', 'ring-g8', 'ring-g9', 'ring-g10'])
     expect(RING_GOODS.map((g) => g.price)).toEqual([205, 275, 340, 450, 580, 745, 950, 1220, 1555, 2025])

@@ -119,6 +119,32 @@ export function makeRing(save: SaveV4, inputs: readonly BenchInput[]): { save: S
   return { save: { ...save, items: addGoods(taken, ring, 1, 1), today: { ...save.today, ring: grade } }, ring }
 }
 
+/** A starter recipe from Day 1 forest stock. Available after the bench opens. */
+export const STARTER_RING_LOGS = 6
+export const STARTER_RING_GOOD = 'pine-log'
+
+export function starterRingLock(save: FarmSave): string | null {
+  if (!benchOpen(save)) return BENCH_WORDS.closed
+  if (save.today.ring > 0) return BENCH_WORDS.today
+  const missing = STARTER_RING_LOGS - goodCount(save.items, STARTER_RING_GOOD)
+  return missing > 0 ? `Gather ${missing} more Pine ${missing === 1 ? 'Log' : 'Logs'} in the Woods.` : null
+}
+
+export function makeStarterRing(save: FarmSave): { save: FarmSave; ring: string } {
+  const refusal = starterRingLock(save)
+  if (refusal) throw new SaveRuleError('locked', refusal)
+  const ring = ringId(1)
+  let items = save.items
+  let remaining = STARTER_RING_LOGS
+  for (let star = 1; remaining > 0 && star <= 5; star++) {
+    const take = Math.min(remaining, items[STARTER_RING_GOOD]?.[star - 1] ?? 0)
+    if (take === 0) continue
+    items = takeGoods(items, STARTER_RING_GOOD, star, take)
+    remaining -= take
+  }
+  return { save: { ...save, items: addGoods(items, ring, 1, 1), today: { ...save.today, ring: 1 } }, ring }
+}
+
 // --- Her ring --------------------------------------------------------------------------------------
 
 /** Her ring's bonus once married, a grade's worth: +1% a grade, every ring a Rough make until the merge game. */

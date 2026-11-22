@@ -1,32 +1,12 @@
-// When her next event is Ready: written with the ladders, since the
-// Ready chips, sort and filter read it before the events play. All four:
-//
-//   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
-//   2 she hasn't played an event today
-//   3 its one setup is met, if it has one: she works a named place today (met every day), a
-//     named good is in the Warehouse, her bond with a named Uma has reached a level
-//   4 her chapter is open: when her next event is her chapter's first, the chapter's gate holds, if it has one
-//
-// Where she lives doesn't matter: her event plays from her menu in town or from her profile, an action each.
-//
-// A setup is never an hour, the weather, a season or a festival, and nothing waits on the story: an event the pack
-// doesn't script plays the default story's (`placeholders.ts`). Her chapter may ask the farm for something first
-// (`chapters.ts`): its gate holds back its first event, and may be a season or a festival. What isn't met is said:
-// `waits` names the first thing in the way, in this order: the route done; S2 and S4, which come at night; a "Not yet"
-// at her confession; her chapter's gate; a working setup at a place not built yet; the bar or the day; the ring; today;
-// the setup. Read live: Ready changes by day, so the morning never stores it.
-import { bondHearts } from '../farm/bonds'
+// An event uses its original staging when its requirements hold. An alternate advances the same rung when they don’t.
 import { RING_IDS } from '../goods/ids'
-import type { Activity } from '../farm/ranks'
 import { SaveRuleError } from '../save/rules'
-import { pairKey } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { StoryTrigger, Trigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
-import { beatOf } from '../story/placeholders'
 import { bar, NIGHT_RUNGS, WAITING_RUNGS } from './love'
-import { chapterNow } from './chapters'
+import { routeRequirements, type RouteRequirement } from './route-variants'
 
 
 /** A setup the player meets on the day: she works a place, a good is held, a bond is reached. */
@@ -58,21 +38,18 @@ export type Wait =
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
   { condition: 'Her bar is full for the rung; a waiting rung opens the day after the rung before, the proposal needs a ring, and a planned wedding waits for its date', unmet: '`bar`, `day`, `ring`, `wedding-day`' },
   { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
-  { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters)' },
-  { condition: 'Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival)', unmet: '`gate`: “Opens when the Kitchen is built”' },
+  { condition: 'A chapter requirement or Warehouse item or bond decides the scene version, once the event is Ready', unmet: 'Play an alternate now. The original can be viewed in the Library when its requirements are met.' },
 ]
 /** The waits in the order `readiness` says them: the first one met is the one shown. */
 export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'done', when: 'Her route is complete (S5 has played)' },
   { kind: 'night', when: 'S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar`' },
   { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile' },
-  { kind: 'gate', when: 'Her next event opens her chapter, and its gate doesn’t hold yet' },
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
   { kind: 'wedding-day', when: 'The wedding is scheduled for a later day' },
   { kind: 'ring', when: 'The proposal, with no ring in the Warehouse' },
   { kind: 'today', when: 'She played one of her events today' },
-  { kind: 'setup', when: 'Its day setup isn’t met today' },
 ]
 
 export interface Readiness {
@@ -81,21 +58,8 @@ export interface Readiness {
   ready: boolean
   /** The first thing in the way, or null when Ready. */
   waits: Wait | null
-}
-
-/** Whether her day's work setup is met. Only a farmhand works the farm, and only overnight: a working setup holds every
- * day, whether or not its place is built, so her event never waits on work she may not do. */
-export function worksToday(_save: SaveV4, _id: string, _activity: Activity): boolean {
-  return true
-}
-
-/** Whether a day setup is met. */
-export function setupMet(save: SaveV4, id: string, setup: Setup): boolean {
-  switch (setup.kind) {
-    case 'working': return worksToday(save, id, setup.activity)
-    case 'item': return goodCount(save.items, setup.good) > 0
-    case 'bond': return bondHearts(save.bonds[pairKey(id, setup.with)] ?? 0) >= setup.level
-  }
+  /** Requirements for the original scene when an alternate is available. */
+  alternate?: readonly RouteRequirement[]
 }
 
 /** Her next event's state, wherever she lives. Refused for someone you haven't met. */
@@ -108,14 +72,11 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'>
   if (rung === null) return wait({ kind: 'done' })
   if (NIGHT_RUNGS.includes(rung)) return wait({ kind: now.full ? 'night' : 'bar' })
   if (love.stage === 'confession' && love.friend) return wait({ kind: 'friend' })
-  const gate = chapterNow(save, pack, id).waits
-  if (gate) return wait({ kind: 'gate', gate })
-  const trigger: Trigger = beatOf(pack, id, rung)?.trigger ?? { kind: 'hearts' }
   const day = save.calendar.day
   if (WAITING_RUNGS.includes(rung) ? day <= love.last : !now.full) return wait({ kind: WAITING_RUNGS.includes(rung) ? 'day' : 'bar' })
   if (rung === 'wedding' && love.weddingDay !== undefined && day < love.weddingDay) return wait({ kind: 'wedding-day', day: love.weddingDay })
   if (rung === 'proposal' && !RING_IDS.some((ring) => goodCount(save.items, ring) > 0)) return wait({ kind: 'ring' })
   if (save.today.events.includes(id) || love.last === day) return wait({ kind: 'today' })
-  if ((trigger.kind === 'working' || trigger.kind === 'item' || trigger.kind === 'bond') && !setupMet(save, id, trigger)) return wait({ kind: 'setup', setup: trigger })
-  return { rung, ready: true, waits: null }
+  const alternate = routeRequirements(save, pack, id, rung)
+  return { rung, ready: true, waits: null, ...(alternate.length ? { alternate } : {}) }
 }

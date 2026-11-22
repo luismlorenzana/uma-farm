@@ -260,7 +260,7 @@ describe('her chapters', () => {
     expect(heartRows(farm(), PACK, nameOf).map((r) => glanceWords(r.chapter))).toEqual(['Ch. 1 · Getting to know her', 'Ch. 1 · Getting to know her', 'Ch. 1 · Getting to know her'])
   })
 
-  it('with the pack’s six, the third waits for the Kitchen: her row, her Next card and her chapters say so', () => {
+  it('offers an alternate immediately and keeps the Kitchen requirement on the original', () => {
     const save = met(farm({ [ONE]: { level: 6, points: 440 } }))
     const view = chaptersView(save, six, ONE, nameOf)
     expect(view.chapters.map((c) => c.title)).toEqual(SIX.map((c) => c.title))
@@ -268,11 +268,11 @@ describe('her chapters', () => {
     expect(view.chapters[2]!.gate).toBe('Opens when the Kitchen is built')
     expect(view.next).toEqual({ title: 'Hand in hand', after: 'After Friendship 10', gate: null })
     const state = readiness(save, six, ONE)
-    expect(state.waits).toEqual({ kind: 'gate', gate: { kind: 'built', place: 'kitchen' } })
-    expect(nextWords(state, { points: 440, cost: 440 }, nameOf)).toBe('Opens when the Kitchen is built')
-    expect(readyWords(state, { points: 440, cost: 440 }, nameOf)).toBe('Friendship 7 · Opens when the Kitchen is built')
+    expect(state).toMatchObject({ ready: true, waits: null, alternate: [{ kind: 'gate', gate: { kind: 'built', place: 'kitchen' } }] })
+    expect(nextWords(state, { points: 440, cost: 440 }, nameOf)).toBe('Alternate scene ready')
+    expect(readyWords(state, { points: 440, cost: 440 }, nameOf)).toBe('Friendship 7 · Alternate scene ready')
     const row = heartRows(save, six, nameOf).find((r) => r.id === ONE)!
-    expect([glanceWords(row.chapter), row.note]).toEqual(['Ch. 3 · Kitchen days', 'Friendship 7 · Opens when the Kitchen is built'])
+    expect([glanceWords(row.chapter), row.note]).toEqual(['Ch. 3 · Kitchen days', 'Friendship 7 · Alternate scene ready'])
     // Built, she's Ready and the gate's words go.
     const kitchen = { ...save, buildings: { ...save.buildings, kitchen: 1 } }
     expect(readiness(kitchen, six, ONE).ready).toBe(true)

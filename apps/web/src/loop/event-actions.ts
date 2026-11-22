@@ -4,7 +4,7 @@
 // (`playOccasion`), each cost an action, the special day's event actions first (the story's special days: its year's
 // festivals and the met Umas' birthdays). Apart from `actions.ts` so the events' rules load with the player. Loaded on
 // demand.
-import { askHer, GAME_DAYS, playEvent, playOccasion, touched, type Answer, type EventCard, type EventOutcome, type SpecialDays } from '@farm/domain'
+import { askHer, GAME_DAYS, recordOriginalRoute, playEvent, playOccasion, touched, type Answer, type EventCard, type EventOutcome, type SpecialDays } from '@farm/domain'
 import { commit, useGame } from '../save/game'
 import { libraryChange } from '../library/changes'
 import { specialDays, storyReady } from '../story/story'
@@ -36,6 +36,15 @@ export async function playOccasionOnce(id: string, occasion: string): Promise<vo
   const save = useGame.getState().save
   if (!save) throw new Error('No farm yet.')
   await commit(touched(libraryChange(save, playOccasion(save, pack, id, special, occasion), pack, special), new Date().toISOString()))
+}
+
+/** Records the first viewing of an unlocked original. No action or relationship reward. */
+export async function seeOriginalRoute(id: string, rung: string): Promise<void> {
+  const pack = await storyReady()
+  const save = useGame.getState().save
+  if (!save) return
+  const next = recordOriginalRoute(save, pack, id, rung)
+  if (next !== save) await commit(touched(next, new Date().toISOString()))
 }
 
 /** Ask her: her answer, once a day, paying nothing; Yes moves her to romance. One stamped change. */

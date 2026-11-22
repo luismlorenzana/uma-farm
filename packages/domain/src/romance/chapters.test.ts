@@ -14,6 +14,9 @@ import { STAND_IN_FILES } from '../story/stand-in'
 import { chapterAt, chapterBegun, chapterNow, chaptersOpened, chapterTitle, gateHolds, gateWords, herChapters, rungPlayed } from './chapters'
 import { joinCast } from './meeting.fixture'
 import { readiness } from './ready'
+import { alternateRouteSteps, originalRouteAvailable, originalRouteDay, recordOriginalRoute } from './route-variants'
+import { mayReplayMemory } from './links'
+import { playEvent } from './events'
 
 const AT = '2026-11-11T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -111,25 +114,25 @@ describe('a chapter’s gate', () => {
   /** She's played F6 and her F7 bar is full: her next event opens Kitchen days. */
   const atSeven = (day = 5) => withLove(farm(day), ONE, { stage: 'friendship', level: 6, points: 440 })
 
-  it('holds back its first event until it holds: Ready says “gate”', () => {
+  it('offers an alternate when the original has an unmet chapter requirement', () => {
     const save = atSeven()
     expect(chapterNow(save, pack, ONE)).toMatchObject({ current: { title: 'Kitchen days' }, waits: KITCHEN })
-    expect(readiness(save, pack, ONE)).toEqual({ rung: 'f7', ready: false, waits: { kind: 'gate', gate: KITCHEN } })
-    // Ahead of a short bar.
-    expect(readiness(withLove(save, ONE, { points: 0 }), pack, ONE).waits).toEqual({ kind: 'gate', gate: KITCHEN })
+    expect(readiness(save, pack, ONE)).toEqual({ rung: 'f7', ready: true, waits: null, alternate: [{ kind: 'gate', gate: KITCHEN }] })
+    // She still needs the ordinary points.
+    expect(readiness(withLove(save, ONE, { points: 0 }), pack, ONE).waits).toEqual({ kind: 'bar' })
     expect(readiness(built(save, 'kitchen'), pack, ONE)).toEqual({ rung: 'f7', ready: true, waits: null })
     expect(chapterNow(built(save, 'kitchen'), pack, ONE).waits).toBeNull()
     // With the defaults, nothing waits.
     expect(readiness(save, PACK, ONE).ready).toBe(true)
   })
 
-  it('still holds when its first event\'s setup names the place it waits for: the gate, not the setup, holds her', () => {
+  it('keeps the original staging requirement when the working setup is at the same place', () => {
     const own: UmaBible = PACK.bibles.get(ONE)!
     const f7 = { ...(own.route?.find((b) => b.id === 'f7') ?? { id: 'f7' }), trigger: { kind: 'working' as const, activity: 'cooking' as const } }
     const bible: UmaBible = { ...own, route: [...(own.route ?? []).filter((b) => b.id !== 'f7'), f7] }
     const cooking: StoryPack = { ...pack, bibles: new Map([...PACK.bibles, [ONE, bible]]) }
     const save = atSeven()
-    expect(readiness(save, cooking, ONE)).toEqual({ rung: 'f7', ready: false, waits: { kind: 'gate', gate: KITCHEN } })
+    expect(readiness(save, cooking, ONE)).toEqual({ rung: 'f7', ready: true, waits: null, alternate: [{ kind: 'gate', gate: KITCHEN }] })
     expect(readiness(built(save, 'kitchen'), cooking, ONE)).toEqual({ rung: 'f7', ready: true, waits: null })
     // Without the gate, the same setup holds nothing back.
     expect(readiness(save, { ...PACK, bibles: cooking.bibles }, ONE).ready).toBe(true)
@@ -144,8 +147,36 @@ describe('a chapter’s gate', () => {
   it('on her first chapter, never holds back her meeting scene: it holds her first event', () => {
     const gated = packWith([{ ...SIX[0]!, gate: { kind: 'farm-rank', rank: 3 } }, ...SIX.slice(1)])
     const save = withLove(farm(), ONE, { points: 200 })
-    expect(readiness(save, gated, ONE).waits).toEqual({ kind: 'gate', gate: { kind: 'farm-rank', rank: 3 } })
+    expect(readiness(save, gated, ONE).alternate).toEqual([{ kind: 'gate', gate: { kind: 'farm-rank', rank: 3 } }])
     expect(readiness({ ...save, farm: { ...save.farm, points: 1_000_000 } }, gated, ONE).ready).toBe(true)
+  })
+
+  it('advances exactly once, preserves both scene versions, and dates the unlocked original', () => {
+    const save = atSeven()
+    const event = { id: 'f7', steps: alternateRouteSteps(pack, ONE, 'f7') }
+    expect(event.steps.filter(step => 'say' in step).every(step => 'say' in step && typeof step.line === 'string' && step.line.length > 0)).toBe(true)
+    const prepared = { event, picks: [0], plays: [] }
+    expect(() => playEvent(save, pack, ONE, prepared)).toThrow('Choose the alternate scene')
+    const played = playEvent(save, pack, ONE, { ...prepared, alternate: true }).save
+    expect(played.love[ONE]?.level).toBe(7)
+    expect(played.today.actions).toBe(save.today.actions + 1)
+    expect(parseSaveV6(json(played))).toEqual(played)
+    expect(mayReplayMemory(played, ONE, 'alt-f7', pack)).toBe(true)
+    expect(mayReplayMemory(played, ONE, 'f7', pack)).toBe(false)
+    expect(recordOriginalRoute(played, pack, ONE, 'f7')).toBe(played)
+    const kitchen = built(played, 'kitchen')
+    expect(mayReplayMemory(kitchen, ONE, 'f7', pack)).toBe(true)
+    const seen = recordOriginalRoute(kitchen, pack, ONE, 'f7')
+    expect(originalRouteDay(seen, ONE, 'f7')).toBe(kitchen.calendar.day)
+    expect(seen.love).toBe(kitchen.love)
+    expect(seen.today).toBe(kitchen.today)
+  })
+
+  it('uses the ring bench as the original Forge scene location', () => {
+    const forge = packWith(SIX.map(c => c.gate ? { ...c, gate: { kind: 'built', place: 'forge' } } : c))
+    const save = atSeven()
+    expect(originalRouteAvailable(save, forge, ONE, 'f7')).toBe(false)
+    expect(originalRouteAvailable({ ...save, buildings: { ...save.buildings, forge: 0 } }, forge, ONE, 'f7')).toBe(true)
   })
 
   it('reads each kind of the menu a gate takes', () => {

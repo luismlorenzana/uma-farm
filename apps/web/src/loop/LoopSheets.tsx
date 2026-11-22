@@ -22,8 +22,9 @@ import { nudgeWords } from './words'
 
 const Tonight = lazy(() => import('./Tonight'))
 const CalendarScreen = lazy(() => import('./CalendarScreen'))
+const WhatNext = lazy(() => import('./WhatNext'))
 
-export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin' | 'shop' | 'rank' }) {
+export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin' | 'shop' | 'rank' | 'next' }) {
   const close = useClose()
   switch (sheet) {
     case 'end': return <EndDay />
@@ -31,6 +32,7 @@ export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin
     case 'bin': return <BinSheet onClose={close} />
     case 'shop': return <ShopSheet onClose={close} />
     case 'rank': return <RankSheet />
+    case 'next': return <Suspense fallback={null}><WhatNext onClose={close} /></Suspense>
   }
 }
 
