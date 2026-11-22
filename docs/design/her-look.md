@@ -106,7 +106,9 @@ for `tender`, `laughing` or `sleepy` on 126 of 164 spoken steps. The baseline pa
 emotional range, including nighttime heart events. A named calendar `anniversary` scene normally wears `dinner`.
 The five numbered formal looks belong to the married-life player. It uses neutral as the sitting conversation opens,
 tender at the quiet bedside for a pajama visit, and loving at the bedside for a birthday or anniversary. Farewell
-and morning use tender. An authored beat can choose its own expression.
+and morning use tender. An authored beat can choose its own expression. When a released wardrobe retires an old
+base, earlier pajama and wedding-night portrait cues use the first numbered look of their respective wardrobe.
+The prior wedding-day illustration IDs still resolve in those scenes and in saved galleries.
 
 **When a scene calls for more.** Start with the actual fallback. `dreamy` and `sleepy` can use `tender`, `teasing`
 can use `happy`, and `worried` can use `sad`. Approve the exact composition when it supplies the punchline or changes
