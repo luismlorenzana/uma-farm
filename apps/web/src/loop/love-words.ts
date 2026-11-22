@@ -19,7 +19,7 @@ export const WORK_PLACE: Readonly<Record<Activity, string>> = {
 export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string, year?: readonly Festival[]): string {
   const rung = state.rung ? rungName(state.rung) : ''
   const at = (words: string) => `${rung} · ${words}`
-  if (state.ready) return at('Ready')
+  if (state.ready) return at(state.alternate ? 'Alternate scene ready' : 'Ready')
   const waits = state.waits!
   switch (waits.kind) {
     case 'done': return 'Her route is complete'
@@ -43,7 +43,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
 /** Her Next card's words: the wait without the rung, which the card's title already names. "Ready",
  * "123 to go", "Tomorrow", "Needs a ring", her chapter's gate ("Opens when the Kitchen is built"). */
 export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string, year?: readonly Festival[]): string {
-  if (state.ready) return 'Ready'
+  if (state.ready) return state.alternate ? 'Alternate scene ready' : 'Ready'
   const waits = state.waits!
   switch (waits.kind) {
     case 'done': return 'Her route is complete'

@@ -13,6 +13,7 @@ import { useStory } from '../story/story'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { placeLink } from './farm-map'
+import { compareRelationships } from './relationship-order'
 import { dateWords } from './words'
 
 const number = (value: number) => value.toLocaleString('en-US')
@@ -98,7 +99,7 @@ function WeddingPath({ save }: { save: FarmSave }) {
   const held = heldRings(save).length > 0
   const bench = benchOpen(save)
   const candidate = Object.entries(save.love).filter(([, love]) => love.wed === undefined && love.stage !== 'spouse')
-    .sort(([, a], [, b]) => progress(b) - progress(a))[0]
+    .sort(([a], [b]) => compareRelationships(save, a, b))[0]
   const nextEvent = candidate && pack ? readiness(save, pack, candidate[0]) : null
   const nextBar = candidate ? bar(candidate[1]) : null
   const hasSpouse = Object.values(save.love).some(love => love.stage === 'spouse')
@@ -124,12 +125,6 @@ function WeddingPath({ save }: { save: FarmSave }) {
     </ol>
     <p className="text-[13px] text-ink-soft">The starter ring needs no gold. The Farmhouse has room for the wedding.</p>
   </section>
-}
-
-const progress = (love: FarmSave['love'][string]) => {
-  const moment = bar(love)
-  return (love.stage === 'wedding' ? 40 : love.stage === 'proposal' ? 30 : love.stage === 'romance' ? 20 : love.stage === 'confession' ? 10 : 0)
-    + love.level + (moment.cost > 0 ? Math.min(moment.points / moment.cost, 1) : 0)
 }
 
 function Focus({ save }: { save: FarmSave }) {

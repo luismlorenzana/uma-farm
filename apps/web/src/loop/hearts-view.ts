@@ -144,6 +144,7 @@ export interface HeartRow {
 
 /** The line under her bar. */
 export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf, year?: readonly Festival[]): string | null {
+  if (state.alternate) return readyWords(state, now, nameOf, year)
   if (state.ready) return `Ready · ${rungName(state.rung!)}${place ? ` · ${place}` : ''}`
   const kind = state.waits!.kind
   if (kind === 'bar') return home ? null : 'Lives in town: find her there'

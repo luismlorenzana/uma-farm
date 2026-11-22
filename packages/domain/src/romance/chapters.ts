@@ -23,6 +23,7 @@ import type { StoryPack } from '../story/pack'
 import { chaptersOf, DEFAULT_CHAPTERS, festivalNameOf, festivalsOf } from '../story/placeholders'
 import { NIGHT_RUNGS, nextRung, ROUTE_RUNGS, rungName } from './love'
 import { eventPlayed, triggerHolds } from './meeting'
+import { benchOpen } from './bench'
 import { routeIndex } from './perk-terms'
 
 /** One of her chapters, as it plays. */
@@ -96,7 +97,8 @@ export function gateHolds(save: SaveV4, gate: StoryTrigger, year: readonly Festi
   switch (gate.kind) {
     case 'season': return dateOf(save.calendar.day, save.calendar).season === gate.season
     case 'festival': return festivalOn(save.calendar.day, year, save.calendar)?.id === gate.festival
-    case 'farm-rank': case 'built': case 'shipped': case 'event': return triggerHolds(save, gate, 0, { at: 'night' })
+    case 'built': return gate.place === 'forge' ? benchOpen(save) : triggerHolds(save, gate, 0, { at: 'night' })
+    case 'farm-rank': case 'shipped': case 'event': return triggerHolds(save, gate, 0, { at: 'night' })
     default: return true
   }
 }

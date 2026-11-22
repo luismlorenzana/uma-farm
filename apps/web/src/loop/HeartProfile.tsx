@@ -380,14 +380,14 @@ function ChaptersSection({ view, colour }: { view: ChaptersView; colour: string 
                 ))}
               </ul>
             )}
-            {c.gate && !(view.next && c.n === (current ?? 0) + 1) && <p className="pl-7 text-[12px] font-semibold text-ink-soft" data-chapter-gate>{c.gate}</p>}
+            {c.gate && !(view.next && c.n === (current ?? 0) + 1) && <p className="pl-7 text-[12px] font-semibold text-ink-soft" data-chapter-gate>Original scene · {c.gate}</p>}
           </li>
         ))}
       </ol>
       {view.next && (
         <p className="pt-1.5 text-[13px]" data-chapter-next>
           <span className="text-ink-soft">Next · </span><span className="font-semibold">{view.next.title}</span>
-          <span className="text-ink-soft"> · {view.next.after}{view.next.gate ? ` · ${view.next.gate}` : ''}</span>
+          <span className="text-ink-soft"> · {view.next.after}{view.next.gate ? ` · Original scene · ${view.next.gate}` : ''}</span>
         </p>
       )}
       {view.closed && <p className="pt-1.5 text-[13px] text-ink-soft" data-chapters-closed>Her last chapter is closed. Life at home goes on.</p>}

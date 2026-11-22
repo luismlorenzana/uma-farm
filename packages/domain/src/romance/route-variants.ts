@@ -6,7 +6,6 @@ import { ARRIVAL, YOU, type Step, type StoryTrigger, type Trigger } from '../sto
 import type { StoryPack } from '../story/pack'
 import { beatOf, festivalsOf } from '../story/placeholders'
 import { chapterAt, gateHolds, herChapters } from './chapters'
-import { benchOpen } from './bench'
 
 type RoutePack = Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world'>>
 type RouteSetup = Extract<Trigger, { kind: 'item' | 'bond' }>
@@ -19,7 +18,7 @@ export function routeRequirements(save: FarmSave, pack: RoutePack, id: string, r
   const gate = chapter?.events.find(event => event !== ARRIVAL) === rung ? chapter.gate : null
   const trigger = beatOf(pack, id, rung)?.trigger
   const requirements: RouteRequirement[] = []
-  if (gate && !(gate.kind === 'built' && gate.place === 'forge' ? benchOpen(save) : gateHolds(save, gate, festivalsOf(pack)))) requirements.push({ kind: 'gate', gate })
+  if (gate && !gateHolds(save, gate, festivalsOf(pack))) requirements.push({ kind: 'gate', gate })
   if ((trigger?.kind === 'item' && goodCount(save.items, trigger.good) === 0)
     || (trigger?.kind === 'bond' && bondHearts(save.bonds[pairKey(id, trigger.with)] ?? 0) < trigger.level)) {
     requirements.push({ kind: 'setup', setup: trigger })
