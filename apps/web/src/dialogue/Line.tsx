@@ -5,6 +5,7 @@
 import { withFarmer, type Step } from '@farm/domain'
 import { useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useRef, useState } from 'react'
+import { useSceneSpeaker } from './Bust'
 import { useArtMode } from './Illustration'
 
 /** A step's words, kind and speaker as a line shows them. */
@@ -49,7 +50,9 @@ export function Line({ step, nameOf, farmer, onNext, onHold, typed = false, auto
 }) {
   const reduced = useReducedMotionSetting()
   const wait = 'wait' in step ? Math.min(5000, Math.max(0, step.wait)) : null
-  const { kind, speaker, text } = lineOf(step, farmer)
+  const spokenBy = useSceneSpeaker('say' in step ? step.say : null)
+  const line = 'say' in step ? spokenBy ? { ...step, say: spokenBy } : { narrate: step.line } : step
+  const { kind, speaker, text } = lineOf(line, farmer)
   const [chars, setChars] = useState(!typed || reduced || still ? text.length : 0)
   const full = chars >= text.length
   useEffect(() => {

@@ -12,7 +12,7 @@
 // Tap anyone (`?uma=<id>`) for her menu on the dialogue engine (`HerMenu.tsx`). Faces load as they scroll into view.
 // Names and faces are master data's and the pack's, at run time. Its title is the town's name when the world gives
 // one. Loaded on demand.
-import { CAST, placeNameOf, townDay, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
+import { CAST, placeNameOf, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
@@ -98,7 +98,7 @@ function About() {
     <GuideContent topic="town">
       <p>Your cast lives in town: tap a place to walk there, free, and see who’s there now. Each Uma keeps her own days: the story’s home, work and favourite places, or her favourite spot every third day. Her profile and the calendar show them.</p>
       <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, ask her out (two actions, one evening a day), and her event when it’s ready.</p>
-      <p>The town’s people are at their posts: the general store sells seeds, the rancher’s animals and fodder, and the mayor’s office takes build orders and lends toward them.</p>
+      <p>Umas staff the shops on their town shifts. You can shop on days off. The mayor’s office takes build orders and lends toward them.</p>
     </GuideContent>
   )
 }
@@ -113,7 +113,8 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   const views = useMemo(() => locationViews(day, pack, save), [day, pack, save])
   const asked = params.get('at')
   const here = views.find((v) => v.loc.id === asked) ?? views.find((v) => v.loc.id === START)!
-  const uma = params.get('uma') ?? params.get('talk')
+  const candidate = params.get('uma') ?? params.get('talk')
+  const uma = candidate && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)) ? candidate : null
   // Walking between places is free: replacing keeps Back's way to the farm.
   const go = (at: string) => navigate(withParam(location, 'at', at), { replace: true, state: location.state })
   // Her menu over the town: at her place when she's out (so Back returns there), else over where you are.

@@ -2,7 +2,7 @@
 // grade's goods), "→ Iron Ring"; the recipe greyed until the Smelter and the Cutter stand; her bonus once married; and **Make an Iron
 // Ring · 1 a day** in the thumb zone. A made ring is ★1 in the Warehouse; the bench says "One ring a day." until tomorrow.
 // Also the Forge's quick look once the bench stands (`BenchPeek`). Loaded on demand.
-import { benchOpen, BENCH_WORDS, goodCount, goodName, ringName, starterRingLock, STARTER_RING_GOOD, STARTER_RING_LOGS, type BenchInput, type SaveV4 } from '@farm/domain'
+import { benchOpen, BENCH_WORDS, goodCount, goodName, ringName, sceneSpeaker, starterRingLock, STARTER_RING_GOOD, STARTER_RING_LOGS, type BenchInput, type SaveV4 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
@@ -47,7 +47,8 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   // The town's smith, who keeps the bench: her name from master data, the role's words without it.
   const master = useMaster()
   const story = useStory()
-  const smith = namer(master.status === 'ready' ? master.view : null, story)('ida-stone')
+  const smith = story ? sceneSpeaker(story, save, 'ida-stone') : null
+  const smithName = smith ? namer(master.status === 'ready' ? master.view : null, story)(smith) : 'Self-service'
   const forge = forgeRecipeWords(save)
   const starterLock = starterRingLock(save)
   const make = async (starter = false) => {
@@ -82,9 +83,9 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
     >
       <div className="space-y-3 pb-2" data-bench>
         <div className="flex items-center gap-3">
-          <PersonBust who="ida-stone" name={smith} size={60} />
+          {smith && <PersonBust who={smith} name={smithName} size={60} />}
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold" data-smith>{smith}</p>
+            <p className="text-[14px] font-semibold" data-smith>{smithName}</p>
             <p className="text-[13px] text-ink-soft">{BENCH_TEXT.rule}</p>
           </div>
           <GuideButton topic="rings" title="The ring bench" label="About the ring bench">

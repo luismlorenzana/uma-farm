@@ -134,6 +134,13 @@ afterEach(async () => {
 })
 
 describe('the town', () => {
+  it('leaves non-resident legacy conversation links on the town map', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    await render(<TownPage />, '/town?talk=99997')
+    await find('[data-town-today]')
+    expect($('[data-her-menu]')).toBeNull()
+  })
+
   it('shows working spouses at the counter and self-service on its own day off', () => {
     const id = '90001'
     const legacy = fixture.pack!
