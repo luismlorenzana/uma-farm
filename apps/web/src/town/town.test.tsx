@@ -261,24 +261,25 @@ describe('the town', () => {
     await click(await find('[data-post-item="build"]'))
     expect(path).toBe('/town?at=mayor&sheet=mayor')
     await find('[data-mayor]')
-    // The Mill, short 360g: the office lends 400g. The retired Dorm's levels are no order.
-    expect($$('[data-order]').map((o) => [o.dataset.order, o.dataset.borrow])).toEqual([['mill', '400']])
-    expect($('[data-order="mill"] [data-order-terms]')?.textContent).toBe('Need 360g more · 440g owed, a tenth a night from income')
-    expect($('[data-terms]')?.textContent).toContain('Up to 1,000g at Farm Rank 1')
+    // The Mill, short 360g: the office offers an exact quote.
+    expect($$('[data-order]').map((o) => [o.dataset.order, o.dataset.borrow])).toEqual([['mill', '360']])
+    expect($('[data-terms]')?.textContent).toContain('100,000g credit left · 3 slots free')
+    await click($('[data-order="mill"] [data-action="review-build-credit"]'))
+    expect($('[data-order="mill"] dl')?.textContent).toContain('Total owed400g')
     expect($('[data-no-loans]')?.textContent).toBe('No loans.')
     await click($('[data-order="mill"] [data-action="borrow"]'))
     await until(() => save().farm.loans.length === 1)
-    expect(save()).toMatchObject({ gold: 40, farm: { builds: ['mill'], loans: [{ for: 'mill', lent: 400, fee: 40, owed: 440, nightly: 45 }] } })
+    expect(save()).toMatchObject({ gold: 0, farm: { builds: ['mill'], loans: [{ for: 'mill', lent: 360, fee: 40, owed: 400, nightly: 0 }] } })
     expect(save().today.actions).toBe(0)
     await until(() => $('[data-mayor-note]')?.textContent === 'The Mill stands tomorrow, on a loan.')
     expect($('[data-order="mill"]')?.textContent).toContain('Builds tonight')
-    expect($('[data-office-loan="mill"]')?.textContent).toContain('440g owed · 45g a night · clears in about 10 nights (Spring 15)')
-    expect($('[data-office-loan="mill"] [data-action="repay"]')?.textContent).toBe('Repay · need 400g more')
+    expect($('[data-office-loan="mill"]')?.textContent).toContain('400g owed · Waiting for sales')
+    expect($('[data-office-loan="mill"] [data-action="repay"]')?.textContent).toBe('Pay off · 400g')
     // With the gold, repay it all.
     await act(async () => useGame.setState({ save: { ...save(), gold: 500 } }))
     await click($('[data-office-loan="mill"] [data-action="repay"]'))
     await until(() => save().farm.loans.length === 0)
-    expect(save().gold).toBe(60)
+    expect(save().gold).toBe(100)
   })
 
   it('puts an Uma with a routine where it says', async () => {

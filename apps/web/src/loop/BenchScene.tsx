@@ -43,7 +43,7 @@ export default function BenchScene({ save }: { save: SaveV4 }) {
           <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col justify-end gap-3 px-4 pb-4" data-bench-card>
             <div className="space-y-1.5 rounded-md border border-hairline bg-panel p-4 shadow-2">
               <p className="flex items-center gap-2 font-display text-[22px] font-bold"><UiMark mark="farm/ring-bench" scale={2} fallback={<span aria-hidden>◎</span>} /> The ring bench is open</p>
-              <p className="text-[15px]">A ring of any grade from three refined goods of that grade. No gold, one ring a day.</p>
+              <p className="text-[15px]">Commission a Copper Ring with metal and quartz from the smith. Pay in full or put 2,000g down.</p>
               <p className="text-[13px] text-ink-soft">At the Forge, on the workshop row. Any ring makes the proposal Ready at Romance 10.</p>
             </div>
             <Button className="w-full" onClick={() => finish('/?sheet=bench')} data-action="see-bench">See the bench</Button>

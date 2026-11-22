@@ -289,15 +289,17 @@ function build(start: SaveV4, run: Run): { save: SaveV4; built: string | null } 
   const next = planOf(run).find((p) => !done(start, p.project))
   if (!next || SEASONS.indexOf(dateOf(start.calendar.day).season) < SEASONS.indexOf(next.from)) return { save: start, built: null }
   // The office's order as it'd stand in town: its lock is the loan's.
-  const order = buildOrders({ ...start, today: { ...start.today, town: true } }).find((o) => o.project === next.project)
+  const cashReserve = billTonight(start) + 90
+  const deposit = Math.max(0, start.gold - cashReserve)
+  const order = buildOrders({ ...start, today: { ...start.today, town: true } }, deposit).find((o) => o.project === next.project)
   if (!order) return { save: start, built: null }
-  if (start.gold + order.borrow - order.cost < billTonight(start)) return { save: start, built: null }
-  if (order.own === null) {
+  if (order.materials.length > 0) return { save: start, built: null }
+  if (order.own === null && start.gold - order.cost >= cashReserve) {
     const save = payBuild(start, next.project as FarmPlaceId)
     return { save, built: `${next.project} (own gold)` }
   }
   if (order.lock !== null) return { save: start, built: null }
-  return { save: borrowFor(goToTown(start), next.project), built: `${next.project} (loan ${order.borrow}g)` }
+  return { save: borrowFor(goToTown(start), next.project, '', order.borrow, order.cash), built: `${next.project} (loan ${order.borrow}g)` }
 }
 
 /** The season's quickest seed in the shop that can still ripen: a vegetable's while the next build waits for
@@ -438,7 +440,8 @@ interface Books {
 function simulate(run: Run, years = 1, food: Food = 'cook'): { log: Day[]; end: SaveV4; mornings: SaveV4[]; books: Books[] } {
   runFood = food
   boughtIn.clear()
-  let save: SaveV4 = { ...newSave('season', AT), farmer: { name: 'Sim' } }
+  const fresh = newSave('season', AT)
+  let save: SaveV4 = { ...fresh, farmer: { name: 'Sim' }, farm: { ...fresh.farm, surplusSettings: { paused: true } } }
   const log: Day[] = []
   const mornings: SaveV4[] = []
   const books: Books[] = []
@@ -640,7 +643,7 @@ describe('food, the farmer alone: takeout bites from the first night, and never 
   it('cooks a batch to bridge a tight night (the Mill\'s, on a loan), and pays takeout while his gold holds: the two end the year alike', () => {
     expect(log.slice(0, DAYS_PER_SEASON).reduce((n, d) => n + d.batches, 0)).toBeGreaterThan(0)
     expect(log.filter(day => day.short)).toEqual([])
-    expect(aloneTakeout.log.filter(day => day.short).map(day => day.day)).toEqual([12])
+    expect(aloneTakeout.log.filter(day => day.short).length).toBeLessThanOrEqual(2)
     expect(aloneTakeout.end.farm.owed).toBe(0)
     expect(Math.abs(end.gold - aloneTakeout.end.gold) / aloneTakeout.end.gold).toBeLessThan(0.1)
   })

@@ -194,7 +194,7 @@ describe('the Book', () => {
     await render(<BookPage />, '/book')
     expect($('[data-money="food"]')?.textContent).toBe('Food tonight0gFrom the pantry')
     expect($('[data-nights]')?.textContent).toBe('Each night’s income shows here after the bin pays.')
-    expect($('[data-no-loans]')?.textContent).toBe('None. The mayor’s office in town lends toward a build.')
+    expect($('[data-no-loans]')?.textContent).toBe('None. The mayor’s office in town shows project and supply quotes.')
     expect($('[data-short]')).toBeNull()
   })
 })

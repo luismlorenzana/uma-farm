@@ -36,7 +36,7 @@ kind: 'sold'
  * - `short`: gold `owed` after a short night, and the short nights in a row (`nights`: 1 warns, 2 and on is half pace);
  * - `paid-up`: the upkeep owed from before is paid, the half pace over. */
 export type MoneyLine =
-  | { kind: 'loan'; for: string; paid: number; left: number }
+  | { kind: 'loan'; for: string; paid: number; left: number; title?: string }
   | { kind: 'staff'; mouths: number; days: number }
   | { kind: 'pantry'; meals: number; spoiled: number; fed: number }
   | { kind: 'takeout'; meals: number; paid: number; due: number }
@@ -170,6 +170,7 @@ export type NewsLine =
   | { kind: 'built'; place: FarmPlaceId; level?: number }
   | { kind: 'farm-rank'; rank: number }
   | { kind: 'milestone'; id: string }
+  | { kind: 'ring-ready'; grade: number }
   | HouseholdNews
 
 /** §6 Today's nudges: growing tiles to water this morning. */

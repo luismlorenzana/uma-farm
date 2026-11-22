@@ -8,6 +8,7 @@
 // `edit`), commits it to the store and the device, and syncs; a refused rule throws its words. The night reads the
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
 // of the initial JS.
+import { ANIMALS, FODDER_PRICE, goodName, recordPurchase } from '@farm/domain'
 import {
   passDayPart, crewShiftEnabled, payBuild, borrowFor, repayLoan, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, nameFarmer,
@@ -87,7 +88,7 @@ export const takeBackLine = (id: string, stars: number, count: number) => change
 export const buyLine = (line: ShopLine, count: number) => change((s) => {
   const now = shopLines(s).find((l) => l.id === line.id)
   if (!now) throw new SaveRuleError('locked', 'Not in the shop this season.')
-  return buy(s, now, count)
+  return recordPurchase(buy(s, now, count), goodName(now.id), now.price * count)
 })
 
 // --- The day's actions -------------------------------------------------------------------------------------------
@@ -163,10 +164,10 @@ export const grassAt = (tile: number): Promise<number> => act((s) => {
 /** Buys an animal at the rancher's: free in town. */
 export const buyAnimalOf = (kind: AnimalKind): Promise<Animal> => act((s) => {
   const done = buyAnimal(s, kind)
-  return { save: done.save, result: done.animal }
+  return { save: recordPurchase(done.save, ANIMALS[kind].name, ANIMALS[kind].price), result: done.animal }
 })
 /** Buys fodder for the silo at the rancher's: free in town. */
-export const buyFodderOf = (count: number) => change((s) => buyFodder(s, count))
+export const buyFodderOf = (count: number) => change((s) => recordPurchase(buyFodder(s, count), 'Fodder', count * FODDER_PRICE))
 /** Works a face at a dig: an action; what it brought. */
 export const faceAt = (dig: DigId, floor?: number): Promise<Face> => act((s) => {
   const done = workFace(s, dig, floor)
@@ -183,9 +184,9 @@ export const intoTown = () => change(goToTown)
 export const buildPlace = (place: FarmPlaceId) => change((s) => payBuild(s, place))
 
 /** At the mayor's office, in town: borrows what a build is short of gold and orders it (a house named `name`). */
-export const borrowAndBuild = (project: string, name = '') => change((s) => borrowFor(s, project, name))
+export const borrowAndBuild = (project: string, name = '', expected?: number, deposit?: number) => change((s) => borrowFor(s, project, name, expected, deposit))
 /** At the mayor's office, in town: repays a loan in full. */
-export const repayTheLoan = (project: string) => change((s) => repayLoan(s, project))
+export const repayTheLoan = (project: string, amount?: number) => change((s) => repayLoan(s, project, amount))
 
 // --- The scenes -----------------------------------------------------------------------------------------------
 

@@ -74,7 +74,7 @@ function Book({ save }: { save: FarmSave }) {
           <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, and each spouse living on the farm. A farmhand costs her meals on her farm days.</p>
           <p>Everyone who eats on the farm eats twice a night, from the pantry first. What it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep. Cook in the farmhouse kitchen, or set a farmhand to Cook.</p>
           <p>Short of it, the rest is owed. The first short night warns you; from the second, the farmhands work at half pace until it’s paid. Nobody leaves, and nothing is lost.</p>
-          <p>The mayor’s office in town lends toward a build. Each night’s income repays a little, before the upkeep.</p>
+          <p>The mayor’s office quotes projects, gold, and supplies. New loans share 20% of sales left after bills.</p>
           <p>Tap a card to open its place.</p>
         </GuideButton>
       </div>
@@ -115,9 +115,11 @@ function Money({ save }: { save: FarmSave }) {
   const income = averageIncome(save)
   const nights = save.farm.income.length
   const shipping = binTotal(save.bin, dateDayOf(save.calendar.day, save.calendar), save.farm.market)
-  const settlement = settleAccounts({ ...save, gold: save.gold + shipping }, shipping, {
+  const service = save.workshops.restaurant?.last
+  const dining = service?.day === save.calendar.day ? service.sales + service.tips : 0
+  const settlement = settleAccounts({ ...save, gold: save.gold + shipping }, shipping + dining, {
     pantry: table.pantry, spoiled: 0, fed: table.fed, takeout: table.takeout,
-  }).save
+  }, dining).save
   const projection = settlement.farm.accounts!.at(-1)!
   const obligations = upkeep.gold + save.farm.owed + table.gold
   const parts = upkeepLines(upkeep)
@@ -135,7 +137,7 @@ function Money({ save }: { save: FarmSave }) {
       </div>
       <div className="grid gap-x-4 gap-y-2 @lg:grid-cols-2">
         <div className="space-y-2">
-          <p className="text-[13px] text-ink-soft"><strong className="text-ink">Shipping average · {gold(income)}</strong> {nights > 0 ? `over ${plural(Math.min(nights, INCOME_NIGHTS), 'night')}` : 'once the bin pays'}</p>
+          <p className="text-[13px] text-ink-soft"><strong className="text-ink">Sales average · {gold(income)}</strong> {nights > 0 ? `over ${plural(Math.min(nights, INCOME_NIGHTS), 'night')}` : 'once the bin pays'}</p>
           <Nights save={save} upkeep={upkeep.gold + table.gold} />
         </div>
         <div className="space-y-1">
@@ -169,15 +171,21 @@ function Money({ save }: { save: FarmSave }) {
         </p>
       )}
       <Accounts save={save} />
+      {!!save.farm.financeLog?.length && <details className="space-y-1 text-[13px]">
+        <summary className="min-h-11 cursor-pointer font-semibold">Recent purchases and loan activity</summary>
+        {save.farm.financeLog.slice(-12).reverse().map((row, index) => <p key={`${row.day}:${index}`}>
+          {row.title} · {gold(row.amount)} · {row.kind === 'cleared' ? 'Paid off' : row.kind === 'borrowed' ? 'Borrowed' : row.kind === 'purchase' ? 'Purchased' : 'Repaid'}
+        </p>)}
+      </details>}
       <div data-loans={save.farm.loans.length}>
         <h2 className="text-micro">Loans{owed > 0 ? ` · ${gold(owed)} owed` : ''}</h2>
         {save.farm.loans.length === 0 ? (
-          <p className="text-[13px] text-ink-soft" data-no-loans>None. The mayor’s office in town lends toward a build.</p>
+          <p className="text-[13px] text-ink-soft" data-no-loans>None. The mayor’s office in town shows project and supply quotes.</p>
         ) : (
           <ul className="divide-y divide-hairline">
             {save.farm.loans.map((loan) => (
               <li key={loan.for} className="flex min-h-11 flex-col justify-center py-1" data-loan={loan.for}>
-                <span className="text-[14px] font-semibold">{projectName(loan.for, names)}</span>
+                <span className="text-[14px] font-semibold">{loan.credit?.title ?? projectName(loan.for, names)}</span>
                 <span className="text-[12px] text-ink-soft">{loanWords(save, loan)}</span>
               </li>
             ))}
@@ -195,14 +203,14 @@ function Accounts({ save }: { save: FarmSave }) {
     <h3 className="font-semibold">Recent nights</h3>
     {entries.length === 0 ? <p className="text-[13px] text-ink-soft">Food, upkeep and loan payments appear after your next night.</p>
       : <table className="w-full text-left text-[12px] tabular-nums">
-        <thead><tr className="text-ink-soft">{['Night', 'Shipping', 'Food', 'Upkeep', 'Loans', 'Net'].map(label =>
+        <thead><tr className="text-ink-soft">{['Night', 'Sales', 'Food', 'Upkeep', 'Loans', 'Net'].map(label =>
           <th key={label} scope="col" className="px-1 py-1 font-semibold">{label}</th>)}</tr></thead>
         <tbody className="divide-y divide-hairline">{[...entries].reverse().map(entry => {
-          const delta = entry.shipping - entry.food - entry.upkeep - entry.loans
+          const delta = entry.shipping + (entry.restaurant ?? 0) - entry.food - entry.upkeep - entry.loans
           return <tr key={entry.day} data-account-day={entry.day}>
             <th scope="row" className="px-1 py-2 font-medium">{dateWords(entry.day, save.calendar)}
               {entry.owed > 0 && <span className="block text-danger">{gold(entry.owed)} owed</span>}</th>
-            <td className="px-1">{gold(entry.shipping)}</td><td className="px-1">{gold(entry.food)}</td>
+            <td className="px-1">{gold(entry.shipping)} bin{entry.restaurant ? <span className="block">{gold(entry.restaurant)} restaurant</span> : null}</td><td className="px-1">{gold(entry.food)}</td>
             <td className="px-1">{gold(entry.upkeep)}</td><td className="px-1">{gold(entry.loans)}</td>
             <td className={`px-1 font-semibold ${delta < 0 ? 'text-danger' : 'text-success'}`}>{delta < 0 ? '−' : '+'}{gold(Math.abs(delta))}</td>
           </tr>

@@ -3,7 +3,7 @@
 // Ship, which opens the Warehouse to pick a crate from: one action ships it. The shop (`?sheet=shop`), in town: its
 // lines on the kit's ExchangeRows, bought with gold once you've gone into town today, and its Recipes shelf once the Kitchen
 // stands (a recipe for the Kitchen, known for good); before that, Go into town.
-import { dishName, kitchenBuilt, recipeLock, recipeShelf, recipeWords, shopLines, type FarmSave, type ShopLine } from '@farm/domain'
+import { actionsLeft, crateWorth, dishName, goodName, surplusCrate, shipSuggestedSurplus, kitchenBuilt, recipeLock, recipeShelf, recipeWords, shopLines, type FarmSave, type ShopLine } from '@farm/domain'
 import { ExchangeRows } from '@luismlorenzana/uma-kit/places'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
@@ -14,6 +14,9 @@ import { useLoopSave } from '../save/game'
 import { GoldMark } from '../shell/Gold'
 import { buyLine, intoTown, takeBackLine } from './actions'
 import { buyTheRecipe } from './kitchen-actions'
+import { changeHomestead } from './homestead-actions'
+import { buy, lineOpen, recordPurchase } from '@farm/domain'
+import { CreditPurchase } from './CreditPurchase'
 import { binView, easedWords, goldWords, saleWords, shopRows } from './goods-view'
 
 /** The Warehouse to pick a crate from: one action ships it. */
@@ -29,6 +32,12 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false)
   if (!save) return null
   const view = binView(save)
+  const suggested = surplusCrate(save, true)
+  const approve = () => {
+    setBusy(true)
+    setError(null)
+    void changeHomestead(shipSuggestedSurplus).catch((err: unknown) => setError(errorWords(err))).finally(() => setBusy(false))
+  }
   const back = (id: string, stars: number, count: number) => {
     setBusy(true)
     setError(null)
@@ -54,6 +63,11 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
             <p>Take anything back until the night, free. Seeds don’t sell.</p>
           </GuideButton>
         </div>
+        {suggested.length > 0 && <details className="rounded-md border border-hairline p-2 text-[13px]">
+          <summary className="min-h-11 cursor-pointer font-semibold">Suggested surplus · {goldWords(crateWorth(save, suggested))}</summary>
+          <ul className="mb-2">{suggested.map(line => <li key={`${line.id}@${line.stars}`}>{line.count} × {goodName(line.id)} · ★{line.stars}</li>)}</ul>
+          <Button disabled={busy || actionsLeft(save) < 1} onClick={approve} data-action="ship-suggested">Ship suggested crate · 1 action</Button>
+        </details>}
         {view.lines.length === 0 && <p className="text-[14px] text-ink-soft">Tap Ship to pick goods. They pay tonight.</p>}
         {view.lines.length > 0 && (
           <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="In the bin">
@@ -83,7 +97,7 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
 export function ShopList({ save, lines }: { save: FarmSave; lines: readonly ShopLine[] }) {
   const rows = shopRows(save, lines)
   if (rows.length === 0) return <p className="py-2 text-[15px] text-ink-soft" data-shop-empty>Nothing for sale yet.</p>
-  return (
+  return (<>
     <ExchangeRows
       rows={rows.map((row) => ({
         key: row.line.id, icon: <ItemIcon id={row.line.id} size={32} />, name: row.name, price: { mark: <GoldMark />, amount: row.line.price },
@@ -97,7 +111,31 @@ export function ShopList({ save, lines }: { save: FarmSave; lines: readonly Shop
       }}
       words={{ buy: 'Buy {n} ·', short: 'Need {n}g more', cantBuy: 'Couldn’t buy.' }}
     />
-  )
+    <SeedCredit save={save} lines={lines.filter(line => lineOpen(save, line))} />
+  </>)
+}
+
+function SeedCredit({ save, lines }: { save: FarmSave; lines: readonly ShopLine[] }) {
+  const [id, select] = useState('')
+  const [count, setCount] = useState(10)
+  const line = lines.find(row => row.id === id) ?? lines[0]
+  if (!line) return null
+  const title = `${count} × ${goodName(line.id)}`
+  return <details className="mt-2 space-y-2 rounded-md border border-hairline p-2 text-[13px]">
+    <summary className="min-h-11 cursor-pointer font-semibold">Finance seed purchases</summary>
+    <select aria-label="Seed to finance" className="min-h-11 w-full bg-panel" value={line.id} onChange={event => select(event.currentTarget.value)}>
+      {lines.map(row => <option key={row.id} value={row.id}>{goodName(row.id)}</option>)}
+    </select>
+    <label>Quantity <input className="min-h-11 w-20 border border-hairline bg-panel px-2" type="number" min="1" max="99"
+      value={count} onChange={event => setCount(Number(event.currentTarget.value))} /></label>
+    <CreditPurchase save={save} title={title} cost={line.price * count}
+      lock={Number.isSafeInteger(count) && count > 0 && count <= 99 && save.today.town ? null : 'Choose a quantity from 1 to 99.'}
+      order={s => {
+        const current = shopLines(s).find(row => row.id === line.id)
+        if (!current || current.price !== line.price) throw new Error('The shop changed. Review the new quote.')
+        return recordPurchase(buy(s, current, count), title, current.price * count)
+      }} />
+  </details>
 }
 
 /** The shop, in town: it lists the season's seeds once you've gone into town today, and its Recipes shelf once the

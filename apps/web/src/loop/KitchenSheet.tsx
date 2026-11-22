@@ -339,6 +339,9 @@ function StaffMeal({ save, busy, onServe }: { save: SaveV4; busy: boolean; onSer
   )
 }
 
+import { upgradeKitchen } from '@farm/domain'
+import { CreditPurchase } from './CreditPurchase'
+
 // --- Its level, and the recipes ---------------------------------------------------------------------------------------------
 
 function Level({ save, busy, onUpgrade }: { save: SaveV4; busy: boolean; onUpgrade: () => void }) {
@@ -357,6 +360,8 @@ function Level({ save, busy, onUpgrade }: { save: SaveV4; busy: boolean; onUpgra
           <Button size="sm" variant="secondary" disabled={busy || lock !== null} onClick={onUpgrade} data-action="kitchen-upgrade">Upgrade · {next.cost.toLocaleString('en-US')}g</Button>
         </div>
       )}
+      {next && <CreditPurchase save={save} cost={next.cost} title={`Kitchen level ${next.level}`}
+        lock={levelLockWords(kitchenLevelLock({ ...save, gold: next.cost }))} order={upgradeKitchen} />}
     </section>
   )
 }

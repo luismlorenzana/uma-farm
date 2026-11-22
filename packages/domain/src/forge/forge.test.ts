@@ -67,7 +67,7 @@ describe('the two Forge counters', () => {
   it('uses one real Morning action and credits the smith once across settlement and reload', () => {
     const base = spouse()
     const funded = { ...base, items: addGoods(base.items, 'pine-plank', 1, 8) }
-    const at = activateForge(day(funded, 124))
+    const at = activateForge(day({ ...funded, farm: { ...funded.farm, surplusSettings: { paused: true } } }, 124))
     const chosen = Array.from({ length: 7 }, (_, i) => day(at, at.calendar.day + i))
       .find(save => forgeAssistants(save, pack).includes(ID))!
     const booked = orderTool({ ...chosen, today: { ...chosen.today, dayParts: true } }, 'hoe', pack, ID)

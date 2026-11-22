@@ -37,7 +37,8 @@ const roundTrip = (save: FarmSave) => parseSaveV6(JSON.parse(JSON.stringify(save
 function setup(size: Crew) {
   const ids = Array.from({ length: size }, (_, i) => String(9_800_001 + i))
   const story = castPack(ids)
-  const base = { ...newSave('festival-year-' + size, AT), farmer: { name: 'Robin' } }
+  const fresh = newSave('festival-year-' + size, AT)
+  const base: FarmSave = { ...fresh, farmer: { name: 'Robin' }, farm: { ...fresh.farm, surplusSettings: { paused: true } } }
   if (!size) return { save: base, ids, story }
   const rank = size === 10 ? 3 : size === 20 ? 6 : 10
   const points = FARM_RANK_POINTS[rank - 1]!

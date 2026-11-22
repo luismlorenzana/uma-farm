@@ -32,7 +32,15 @@ export const projectInSentence = (project: string, names: ProjectNames): string 
   HOUSE_LOAN.test(project) || DORM_LOAN.test(project) ? projectName(project, names) : theName(projectName(project, names))
 
 /** A loan as the Book and the projects list say it: "440g owed · 45g a night · clears in about 10 nights (Spring 11)". */
-export function loanWords(save: Pick<FarmSave, 'calendar'>, loan: Loan): string {
+export function loanWords(save: Pick<FarmSave, 'calendar'> & Partial<Pick<FarmSave, 'farm'>>, loan: Loan): string {
+  if (loan.credit) {
+    const rows = save.farm?.accounts ?? []
+    const average = rows.length ? rows.reduce((sum, row) => sum + (row.repaymentBudget ?? 0), 0) / rows.length : 0
+    const notes = save.farm?.loans.filter(note => note.credit) ?? []
+    const earlier = notes.findIndex(note => note.for === loan.for)
+    const queue = earlier > 0 ? notes.slice(0, earlier).reduce((sum, note) => sum + note.owed, 0) : 0
+    return `${gold(loan.owed)} owed · ${average > 0 ? `about ${plural(Math.ceil((loan.owed + queue) / average), 'night')}` : 'Waiting for sales'}`
+  }
   const { nights, day } = loanClears(save, loan)
   return `${gold(loan.owed)} owed · ${gold(loan.nightly)} a night · clears in about ${plural(nights, 'night')} (${shortDate(day, save.calendar)})`
 }
@@ -65,7 +73,7 @@ export function moneyLines(lines: readonly MoneyLine[], names: ProjectNames): Mo
   return lines.map((line): MoneyWords => {
     switch (line.kind) {
       case 'loan': {
-        const what = `Loan for ${projectInSentence(line.for, names)}`
+        const what = `Loan for ${line.title ?? projectInSentence(line.for, names)}`
         if (line.left === 0) return { key: `loan:${line.for}`, text: `${what} · cleared`, tag: 'Cleared' }
         return { key: `loan:${line.for}`, text: `${what} · ${line.paid > 0 ? `${gold(line.paid)} repaid` : 'payment skipped'} · ${gold(line.left)} left` }
       }

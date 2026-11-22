@@ -24,6 +24,9 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
 import { copyHandTask, enterDayPart, planSurplus, setHandTasks } from '../loop/actions'
+import { configureSurplus, defaultCrateLimit, SURPLUS_LIMIT_MAX } from '@farm/domain'
+import { changeHomestead } from '../loop/homestead-actions'
+import { RestockList } from '../loop/RestockList'
 import { Notes, useAct } from '../loop/FarmPanels'
 import { useTalents } from '../loop/talents'
 import { plural, shortDate } from '../loop/words'
@@ -88,10 +91,9 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       {save.today.crew && <p className="text-[13px] text-ink-soft">Morning shift complete. Order changes apply on each Uma’s next farm shift.</p>}
       {shiftError && <p role="alert" className="text-danger">{shiftError}</p>}
       <Coverage suggestions={suggestions} nameOf={nameOf} />
-      {hands.length > 0 && <>
-        <ProductionForecast before={save} after={forecast.save} pack={pack} />
-        <SurplusEditor save={save} />
-      </>}
+      <RestockList save={save} />
+      {hands.length > 0 && <ProductionForecast before={save} after={forecast.save} pack={pack} />}
+      <SurplusEditor save={save} />
       {hands.length === 0 ? (
         <p className="rounded-md border border-dashed border-hairline-strong px-3 py-3 text-[14px] text-ink-soft" data-no-hands>
           No farmhands yet. Once she’s a friend (Friendship 3), invite her to work: her menu in town.
@@ -207,7 +209,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px] font-semibold" data-task-words>{taskWords(task, plots)}</span>
                   <span className="block truncate text-[11px] text-ink-soft" data-task-aptitude>
-                    {aptitude ? `${APTITUDE_NAMES[aptitude]} ${level}` : save.farm.surplus ? 'Shared crate · respects reserves' : 'Set a surplus plan'}
+                    {aptitude ? `${APTITUDE_NAMES[aptitude]} ${level}` : save.farm.surplusSettings?.paused ? 'Shipping paused' : 'Shared crate · respects reserves'}
                     {runsOn(task) ? ' · shares what’s left' : ''}{planned ? ' · follows row plan' : ''}{target ? ' · follows station targets' : ''}
                     {level < unlock ? ` · grade work at level ${unlock}` : ''}
                   </span>
@@ -272,15 +274,22 @@ function SurplusEditor({ save }: { save: FarmSave }) {
   const plan = save.farm.surplus
   const goods = plan?.goods ?? []
   const [id, choose] = useState('')
-  const [limit, setLimit] = useState(plan?.limit ?? MAX_SURPLUS)
+  const settings = save.farm.surplusSettings
+  const currentLimit = settings?.limit ?? plan?.limit ?? defaultCrateLimit(save)
+  const [limit, setLimit] = useState(currentLimit)
   const { note, error, busy, run } = useAct('surplus')
-  const valid = Number.isInteger(limit) && limit > 0 && limit <= MAX_SURPLUS
+  const valid = Number.isInteger(limit) && limit > 0 && limit <= (plan ? MAX_SURPLUS : SURPLUS_LIMIT_MAX)
+  const configure = (next: Parameters<typeof configureSurplus>[1]) => run(changeHomestead(s => configureSurplus(s, next)).then(() => 'Surplus settings saved'))
   const edit = (next: string[]) => run(planSurplus(next.length ? { goods: next, limit } : null).then(() => { choose(''); return null }))
   return (
     <details className="rounded-md border border-hairline bg-panel px-3 text-[13px]">
-      <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Surplus crate · {plan ? `up to ${plan.limit}` : 'Off'}</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Surplus crate · {settings?.paused ? 'Paused' : `${plan ? 'Custom' : 'Standard'} · up to ${currentLimit}`}</summary>
       <div className="max-w-lg space-y-2 pb-2">
-        <p className="text-ink-soft">Assign Ship surplus to a farmhand. One shared crate goes into tomorrow’s bin.</p>
+        <p className="text-ink-soft">{plan ? 'Your assigned farmhand uses this custom list.' : 'An available farmhand ships excess stock after the priority jobs. You can change a good’s reserve in the Warehouse.'}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" disabled={busy} onClick={() => configure({ paused: !settings?.paused })}>{settings?.paused ? 'Resume' : 'Pause'} shipping</Button>
+          <Button variant="secondary" disabled={busy || (!plan && !settings)} onClick={() => { setLimit(defaultCrateLimit(save)); configure({ reset: true }) }}>Restore all standards</Button>
+        </div>
         {goods.map((good) => <div key={good} className="flex items-center gap-1">
           <span className="min-w-0 flex-1">{goodName(good)}</span>
           <Button variant="secondary" size="sm" disabled={busy || !valid} onClick={() => edit(goods.filter((other) => other !== good))}
@@ -292,10 +301,10 @@ function SurplusEditor({ save }: { save: FarmSave }) {
             <option key={good.id} value={good.id}>{itemNameOf(baseGoodId(good.id))} · G{good.grade}</option>)}
         </select>
         <div className="flex flex-wrap items-center gap-2">
-          <label>Crate limit <input type="number" min={1} max={MAX_SURPLUS} className="min-h-11 w-16 rounded-sm border border-hairline bg-panel px-1"
+          <label>Crate limit <input type="number" min={1} max={plan ? MAX_SURPLUS : SURPLUS_LIMIT_MAX} className="min-h-11 w-16 rounded-sm border border-hairline bg-panel px-1"
             value={limit} onChange={(e) => setLimit(Number(e.currentTarget.value))} /></label>
-          <Button size="sm" disabled={busy || !id || !valid || goods.length >= MAX_SURPLUS} onClick={() => edit([...goods, id])}>Add good</Button>
-          {plan && <Button size="sm" variant="secondary" disabled={busy || !valid || limit === plan.limit} onClick={() => edit(goods)}>Set limit</Button>}
+          <Button size="sm" disabled={busy || !id || !valid || limit > MAX_SURPLUS || goods.length >= MAX_SURPLUS} onClick={() => edit([...goods, id])}>Add good</Button>
+          <Button size="sm" variant="secondary" disabled={busy || !valid || limit === currentLimit} onClick={() => configure({ limit })}>Set limit</Button>
         </div>
         <Notes note={note} error={error} />
       </div>
@@ -393,7 +402,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
             In {KITCHEN}: a batch an action from two goods of food, ★2 goods first, until the pantry holds tonight’s meals for everyone.
           </p>
         ) : kind === 'ship-surplus' ? (
-          <p className="text-[14px] text-ink-soft">Ships the shared surplus crate after the bin has paid, ready for the following evening.</p>
+          <p className="text-[14px] text-ink-soft">Ships the shared surplus crate when this hand has an action on her shift.</p>
         ) : kind === 'save-seed' ? (
           <fieldset className="space-y-2">
             <legend className="text-micro pb-1">Seed to save</legend>

@@ -278,6 +278,9 @@ function PlotGrid({ save, plot, tile, row, size, state }: { save: FarmSave; plot
   )
 }
 
+import { clearPlot, plotLock, plotLockWords } from '@farm/domain'
+import { CreditPurchase } from './CreditPurchase'
+
 /** A plot not cleared yet: wild ground behind a card that says what opens it, its cost, and Clear once its Farm Rank has
  * come. */
 function LockedPlot({ save, page, size, onCleared }: { save: FarmSave; page: PlotPage; size: number; onCleared: (words: string) => void }) {
@@ -295,12 +298,15 @@ function LockedPlot({ save, page, size, onCleared }: { save: FarmSave; page: Plo
         backgroundImage: 'radial-gradient(circle at 30% 60%, #4f7a35 0 9%, transparent 11%), radial-gradient(circle at 70% 30%, #9a9a94 0 8%, transparent 10%)',
         backgroundSize: `${size}px ${size}px`,
       }} />
-      <div className="absolute w-[min(320px,80%)] space-y-2 rounded-lg border border-hairline bg-panel/95 p-4 text-center shadow-3">
+      <div className="absolute max-h-full w-[min(320px,80%)] space-y-2 overflow-y-auto rounded-lg border border-hairline bg-panel/95 p-4 text-center shadow-3">
         <span className="mx-auto grid size-9 place-items-center rounded-full bg-sunken text-ink-soft"><LockedIcon size={20} /></span>
         <h2 className="font-display text-[18px] font-bold">{page.name}</h2>
         <p className="text-[14px] font-semibold" data-plot-lock>{page.offered ? 'Ready to clear' : (page.lock ?? `Opens at Farm Rank ${rank}`)}</p>
         <p className="text-[13px] text-ink-soft">Farm Rank {rank} · {cost.toLocaleString('en-US')}g and an action. It opens at once, wild: clear and till its tiles. No upkeep.</p>
         <Notes note={note} error={error} />
+        {page.offered && <CreditPurchase save={save} cost={cost} title={page.name}
+          lock={plotLockWords(plotLock({ ...save, gold: cost }, page.plot))} order={s => clearPlot(s, page.plot)}
+          onDone={() => onCleared(`${page.name} is yours.`)} />}
         {page.offered && (
           <Button className="w-full" disabled={busy || page.lock !== null} onClick={clear} data-action="clear-plot">
             {page.lock ?? `Clear ${page.name} · ${cost.toLocaleString('en-US')}g · 1 action`}

@@ -336,7 +336,7 @@ function NextSection({ card, alternate = false, play = null, ask = null, bench =
         {card.words}
       </p>
       {alternate && <p className="text-[13px] text-ink-soft">The original scene will open in her Library when its requirements are met.</p>}
-      {bench && <Link to="/?sheet=bench" state={{ back: true }} className="block min-h-11 py-2 text-[14px] font-semibold text-accent-strong" data-action="to-bench">Make one at the Forge’s bench ›</Link>}
+      {bench && <Link to="/?sheet=bench" state={{ back: true }} className="block min-h-11 py-2 text-[14px] font-semibold text-accent-strong" data-action="to-bench">Commission one at the Ring Bench ›</Link>}
       {play && (
         <Link to={play} state={{ back: true }} aria-label="Play her event · 1 action" className="font-display grid min-h-12 place-items-center rounded-md text-[16px] font-bold text-white" style={{ background: colour }} data-action="play-event">
           {alternate ? 'Play alternate · 1 ›' : 'Play · 1 ›'}

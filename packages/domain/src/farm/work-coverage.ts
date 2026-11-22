@@ -8,6 +8,7 @@ import { mealsNeeded, pantryMeals, plainBatch } from './food'
 import { nextStationLoad } from '../gathering/stations'
 import { STATIONS } from '../gathering/ids'
 import { taskLock } from './farmhands'
+import { surplusCrate } from './production'
 import type { SchedulePack } from '../town/town'
 
 export type WorkNeed = { task: FarmTask; priority: number; count: number; need: string; blocked?: true }
@@ -51,6 +52,8 @@ export function workNeeds(save: FarmSave, pack: SchedulePack | null): WorkNeed[]
   for (const station of STATIONS) {
     if (save.farm.stationPlans?.[station] && nextStationLoad(save, station, 1)) add({ kind: 'load', station }, 5, 1, 'Target needs another load')
   }
+  const surplus = surplusCrate(save).reduce((sum, line) => sum + line.count, 0)
+  add({ kind: 'ship-surplus' }, 6, surplus, 'Shipping waits · approve at the bin')
   return gaps.sort((a, b) => a.priority - b.priority || b.count - a.count)
 }
 

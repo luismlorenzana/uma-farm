@@ -1,8 +1,8 @@
 import {
   forgeMaterialRows, HEIRLOOMS, TOOL_IDS, TOOL_NAMES, toolTierName, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, binTotal, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
   BUILD_PLACES, EXPEDITION_REGIONS, farmPlace, farmRankOf, farmRankOpens, FARM_RANK_POINTS, FIELD_PLOTS,
-  goodCount, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
-  HOUSE_COSTS, readyTiles, rungName, STARTER_RING_GOOD, STARTER_RING_LOGS, STATION_LEVELS, STATIONS, umaMilestones,
+  creditLeft, buildOrders, pinSupplyProject, RING_DEPOSIT, STANDARD_RING_COST, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
+  HOUSE_COSTS, readyTiles, rungName, STATION_LEVELS, STATIONS, umaMilestones,
   type BuildPlace, type BuildNeed, type FarmSave, type FarmPlaceId,
 } from '@farm/domain'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -15,6 +15,9 @@ import { namer } from '../story/people'
 import { placeLink } from './farm-map'
 import { compareRelationships } from './relationship-order'
 import { dateWords } from './words'
+import { changeHomestead } from './homestead-actions'
+import { loanWords } from './money-words'
+import { RestockList } from './RestockList'
 
 const number = (value: number) => value.toLocaleString('en-US')
 const gold = (value: number) => `${number(value)}g`
@@ -46,6 +49,8 @@ function Project({ save, project }: { save: FarmSave; project: BuildPlace }) {
   const cost = project.opens.cost
   const done = lock?.by === 'built'
   const due = lock?.by === 'tonight'
+  const [message, setMessage] = useState('')
+  const quote = buildOrders({ ...save, today: { ...save.today, town: true } }).find(row => row.project === project.id)
   const short = Math.max(0, cost.gold - save.gold)
   const stats = done ? 'Built' : due ? 'Finishes overnight' : !project.opens.game ? 'Deferred'
     : lock?.by === 'farm-rank' ? `Farm Rank ${lock.rank}` : lock?.by === 'after' ? `After the ${farmPlace(lock.place)?.name}`
@@ -66,6 +71,13 @@ function Project({ save, project }: { save: FarmSave; project: BuildPlace }) {
         </div>)}
       </>}
       {project.opens.game && <Action to={peek(project.id)}>{done ? 'Open project' : 'View build'}</Action>}
+      {!done && !due && project.opens.game && <div className="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" onClick={() => void changeHomestead(s => pinSupplyProject(s, project.id)).catch((error: Error) => setMessage(error.message))}>
+          {save.farm.projectPin === project.id ? 'Unpin project' : 'Pin and keep materials'}
+        </Button>
+        {quote && !quote.lock && <Action to="/town?at=mayor&sheet=mayor">Finance · {gold(quote.borrow)}</Action>}
+        {message && <p role="status">{message}</p>}
+      </div>}
     </div>
   </details>
 }
@@ -103,7 +115,7 @@ function WeddingPath({ save }: { save: FarmSave }) {
   const nextEvent = candidate && pack ? readiness(save, pack, candidate[0]) : null
   const nextBar = candidate ? bar(candidate[1]) : null
   const hasSpouse = Object.values(save.love).some(love => love.stage === 'spouse')
-  const logs = Math.min(goodCount(save.items, STARTER_RING_GOOD), STARTER_RING_LOGS)
+  const pending = save.forge?.ringOrder
   return <section className="space-y-2" aria-label="Wedding and rings">
     <h3 className="font-display text-base font-semibold">First wedding</h3>
     {hasSpouse && <p className="text-[13px] text-success">First wedding held</p>}
@@ -117,13 +129,14 @@ function WeddingPath({ save }: { save: FarmSave }) {
         </> : <><Action to="/town">Meet an Uma in town</Action> and play her Friendship events.</>}
       </li>
       <li>Play Romance 8 and end the day. {bench ? 'Ring bench open.' : 'The bench opens the next morning.'}</li>
-      <li>{held ? 'A ring is in the Warehouse.' : `Gather Pine Logs · ${logs}/${STARTER_RING_LOGS} for a Copper Ring.`}{' '}
-        {bench ? <Action to="/?sheet=bench">Ring bench</Action> : <Action to={peek('forest')}>The Woods</Action>}</li>
+      <li>{held ? 'A ring is in the Warehouse.' : pending ? `Ring due ${dateWords(pending.due, save.calendar)}.`
+        : `Commission a Copper Ring for ${gold(STANDARD_RING_COST)} or save ${gold(RING_DEPOSIT)} for the deposit.`}{' '}
+        {bench && <Action to="/?sheet=bench">Ring Bench</Action>}</li>
       <li>After Romance 10, propose with any ring. Confirm a wedding date and play the wedding on that day.
         {candidate?.[1].weddingDay !== undefined && <> Scheduled · {dateWords(candidate[1].weddingDay, save.calendar)}.</>}
       </li>
     </ol>
-    <p className="text-[13px] text-ink-soft">The starter ring needs no gold. The Farmhouse has room for the wedding.</p>
+    <p className="text-[13px] text-ink-soft">The smith supplies the starter commission’s metal and gemstone. The Farmhouse has room for the wedding.</p>
   </section>
 }
 
@@ -136,6 +149,11 @@ function Focus({ save }: { save: FarmSave }) {
     .filter(project => buildLock(save, project.id)?.by !== 'built')
     .sort((a, b) => a.opens.rank - b.opens.rank)
   return <div className="space-y-4">
+    <RestockList save={save} />
+    <section aria-label="Project credit" className="text-[13px]">
+      <Action to="/town?at=mayor&sheet=mayor">{gold(creditLeft(save))} credit left</Action>
+      {save.farm.loans.map(loan => <p key={loan.for}>{loan.credit?.title ?? loan.for} · {loanWords(save, loan)}</p>)}
+    </section>
     <section className="space-y-1" aria-label="Next Farm Rank">
       <h3 className="font-display text-base font-semibold">{next ? `Reach Farm Rank ${next.rank}` : 'Farm Rank 10 reached'}</h3>
       {next && <>

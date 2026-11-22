@@ -159,7 +159,7 @@ The [Work calendar](game-mechanics.md#farmhands) shows allocations and gaps by d
 
 **F110 is in.** The [Forge](game-mechanics.md#the-forge-workshop) upgrades seven tools shared with the crew, and its four heirlooms unlock formal looks alongside Greater Love. The Ring Bench opens independently.
 
-**F111 is next.** [Project finance, wedding rings, and farm handoffs](handoff/tasks/F111-project-finance.md) adds shared credit for major orders, partial repayment, ring commissions, and a standard surplus policy for every item. The exit check covers the first wedding on a solo farm, a six-figure project, and default shipping with 10, 20 and 50 Umas.
+**F111 is in.** Shared credit, partial repayments, wedding ring commissions, and standard surplus policies are part of the farm economy. The [playthroughs](game-mechanics.md#f111-finance-and-default-surplus-playthroughs) cover a solo first wedding, six-figure orders and default shipping with 10, 20 and 50 Umas.
 
 How each workshop is built:
 

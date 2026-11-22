@@ -3,7 +3,8 @@
 // 1 action). With `?pick=bin` it's the bin's pick mode: a tap on a star puts one in the crate, All puts the good's every
 // star in, and Ship · 1 action ships the crate, then goes back to the bin. Drawn on the kit's Chip, Sheet and Button:
 // the kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
-import { dateDayOf } from '@farm/domain'
+import { dateDayOf, isShippableId, KEEP_ALL, setSurplusReserve, surplusStock } from '@farm/domain'
+import { changeHomestead } from './homestead-actions'
 import {
   actionsLeft, availableStock, baseGoodId, binTotal, canSaveCropSeed, CATALOGUE, cropBaseGrade, cropGoodId, cropGradeOf, crateWorth, discovered, goodName,
   goodOf, ingredientSources, isGoodId, itemNameOf, MAX_PRODUCTION_TARGET, SEED_BATCH, seedKnowledge, seedOf, seedOutput, type CropId, type CrateLine, type FarmSave,
@@ -284,6 +285,7 @@ function GoodSheet({ save, id, row, onClose, onShipAll, busy, error }: {
         </div>
       )}
       {good && isGoodId(good.id) && <ReservePanel key={good.id} save={save} id={good.id} grade={good.grade} />}
+      {(good?.id ?? row?.id) && <SurplusReserve key={good?.id ?? row!.id} save={save} id={good?.id ?? row!.id} />}
       {crop && <CropSeedPanel key={`${crop.crop}:${crop.grade}`} save={save} {...crop} held={row?.total ?? 0} />}
     </Sheet>
   )
@@ -307,6 +309,33 @@ function ReservePanel({ save, id, grade }: { save: FarmSave; id: string; grade: 
       <Notes note={note} error={error} />
     </div>
   )
+}
+
+function SurplusReserve({ save, id }: { save: FarmSave; id: string }) {
+  const stock = surplusStock(save, id)
+  const [floor, setFloor] = useState(stock.override ?? stock.standard)
+  const [stars, setStars] = useState(stock.heldStars)
+  const { note, error, busy, run } = useAct(id)
+  const set = (count: number | null, minStars = stars) =>
+    run(changeHomestead(s => setSurplusReserve(s, id, count, minStars)).then(() => 'Surplus rule saved'))
+  if (!isShippableId(id) || stock.standard === KEEP_ALL) return <p className="py-1 text-[13px] text-ink-soft">Automatic shipping · Keep all</p>
+  return <details className="border-t border-hairline py-2 text-[13px]">
+    <summary className="min-h-11 cursor-pointer font-semibold">Surplus · {stock.available} eligible to ship</summary>
+    <p>Standard keep {stock.standard} · {stock.protectedStock} protected
+      {stock.override !== undefined && ` · Override ${stock.override === KEEP_ALL ? 'Keep all' : stock.override}`}</p>
+    <div className="flex flex-wrap items-center gap-2">
+      <label>Keep <input type="number" className="min-h-11 w-20 border border-hairline bg-panel px-2" min="0" max="99"
+        value={floor === KEEP_ALL ? 99 : floor} onChange={event => setFloor(Number(event.currentTarget.value))} /></label>
+      <label>Protect stars <select className="min-h-11 bg-panel px-2" value={stars} onChange={event => setStars(Number(event.currentTarget.value))}>
+        <option value={6}>Any can ship</option>
+        {[2, 3, 4, 5].map(n => <option key={n} value={n}>★{n} and up</option>)}
+      </select></label>
+      <Button variant="secondary" disabled={busy || !Number.isSafeInteger(floor) || floor < 0 || floor > 99} onClick={() => set(floor)}>Set surplus reserve</Button>
+      <Button variant="secondary" disabled={busy} onClick={() => { setFloor(KEEP_ALL); set(KEEP_ALL) }}>Keep all</Button>
+      <Button variant="secondary" disabled={busy} onClick={() => { setFloor(stock.standard); setStars(6); set(null, 6) }}>Use standard</Button>
+    </div>
+    <Notes note={note} error={error} />
+  </details>
 }
 
 function CropSeedPanel({ save, crop, grade, held }: { save: FarmSave; crop: CropId; grade: number; held: number }) {

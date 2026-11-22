@@ -61,6 +61,9 @@ function Animals({ save, busy, run }: { save: FarmSave; busy: boolean; run: Run 
   )
 }
 
+import { buyAnimal, buyFodder, recordPurchase } from '@farm/domain'
+import { CreditPurchase } from '../loop/CreditPurchase'
+
 function AnimalRow({ save, kind, busy, run }: { save: FarmSave; kind: AnimalKind; busy: boolean; run: Run }) {
   const rule = ANIMALS[kind]
   const lock = animalLock(save, kind)
@@ -73,6 +76,8 @@ function AnimalRow({ save, kind, busy, run }: { save: FarmSave; kind: AnimalKind
         <span className="block truncate text-[14px] font-semibold">{rule.name}{kept > 0 ? <span className="font-normal text-ink-soft"> · {kept} on the farm</span> : null}</span>
         <span className="block truncate text-[12px] text-ink-soft">The {HOME_NAMES[rule.home]} · {animalGoodName(kind)} {gold(goodOf(rule.good) ? starPrice(rule.good, 1) : 0)}, a fed night</span>
       </span>
+      {short && <CreditPurchase save={save} cost={rule.price} title={rule.name} lock={lock}
+        order={s => recordPurchase(buyAnimal(s, kind).save, rule.name, rule.price)} />}
       {lock ? <span className="max-w-[40%] shrink-0 text-right text-[12px] text-ink-soft">{lock.replace(/\.$/, '')}</span> : (
         <Button size="sm" disabled={busy || short} data-action="buy-animal"
           onClick={() => run(() => buyAnimalOf(kind), `A ${rule.name.toLowerCase()} for the ${HOME_NAMES[rule.home]}`)}>{short ? `Need ${gold(rule.price)}` : `Buy · ${gold(rule.price)}`}</Button>
@@ -94,6 +99,8 @@ function Fodder({ save, busy, run }: { save: FarmSave; busy: boolean; run: Run }
           {room === 0 ? <p className="text-[13px] text-ink-soft">The silo is full.</p> : (
             <div className="flex flex-wrap gap-1.5">
               {[...new Set(amounts)].map((n) => (
+                save.gold < n * FODDER_PRICE ? <CreditPurchase key={n} save={save} cost={n * FODDER_PRICE} title={`${n} feed`}
+                  order={s => recordPurchase(buyFodder(s, n), 'Fodder', n * FODDER_PRICE)} /> :
                 <Button key={n} size="sm" variant={n === amounts.at(-1) ? 'primary' : 'secondary'} disabled={busy || save.gold < n * FODDER_PRICE} data-action="buy-fodder" data-count={n}
                   onClick={() => run(() => buyFodderOf(n), `${n} feed into the silo`)}>{n === room ? 'Fill it' : `${n}`} · {gold(n * FODDER_PRICE)}</Button>
               ))}

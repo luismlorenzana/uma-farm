@@ -5,7 +5,7 @@ import { fail, member } from './parse-loop'
 import { TOOL_IDS, type FarmSave, type TodayV4, type ToolId } from './v4'
 
 export function parseForge(value: unknown, path: string, save: FarmSave): ForgeState {
-  const data = object(value, path, ['bench', 'legacyLooks', 'tool', 'installed', 'heirlooms', 'tracked'])
+  const data = object(value, path, ['bench', 'legacyLooks', 'tool', 'installed', 'heirlooms', 'tracked', 'ringOrder'])
   const today = save.calendar.day
   const roster = new Set(Object.keys(save.roster))
   const spouses = new Set([...roster].filter(id => save.love[id]?.stage === 'spouse'))
@@ -47,7 +47,10 @@ export function parseForge(value: unknown, path: string, save: FarmSave): ForgeS
     || heirlooms.filter(row => !row.ready).length > 2) fail(path, 'invalid heirloom orders')
   const goal = data.tracked === undefined ? null : object(data.tracked, path, ['recipient', 'piece'])
   const tracked = goal ? { recipient: member(goal.recipient, path, spouses), piece: oneOf(goal.piece, path, HEIRLOOM_IDS) } : null
-  return { bench: bool(data.bench, path), legacyLooks, ...(tool ? { tool } : {}), installed, heirlooms, ...(tracked ? { tracked } : {}) }
+  const pending = data.ringOrder === undefined ? null : object(data.ringOrder, `${path}.ringOrder`, ['grade', 'due'])
+  const ringOrder = pending ? { grade: int(pending.grade, path, 1, 10), due: int(pending.due, path, today + 1, today + 2) } : null
+  return { bench: bool(data.bench, path), legacyLooks, ...(tool ? { tool } : {}), installed, heirlooms, ...(tracked ? { tracked } : {}),
+    ...(ringOrder ? { ringOrder } : {}) }
 }
 
 export function parseForgeHelper(value: unknown, path: string, roster: ReadonlySet<string>): NonNullable<TodayV4['forgeHelper']> {

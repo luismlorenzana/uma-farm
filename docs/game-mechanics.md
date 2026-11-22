@@ -2067,7 +2067,7 @@ The crops' own prices, their refined forms and their season of demand:
 
 #### Rings
 
-The catalogue's 16th family is the rings: ten of them, made at the ring bench from three refined goods of their grade,
+The catalogue's 16th family is the rings: ten of them, ordered at the Ring Bench,
 always at ★1. They sell at the bin like any good, never in demand, and sit on the
 Warehouse's Rings tab while one is held. The ring bench is the romance's.
 
@@ -2181,9 +2181,9 @@ that exact grade from automatic cooking and surplus shipping. An explicitly sele
 or shipment can still use the goods under its usual rules.
 Price easing groups all grades of an ingredient into the same crate and groups each refined form separately.
 
-**Ship surplus** is an optional Work board assignment. Configure the exact goods, in order, and a limit of up to
-50 units. One farmhand spends one action to move one shared crate into tomorrow's bin after tonight's settlement.
-You can take goods back before the following settlement or add a manual shipment alongside it.
+**Standard surplus** is ready on a new farm. It keeps 12 of common crops, eight of other common food inputs, six of most refined or rare goods, 20 Pine Logs and four of each Restaurant dish. Grades and forms have independent floors. It keeps all seeds, fodder, rings, heirlooms, and other protected goods. Existing custom lists and exact-grade reserves carry forward. The Warehouse shows the standard and your overrides, including zero, Keep all and protection by stars.
+
+Pinned builds and Restaurant recipes, tracked tools and heirlooms, station stock targets, and the next meal ingredients protect stock before shipping. An eligible Uma queues the shared crate after priority work, using one action. The default cap is 50 units on small farms, 100 from 15 hands and 200 from 35. The market still applies easing. On a solo farm, **Suggested surplus** at the bin queues its listed goods with one player action. **Take back** still works until settlement. Work can pause automatic shipping, change its cap or restore standards.
 
 #### Roster production playthrough
 
@@ -2208,6 +2208,22 @@ outputs. Seasonal seed buys kept the rotation stocked. Irrigation still has occa
 shift, and surplus shipping is capped at one crate per night. The 50-Uma farm outproduced that crate and built up
 raw stock in several grades, even with spare load slots. The deterministic report records per-season gold, water
 and feed gaps, pantry use, exact grade discovery days and end-of-year stock by form.
+
+#### F111 finance and default surplus playthroughs
+
+The fresh solo farm began with 500g, nine Carrot Seeds and zero farmhands. It sold the suggested surplus, bought seasonal seeds, placed a financed Copper Ring order on Summer 2 with 525g left after the deposit, and married on Summer 7 of Year 1. There were no nights in arrears. The wedding-day save still held 961g before a voluntary 100g payment.
+
+The standard defaults ran for all 120 turns without any surplus configuration in the staffed trials. These use synthetic Umas available from the beginning to measure the shipping system at each size.
+
+| Farmhands | Automatic crates | Units shipped | Bin sales | Automatic repayment | Nights in arrears |
+|---:|---:|---:|---:|---:|---:|
+| 10 | 72 | 789 | 74,260g | 1,000g | 0 |
+| 20 | 68 | 1,628 | 199,180g | 1,000g | 0 |
+| 50 | 110 | 5,045 | 638,355g | 1,000g | 0 |
+
+Each trial also made a 100g partial payment before the overnight schedule. A separate Rank 10 farm with 50 Umas and the same default policy sold 3,217,115g over one year, finished with 461 raw and 42 refined units in stock, and kept its higher-grade Yogurt target. These are fixture results. The actual schedule depends on assignments, plantings, ingredient choices and demand.
+
+A 100,000g Mythril Ring used 10,000g in savings and 90,000g in credit. Its balance reached 99,000g with the fee and fell to 94,000g after a 5,000g payment. The eligible 110,000g fifth cottage was also built with 10,000g in savings and the full 100,000g credit line. The browser smoke test commissioned a ring, paid part of a loan, approved a suggested surplus crate, and financed the cottage at 844 × 390 and 667 × 375. The simulations are in the domain wedding, credit, and scale tests.
 
 #### Every family's prices
 
@@ -2516,49 +2532,25 @@ Every night the farm covers takeout, upkeep and any arrears first. The remaining
 
 #### Loans
 
-The mayor's office, in town, lends toward a build. The trip, ordering and borrowing are all free of actions.
+The mayor’s office offers project quotes, gold advances, and exact-grade supplier materials. An eligible project can finance its gold bill and materials available from a supplier. Seed, livestock, fodder, land, station, Kitchen and Forge purchases offer a quote from their own screens.
 
 <!-- live:loans -->
-| Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Lends up to | 1,000g | 2,000g | 4,000g | 8,000g | 15,000g | 30,000g | 50,000g | 80,000g | 120,000g | 160,000g |
-| Loans at once | 1 | 1 | 1 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
-
 | Term | The rule |
 |---|---|
-| What it lends | What the build is short of gold, rounded up to 100g, never past its cost; you bring the goods |
-| Toward | A place offered at your Farm Rank (its game built), or the next house once its wedding has come |
-| The fee | 10% of the loan, rounded up to 10g, owed with it |
-| Each night | A tenth of what’s owed when it’s taken (rounded up to 5g). Capped by the night’s income and by the cash available after bills and arrears |
-| Repay | At the office, in full, any time you’re in town; the fee isn’t returned |
+| Credit | 100,000g shared outstanding principal from Rank 1, across three open loans |
+| What it lends | Gold advances, exact supplier goods, and eligible projects and commissions |
+| The fee | 10% once, rounded up to 10g |
+| Each night | 20% of settled sales left after food, upkeep, and arrears, shared oldest first |
+| Repay | Pay any amount at the office. Payments clear the fee first, then free principal. A paid-off loan frees its slot. |
 <!-- /live -->
 
-- **The office's orders** (`buildOrders`): every place offered at your Farm Rank whose game is built and that doesn't
-  stand (one paid today says "Builds tonight"), and the next house once its wedding has come. (A loan a save still holds
-  toward the retired Dorm's level is repaid like any other.) Each says what it costs, and:
-  - **Build · 1,000g** when the gold and goods are there: the build as its own card orders it, with your gold;
-  - **Borrow 400g · Build** when only gold is short and the office lends: what it's short, rounded up to 100g, with the
-    terms under it ("Need 360g more · 440g owed, a tenth a night from income"). The loan and the build are one tap: a
-    place stands the next morning, and a house stands at once, named in its
-    row's field as on the homestead;
-  - otherwise why not: its goods ("Need 20 logs more."), the loans held ("One loan at a time: this one first.",
-    "Two loans at a time: one of these first."), or the limit ("The office lends up to 1,000g at Farm Rank 1.").
-- **Each night,** each loan in the order taken draws its share (`nightly`, a tenth of what was owed when it was
-  taken, rounded up to 5g). Payments draw from that night's income, capped by the cash left after takeout,
-  upkeep and arrears. A loan with nothing owed goes, and the morning says "cleared".
-- **Repay:** at the office, the whole of what's owed, from your gold, any time you're in town; the fee isn't returned.
-- **When it clears:** the nights at its share (what's owed ÷ its share, rounded up) from today: "clears in about 10
-  nights (Spring 14)", as the Book, the projects list and the office say it. "About", since a night with fewer sales
-  repays less.
-- **Ordering a build stays where it is.** A place's Build card on the farm and the homestead still
-  order with your own gold and goods, free and with no trip to town; the office orders the same builds, and only it
-  lends. Paying your own way needs nobody's leave, and builds are rare, so a trip to town would add a step and no
-  choice: the trip is the price of credit.
+- **Review financing** shows the total, cash to pay now, principal, one-time fee, total owed, and remaining credit. The order and its loan commit together. The usual project gates apply.
+- **Suppliers** quote Pine Logs and Limestone from the start, and other exact goods after the farm discovers them. Borrowed goods arrive at ★1. They use the existing discovery requirements.
+- **Nightly repayment** shares one budget across new loans. From 1,000g in shipping and Restaurant sales, with 300g in bills, 140g goes to repayment and 560g stays in the wallet. A night with no sales left after bills pays 0g. Legacy loans draw under their original terms before the new budget.
+- **Pay any amount** uses whole gold up to the outstanding balance and cash the farm holds. It applies to the note you select. **Pay off** clears the entire balance. The fee is paid first, and the remaining principal determines available credit.
+- **Book → Money** shows settled sales from the bin and Restaurant, food, upkeep, automatic payments, and recent finance activity. The mayor shows recent paid-off notes. Payoff estimates use recent available payments. A farm without eligible sales shows **Waiting for sales**.
 
-**The save:** `farm.loans` (each loan's project, the day taken, what was lent, the fee, what's owed and its share a
-night; at most two), `farm.owed` and `farm.short` (together: both 0, or both above), and `farm.income` (up to seven
-nights). They grow v5 in place: a save from before them reads as no loans, nothing owed and no nights, and nothing moves
-`updatedAt` for it.
+The save keeps legacy loans with their old balances and terms. New notes store their original principal, fee, remaining balance, and purpose. The recent journal records borrowing, supplier purchases, manual payments and automatic payments.
 
 ### Food
 
@@ -4981,8 +4973,8 @@ The town's smith first appears at the ring bench, by her master-data name. The r
 | 2 | The smith | “I keep the smithy down in town. They told me this Forge was still standing.” |
 | 3 | (narration) | She runs a hand along the cold hearth, then looks at you. |
 | 4 | The smith | “The fire can wait for another year. But a bench by the door, that I can set up today.” |
-| 5 | The smith | “Bring three refined goods of one grade, and you’ll make a ring of that grade. Planks, fillets, flour: whatever you have.” |
-| 6 | The smith | “One ring a day, and no charge. Word in town is that someone on this farm has your heart.” |
+| 5 | The smith | “I can set quartz in copper for your first ring. I’ll bring the metal and stone from town.” |
+| 6 | The smith | “You can pay a deposit at the bench and settle the rest with the mayor as your farm grows.” |
 | 7 | (narration) | The Forge’s door stays open. A small bench waits inside, by the light. |
 <!-- /live -->
 
@@ -7160,7 +7152,7 @@ household's meals and the night's companion ([the Uma loop](#the-uma-loop)) alon
 ### The Forge workshop
 
 One farm location has a **Forge workshop** and a **Ring Bench**. Restore the workshop at Farm Rank 3 for
-1,000g and 12 logs. It opens the next morning, with no additional nightly upkeep. The Ring Bench opens after
+1,000g and 12 logs. It opens the next morning and costs 15g in nightly upkeep once built. The Ring Bench opens after
 the first played Romance 8 and uses its own daily allowance. Either counter can open first.
 
 #### Shared tools
@@ -7224,54 +7216,48 @@ finished piece waits in her book or the workshop for **Give to her**. Gifting is
 
 #### The ring bench
 
-A solo farmer can court one Uma through the first wedding. Start with six Pine Logs from the Woods.
-Play Romance 8 and end the day, make a Copper Ring at the bench, then propose after Romance 10.
-The farmhouse can cook from Day 1 and has room at the wedding.
+The Ring Bench opens on the dawn after the first Romance 8. The smith supplies two Copper Ingots and one Cut Quartz for the 20,000g standard commission. Pay outright or put 2,000g down and borrow the remaining 18,000g. The financed total is 19,800g. The ring reaches the Warehouse the next dawn. Propose after Romance 10 using the usual calendar and relationship rules. The farmhouse has room for the wedding.
 
 The bench's rule, in full:
 
 <!-- live:bench-recipe -->
-|  | The ring bench |
-|---|---|
-| Opens | The night after the first Romance 8 event anyone plays; the smith’s scene is due the next morning |
-| Starter Copper Ring | 6 Pine Logs, any stars, with no paid building or Farm Rank requirement |
-| A ring of grade g | 3 refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand |
-| Cost | The goods only: no gold, no game, no assistant, no score |
-| Out | The ring, ★1 (a Rough make), into the Warehouse |
-| How often | One ring a day (`today.ring`) |
-| Her bonus once married | +1% at her line a grade, inside her own +35% |
-| Refusals | “The ring bench opens with your first Romance 8.” · “Three refined goods of one grade.” · “Ingots, blocks and cut gems open when the Smelter and the Cutter are built.” · “One ring a day.” · “Not enough in the Warehouse.” |
+| Ring | Farm Rank | Materials | Fee | Delivery |
+|---|---|---|---|---|
+| Copper Ring | 1 | 2 Copper Ingot + 1 Cut Quartz (provided by smith) | 20,000g | Next dawn |
+| Tin Ring | 4 | 2 Tin Ingot + 1 Cut Amethyst | 25,000g | Next dawn |
+| Iron Ring | 4 | 2 Iron Ingot + 1 Cut Citrine | 30,000g | Next dawn |
+| Silver Ring | 5 | 2 Silver Ingot + 1 Cut Garnet | 38,000g | Next dawn |
+| Cobalt Ring | 6 | 2 Cobalt Ingot + 1 Cut Emerald | 48,000g | Next dawn |
+| Gold Ring | 7 | 2 Gold Ingot + 1 Cut Sapphire | 60,000g | Next dawn |
+| Platinum Ring | 8 | 2 Platinum Ingot + 1 Cut Ruby | 75,000g | Next dawn |
+| Titanium Ring | 8 | 2 Titanium Ingot + 1 Cut Diamond | 90,000g | Next dawn |
+| Mythril Ring | 9 | 12 Mythril Ingot + 8 Cut Starstone | 100,000g | 2 dawns |
+| Orichalcum Ring | 10 | 12 Orichalcum Ingot + 8 Cut Philosopher's Stone | 120,000g | 2 dawns |
+
+The Copper Ring can be financed with 2,000g down. The Ring Bench accepts one pending order independently of the tool and heirloom counters.
 <!-- /live -->
 
-- **On the map:** open the Forge and choose its Ring Bench once Romance 8 opens it. **Make a ring ›** opens the
-  counter. It reads **See the bench ›** once today's ring is made.
-- **The smith's scene:** the morning after, once the summary is put away (after the opening, before the meeting scenes), seven
-  short lines and a card with **See the bench** or **Later**; read once.
-- **The bench's sheet:** the smith's face and name (the Uma who plays the role) and the rule; one row a grade you can make now, lowest first, each with **the
-  three goods it would take** (the lowest-value refined goods of that grade, fewer stars first, any family, any mix),
-  "→ Iron Ring" and "+3% once married". A tap on one of the three lists the grade's other goods held and swaps it in; a
-  tap on a row chooses it. The Forge's own recipe shows greyed, "2 ingots + 1 cut gem · Opens when the Smelter and the Cutter are built"; then "Her bonus
-  once married: +1% a grade", and **Make an Iron Ring · 1 a day**. Made, the ring is "in the Warehouse, ★1", and the foot
-  says "One ring a day. Iron Ring made today ✓" until tomorrow. With nothing to make: "Nothing to make yet. Three refined
-  goods of one grade make a ring: planks from the Sawmill, fillets from the Smokehouse, flour from the Mill."
+- **On the map**, open the Forge and choose **Ring Bench**. Select the grade to see the exact metal and gem, cost, and delivery date. The smith’s introduction plays once when the bench opens.
+- **Premium commissions** need the Smelter and Cutter and the exact listed materials. They keep the usual ring bonus of +1% per grade at her line, inside her existing cap. The grade-9 Mythril Ring fee is 100,000g and the grade-10 Orichalcum Ring fee is 120,000g.
+- **An order** uses the bench allowance for the day and stays on the bench until its delivery dawn. Paid workshop tool and heirloom orders follow their own schedules. Rings already owned or equipped and weddings already scheduled carry forward.
 
 #### The rings
 
 The ten rings, one a grade:
 
 <!-- live:rings -->
-| Grade | Ring | Id | ★1 | ★5 | Her bonus once married | Cheapest at the bench | Its own recipe (once the Smelter and the Cutter stand) |
-|---|---|---|---|---|---|---|---|
-| G1 | Copper Ring | `ring-g1` | 205g | 410g | +1% | 3 Pine Plank (40g each) | 2 Copper Ingot + 1 Cut Quartz |
-| G2 | Tin Ring | `ring-g2` | 275g | 550g | +2% | 3 Birch Plank (45g each) | 2 Tin Ingot + 1 Cut Amethyst |
-| G3 | Iron Ring | `ring-g3` | 340g | 680g | +3% | 3 Cedar Plank (60g each) | 2 Iron Ingot + 1 Cut Citrine |
-| G4 | Silver Ring | `ring-g4` | 450g | 900g | +4% | 3 Polished Rice (75g each) | 2 Silver Ingot + 1 Cut Garnet |
-| G5 | Cobalt Ring | `ring-g5` | 580g | 1,160g | +5% | 3 Oak Plank (105g each) | 2 Cobalt Ingot + 1 Cut Emerald |
-| G6 | Gold Ring | `ring-g6` | 745g | 1,490g | +6% | 3 Rye Flour (90g each) | 2 Gold Ingot + 1 Cut Sapphire |
-| G7 | Platinum Ring | `ring-g7` | 950g | 1,900g | +7% | 3 Buckwheat Flour (115g each) | 2 Platinum Ingot + 1 Cut Ruby |
-| G8 | Titanium Ring | `ring-g8` | 1,220g | 2,440g | +8% | 3 Ebony Plank (220g each) | 2 Titanium Ingot + 1 Cut Diamond |
-| G9 | Mythril Ring | `ring-g9` | 1,555g | 3,110g | +9% | 3 Elderwood Plank (280g each) | 2 Mythril Ingot + 1 Cut Starstone |
-| G10 | Orichalcum Ring | `ring-g10` | 2,025g | 4,050g | +10% | 3 Yggdrasil Plank (360g each) | 2 Orichalcum Ingot + 1 Cut Philosopher's Stone |
+| Grade | Ring | Id | ★1 sale | ★5 sale | Her bonus once married |
+|---|---|---|---|---|---|
+| G1 | Copper Ring | `ring-g1` | 205g | 410g | +1% |
+| G2 | Tin Ring | `ring-g2` | 275g | 550g | +2% |
+| G3 | Iron Ring | `ring-g3` | 340g | 680g | +3% |
+| G4 | Silver Ring | `ring-g4` | 450g | 900g | +4% |
+| G5 | Cobalt Ring | `ring-g5` | 580g | 1,160g | +5% |
+| G6 | Gold Ring | `ring-g6` | 745g | 1,490g | +6% |
+| G7 | Platinum Ring | `ring-g7` | 950g | 1,900g | +7% |
+| G8 | Titanium Ring | `ring-g8` | 1,220g | 2,440g | +8% |
+| G9 | Mythril Ring | `ring-g9` | 1,555g | 3,110g | +9% |
+| G10 | Orichalcum Ring | `ring-g10` | 2,025g | 4,050g | +10% |
 <!-- /live -->
 
 Rings are goods of their own family: sold at the bin like any good (no season's demand), on the Warehouse's

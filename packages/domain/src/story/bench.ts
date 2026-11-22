@@ -29,8 +29,8 @@ export const BENCH_SCENE_LINES: { readonly id: typeof BENCH_SCENE; readonly titl
     cast('ida-stone', '“I keep the smithy down in town. They told me this Forge was still standing.”'),
     narrator('She runs a hand along the cold hearth, then looks at you.'),
     cast('ida-stone', '“The fire can wait for another year. But a bench by the door, that I can set up today.”'),
-    cast('ida-stone', '“Bring three refined goods of one grade, and you’ll make a ring of that grade. Planks, fillets, flour: whatever you have.”'),
-    cast('ida-stone', '“One ring a day, and no charge. Word in town is that someone on this farm has your heart.”'),
+    cast('ida-stone', '“I can set quartz in copper for your first ring. I’ll bring the metal and stone from town.”'),
+    cast('ida-stone', '“You can pay a deposit at the bench and settle the rest with the mayor as your farm grows.”'),
     narrator('The Forge’s door stays open. A small bench waits inside, by the light.'),
   ],
 }

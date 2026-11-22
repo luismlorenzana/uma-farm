@@ -66,6 +66,9 @@ function Restore({ save }: { save: FarmSave }) {
   </div>
 }
 
+import { CreditPurchase } from './CreditPurchase'
+import { pinToolStock } from '@farm/domain'
+
 function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }: {
   save: FarmSave; jewels: boolean; initialRecipient: string | null; initialPiece: string | null; initialTool: string | null
 }) {
@@ -165,11 +168,19 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
           {jewels && recipient && <Button variant="secondary" disabled={busy} onClick={() => void run(
             s => trackHeirloom(s, recipient, piece), tracked ? 'Tracking cleared.' : 'Added to What Next?',
           )}>{tracked ? 'Stop tracking' : 'Track materials'}</Button>}
+          {!jewels && <Button variant="secondary" disabled={busy} onClick={() => void run(
+            s => pinToolStock(s, tool), save.farm.toolPin === tool ? 'Tracking cleared.' : 'Tool materials protected.',
+          )}>{save.farm.toolPin === tool ? 'Stop tracking' : 'Track tool materials'}</Button>}
           {lock && <p className="text-ink-soft">{jewels && artLoading && lock === 'Artwork coming.' ? 'Checking wardrobe art…' : lock}</p>}
           <Button disabled={busy || lock !== null} onClick={() => void run(
             s => jewels ? orderHeirloom(s, recipient, piece, artReady, pack, assistant, useReserved)
               : orderTool(s, tool, pack, assistant, useReserved), 'Order placed.',
           )}>{jewels ? 'Commission heirloom' : 'Place tool order'}</Button>
+          <CreditPurchase save={save} cost={recipe.gold} title={jewels ? HEIRLOOMS[piece].name : TOOL_NAMES[tool]}
+            lock={jewels ? heirloomLock({ ...save, gold: recipe.gold }, recipient, piece, artReady, useReserved)
+              : toolOrderLock({ ...save, gold: recipe.gold }, tool, useReserved)}
+            order={s => jewels ? orderHeirloom(s, recipient, piece, artReady, pack, assistant, useReserved)
+              : orderTool(s, tool, pack, assistant, useReserved)} />
         </>}
         {message && <p role={error ? 'alert' : 'status'} className={error ? 'text-danger' : 'text-success'}>{message}</p>}
       </div>

@@ -21,8 +21,9 @@ import { describe, expect, it } from 'vitest'
 import { actionsLeft, goToTown, MORNING_ACTIONS, morningShiftDue, prepareDayChange, spendActions } from './actions'
 import { buildLock, buildLockWords, heldFor, payBuild, pickFor } from './builds'
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, dateOf, SEASONS } from './calendar'
-import { upkeepOf } from './economy'
-import { routineStockFloors, setStockReserve } from './production'
+import { repayLoan, upkeepOf } from './economy'
+import { borrowGold } from './credit'
+import { configureSurplus, routineStockFloors, setStockReserve } from './production'
 import { farmRankOf } from './farm'
 import { playProductionFarm, PRODUCTION_CREWS } from './production-scale.fixture'
 import { aptitudeOf, handDay, handsInOrder, handsTonight, handsWorking, setTasks, settleCrewShift, tilesAnAction, TRICK_AT } from './farmhands'
@@ -955,7 +956,7 @@ function balanceManual(save: SaveV4, crew: number): SaveV4 {
 
 async function playBalance(target: 0 | Stage) {
   // Same save seed and a twelve-day solo opening. Recruit in pairs to exercise the real shifts.
-  let save: SaveV4 = { ...newSave('balance-spring', AT), farmer: { name: 'Robin' } }
+  let save: SaveV4 = configureSurplus({ ...newSave('balance-spring', AT), farmer: { name: 'Robin' } }, { paused: true })
   let rank10 = 0
   let fullCrew = 0
   let short = 0
@@ -1154,13 +1155,19 @@ function paceFarmAction(save: SaveV4, manualFields: boolean): SaveV4 {
 }
 
 /** Same seed, starting gold and player policy, with a fixed crew of synthetic hires in each comparison. */
-async function playPacedYear(size: 0 | Stage, morningCrew: boolean) {
+async function playPacedYear(size: 0 | Stage, morningCrew: boolean, autoShip = false) {
   let save = hire({ ...newSave('day-parts-pacing', AT), farmer: { name: 'Robin' } }, size)
+  if (autoShip) {
+    save = borrowGold(goToTown(save), 1000)
+    save = repayLoan(save, save.farm.loans[0]!.for, 100)
+    expect(save.farm.loans[0]?.owed).toBe(1000)
+  } else save = configureSurplus(save, { paused: true })
   const pack = DAY_PART_PACK
   const ctx = { story: pack, talentOf: tripTalents }
   const builds = planFor(false)
   const metrics = { morning: 0, afternoon: 0, relationship: 0, hangouts: 0, dates: 0, friendship3: 0, firstDate: 0, confession: 0,
     shipping: 0, short: 0, takeout: 0, upkeep: 0, withered: 0, crew: 0, unused: 0, seedDays: 0, rank: 1, gold: 0,
+    crewCrates: 0, crewUnits: 0, repaid: 0,
     exactByAfternoon: Object.fromEntries(BALANCE_INGREDIENTS.map(key => [key, 0])), milestones: {} as Record<string, number> }
   const act = (changed: SaveV4, social = false) => {
     const from = save.today.actions
@@ -1175,7 +1182,7 @@ async function playPacedYear(size: 0 | Stage, morningCrew: boolean) {
   for (let day = 1; day <= DAYS_PER_YEAR; day++) {
     act(grow(save, size > 0 && save.fields.plots.length < Math.ceil(size / 8), builds, pack))
     save = stock(save, true, size <= 10 ? 2 : 4)
-    save = balanceStockPlan(save, size > 0)
+    if (!autoShip) save = balanceStockPlan(save, size > 0)
     save = seeds(save, (options, plot) => plantingPlan(save, plot * FIELD_TILES)?.crop ?? plotCrop(options, plot))
     save = goToTown(save)
     if (size) save = assign(save, pack, true).save
@@ -1218,17 +1225,21 @@ async function playPacedYear(size: 0 | Stage, morningCrew: boolean) {
       else if (role === 'hangout') metrics.hangouts++
     }
     while (actionsLeft(save) > 1) act(paceFarmAction(save, size === 0 || handsWorking(save, pack).length < 3))
-    act(ship(save, builds, pack, true))
+    if (!autoShip) act(ship(save, builds, pack, true))
     save = runNight(save, ctx)
     if (save.farm.short) metrics.short++
     metrics.shipping += sum(save.summary!.bin.map(sale => sale.gold))
     for (const line of save.summary?.money ?? []) {
       if (line.kind === 'takeout') metrics.takeout += line.meals
       if (line.kind === 'upkeep') metrics.upkeep += line.due
+      if (line.kind === 'loan') metrics.repaid += line.paid
     }
     for (const line of save.summary?.work ?? []) {
       if (line.kind === 'withered') metrics.withered += line.tiles
-      if (line.kind === 'farmhand') { metrics.crew += line.spent; metrics.unused += line.actions - line.spent }
+      if (line.kind === 'farmhand') {
+        metrics.crew += line.spent; metrics.unused += line.actions - line.spent
+        if (line.done['ship-surplus']) { metrics.crewCrates++; metrics.crewUnits += line.done['ship-surplus'] }
+      }
     }
     if (day % DAYS_PER_SEASON === 0) await setImmediate()
   }
@@ -1240,6 +1251,27 @@ async function playPacedYear(size: 0 | Stage, morningCrew: boolean) {
   expect(parseSaveV6(JSON.parse(JSON.stringify(save)))).toEqual(save)
   return metrics
 }
+
+describe('F111 zero-setup surplus shipping', () => {
+  it('ships with the standard plan from a mature 50-Uma Rank 10 farm', async () => {
+    const result = await playProductionFarm(50, true)
+    const year = result.years[0]!
+    console.log(JSON.stringify({ F111: 'mature default surplus', ...year }))
+    expect(result.save.farm.surplus).toBeUndefined()
+    expect(result.save.farm.surplusSettings).toBeUndefined()
+    expect(year.shipped).toBeGreaterThan(100_000)
+    expect(goodCount(result.save.items, 'cultured-yogurt-grade-3')).toBeGreaterThan(0)
+  }, 120_000)
+  it.each(STAGES)('ships and repays through four seasons with %i Umas', async size => {
+    const result = await playPacedYear(size, true, true)
+    console.log(JSON.stringify({ F111: 'default surplus', size, ...result }))
+    expect(result.crewCrates).toBeGreaterThan(30)
+    expect(result.crewCrates).toBeLessThanOrEqual(DAYS_PER_YEAR)
+    expect(result.shipping).toBeGreaterThan(0)
+    expect(result.repaid).toBe(1000)
+    expect(result.short).toBe(0)
+  }, 120_000)
+})
 
 describe('F106 first-year farm and relationship pacing', () => {
   it.each([0, ...STAGES] as const)('compares 120 identical turns with %i farmhands', async size => {
