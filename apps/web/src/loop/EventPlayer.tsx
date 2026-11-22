@@ -388,26 +388,28 @@ function RingPicker({ save, onPick, onClose }: { save: SaveV4; onPick: (ring: st
   const [chosen, setChosen] = useState(rings[0] ?? null)
   if (!chosen) return <EndNote text="Needs a ring: make one at the Forge’s bench." onDone={onClose} />
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-ring-picker>
-      <div className="pt-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 px-4 pb-3" data-ring-picker>
+      <div className="shrink-0 pt-1">
         <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.ring}</h2>
         <p className="text-[14px] text-ink-soft">{PICKER_WORDS.ringHelp}</p>
       </div>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {rings.map((r) => (
-          <li key={r}>
-            <button type="button" onClick={() => setChosen(r)} aria-pressed={r === chosen} data-ring={r}
-              className={`flex min-h-12 w-full items-center gap-3 rounded-md border-2 bg-panel px-3 text-left ${r === chosen ? 'border-[#e0567a]' : 'border-hairline'}`}>
-              <ItemIcon id={r} size={32} />
-              <span className="min-w-0 flex-1 text-[15px] font-semibold">{goodName(r)}</span>
-              <span className="shrink-0 text-[13px] text-ink-soft">+{ringPercent(ringGrade(r))}% once married</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="sticky bottom-0 z-10 flex items-center gap-3 rounded-lg border border-hairline bg-panel p-2 shadow-2">
-        <RingArt key={chosen} id={chosen} size={76} />
-        <Button className="flex-1" onClick={() => onPick(chosen)} data-action="propose">Propose with the {goodName(chosen)} ›</Button>
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(168px,32%)] gap-3">
+        <ul className="grid min-h-0 content-start gap-2 overflow-y-auto pr-1 min-[800px]:grid-cols-2">
+          {rings.map(r => (
+            <li key={r}>
+              <button type="button" onClick={() => setChosen(r)} aria-pressed={r === chosen} data-ring={r}
+                className={`flex min-h-12 w-full items-center gap-2 rounded-md border-2 bg-panel px-2 text-left ${r === chosen ? 'border-[#e0567a]' : 'border-hairline'}`}>
+                <ItemIcon id={r} size={32} />
+                <span className="min-w-0 flex-1 text-[14px] font-semibold">{goodName(r)}</span>
+                <span className="shrink-0 text-[12px] text-ink-soft">+{ringPercent(ringGrade(r))}%</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="flex min-h-0 flex-col items-center justify-center gap-2 overflow-y-auto rounded-lg border border-hairline bg-panel p-2 shadow-1">
+          <RingArt id={chosen} size={112} />
+          <Button className="w-full shrink-0" onClick={() => onPick(chosen)} data-action="propose">Propose with the {goodName(chosen)} ›</Button>
+        </div>
       </div>
     </div>
   )
