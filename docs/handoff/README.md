@@ -144,6 +144,7 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 
 | Packet | Work | Status |
 |---|---|---|
+| [F112](tasks/F112-conversation-art.md) | Conversation environments and game art coverage | Authoring packet, inventory audit, and first art studies ready. Art review, runtime integration and playthroughs are open. |
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
 
 **The Forge is open** (F110). [Shared tools and heirlooms](../game-mechanics.md#the-forge-workshop) have their
