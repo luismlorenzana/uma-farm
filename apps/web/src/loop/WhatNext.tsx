@@ -2,12 +2,12 @@ import {
   forgeMaterialRows, HEIRLOOMS, TOOL_IDS, TOOL_NAMES, toolTierName, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, binTotal, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
   BUILD_PLACES, EXPEDITION_REGIONS, farmPlace, farmRankOf, farmRankOpens, FARM_RANK_POINTS, FIELD_PLOTS,
   creditLeft, buildOrders, pinSupplyProject, RING_DEPOSIT, STANDARD_RING_COST, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
-  HOUSE_COSTS, readyTiles, rungName, STATION_LEVELS, STATIONS, umaMilestones,
+  animalLock, extensionCost, handsTonight, houseOpensWords, HOUSE_COSTS, nextLot, readyTiles, roomsInAll, rungName, STATION_LEVELS, STATIONS, umaMilestones, workKey,
   type BuildPlace, type BuildNeed, type FarmSave, type FarmPlaceId,
 } from '@farm/domain'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { useMaster } from '../master/master'
@@ -18,17 +18,21 @@ import { dateWords } from './words'
 import { changeHomestead } from './homestead-actions'
 import { loanWords } from './money-words'
 import { RestockList } from './RestockList'
+import { orderLink } from '../book/work-plan'
+import { taskWords } from '../book/board-words'
+import { useTalents } from './talents'
+import { starterGoals } from './starter-goals'
 
 const number = (value: number) => value.toLocaleString('en-US')
 const gold = (value: number) => `${number(value)}g`
 const peek = (id: FarmPlaceId) => `/?peek=${id}`
 
-const SOURCE: Partial<Record<string, { at: FarmPlaceId; label: string }>> = {
-  logs: { at: 'forest', label: 'Gather in the Woods' },
-  vegetables: { at: 'fields', label: 'Grow vegetables' },
-  fish: { at: 'fishery', label: 'Fish at the Pond' },
-  planks: { at: 'sawmill', label: 'Make planks at the Sawmill' },
-  fillets: { at: 'smokehouse', label: 'Make fillets at the Smokehouse' },
+const SOURCE: Partial<Record<string, { at: FarmPlaceId; label: string; order: string }>> = {
+  logs: { at: 'forest', label: 'Chop in the Woods', order: 'chop:woods' },
+  vegetables: { at: 'fields', label: 'Grow vegetables', order: 'plant:0' },
+  fish: { at: 'fishery', label: 'Fish at the Pond', order: 'fish:pond' },
+  planks: { at: 'sawmill', label: 'Make planks at the Sawmill', order: 'load:sawmill' },
+  fillets: { at: 'smokehouse', label: 'Make fillets at the Smokehouse', order: 'load:smokehouse' },
 }
 
 function Action({ to, children }: { to: string; children: ReactNode }) {
@@ -39,9 +43,11 @@ function SourceAction({ save, line }: { save: FarmSave; line: BuildNeed }) {
   const source = SOURCE[buildGoodsWords({ family: line.goods.family, refined: line.goods.refined })]
   if (!source) return null
   const place = farmPlace(source.at)!
-  return <Action to={placeLink(save, place)}>
-    {place.opens.by === 'build' && !placeBuilt(save, source.at) ? `Build the ${place.name} first` : source.label}
-  </Action>
+  const ready = placeBuilt(save, source.at)
+  return <div className="flex flex-wrap gap-x-3">
+    <Action to={placeLink(save, place)}>{ready ? source.label : 'Build the ' + place.name + ' first'}</Action>
+    {ready && <Action to={orderLink(source.order)}>Crew order</Action>}
+  </div>
 }
 
 function Project({ save, project }: { save: FarmSave; project: BuildPlace }) {
@@ -66,7 +72,8 @@ function Project({ save, project }: { save: FarmSave; project: BuildPlace }) {
         {project.opens.after && <p className="text-[13px]">Requires the {farmPlace(project.opens.after)?.name} to be built.</p>}
         {short > 0 && <p className="text-[13px]">Gold · {gold(save.gold)} / {gold(cost.gold)}. {gold(short)} short.</p>}
         {buildNeeds(save, project).map(line => <div key={buildGoodsWords(line.goods)} className="border-t border-hairline pt-1">
-          <p className="text-[13px]">{buildGoodsWords({ family: line.goods.family, refined: line.goods.refined })} · {number(Math.min(line.have, line.goods.count))}/{number(line.goods.count)}</p>
+          <p className="text-[13px]">{buildGoodsWords(line.goods)}</p>
+          <GoalBar label={buildGoodsWords(line.goods)} have={line.have} target={line.goods.count} />
           {line.have < line.goods.count && <SourceAction save={save} line={line} />}
         </div>)}
       </>}
@@ -140,15 +147,125 @@ function WeddingPath({ save }: { save: FarmSave }) {
   </section>
 }
 
+function GoalBar({ label, have, target }: { label: string; have: number; target: number }) {
+  return <div className="grid grid-cols-[1fr_auto] items-center gap-2 text-[12px] tabular-nums">
+    <progress className="h-2 w-full accent-accent" value={Math.min(have, target)} max={target} aria-label={label} />
+    <span>{number(Math.min(have, target))}/{number(target)}</span>
+  </div>
+}
+
+function StarterSteps({ save }: { save: FarmSave }) {
+  const goals = starterGoals(save)
+  const active = goals.filter(goal => goal.have < goal.target)
+  return <section className="space-y-2" aria-label="Starter goals">
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="font-display text-base font-semibold">First farm goals</h3>
+      <span className="text-[12px] text-ink-soft">{goals.length - active.length}/{goals.length} done</span>
+    </div>
+    {active.length > 0 && <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {active.map(goal => <li key={goal.id} className="space-y-1 rounded-md border border-hairline bg-panel p-2" data-next-goal={goal.id}>
+        <strong className="text-[13px]">{goal.label}</strong>
+        <GoalBar label={goal.label} have={goal.have} target={goal.target} />
+        <p className="text-[12px] text-ink-soft">{goal.detail}</p>
+        <div className="flex flex-wrap gap-x-3 text-[13px]">
+          <Action to={goal.to}>{goal.id === 'ship' ? 'Open bin' : goal.id === 'fish' ? 'Visit Pond' : goal.id === 'chop' || goal.id === 'forage' ? 'Visit Woods' : 'Open Fields'}</Action>
+          <Action to={orderLink(goal.key)}>Crew order</Action>
+        </div>
+      </li>)}
+    </ul>}
+    {active.length < goals.length && <details className="rounded border border-hairline px-2">
+      <summary className="min-h-11 py-2 text-[13px] font-semibold">Completed goals</summary>
+      <ul className="pb-2 text-[13px]">{goals.filter(goal => goal.have >= goal.target).map(goal => <li key={goal.id}>✓ {goal.label}</li>)}</ul>
+    </details>}
+  </section>
+}
+
+function FieldAndCrew({ save }: { save: FarmSave }) {
+  const pack = useStory()
+  const { of } = useTalents()
+  const forecast = useMemo(() => handsTonight(save, save, of, pack), [save, of, pack])
+  const needs = workNeeds(forecast.save, pack)
+  const free = forecast.lines.reduce((sum, line) => sum + line.actions - line.spent, 0)
+  return <section className="space-y-2" aria-label="Today's farm work">
+    <h3 className="font-display text-base font-semibold">{save.today.crew ? 'Work left today' : 'After the crew’s orders'}</h3>
+    <p className="text-[13px] text-ink-soft">
+      {forecast.lines.length ? forecast.lines.length + ' on shift · ' + free + ' crew actions free' : 'No crew on shift today'}
+    </p>
+    {!!needs.length && <ul className="divide-y divide-hairline rounded border border-hairline px-2 text-[13px]">
+      {needs.map(need => <li key={workKey(need.task)} className="flex items-center justify-between gap-2">
+        <span><strong className="block">{taskWords(need.task, save.fields.plots.length)}</strong><small>{need.need}</small></span>
+        {need.blocked ? need.task.kind === 'plant' ? <Action to="/?sheet=shop">Find seeds</Action>
+          : <span className="text-[12px] text-ink-soft">Needs supplies</span>
+          : <Action to={orderLink(workKey(need.task))}>Plan order</Action>}
+      </li>)}
+    </ul>}
+    <div className="flex flex-wrap gap-x-4 text-[13px]">
+      <Action to="/book?view=work">Work board</Action>
+      <Action to="/book?view=work&workCalendar=1">Work calendar</Action>
+    </div>
+  </section>
+}
+
+const rancher = '/town?at=rancher&sheet=rancher'
+
+function AnimalGoal({ save, kind }: { save: FarmSave; kind: (typeof ANIMAL_KINDS)[number] }) {
+  const animal = ANIMALS[kind]
+  const owned = save.ranch.animals.filter(row => row.kind === kind).length
+  const open = placeBuilt(save, animal.home)
+  const lock = animalLock(save, kind)
+  return <li className="rounded border border-hairline bg-panel p-2 text-[13px]" data-next-animal={kind}>
+    <strong>{animal.name} · {gold(animal.price)}</strong>
+    <p>{owned ? number(owned) + ' on the farm' : 'Farm Rank ' + animal.rank + ' · ' + farmPlace(animal.home)?.name}</p>
+    {!owned && (lock ? <p className="text-ink-soft">{lock}</p> : <p className="text-ink-soft">{save.gold < animal.price ? gold(animal.price - save.gold) + ' short' : 'Ready to buy'}</p>)}
+    <Action to={open ? rancher : peek(animal.home)}>{open ? 'Rancher' : 'View ' + farmPlace(animal.home)?.name}</Action>
+  </li>
+}
+
+function RanchAndHousing({ save }: { save: FarmSave }) {
+  const lot = nextLot(save)
+  const rooms = roomsInAll(save)
+  const waiting = Object.values(save.love).filter(love => love.stage === 'spouse' && love.house === undefined).length
+  const rank = farmRankOf(save.farm.points)
+  const animals = ANIMAL_KINDS.filter(kind => ANIMALS[kind].rank <= Math.max(3, rank))
+  const extension = save.homestead.houses.findIndex((house, i) => i > 0 && !house.extended)
+  return <section className="space-y-2" aria-label="Animals and houses">
+    <h3 className="font-display text-base font-semibold">Animals and houses</h3>
+    <details open className="rounded border border-hairline p-2">
+      <summary className="min-h-11 cursor-pointer py-2 font-semibold">Ranch · {save.ranch.animals.length} animals</summary>
+      <div className="space-y-1">
+        {!placeBuilt(save, 'coop') && <Project save={save} project={BUILD_PLACES.find(place => place.id === 'coop')!} />}
+        {!placeBuilt(save, 'barn') && <Project save={save} project={BUILD_PLACES.find(place => place.id === 'barn')!} />}
+        <ul className="grid gap-1 sm:grid-cols-2">{animals.map(kind => <AnimalGoal key={kind} save={save} kind={kind} />)}</ul>
+        {(placeBuilt(save, 'coop') || placeBuilt(save, 'barn')) && <p className="text-[13px]">
+          {save.ranch.silo} fodder in the silo · <Action to={rancher}>Buy animals or fodder</Action>
+        </p>}
+      </div>
+    </details>
+    <div className="rounded border border-hairline bg-panel p-2 text-[13px]" data-next-housing>
+      <strong>Homestead · {rooms.rooms - rooms.taken} rooms free</strong>
+      {waiting > 0 && <p>{waiting} waiting for a room</p>}
+      {lot && <>
+        <p>House {lot.n} · {gold(lot.cost)} · {lot.open ? 'Unlocked' : houseOpensWords(lot.n)}</p>
+        <GoalBar label={'House ' + lot.n + ' gold'} have={save.gold} target={lot.cost} />
+        <p className="text-ink-soft">Houses cost gold. The Farmhouse has two rooms from day one.</p>
+      </>}
+      {extension > 0 && <p>Extend {save.homestead.houses[extension]!.name} for {gold(extensionCost(extension))} · adds two rooms.</p>}
+      <Action to="/?sheet=homestead">Open Homestead</Action>
+    </div>
+  </section>
+}
+
 function Focus({ save }: { save: FarmSave }) {
   const rank = farmRankOf(save.farm.points)
   const next = nextFarmRank(save.farm.points)
   const ready = readyTiles(save)
   const inBin = binTotal(save.bin, save.calendar.day, save.farm.market)
-  const projects = BUILD_PLACES.filter(project => project.opens.rank <= rank && project.opens.game)
+  const projects = BUILD_PLACES.filter(project => project.opens.rank <= rank && project.opens.game && project.group !== 'ranch')
     .filter(project => buildLock(save, project.id)?.by !== 'built')
     .sort((a, b) => a.opens.rank - b.opens.rank)
   return <div className="space-y-4">
+    <StarterSteps save={save} />
+    <FieldAndCrew save={save} />
     <RestockList save={save} />
     <section aria-label="Project credit" className="text-[13px]">
       <Action to="/town?at=mayor&sheet=mayor">{gold(creditLeft(save))} credit left</Action>
@@ -174,6 +291,7 @@ function Focus({ save }: { save: FarmSave }) {
       <Action to="/book?view=work">Assign production to your crew</Action>
       {(save.buildings.forge ?? 0) > 0 && <ForgeGoals save={save} />}
     </section>
+    <RanchAndHousing save={save} />
     <WeddingPath save={save} />
   </div>
 }
@@ -211,7 +329,7 @@ function FarmPath({ save }: { save: FarmSave }) {
           {projects.map(project => <Project key={project.id} save={save} project={project} />)}
           <LandAndLevels save={save} rank={level} />
           {unlocks.length > 0 && <p className="text-[13px] text-ink-soft">{unlocks.join(' · ')}</p>}
-          {(ANIMAL_KINDS as readonly (keyof typeof ANIMALS)[]).some(kind => ANIMALS[kind].rank === level) && <Action to="/town?at=rancher">Rancher</Action>}
+          <ul className="grid gap-1 sm:grid-cols-2">{ANIMAL_KINDS.filter(kind => ANIMALS[kind].rank === level).map(kind => <AnimalGoal key={kind} save={save} kind={kind} />)}</ul>
           {regions.length > 0 && <div className="text-[13px] text-ink-soft">
             <p>Expeditions · {Math.min(3, level - 6)} parties. Requires the Expedition post.</p>
             <ul>{regions.map(region => <li key={region.name}>{region.name} · {region.days} days · {region.need} power</li>)}</ul>

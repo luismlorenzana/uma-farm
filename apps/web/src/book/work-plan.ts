@@ -1,6 +1,6 @@
 import {
-  deliverForge, handsTonight, MEAL_KEEPS, newTodayV4, aptitudeOf, isTileTask, MAX_TASKS, RANCH_HOMES, STATIONS, taskAptitude, taskLock, taskPlot, workNeeds,
-  type FarmSave, type FarmTask, type HandsTonight, type StoryPack, type TalentOf, type TileTaskKind,
+  deliverForge, FULL_HAULS, haulsToday, handsTonight, MEAL_KEEPS, newTodayV4, aptitudeOf, isTileTask, MAX_TASKS, taskAptitude, taskLock, taskPlot, workCatalog, workKey, workNeeds,
+  type FarmSave, type FarmTask, type HandsTonight, type StoryPack, type TalentOf, type WorkNeed,
 } from '@farm/domain'
 import { taskWords } from './board-words'
 
@@ -12,54 +12,78 @@ export function forecastCrewOn(save: FarmSave, day: number, pack: StoryPack | nu
     farm: { ...save.farm, pantry: save.farm.pantry.filter(lot => day - lot.day < MEAL_KEEPS) },
   })
   const forecast = handsTonight(snapshot, snapshot, talents, pack)
-  const needs = workNeeds(forecast.save, pack)
+  const needs = workNeeds(forecast.save, pack, true)
   return { ...forecast, snapshot, needs }
 }
 
 export type JobPreset = { key: string; task: FarmTask; label: string }
-type Gap = { job: JobPreset; priority: number; count: number; need: string; blocked?: true }
-export type WorkSuggestion = Gap & { worker: string | null }
-
-function plotJob(kind: TileTaskKind, plot: number, size: number): FarmTask {
-  return { kind, tiles: Array.from({ length: size }, (_, i) => i), ...(plot ? { plot } : {}) }
+export type WorkSuggestion = WorkNeed & { job: JobPreset; worker: string | null }
+export type WorkRow = JobPreset & {
+  scheduled: string[]
+  worked: { id: string; actions: number }[]
+  need?: WorkNeed
+  lock: string | null
+  idle?: string
 }
 
+export const orderLink = (key: string): string => '/book?view=work&order=' + encodeURIComponent(key)
+
 function job(task: FarmTask, plots: number): JobPreset {
-  return { key: JSON.stringify(task), task, label: taskWords(task, plots) }
+  return { key: workKey(task), task, label: taskWords(task, plots) }
 }
 
 export function workPresets(save: FarmSave): JobPreset[] {
-  const fields = save.fields.plots.flatMap(({ tiles }, plot) =>
-    (['harvest', 'water', 'plant', 'till'] as const).map(kind => plotJob(kind, plot, tiles.length)))
-  const other: FarmTask[] = [
-    ...RANCH_HOMES.map((home): FarmTask => ({ kind: 'care', home })),
-    { kind: 'cook' },
-    ...STATIONS.map((station): FarmTask => ({ kind: 'load', station })),
-    { kind: 'forage', area: 'woods' }, { kind: 'chop', area: 'woods' }, { kind: 'fish', spot: 'pond' },
-    { kind: 'mine', dig: 'mine' }, { kind: 'mine', dig: 'quarry' }, { kind: 'ship-surplus' },
-  ]
-  return [...fields, ...other].filter(task => !taskLock(save, task)).map(task => job(task, save.fields.plots.length))
+  return workCatalog(save).filter(task => !taskLock(save, task)).map(task => job(task, save.fields.plots.length))
 }
 
+/** An existing broader plot order already covers these tiles. */
 export function hasPreset(tasks: readonly FarmTask[], task: FarmTask): boolean {
   return tasks.some(existing => {
     if (isTileTask(existing) && isTileTask(task)) {
       return existing.kind === task.kind && taskPlot(existing) === taskPlot(task)
         && (existing.kind !== 'plant' || (task.kind === 'plant' && existing.crop === task.crop))
-        && existing.tiles.length === task.tiles.length && existing.tiles.every((tile, i) => tile === task.tiles[i])
+        && task.tiles.every(tile => existing.tiles.includes(tile))
     }
     return JSON.stringify(existing) === JSON.stringify(task)
   })
 }
 
-export function workSuggestions(before: FarmSave, forecast: HandsTonight, pack: StoryPack | null, talentOf: TalentOf): WorkSuggestion[] {
-  const gaps: Gap[] = workNeeds(forecast.save, pack).map(({ task, ...need }) => ({ ...need, job: job(task, before.fields.plots.length) }))
+export function workRows(before: FarmSave, forecast: HandsTonight, needs: readonly WorkNeed[]): WorkRow[] {
+  const jobs = workCatalog(before)
+  const gaps = new Map(needs.map(need => [workKey(need.task), need]))
+  const scheduled = new Map<string, Set<string>>()
+  const worked = new Map<string, WorkRow['worked']>()
+  for (const line of forecast.lines) {
+    for (const task of before.today.crew ? [] : before.roster[line.id]?.tasks ?? []) {
+      const key = workKey(task)
+      if (!scheduled.has(key)) scheduled.set(key, new Set())
+      scheduled.get(key)!.add(line.id)
+    }
+  }
+  for (const order of forecast.jobs ?? []) {
+    if (!worked.has(order.key)) worked.set(order.key, [])
+    worked.get(order.key)!.push(order)
+  }
+  return jobs.map(task => {
+    const preset = job(task, before.fields.plots.length)
+    const spot = task.kind === 'forage' || task.kind === 'chop' ? task.area
+      : task.kind === 'fish' ? task.spot : task.kind === 'mine' ? task.dig : null
+    const idle = spot && haulsToday(forecast.save, spot) >= FULL_HAULS
+      ? task.kind === 'mine' ? 'Full faces used · further digging gives fewer finds' : 'Full hauls used · further work gives thin hauls'
+      : undefined
+    return { ...preset, idle, scheduled: [...scheduled.get(preset.key) ?? []], worked: worked.get(preset.key) ?? [],
+      need: gaps.get(preset.key), lock: taskLock(before, task) }
+  })
+}
+
+export function workSuggestions(before: FarmSave, forecast: HandsTonight, gaps: readonly WorkNeed[], talentOf: TalentOf): WorkSuggestion[] {
   const workers = (before.today.crew ? [] : forecast.lines).filter(line => line.spent < line.actions && (before.roster[line.id]?.tasks?.length ?? 0) < MAX_TASKS)
-  return gaps.sort((a, b) => a.priority - b.priority || b.count - a.count).map(gap => {
-    const aptitude = taskAptitude(gap.job.task)
+  return gaps.map(gap => {
+    const preset = job(gap.task, before.fields.plots.length)
+    const aptitude = taskAptitude(gap.task)
     const strength = (id: string) => aptitude ? aptitudeOf(before.roster[id]!, aptitude, activity => talentOf(id, activity)).level : 0
-    const candidate = gap.blocked ? null : workers.filter(line => !hasPreset(before.roster[line.id]?.tasks ?? [], gap.job.task))
+    const candidate = gap.blocked ? null : workers.filter(line => !hasPreset(before.roster[line.id]?.tasks ?? [], gap.task))
       .sort((a, b) => (b.actions - b.spent) - (a.actions - a.spent) || strength(b.id) - strength(a.id))[0]
-    return { ...gap, worker: candidate?.id ?? null }
+    return { ...gap, job: preset, worker: candidate?.id ?? null }
   })
 }

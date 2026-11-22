@@ -5,7 +5,7 @@
 // before afternoon, so her goods are ready to use, and eats her two meals on the farm. On her town
 // days she's in town, and doesn't work, eat on the farm or cost anything. A spouse in her room is on the farm every day.
 //
-//   her day      on her farm day: 3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
+//   her day      on her farm day: 3 actions; +1 once she's settled in (12 days after you invited her); +2 once she's your spouse;
 //                +1 when she's well fed this morning (a household meal the day before, a reception, a spouse's
 //                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1).
 //                The Kitchen's assistant gives one of them to its play (`kitchen/kitchen.ts`)
@@ -66,7 +66,7 @@ const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 
 /** A farmhand's actions a day, to start. */
 export const HAND_ACTIONS = 3
-/** Settled in: a season after you invited her, one more. */
+/** Settled in: 12 days after you invited her, one more. */
 export const SETTLED_AFTER = 12
 export const SETTLED_ACTIONS = 1
 /** Once she's your spouse, two more. */
@@ -146,6 +146,61 @@ export const taskPlot = (task: Extract<FarmTask, { tiles: number[] }>): number =
 /** A field task's tiles as field indices: its plot's tiles, numbered on from plot 1's. */
 export const taskTiles = (task: Extract<FarmTask, { tiles: number[] }>): number[] =>
   task.tiles.filter((i) => Number.isInteger(i) && i >= 0 && i < FIELD_TILES).map((i) => fieldIndex(taskPlot(task), i))
+
+/** Identify a job at its location. Overlapping field orders share a plot row on the calendar. */
+export function workKey(task: FarmTask): string {
+  switch (task.kind) {
+    case 'harvest': case 'till': case 'plant': case 'water': return task.kind + ':' + taskPlot(task)
+    case 'forage': case 'chop': return task.kind + ':' + task.area
+    case 'fish': return 'fish:' + task.spot
+    case 'mine': return 'mine:' + task.dig + (task.floor ? ':' + task.floor : '')
+    case 'care': return 'care:' + task.home
+    case 'load': return 'load:' + task.station
+    case 'save-seed': return 'save-seed:' + (task.crop ?? 'carrot') + ':' + task.grade + (task.improve ? ':improve' : '')
+    default: return task.kind
+  }
+}
+
+const FIELD_ORDER = { harvest: 0, till: 1, plant: 2, water: 3 } as const
+
+function precedesFieldTask(first: FarmTask, second: FarmTask): boolean {
+  return isTileTask(first) && isTileTask(second) && FIELD_ORDER[first.kind] < FIELD_ORDER[second.kind]
+    && taskPlot(first) === taskPlot(second) && first.tiles.some(tile => second.tiles.includes(tile))
+}
+
+type TaskPass = { task: FarmTask; keepPriority: boolean }
+
+/** Keep an explicit water pass before and after crop work, and move prerequisites ahead on other overlapping orders. */
+function orderedTasks(tasks: readonly FarmTask[]): TaskPass[] {
+  // An explicit water pass both before and after crop work opts this plot out of automatic ordering.
+  const waterFirst = new Set<number>()
+  tasks.forEach((task, index) => {
+    if (task.kind !== 'water') return
+    const cropWork = tasks.findIndex((other, i) => i > index && precedesFieldTask(other, task))
+    if (cropWork !== -1 && tasks.slice(cropWork + 1).some(other => other.kind === 'water'
+      && taskPlot(other) === taskPlot(task) && task.tiles.every(tile => other.tiles.includes(tile)))) waterFirst.add(taskPlot(task))
+  })
+  const waiting = tasks.map(task => ({ task, keepPriority: isTileTask(task) && waterFirst.has(taskPlot(task)) }))
+  const ordered: TaskPass[] = []
+  while (waiting.length) {
+    const index = waiting.findIndex(({ task, keepPriority }) =>
+      keepPriority || !waiting.some(other => precedesFieldTask(other.task, task)))
+    ordered.push(waiting.splice(index, 1)[0]!)
+  }
+  return ordered
+}
+
+/** The same exact-grade, crop and season check used by the job and its forecast. */
+export function seedForTile(save: FarmSave, index: number, crop?: CropId, seeds = seedsInSeason(save)) {
+  const plan = plantingPlan(save, index)
+  if (plan === null || plan?.crop === null) return undefined
+  const named = plan?.crop ?? crop
+  return seeds.find(seed => {
+    if (named && seed.crop !== named) return false
+    if (CROPS[seed.crop].woody ? !named : !ripensInTime(seed.crop, save.calendar)) return false
+    return plan?.crop ? (seed.grade ?? cropBaseGrade(seed.crop)) === plan.grade : seed.grade === undefined
+  })
+}
 
 /** The aptitude a task practises: its own, a load its station's. */
 export const taskAptitude = (task: FarmTask): AptitudeId | null =>
@@ -342,7 +397,11 @@ export interface CrewReceipt {
   /** The areas and spots worked tonight, for the Diary's depth milestones. */
   gathered: string[]
   aptitudes?: AptitudeUp[]
+  /** The actions spent on each job and location this morning, when the shift recorded them. */
+  jobs?: WorkedOrder[]
 }
+
+export type WorkedOrder = { id: string; key: string; actions: number }
 
 export interface HandsTonight extends CrewReceipt {
   save: FarmSave
@@ -488,14 +547,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       let n = 0
       for (const i of empty) {
         if (n >= tilesAnAction('plant', level)) break
-        const plan = plantingPlan(next, i)
-        if (plan === null) continue
-        const named = plan ? plan.crop : task.crop
-        const seed = seedsInSeason(next).find((s) => {
-          if (named && s.crop !== named) return false
-          if (CROPS[s.crop].woody ? !named : !ripensInTime(s.crop, next.calendar)) return false
-          return plan?.crop ? (s.grade ?? cropBaseGrade(s.crop)) === plan.grade : s.grade === undefined
-        })
+        const seed = seedForTile(next, i, task.crop)
         if (!seed) continue
         next = sowTile(next, i, seed.id, id)
         n++
@@ -583,7 +635,8 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
  * Forecast or report a crew shift: each farmhand who worked the farm today (`handsWorking`: on her
  * farm day, the day being settled; on a town day she's in town and doesn't work), in the order you invited them, spends
  * her actions today (`handDay`, read from the day as it was left: `day`) on her board's tasks: the field's
- * and the loads first, in your order, each until it's done; then her gathering shares what's left, a turn each. Each
+ * and the loads first. Overlapping field orders follow crop order, including work unlocked by other farmhands.
+ * Gathering shares what's left, a turn each. Each
  * action is a point of practice in its aptitude; her goods go into the Warehouse at once (a load's the next morning, at
  * step 4); her harvests, hauls and catches count toward her challenges.
  */
@@ -591,12 +644,18 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   if (save.today.crew) return crewWithBookings(save, save.today.crew)
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
+  const jobs = new Map<string, WorkedOrder>()
+  const rosterTasks = new Map(handsWorking(save, story).map(id => [id, save.roster[id]!.tasks ?? []] as const))
+  const fields = [...rosterTasks].flatMap(([id, orders]) => orders.filter(isTileTask).map(task => ({ id, task })))
+  const fieldRetries: (() => void)[] = []
+  const deferredGathering: (() => void)[] = []
+  let fieldActions = 0
   const finish: (() => void)[] = []
   const finishScheduled: (() => void)[] = []
   const ship: (() => boolean)[] = []
   const automatic = !save.farm.surplus && !save.farm.surplusSettings?.paused
   let reservedShippingAction = false
-  for (const id of handsWorking(save, story)) {
+  for (const [id, orders] of rosterTasks) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
     const festival = festivalBooked(save, id) ? 1 : 0
@@ -617,6 +676,11 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       next = aptitude ? practised(step.save, id, aptitude) : step.save
       for (const { activity, event } of step.events) next = countChallenge(next, id, activity, event)
       left -= 1
+      if (isTileTask(task)) fieldActions++
+      const key = workKey(task)
+      const used = jobs.get(id + '/' + key)
+      if (used) used.actions++
+      else jobs.set(id + '/' + key, { id, key, actions: 1 })
       done[task.kind] = (done[task.kind] ?? 0) + step.n
       if (task.kind === 'ship-surplus') return true
       const place = taskPlace(task)
@@ -627,14 +691,28 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       if (task.kind === 'fish') out.gathered.push(task.spot)
       return true
     }
-    const tasks = next.roster[id]!.tasks ?? []
+    const passes = orderedTasks(orders)
+    const tasks = passes.map(pass => pass.task)
     for (const task of tasks.filter((t) => !OPEN_TASKS.includes(t.kind) && (!automatic || t.kind !== 'ship-surplus'))) {
       while (left > 0 && work(task)) { /* until it's done, or her actions are */ }
     }
     let open = tasks.filter((t) => OPEN_TASKS.includes(t.kind))
-    const reserve = automatic && !reservedShippingAction && left > 0 && open.length > 0 && surplusCrate(next).length > 0 ? 1 : 0
-    if (reserve) reservedShippingAction = true
-    while (left > reserve && open.length > 0) open = open.filter((task) => left > reserve && work(task))
+    let reserve = 0
+    const gather = () => {
+      reserve = automatic && !reservedShippingAction && left > 0 && open.length > 0 && surplusCrate(next).length > 0 ? 1 : 0
+      if (reserve) reservedShippingAction = true
+      while (left > reserve && open.length > 0) open = open.filter((task) => left > reserve && work(task))
+    }
+    const shared = passes.filter(({ task, keepPriority }) => !keepPriority && (task.kind === 'plant' || task.kind === 'water')
+      && fields.some(other => other.id !== id && precedesFieldTask(other.task, task)))
+    if (left > 0 && shared.length) {
+      fieldRetries.push(() => {
+        for (const { task } of shared) {
+          while (left > 0 && work(task)) { /* finish eligible work opened by another Uma */ }
+        }
+      })
+      deferredGathering.push(gather)
+    } else gather()
     ship.push(() => left > 0 && work({ kind: 'ship-surplus' }))
     finishScheduled.push(() => {
       // An idle cook or station hand can use exact inputs brought in later in the same shift.
@@ -664,10 +742,16 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       for (const [place, keys] of madeAt) out.made.push({ outfitId: id, place, items: keys })
     })
   }
+  let previousFieldActions: number
+  do {
+    previousFieldActions = fieldActions
+    for (const retry of fieldRetries) retry()
+  } while (previousFieldActions < fieldActions)
+  for (const gather of deferredGathering) gather()
   for (const settle of finishScheduled) settle()
   if (automatic) ship.some(send => send())
   for (const settle of finish) settle()
-  return { ...out, save: next, gathered: [...new Set(out.gathered)] }
+  return { ...out, save: next, gathered: [...new Set(out.gathered)], jobs: [...jobs.values()] }
 }
 
 /** Run a shift once, leaving enough detail for the existing night credit and reporting rules. */

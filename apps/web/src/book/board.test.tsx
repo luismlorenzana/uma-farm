@@ -143,6 +143,33 @@ describe('the work board in the Book', () => {
     expect(updated.today.actions).toBe(save.today.actions)
   })
 
+
+  it('opens a specific order from a goal and adds a complete plot routine in one save', async () => {
+    await render(<BookPage />, '/book?view=work&order=forage%3Awoods')
+    const form = $('[aria-label="Assign a work order"]')!
+    expect(form.textContent).toContain('Forage · the Woods')
+    await click(form.querySelector('button'))
+    const assigned = Object.values(useGame.getState().save!.roster).some(uma => uma.tasks?.some(task => task.kind === 'forage'))
+    expect(assigned).toBe(true)
+    await render(<BookPage />, '/book?view=work&task=' + B)
+    const full = $$('[data-add-task] button').find(button => button.textContent === 'Full crop care')!
+    await click(full)
+    const tasks = useGame.getState().save!.roster[B]!.tasks!
+    expect(tasks.filter(task => 'tiles' in task).map(task => task.kind)).toEqual(['harvest', 'till', 'plant', 'water'])
+    expect(tasks.filter(task => 'tiles' in task).every(task => task.tiles.length === 40)).toBe(true)
+  })
+
+  it('shows planting, forage, fish, the Coop and home costs on a fresh farm', async () => {
+    const { default: WhatNext } = await import('../loop/WhatNext')
+    useGame.setState({ save: newSave('starter', AT) })
+    await render(<WhatNext onClose={() => undefined} />)
+    expect($('[data-next-goal="plant"] progress')?.getAttribute('value')).toBe('0')
+    expect($('[data-next-goal="forage"] a[href*="order="]')?.getAttribute('href')).toBe('/book?view=work&order=forage%3Awoods')
+    expect($('[data-next-goal="fish"]')?.textContent).toContain('Catch 4 fish')
+    expect($('[data-next-animal="chicken"]')?.textContent).toContain('Chicken · 500g')
+    expect($('[data-next-housing]')?.textContent).toContain('House 1 · 8,000g · Opens with your first wedding')
+  })
+
   it('assigns a quick job without configuring individual rows', async () => {
     await render(<BookPage />, `/book?view=work&task=${A}`)
     await click($('[data-quick-job="fish"]'))
