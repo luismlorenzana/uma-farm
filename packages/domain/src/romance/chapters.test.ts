@@ -154,6 +154,7 @@ describe('a chapter’s gate', () => {
   it('advances exactly once, preserves both scene versions, and dates the unlocked original', () => {
     const save = atSeven()
     const event = { id: 'f7', steps: alternateRouteSteps(pack, ONE, 'f7') }
+    expect(event.steps.filter(step => 'say' in step).every(step => 'say' in step && typeof step.line === 'string' && step.line.length > 0)).toBe(true)
     const prepared = { event, picks: [0], plays: [] }
     expect(() => playEvent(save, pack, ONE, prepared)).toThrow('Choose the alternate scene')
     const played = playEvent(save, pack, ONE, { ...prepared, alternate: true }).save
