@@ -42,7 +42,7 @@ const DAY = 21
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 /** Her synthetic illustrations: one per moment, each id its moment's. */
 const NIGHT_ART = ['night-pajamas-1-couch', 'night-pajamas-1-bed'] as const
-const ILLS = syntheticIllustrations(Number(ONE), [...ILLUSTRATION_MOMENTS, ...NIGHT_ART])
+const ILLS = syntheticIllustrations(Number(ONE), [...ILLUSTRATION_MOMENTS])
 const ART = { artUrl: async (path: string) => `blob:${path}`, hold: () => () => undefined }
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
@@ -105,6 +105,8 @@ async function tapUntil(selector: string) {
 
 describe('numbered night art', () => {
   it('shows both pajama splashes and saves their gallery receipts from a visit replay', async () => {
+    const nightArt = syntheticIllustrations(Number(ONE), NIGHT_ART)
+    setIllustrationSource({ illustrationsOf: async id => id === ONE ? nightArt : null, listed: id => id === ONE, art: ART })
     const prior = farm({ stage: 'spouse', wed: 1, house: 0 })
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...prior, longGame: {
       weddings: [ONE], celebrations: {}, love: { [ONE]: { points: 2, pajamas: 1, anniversaries: 0,
