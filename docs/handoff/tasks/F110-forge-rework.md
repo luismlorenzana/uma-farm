@@ -42,8 +42,8 @@ shows the workbench, Sawmill and first recipe as separate prerequisites, then re
 | Gold · T4 | 6 | 6 Gold Ingots (G6) + 4 Iron Ingots (G3) | 3,600g | Second dawn | Mine floors 16–18, then Smelter |
 | Mythril · T5 | 8 | 8 Mythril Ingots (G9) + 4 Gold Ingots (G6) | 9,000g | Second dawn | Mine floor 25, then Smelter. Going deeper is optional. |
 
-Each tier requires the previous tier of that tool. The Forge offers 28 orders across seven tools. The four rows are
-the complete recipe matrix: every tool uses the same schedule. Tool tiers and material grades are distinct from quality
+Each tier requires the previous tier of that tool. The Forge offers 28 orders across seven tools. Every tool uses
+the four recipes in the table. Tool tiers and material grades are distinct from quality
 stars. Inventory from any valid source can fulfill an order. Mine-floor labels teach the reliable source and are
 independent of the craft gate. The cheapest eligible stars are shown first, honoring existing Warehouse reserves.
 Any explicit use of protected stock is confirmed separately through the established stock override pattern, if enabled.
@@ -86,13 +86,13 @@ The quantities in the table are the proposed starting values for balance.
   fishing mode, size and exact-grade rules. Show the extra fish in the solo result as well as the crew receipt.
 - **Pick and Hammer.** An extra normal find uses the current floor's existing grade and family draws and can
   discover a real good. A face still gives one face of stair progress, and existing rank/reach gates still apply.
-  The extra item does not accelerate per-find Mining challenges. A second crew member cannot spend the same charge.
+  Count ordinary finds toward per-find Mining challenges. A charge is consumed by one action.
 - **Gathering balance.** Axe, Rod, Pick and Hammer use these daily caps in place of latent tool yield and tool star
   buffs across the full day. Preserve rank, aptitude, food, keepsakes, ordinary grade odds and diminishing returns.
   Give each bonus draw its own deterministic stream, so stock and discovery are real but base rolls and reach don't
   move with the upgrade. Count only base work for existing aptitude, rank challenges and contest evaluation.
-  Charges are shared by all eligible jobs performed by the player and crew and reset at dawn. Keep one tally per tool,
-  not per worker, area, or floor.
+  Charges are shared by all eligible jobs performed by the player and crew. Keep one tally per tool and reset it
+  at dawn.
 
 ### Does it help on a busy farm?
 
@@ -125,12 +125,12 @@ extra ore farm-wide that day, even if 20 Umas dig. Show the two kinds of benefit
 4. **Optional Uma assistant.** Book one available hired Uma's Morning farm action before the shift settles. List
    only eligible farm-day/onsite hands with a free action, from the shared booking rules. Show the affected work
    forecast before confirmation. This is assistance with preparation today. She gets the credit even if tomorrow
-   is her town day or she is away on delivery. No auto-selection; an Afternoon order works solo.
+   is her town day or she is away on delivery. The player chooses the assistant. An Afternoon order works solo.
 5. **Optional tempering.** A tap-to-strike rhythm with a Ready visual cue using the existing anvil UI vocabulary.
    Preview one strike, then play five short cues with no overall session clock. Three on cue earn a maker's stamp,
    shown on the tool in the order history. A skip, poor result, interruption, or legacy client uses standard finish
    and the same tier/date. No added action, material loss, yield multiplier or relationship gate. Commit the stamp
-   at most once before delivery. Start and Skip are visible before any play; no retry rewards.
+   at most once before delivery. Show Start and Skip before play, with one scoring attempt per order.
 6. **Delivery at dawn.** Install automatically, update Farm Rank/What Next? and show one linked Daily Report line.
    Morning crew work uses the installed tool, and Work calendar uses the same effect for its forecast. A tool
    upgrade can be ordered on the delivery date because the prior slot is already free.
@@ -152,7 +152,7 @@ as an explanatory detail at the job, then show any extra items in the existing w
   are Hand (5 credits at any tier), Skilled (4 at Iron or better), Expert (4 at Gold or better), Master (4 at
   Mythril) and Legend (6 at Mythril after Master). One commission or practice equals one credit at its tier,
   awarded to the booked helper after Morning. That helper is also named separately at delivery. A rank can be
-  completed via practice after all 28 upgrades have been installed. Solo orders do not train an offscreen Uma.
+  completed via practice after all 28 upgrades have been installed. Credit goes to the named assistant.
 - For activity-specific favorite-line perks, give eligible assistants the existing Forge line's +10%/+20% to
   Forging points, applied once through the normal rank path. Keep rank and tool performance separate. Retire preview
   copy for the unimplemented refund and free-Fitting placeholders from the shipped perk cards and review their
@@ -165,11 +165,11 @@ as an explanatory detail at the job, then show any extra items in the existing w
 |---|---|
 | Forge on the farm | Timber lean-to, warm hearth, workbench, a vertical rack with each tool silhouette, room for an Uma at the rack. Start with the existing map tile and a static original counter illustration. A shared HD-2D interior can follow the map work without gating tools. |
 | Landscape right sheet | Left set of seven tools, right selected details and date. At 667×375 keep the order button at the bottom, and let the list/detail body scroll. Make pending, affordable, missing-goods and max-tier states readable with words. |
-| What Next? | Track an appropriate next upgrade: water gaps → Can, recurring care gaps → Brush, or the player's tracked tool. Link to the actual stations and profession/crew panels. Keep farm-rank and romance paths independently useful. |
+| What Next? | Feature the Can for watering gaps, the Brush for recurring care gaps, or the tool the player tracks. Link to the actual stations and profession/crew panels. Keep farm-rank and romance paths independently useful. |
 | Tutorial | A diagram shows one action watering two rows, then highlights the two freed worker actions in the forecast. A short caption covers when a new tool becomes available. A second local example explains exact ingots only when the player opens a material lock. |
 | Daily Report | “Gold Watering Can installed · Two rows per action.” If assisted, “Prepared with {Uma}.” Links to the tool, with any rank-up in Ranks. |
 
-One-time opening note: “Set the old tools on the rack. They'll stay in use until the new ones are ready.”
+The one-time opening note reads “Set the old tools on the rack. They'll stay in use until the new ones are ready.”
 The first installation of each tool can show this delivery copy. Subsequent installations use the Daily Report.
 
 | Tool | First-delivery line |
@@ -188,8 +188,8 @@ Reuse approved work/casual art if needed, with no new mandatory individual expre
 hearth-lit setups plus neutral task silhouettes in any future kit request to Platform. Character-specific dialogue
 and derivative art belong in the private story/art sources and their usual publishing pipeline.
 
-Use actionable lock copy: “Needs 2 more Gold Ingots” opens Smelter sourcing, “Ready Spring 14” opens the work
-date, and “Morning crew already worked” explains why an assistant is unavailable and leaves the solo order active.
+“Needs 2 more Gold Ingots” opens Smelter sourcing. “Ready Spring 14” opens the work date. “Morning crew already
+worked” explains why an assistant is unavailable and leaves the solo ordering action available.
 
 ## Where rings could live
 
@@ -199,7 +199,7 @@ date, and “Morning crew already worked” explains why an assistant is unavail
 | **One building, two counters** · recommended | The Forge opens onto Tools and Ring Bench. The tool side unlocks with its restoration, the bench with the first R8 dawn. Proposal links jump straight to the bench, even if the tool side is still closed. | Two independent checks and tasks in one location. Keeps full solo marriage pacing and makes the room feel complete. |
 | **Shared crafting system** | The same interface handles both, with a potential optional refined-ring finish using 2 ingots and 1 cut gem of the same grade once its supply chain is open. | Can make jewelry a late craft goal, but needs separate tuning for all ten rings, ring value, gifts, wedding stock and spouse bonuses. Sharing an order slot or requiring tempering for the proposal would recreate the relationship bottleneck. |
 
-**Recommendation for review:** one location with two independently opened counters. Keep existing ten ring
+**Recommended layout** is one location with two counters that open independently. Keep the existing ten ring
 IDs, grade, stars and bonuses, six-log Copper Ring, existing three-refined-goods recipes, one ring per day,
 engravings, night reveal, proposal entry and wedding scheduling. Bench crafting stays self-service when the
 smith is out, with its own daily counter. Treat the dormant legacy Fine/Great/Masterwork ring-bonus copy as
@@ -239,10 +239,10 @@ even if the room-layout decision is still open.
 
 | Save | Play and verify |
 |---|---|
-| Fresh solo | Reach Rank 3, afford the Sawmill and workbench, install Fitted Can; show the exact old/new action counts. Reach Iron through a self-supplied Mine. Continue to the first proposal using six Pine Logs on a farm with no Forge restoration, and repeat with the workshop built before R8. |
+| Fresh solo | Reach Rank 3, afford the Sawmill and workbench, and install Fitted Can. Show the exact old and new action counts. Reach Iron through a self-supplied Mine. Continue to the first proposal using six Pine Logs on a farm with no Forge restoration, and repeat with the workshop built before R8. |
 | 10 Umas | Keep food first and several field rows assigned. Compare baseline and Forge runs through a full 120-day year. Book a named assistant, validate her weekly shift, and show where the crew spent any freed actions. |
 | 20 Umas | At Rank 6 compare Gold Can, Brush and mining tools with an existing planted exact-grade plan. Try a booking on a town day, free day, after Morning and while away. Confirm those orders can still be placed solo. |
-| 50 Umas | Run the same baseline-vs-Forge policies through Rank 10 and the following year. Complete Mythril without a cliff above floor 25; show each tool's daily cap and spend a day with 20+ diggers. Collect the last tool then train a second smith through practice. |
+| 50 Umas | Run the same baseline-vs-Forge policies through Rank 10 and the following year. Complete Mythril using floor 25. Show each tool's daily cap and spend a day with 20+ diggers. Collect the last tool then train a second smith through practice. |
 | Existing farms | Upgrade saves with legacy bench, ring stock, Romance 8 already read or unread, and already married spouses. Test both entry paths, proposal, ring swaps, warehouse protection and existing scene replays. Reload mid-order and during tempering, cross Day 30 and a year boundary, and recover a cloud-synced pending order. |
 
 Log days to each tier, first tool cost and elapsed days, action savings by job, work gaps at noon, wage/food/upkeep
@@ -250,24 +250,24 @@ arrears, gold and stock after orders, exact-grade min/max and days short, crop w
 At both phone sizes review the selection, active order, material locks, forecast, daily report, two bench entry
 paths and no-smith states. Follow the existing local playthrough and required GitHub checks.
 
-Suggested tuning targets for the first pass:
+### First-pass tuning targets
 
 - First fitted upgrade after one Sawmill load and one dawn in the restored workshop. No loan or crew gate.
 - Gold Can saves at least one Morning action in the three-row skilled fixture. Gold Brush saves at least one
   on an eligible six-animal care round with a two-animal aptitude. Identify which open job used any released
   action, and distinguish free capacity from work actually done.
 - The gathering bonus remains at most four extra items per tool per day. Recheck apparent gains in matched seeded
-  A/B runs: a high-roster year with a fresh supply of excess stock should see neither new persistent arrears nor
-  a material loss in days with two or more reserved units of the tracked Restaurant ingredients. Investigate a
-  gap of more than 5 of 120 comparable days before locking values.
+  A/B runs. Compare persistent arrears and the number of days with two or more reserved units of the tracked
+  Restaurant ingredients. Investigate new persistent arrears or a drop of more than 5 of 120 comparable
+  ingredient days before locking values.
 - Old and new first-marriage routes hit the same eligible dawn, same proposal requirements and same one-ring
   allowance for identical romance actions. A tool commission or missing assistant cannot block the bench.
 
 ## Review and delivery
 
 Approve the early restoration, the four tiers and whether tempering is worth a first build. Pick the ring layout
-separately. Build in this order: split access checks and implement the Fitted Can vertical slice, validate solo and
-staffed coverage, wire the other six tools and remaining tiers, enable commissioned assistance and practice, then
-add tempering if approved. Compare all roster sizes with the live balance before locking values. Update the active
+separately. Start by splitting access checks and implementing the Fitted Can. Validate solo and staffed coverage
+before wiring the other six tools and remaining tiers. Enable commissioned assistance and practice, then add
+tempering if approved. Compare all roster sizes with the live balance before locking values. Update the active
 roadmap only when implementation starts. Ship via a Farm PR with regenerated mechanics, test evidence and a verified
 hosted build, and remove the completed handoff packet with the implementation.
