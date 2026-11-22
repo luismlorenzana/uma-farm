@@ -147,7 +147,8 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 ## Authoring for review
 
 [F110 — The Forge and the crew's tools](tasks/F110-forge-rework.md) proposes a restored workshop, crew-wide
-tool upgrades and independent paths for the Ring Bench. The Forge remains [deferred](../roadmap.md#deferred)
+tool upgrades and independent paths for the Ring Bench. The [heirloom jewelry addendum](tasks/F110-heirloom-jewelry.md)
+defines four spouse keepsakes and their outfit rewards. The Forge remains [deferred](../roadmap.md#deferred)
 until the design is approved.
 
 The [Phase 3.5 balance trials](../game-mechanics.md#progression-balance-through-farm-rank-10) ran from a solo start
