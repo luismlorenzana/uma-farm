@@ -1,4 +1,4 @@
-import { BATCH_MEALS, DAY_ACTIONS, DAYS_PER_SEASON, LOAN_FEE, MEALS_A_DAY, loanFee, loanNightly, TAKEOUT_PRICE } from '@farm/domain'
+import { BATCH_MEALS, DAY_ACTIONS, DAYS_PER_SEASON, CREDIT_SWEEP, LOAN_FEE, MEALS_A_DAY, loanFee, RING_DEPOSIT, STANDARD_RING_COST, TAKEOUT_PRICE } from '@farm/domain'
 
 export type GuideIcon = 'home' | 'time' | 'night' | 'crop' | 'goods' | 'rank' | 'animal' | 'tools' | 'town' | 'book' | 'heart' | 'star' | 'festival' | 'trade' | 'save'
 type GuideItem = readonly [icon: GuideIcon, label: string, instruction: string]
@@ -96,12 +96,12 @@ const GUIDE_TOPICS = {
     ],
   },
   loans: {
-    title: 'Loans', lead: 'At the Mayor’s Office, choose a build you can supply with materials and borrow toward the missing gold.',
+    title: 'Loans', lead: 'The Mayor’s Office offers shared credit for projects, gold, and quoted materials.',
     items: [
       ['trade', 'Know what you will owe', `Check the offer before accepting. The fee is ${Math.round(100 * LOAN_FEE)}% before rounding.`],
-      ['book', 'Track repayment', 'The night pays food and upkeep first. Available income then pays the loan’s share. At the office you can repay early.'],
+      ['book', 'Track repayment', `The farm puts ${Math.round(CREDIT_SWEEP * 100)}% of sales left after bills toward the loans. Choose Pay any amount at the office to make an extra payment.`],
     ],
-    example: `Borrow ${loanExample}g → owe ${owedExample}g → pay up to ${loanNightly(owedExample)}g a night.`,
+    example: `Borrow ${loanExample}g → owe ${owedExample}g. If 700g in sales is left after bills, the loans get ${Math.floor(700 * CREDIT_SWEEP)}g that night.`,
   },
   town: {
     title: 'Visiting town', lead: 'Town is free to enter. Go even on a day when you only want to shop or see who is out.',
@@ -201,7 +201,8 @@ const GUIDE_TOPICS = {
   rings: {
     title: 'The ring bench', lead: 'The bench opens as romance advances. A proposal needs a ring from your Warehouse.',
     items: [
-      ['goods', 'Make the ring she will use', 'Check the bench for the required metal and gem. Choose the ring you want to give when the proposal scene is Ready.'],
+      ['goods', 'Commission the ring', `The smith supplies the Copper Ring’s metal and gem. Pay ${STANDARD_RING_COST.toLocaleString('en-US')}g or finance it with ${RING_DEPOSIT.toLocaleString('en-US')}g down. It arrives the next dawn.`],
+      ['heart', 'Propose', 'Choose the ring you want to give when the proposal scene is Ready.'],
     ],
   },
   library: {

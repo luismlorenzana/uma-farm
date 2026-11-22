@@ -185,7 +185,7 @@ export const buildPlace = (place: FarmPlaceId) => change((s) => payBuild(s, plac
 
 /** At the mayor's office, in town: borrows what a build is short of gold and orders it (a house named `name`). */
 export const borrowAndBuild = (project: string, name = '', expected?: number, deposit?: number) => change((s) => borrowFor(s, project, name, expected, deposit))
-/** At the mayor's office, in town: repays a loan in full. */
+/** Pays the chosen amount or the full loan balance at the mayor’s office. */
 export const repayTheLoan = (project: string, amount?: number) => change((s) => repayLoan(s, project, amount))
 
 // --- The scenes -----------------------------------------------------------------------------------------------
