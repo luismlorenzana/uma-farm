@@ -12,6 +12,7 @@ import { Link, useLocation, useSearchParams } from 'react-router'
 import { forecastCrewOn } from '../book/work-plan'
 import { SceneBust, SceneLookProvider } from '../dialogue/Bust'
 import { usePortraitsState } from '../dialogue/portraits'
+import { ItemIcon } from '../items/ItemIcon'
 import { JewelMark } from '../items/JewelMark'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -137,12 +138,12 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
     <div className="grid grid-cols-1 gap-3 min-[590px]:grid-cols-[minmax(130px,1fr)_minmax(0,2fr)]">
       <div className="grid grid-cols-2 content-start gap-1 min-[590px]:grid-cols-1" aria-label={jewels ? 'Heirlooms' : 'Shared tools'}>
         {jewels ? HEIRLOOM_IDS.map(id => <Button key={id} variant={piece === id ? 'primary' : 'secondary'}
-          aria-pressed={piece === id} onClick={() => { choosePiece(id); setReserved(false) }}>{HEIRLOOMS[id].name}</Button>)
+          aria-pressed={piece === id} onClick={() => { choosePiece(id); setReserved(false) }}><ItemIcon id={`heirloom/${id}`} size={24} />{HEIRLOOMS[id].name}</Button>)
           : TOOL_IDS.map(id => <Button key={id} variant={tool === id ? 'primary' : 'secondary'}
-            aria-pressed={tool === id} onClick={() => { chooseTool(id); setReserved(false) }}>{TOOL_NAMES[id]} · {toolTierName(save.tools[id])}</Button>)}
+            aria-pressed={tool === id} onClick={() => { chooseTool(id); setReserved(false) }}><ItemIcon id={`tool/${id}/tier-${save.tools[id]}`} size={24} />{TOOL_NAMES[id]} · {toolTierName(save.tools[id])}</Button>)}
       </div>
       <div className="min-w-0 space-y-2" data-forge-selection={jewels ? piece : tool}>
-        <h3 className="flex items-center gap-2 font-display text-lg font-bold">{jewels && <JewelMark piece={piece} />}{jewels ? HEIRLOOMS[piece].name : TOOL_NAMES[tool]}</h3>
+        <h3 className="flex items-center gap-2 font-display text-lg font-bold">{jewels ? <JewelMark piece={piece} /> : <ItemIcon id={`tool/${tool}/tier-${tier ?? save.tools[tool]}`} size={36} />}{jewels ? HEIRLOOMS[piece].name : TOOL_NAMES[tool]}</h3>
         {jewels && artReady && <details className="rounded border border-hairline px-2">
           <summary className="flex min-h-11 items-center font-semibold">Preview her look</summary>
           <div className="flex h-36 justify-center">

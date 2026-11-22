@@ -1,6 +1,6 @@
 // The dialogue engine's one layout, for every scene (the opening, meeting her, the ring bench's, heart events, pair
-// talks, the household's scenes): landscape, her bust on the left on the scene's backdrop when it has one (a heart
-// event's place card; plain until place art exists), the line or the choices on the right, both resting on the foot.
+// talks, the household's scenes): the environment spans the stage, her bust is on the left, and dialogue and choices
+// sit in a readable panel on the right.
 // The next line's bust is preloaded while this one shows. While her illustration is up (`Illustration.tsx`) there's no
 // bust: the line or the choices sit in the text box over the picture's lower edge, and a tap on the picture is the
 // line's tap. Loaded with the players.
@@ -10,6 +10,8 @@ import { useArtMode } from './Illustration'
 import { useMaster } from '../master/master'
 import { nameOfAnyone } from '../story/people'
 import { useStory } from '../story/story'
+import { SceneBackground, useEnvironment } from './SceneBackground'
+import type { SceneEnvironment } from './scene-context'
 
 /** Who's on the stage: the speaker (or the scene's own Uma), her name and the line's emote. */
 export interface OnStage { who: string; name: string; emote?: string | null }
@@ -22,7 +24,7 @@ export function BustPanel({ bust: written, backdrop = null, onTap, data = {} }: 
   const story = useStory()
   const bust = who && written ? { ...written, who, name: who === written.who ? written.name : nameOfAnyone(master.status === 'ready' ? master.view : null, story, who) } : null
   return (
-    <div className={`relative flex w-[40%] max-w-[380px] shrink-0 items-end justify-center self-stretch overflow-hidden ${backdrop ? 'rounded-lg border border-hairline' : ''}`}
+    <div className="relative flex w-[40%] max-w-[380px] shrink-0 items-end justify-center self-stretch overflow-hidden"
       onClick={onTap} aria-hidden={bust ? undefined : true} data-bust={bust ? bust.who : 'narrator'} data-stage-bust {...data}>
       {backdrop}
       {bust && (
@@ -37,9 +39,10 @@ export function BustPanel({ bust: written, backdrop = null, onTap, data = {} }: 
 }
 
 /** The stage: the bust's panel on the left, `children` (the line, or the choices) on the right; `next` is preloaded. */
-export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, panel = {}, children }: {
-  bust: OnStage | null; next?: { who: string; emote?: string | null } | null; backdrop?: ReactNode; onTap?: () => void; data?: Data; panel?: Data; children: ReactNode
+export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, panel = {}, environment, children }: {
+  bust: OnStage | null; next?: { who: string; emote?: string | null } | null; backdrop?: ReactNode; onTap?: () => void; data?: Data; panel?: Data; environment?: SceneEnvironment; children: ReactNode
 }) {
+  const shared = useEnvironment()
   const art = useArtMode()
   if (art !== 'none') {
     return (
@@ -54,8 +57,11 @@ export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, pa
   }
   return (
     <div className="relative z-10 flex min-h-0 flex-1 flex-row items-stretch gap-4 px-4 pt-1 pb-4" data-scene-row {...data}>
+      <SceneBackground environment={environment ?? shared} />
       <BustPanel bust={bust} backdrop={backdrop} onTap={onTap} data={panel} />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-end gap-2 overflow-y-auto">{children}</div>
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pt-2">
+        <div className="mt-auto flex shrink-0 flex-col gap-2 rounded-xl border border-hairline bg-panel/95 p-2.5 shadow-2">{children}</div>
+      </div>
       {next && <PreloadLine who={next.who} emote={next.emote ?? null} />}
     </div>
   )

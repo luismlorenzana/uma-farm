@@ -17,7 +17,8 @@ import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { changeHomestead } from './homestead-actions'
 import { EveningScene } from './EveningPlayer'
-import { LifeScene, MORNING_BACKDROP, NIGHT_BACKDROP } from './LifeScene'
+import { LifeScene } from './LifeScene'
+import { environment } from '../dialogue/scene-context'
 import { Frame } from './ScenePlayer'
 
 type NameOf = (id: string) => string
@@ -204,9 +205,11 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
     {error && <p role="alert" className="text-danger">{error}</p>}
     <Button disabled={busy} onClick={onDone}>{morning ? 'Good morning' : 'Finish'}</Button>
   </Sheet>
+  const room = morning || scene.beat === 'bedside' ? 'bedroom'
+    : scene.beat === 'farewell' ? 'home-threshold' : visit.who.length > 1 ? 'sitting-duo' : 'sitting-solo'
   return <Frame title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
     <SceneLookProvider value={{ day: visit.day + (morning ? 1 : 0), leads: [scene.id], own: scene.outfit, portrait: scene.portrait }}>
-      <LifeScene key={part} id={scene.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={morning ? MORNING_BACKDROP : NIGHT_BACKDROP}
+      <LifeScene key={part} id={scene.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} atmosphere={environment(save, room, morning ? 'morning' : 'night', visit.day + (morning ? 1 : 0))}
         onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': scene.beat, 'data-visit-speaker': scene.id }} />
     </SceneLookProvider>
   </Frame>

@@ -3,6 +3,7 @@
 import atlas from '@luismlorenzana/uma-art/buildings/atlas.json'
 import { FARM_PLACES, farmPlace, HOMESTEAD_PLACES, homesteadShown, newSave } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
+import { iconFrame } from '../items/frames'
 import { FIELD, LOT_COLUMNS, lockOf, MAP_ROWS, mapLots, placeLink, POND, WOODS } from './farm-map'
 
 const frames: Readonly<Record<string, { w: number; h: number }>> = atlas.frames
@@ -10,7 +11,10 @@ const day1 = newSave('u1', '2026-11-09T10:00:00.000Z')
 
 describe('the farm map', () => {
   it('finds every place\'s building, and every house\'s, on the pinned sheet', () => {
-    for (const place of FARM_PLACES) expect(frames[place.frame], place.id).toMatchObject({ w: 48, h: 48 })
+    for (const place of FARM_PLACES) {
+      if (place.frame.startsWith('building/')) expect(iconFrame(place.frame), place.id).toMatchObject({ sheet: 'farm-items' })
+      else expect(frames[place.frame], place.id).toMatchObject({ w: 48, h: 48 })
+    }
     for (const house of HOMESTEAD_PLACES) expect(frames[house.frame], house.id).toMatchObject({ w: 48, h: 48 })
     expect(frames.forest).toBeDefined()
     expect(frames.fishery).toBeDefined()

@@ -4,7 +4,7 @@
 // ring and better ring, and the Forge before the bench. The invented stand-in pack
 // (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { dateOf, farmPlace, meet, runNight, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { RING_IDS, dateOf, farmPlace, meet, runNight, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -175,6 +175,36 @@ describe('the ring bench', () => {
 })
 
 describe('the proposal', () => {
+  it('renders distinct close-up art for all ten grades at the Ring Bench and proposal', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'proposal', level: 10, last: DAY - 1 }, {
+      ...bench, items: items(...RING_IDS.map(id => [id, 1] as [string, number])),
+    }) })
+    await render(<div />, '/?sheet=bench')
+    const select = await find('[data-bench] select') as HTMLSelectElement
+    const sources = new Map<string, string>()
+    for (const [i, id] of RING_IDS.entries()) {
+      await act(async () => {
+        select.value = String(i + 1)
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+      })
+      const image = await find('[data-bench] [data-ring-art="' + id + '"] img')
+      const src = image.getAttribute('src') ?? ''
+      expect(src).toContain(id + '.webp')
+      sources.set(id, src)
+    }
+    expect(new Set(sources.values()).size).toBe(10)
+    await render(<HeartsPage />, '/hearts?event=' + ONE)
+    await find('[data-ring-picker]')
+    for (const id of RING_IDS) {
+      await click($('[data-ring="' + id + '"]'))
+      const detail = await find('[data-ring-art="' + id + '"] img')
+      expect(detail.getAttribute('src')).toBe(sources.get(id))
+      expect($('[data-ring="' + id + '"] [data-item-atlas]')?.getAttribute('data-item-atlas')).toBe('farm-items')
+    }
+    await act(async () => $('[data-ring-art] img')?.dispatchEvent(new Event('error')))
+    expect($('[data-ring-art] [data-item-atlas]')?.getAttribute('data-item-atlas')).toBe('farm-items')
+  })
+
   it('asks which ring, the best preselected, plays, uses the ring and closes on Engaged', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'proposal', level: 10, points: 0, last: DAY - 1 }, { ...bench, items: items(['ring-g3', 1], ['ring-g5', 1]) }) })
     await render(<HeartsPage />, `/hearts?event=${ONE}`)

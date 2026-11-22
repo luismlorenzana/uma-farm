@@ -93,7 +93,7 @@ const place = (id: FarmPlaceId, name: string, group: FarmPlaceGroup, row: number
 export const FARM_PLACES: readonly FarmPlace[] = [
   place('fields', 'Fields', 'gathering', 1, 0, 'vegetable-garden', 'Plant, tend and harvest crops.', START),
   place('mill', 'Mill', 'station', 1, 1, 'fields-workbench', 'Grain into flour, fruit into preserves.', build(1, 1000, [logs(20)], true)),
-  place('coop', 'Coop', 'ranch', 1, 2, 'meadow', 'Chickens and ducks, for eggs; the silo beside it.', build(2, 2000, [logs(30), vegetables(20)], true), true),
+  place('coop', 'Coop', 'ranch', 1, 2, 'building/coop', 'Chickens and ducks, for eggs; the silo beside it.', build(2, 2000, [logs(30), vegetables(20)], true)),
   place('forest', 'Forest', 'gathering', 2, 0, 'forest', 'Wood, mushrooms, herbs and the season’s finds.', START),
   place('sawmill', 'Sawmill', 'station', 2, 1, 'forest-workbench', 'Logs into planks; herbs and mushrooms dried.', build(3, 1500, [logs(40)], true)),
   place('barn', 'Barn', 'ranch', 2, 2, 'stable', 'Cows, goats, sheep and alpacas, for milk, wool and fleece.', build(3, 3500, [logs(30), vegetables(20)], true)),
@@ -108,14 +108,14 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'Tools and heirlooms at the workshop. Wedding rings at the Ring Bench.', build(3, 1000, [logs(12)], true)),
   place('bin', 'Shipping bin', 'yard', 6, 0, 'shipping-bin', 'What goes in pays tonight.', START),
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
-  place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'met', umas: 5 }, true),
+  place('board', 'Requests board', 'yard', 7, 0, 'building/board', 'The town’s requests.', { by: 'met', umas: 5 }),
   place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'The farm’s gate. Everyone you meet lives in town.', START),
-  place('dock', 'Dock', 'yard', 7, 2, 'ley-spring', 'A pier on the sea: the Sea Pier’s fish.', build(6, 20000, [planks(80)], true), true),
+  place('dock', 'Dock', 'yard', 7, 2, 'building/dock', 'A pier on the sea: the Sea Pier’s fish.', build(6, 20000, [planks(80)], true)),
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
   place('festival', 'Festival ground', 'town', 8, 1, 'racecourse', 'Prepare and enter the season’s contests.', START),
-  place('expeditions', 'Expedition post', 'town', 8, 2, 'rangers-lodge', 'Parties out for days.', build(7, 25000, [planks(60), fillets(40)], true), true),
-  place('town', 'Town', 'town', 9, 1, 'trophy-hall', 'Who’s out at the town’s spots today, and everyone who lives there.', START, true),
-  place('boat', 'Boat', 'yard', 7, 2, 'ley-spring', 'Out past the pier: the Deep Sea’s fish.', build(6, 30000, [planks(60), fillets(30)], true, 'dock'), true, 'dock'),
+  place('expeditions', 'Expedition post', 'town', 8, 2, 'building/expeditions', 'Parties out for days.', build(7, 25000, [planks(60), fillets(40)], true)),
+  place('town', 'Town', 'town', 9, 1, 'building/town', 'Who’s out at the town’s spots today, and everyone who lives there.', START),
+  place('boat', 'Boat', 'yard', 7, 2, 'building/boat', 'Out past the pier: the Deep Sea’s fish.', build(6, 30000, [planks(60), fillets(30)], true, 'dock'), false, 'dock'),
 ]
 
 /** The map's rows: the farm's seven, the town edge, and the Town below it, alone in the middle. */

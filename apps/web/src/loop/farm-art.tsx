@@ -17,6 +17,7 @@ const WET = '#5d3b20'
 export function BuildingArt({ frame, size, dim = false }: { frame: string; size: number; dim?: boolean }) {
   const art = useBuildingAtlas()
   const f = art?.index.frames[frame]
+  if (frame.startsWith('building/')) return <ItemIcon id={frame} size={size} className={dim ? 'grayscale opacity-70' : ''} />
   if (!art || !f) {
     return (
       <span aria-hidden className="relative inline-block" style={{ width: size, height: size }}>

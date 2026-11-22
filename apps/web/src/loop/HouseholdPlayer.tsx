@@ -27,6 +27,7 @@ import { useStory } from '../story/story'
 import { readHouseholdOnce } from './homestead-actions'
 import { parseHouseholdParam } from './homestead-view'
 import { PlaySheet, playSpec } from './PlaySheet'
+import { environment, environmentAt, type SceneEnvironment } from '../dialogue/scene-context'
 import { Frame, placeName, silent, StepView, WordingChoice } from './ScenePlayer'
 
 export default function HouseholdPlayer({ value, replay }: { value: string; replay: boolean }) {
@@ -98,14 +99,15 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone, onSkip }
   // (the dinner dress), the finale a festival night (the kimono).
   return (
     <SceneLookProvider value={{ own: play.outfit, moments: play.moments, day: save.calendar.day, leads: play.spouses }}>
-      <Part key={index} title={play.title} scene={`${id}:${index}`} steps={part.steps} place={place} onPlace={setPlace} nameOf={nameOf} farmer={save.farmer.name}
+      <Part key={index} setting={environment(save, place, 'night')} title={play.title} scene={`${id}:${index}`} steps={part.steps} place={place} onPlace={setPlace} nameOf={nameOf} farmer={save.farmer.name}
         leaving={leaving} onSkip={onSkip} onDone={next} />
     </SceneLookProvider>
   )
 }
 
 /** One part's steps, a choice's `then` spliced in after the pick (wording only). */
-function Part({ title, scene, steps, place, onPlace, nameOf, farmer, leaving, onSkip, onDone }: {
+function Part({ title, scene, steps, place, onPlace, nameOf, farmer, leaving, onSkip, onDone, setting }: {
+  setting: SceneEnvironment;
   title: string; scene: string; steps: readonly Step[]; place: string; onPlace: (place: string) => void; nameOf: (id: string) => string; farmer: string; leaving: boolean
   onSkip: () => void; onDone: () => void
 }) {
@@ -126,7 +128,7 @@ function Part({ title, scene, steps, place, onPlace, nameOf, farmer, leaving, on
   // A choice is wording only: the last one to speak stays on the stage.
   const last = lastSay(shown.slice(0, cursor))
   return (
-    <Frame title={`${title} · ${placeName(here)}`} label={title} scene={scene} onSkip={onSkip} skipping={leaving}>
+    <Frame atmosphere={environmentAt(shown, cursor, setting)} title={`${title} · ${placeName(here)}`} label={title} scene={scene} onSkip={onSkip} skipping={leaving}>
       {step && 'choice' in step ? (
         <WordingChoice options={step.choice} farmer={farmer} bust={last ? { ...last, name: nameOf(last.who) } : null}
           onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />

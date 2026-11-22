@@ -667,7 +667,7 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 |---|---|---|
 | Fields | `vegetable-garden` | Day 1 |
 | Mill | `fields-workbench` | Farm Rank 1, then built |
-| Coop | `meadow` (borrowed) | Farm Rank 2, then built |
+| Coop | `building/coop` | Farm Rank 2, then built |
 | Forest | `forest` | Day 1 |
 | Sawmill | `forest-workbench` | Farm Rank 3, then built |
 | Barn | `stable` | Farm Rank 3, then built |
@@ -682,13 +682,13 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Forge | `forge` | Farm Rank 3, then built |
 | Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
-| Requests board | `card-library` (borrowed) | 5 Umas met |
+| Requests board | `building/board` | 5 Umas met |
 | Gate | `scenario-gate` | Day 1 |
-| Dock | `ley-spring` (borrowed) | Farm Rank 6, then built |
+| Dock | `building/dock` | Farm Rank 6, then built |
 | Shop | `exchange` | Day 1 |
 | Festival ground | `racecourse` | Day 1 |
-| Expedition post | `rangers-lodge` (borrowed) | Farm Rank 7, then built |
-| Town | `trophy-hall` (borrowed) | Day 1 |
+| Expedition post | `building/expeditions` | Farm Rank 7, then built |
+| Town | `building/town` | Day 1 |
 | Boat | At the Dock | Farm Rank 6, then built after the Dock |
 <!-- /live -->
 
@@ -5025,6 +5025,10 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 > roster's album as its Work view. A save from before v5 starts over as a new farm (see
 > [Save versions](#save-versions)).
 
+### Conversation and inventory art
+
+The Farm atlas holds 187 dedicated sprites, including 120 Restaurant dishes, 12 processed foods, 10 wedding rings, 35 tool tiers, four heirlooms, and six locations. The base sprites carry through inventory, recipe inputs, gifts, shipping, Forge and map views. Exact stock grades and stars still come from the farm's goods. Seeds retain the crop icon and packet mark.
+
 ### The dialogue engine
 
 One engine plays every scene: the opening, meeting her, the ring bench's scene, heart events (and Ask her, and a Memory
@@ -5042,17 +5046,17 @@ and each one seen is kept in **her gallery** ([her gallery](#her-gallery)).
 │ ╭──────────────────────────╮                                         │
 │ │ (the place's    ┌──────┐ │                                         │  her portrait in the scene's
 │ │  backdrop,      │ her  │ │                                         │  outfit, her face the line's
-│ │  heart events   │portr-│ │  ┌──────────────────────────────────┐   │  emote
-│ │  only)          │ ait  │ │  │ Her name                         │   │
+│ │  scene art      │portr-│ │  ┌──────────────────────────────────┐   │  emote
+│ │  across stage)  │ ait  │ │  │ Her name                         │   │
 │ │                 │      │ │  │ Her line, typed out in an event. │   │
 │ │                 └──────┘ │  └──────────────────────────────────┘   │  the line, or the choices
 │ ╰──────────────────────────╯                                         │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Landscape:** her bust on the left, the line or the choices on the right, both resting on the foot. A heart event
-  puts the place card behind her bust (the backdrop); the other scenes stay plain until place art exists. A tap on the
-  line (or on her bust) goes on; a heart event's line is typed out, three lines at most, as before.
+- **Landscape:** the setting spans the stage, with her bust on the left and dialogue or choices on a readable panel on the right. A tap on the line or her bust goes on.
+- **Environments:** 52 original plates cover the Farm and town places, with dedicated room and time views for married life, café mornings, festivals, and winter fields. Town homes and workplaces can share the appropriate threshold or workroom. A place step changes the backdrop for the branch you're playing. A failed image falls back to a compatible setting and the scene keeps playing. Scene art is loaded on demand and previously opened files can be used offline.
+- **Illustrations and replays:** character illustrations take over for their authored beats and return to the scene setting afterward. Gallery receipts still track character illustrations. Replays use the scene's script and recorded day when available.
 - **Who's on the stage:** the speaker; narration and thoughts show no one, except in a heart event, where she stays on
   the stage with the face of her last line. At a choice the last one to speak stays; meeting her ends on her smiling
   ("Welcome, ‹her name›").
@@ -6702,25 +6706,7 @@ A level is its event. Once her next event is Ready it waits for you, for good: *
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **The place card** fills the left, behind her bust ([the dialogue engine](#the-dialogue-engine)'s backdrop): a farm
-  place's building frame on the season's ground (spring `#dcefc7`, summer `#f6e7b0`, autumn `#f2d3b0`, winter
-  `#e3ebf3`), or a romance backdrop's borrowed frame and tint. A place step changes it mid-scene, and the title follows:
-  "The Fields · Friendship 1", "The Pond at night · Romance 5". The speaker's bust is her portrait in the event's outfit
-  (its own `outfit`, else its moment's: her wedding, her work, a picnic, the summer shore; else the day's season), her
-  face the line's emote; during narration she keeps her last line's face. Without portraits, the blank bust (one of the
-  town's people's too; a lettered disc for a role no one plays). A wedding's guests wear the day's season.
-
-  | Backdrop | Borrowed frame | Tint |
-  |---|---|---|
-  | The Pond at night | The Fishery's, under a night sky | `#33456f` |
-  | The Overlook | The observatory's | `#f0c493` |
-  | The orchard bench | The orchard's | `#f3dca6` |
-  | The Dorm porch | The Dorm's | `#ebc79f` |
-  | The harbour wall | The Warehouse's | `#bcd6e2` |
-  | The chapel bell | The chapel's | `#f5e6bd` |
-  | The town | The exchange's | `#f0d4b2` |
-  | The hilltop track | The racecourse's | `#d2e7b7` |
-  | The sea pier | The fishery workbench's | `#9fc6de` |
+- **The setting** follows the event's actual place, including the wedding venue the player chose. A place step changes the background and title. The speaker wears the event outfit or the one for its occasion and keeps her last face through narration. Guests appear at the wedding in the day's outfits.
 
 - **The emote** is her face: her portrait's, else the blank bust's ([the dialogue engine](#the-dialogue-engine)).
 - **Her bubble** holds three lines at most, at 16 pt, typed out: **a tap finishes the line, the next tap goes on, a hold
@@ -7217,6 +7203,8 @@ finished piece waits in her book or the workshop for **Give to her**. Gifting is
 #### The ring bench
 
 The Ring Bench opens on the dawn after the first Romance 8. The smith supplies two Copper Ingots and one Cut Quartz for the 20,000g standard commission. Pay outright or put 2,000g down and borrow the remaining 18,000g. The financed total is 19,800g. The ring reaches the Warehouse the next dawn. Propose after Romance 10 using the usual calendar and relationship rules. The farmhouse has room for the wedding.
+
+Copper through Orichalcum each have a dedicated item sprite and matching close-up. The Bench preview, morning delivery and proposal picker resolve the same ring ID. Warehouse, shipping and relationship summaries use the small sprite.
 
 The bench's rule, in full:
 

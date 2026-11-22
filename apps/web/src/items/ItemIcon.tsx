@@ -3,12 +3,13 @@
 // badges stay behind.
 import dishesUrl from '@luismlorenzana/uma-art/dishes/atlas.png?url'
 import itemsUrl from '@luismlorenzana/uma-art/items/atlas.png?url'
+import farmItemsUrl from '@luismlorenzana/uma-art/farm-items/atlas.png?url'
 import fieldProduceUrl from './field-produce.png?url'
 import { seedOf } from '@farm/domain'
 import { UiMark } from '@luismlorenzana/uma-kit/ui'
 import { ATLAS_CELL, iconFrame, SHEET_SIZE, type Sheet } from './frames'
 
-const URL: Readonly<Record<Sheet, string>> = { items: itemsUrl, dishes: dishesUrl, 'field-produce': fieldProduceUrl }
+const URL: Readonly<Record<Sheet, string>> = { items: itemsUrl, dishes: dishesUrl, 'field-produce': fieldProduceUrl, 'farm-items': farmItemsUrl }
 
 /** A seed's icon is its crop's with uma-art's seed-packet badge in its corner (`farm/seed-packet`),
  * an own seed's with a green dot beside it; without the mark, the corner tag: brown from the shop, green
@@ -24,7 +25,7 @@ export function ItemIcon({ id, size = 32, className = '', label }: { id: string;
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      data-item-icon={id}
+      data-item-icon={id} data-item-atlas={frame?.sheet}
       className={`relative inline-block shrink-0 bg-no-repeat ${className}`}
       style={{
         width: size, height: size, imageRendering: 'pixelated',

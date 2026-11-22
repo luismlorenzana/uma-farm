@@ -71,6 +71,7 @@ export function notesNews(ids: readonly string[], world: WorldWords): SummaryLin
 }
 
 export interface SummaryLine {
+  ring?: string
   key: string
   text: string
   /** Where its tap goes: the place's quick look or screen, the calendar or the roster. */
@@ -349,7 +350,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           case 'built': return { key: `built:${line.place}`, text: builtWords(line.place, line.level), to: peek(farmPlace(line.place)?.on ?? line.place), tag: line.level ? 'Level' : 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
-          case 'ring-ready': return { key: 'ring-ready', text: `${goodName(`ring-g${line.grade}`)} in the Warehouse`, to: `/warehouse?good=ring-g${line.grade}`, tag: 'Ready' }
+          case 'ring-ready': return { key: 'ring-ready', ring: `ring-g${line.grade}`, text: `${goodName(`ring-g${line.grade}`)} in the Warehouse`, to: `/warehouse?good=ring-g${line.grade}`, tag: 'Ready' }
           case 'household': return { key: `household:${line.married}`, ...householdNews(line.married, line.cohort), tag: 'Household' }
         }
       })

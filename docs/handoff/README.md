@@ -140,11 +140,12 @@ the first-year solo playthrough and results from crews of 10, 20 and 50.
 collect scenes, discoveries and personal histories. Farm-wide achievements are in the Diary.
 [Uma Library](../game-mechanics.md#uma-library) has the rules.
 
+**F112 is implemented.** [Conversation and inventory art](../game-mechanics.md#conversation-and-inventory-art) covers the shared stage, the dedicated stock art and ten finished ring designs.
+
 ## Open packets
 
 | Packet | Work | Status |
 |---|---|---|
-| [F112](tasks/F112-conversation-art.md) | Conversation environments and game art coverage | Authoring packet, inventory audit, and first art studies ready. Art review, runtime integration and playthroughs are open. |
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
 
 **The Forge is open** (F110). [Shared tools and heirlooms](../game-mechanics.md#the-forge-workshop) have their

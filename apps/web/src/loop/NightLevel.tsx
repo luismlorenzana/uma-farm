@@ -15,6 +15,7 @@ import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
 import { LevelUpCard } from './EventCards'
+import { environment } from '../dialogue/scene-context'
 import { LifeScene } from './LifeScene'
 import { Frame } from './ScenePlayer'
 
@@ -64,7 +65,7 @@ export default function NightLevel({ value }: { value: string }) {
           return (
             <Frame title={title} label={title} scene={`level:${asked.rung}:${asked.id}`} onSkip={() => setPlayed(true)} skipping={false}>
               <SceneLookProvider value={{ own: scene.outfit, moments: [], day: save.calendar.day, leads: [asked.id] }}>
-                <LifeScene id={asked.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} onDone={(steps) => {
+                <LifeScene id={asked.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} atmosphere={environment(save, 'sitting-solo', 'night')} onDone={(steps) => {
                   void import('./actions').then(actions => actions.readLifeOnce(asked.id, asked.rung, save.calendar.day)).catch(() => undefined)
                   setShown(steps); setPlayed(true)
                 }}

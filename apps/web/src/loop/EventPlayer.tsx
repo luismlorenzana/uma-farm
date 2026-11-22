@@ -1,7 +1,7 @@
 // The event player: her heart event as a full-screen sheet over
 // today's map, played on the dialogue engine (`dialogue/`). From the top: the title ("The Fields · Friendship 1") with
-// **Auto**, **Skip** and **Log** away from the taps; on the left **the place card** (the place's uma-art frame on its
-// season's ground, or a romance backdrop's borrowed frame and tint) behind **her bust**: her portrait in the event's
+// **Auto**, **Skip** and **Log** away from the taps. The event's stage shows its current place behind her bust
+// and dialogue. Her portrait uses the event's
 // outfit (its own when the story names one, else its moment's: her wedding, her work, a picnic, the summer shore; else
 // the day's season), her face the line's emote; without portraits her master-data bust with the emote's bubble (a
 // lettered disc for a stand-in); on the right **her line**, at most three lines, typed out: a tap finishes the line,
@@ -51,7 +51,9 @@ import { useSpecialDays, useStory } from '../story/story'
 import { seeIllustrationOnce } from './actions'
 import { askHerOnce, playHerEvent, seeOriginalRoute } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
-import { eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords, type PlaceCard } from './event-view'
+import { environment, environmentAt } from '../dialogue/scene-context'
+import { RingArt } from '../items/RingArt'
+import { eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords } from './event-view'
 import { marriedOf, placeWords } from './hearts-view'
 import { ItemIcon } from '../items/ItemIcon'
 import { BuildingArt, PlaySheet, playSpec } from './PlaySheet'
@@ -346,6 +348,8 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const day = (mode === 'replay' ? save.library?.[id]?.first[`route:${rung}`] : undefined) ?? save.calendar.day
   const dateDay = dateDayOf(day, save.calendar)
   const placed = placeCard(place ?? 'fields', dateDay)
+  const setting = environment(save, weddingAt ?? beat?.place ?? 'fields', mode === 'replay' ? 'afternoon' : undefined, day)
+  const atmosphere = weddingAt ? setting : environmentAt(shown, cursor, setting)
   // She wears the event's own outfit when the story names one, else its moment's (her wedding, her work, a picnic, the
   // summer shore), else the day's season. A wedding's guests wear the day's.
   const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day: dateDay }), day, leads: [id] }
@@ -353,9 +357,9 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
       {/* Her illustration while it's up; the play's sheet sits over it. */}
       <ArtCue owner={id} ask={ended && !extraNow ? null : illustrationAt(shown, cursor)} steps={steps} />
-      {/* Landscape: the place card with her bust on the left, her line and the choices on the right. */}
+      {/* The backdrop spans the dialogue stage, behind her bust and choices. */}
       <SceneLookProvider value={look}>
-        <Stage bust={{ who: bustId, name: nameOf(bustId), emote }} backdrop={<PlaceBackdrop card={placed} guests={guests} nameOf={nameOf} />}
+        <Stage bust={{ who: bustId, name: nameOf(bustId), emote }} environment={atmosphere} backdrop={guests.length > 0 ? <WeddingGuests guests={guests} nameOf={nameOf} /> : null}
           panel={{ 'data-place-card': placed.place, 'data-frame': placed.frame }} next={activePlay || choiceNow ? null : nextSay(shown, cursor + 1)}>
           {choiceNow ? (
             <>
@@ -384,25 +388,29 @@ function RingPicker({ save, onPick, onClose }: { save: SaveV4; onPick: (ring: st
   const [chosen, setChosen] = useState(rings[0] ?? null)
   if (!chosen) return <EndNote text="Needs a ring: make one at the Forge’s bench." onDone={onClose} />
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-ring-picker>
-      <div className="pt-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 px-4 pb-3" data-ring-picker>
+      <div className="shrink-0 pt-1">
         <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.ring}</h2>
         <p className="text-[14px] text-ink-soft">{PICKER_WORDS.ringHelp}</p>
       </div>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {rings.map((r) => (
-          <li key={r}>
-            <button type="button" onClick={() => setChosen(r)} aria-pressed={r === chosen} data-ring={r}
-              className={`flex min-h-12 w-full items-center gap-3 rounded-md border-2 bg-panel px-3 text-left ${r === chosen ? 'border-[#e0567a]' : 'border-hairline'}`}>
-              <ItemIcon id={r} size={32} />
-              <span className="min-w-0 flex-1 text-[15px] font-semibold">{goodName(r)}</span>
-              <span className="shrink-0 text-[13px] text-ink-soft">+{ringPercent(ringGrade(r))}% once married</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="flex-1" />
-      <Button className="w-full" onClick={() => onPick(chosen)} data-action="propose">Propose with the {goodName(chosen)} ›</Button>
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(168px,32%)] gap-3">
+        <ul className="grid min-h-0 content-start gap-2 overflow-y-auto pr-1 min-[800px]:grid-cols-2">
+          {rings.map(r => (
+            <li key={r}>
+              <button type="button" onClick={() => setChosen(r)} aria-pressed={r === chosen} data-ring={r}
+                className={`flex min-h-12 w-full items-center gap-2 rounded-md border-2 bg-panel px-2 text-left ${r === chosen ? 'border-[#e0567a]' : 'border-hairline'}`}>
+                <ItemIcon id={r} size={32} />
+                <span className="min-w-0 flex-1 text-[14px] font-semibold">{goodName(r)}</span>
+                <span className="shrink-0 text-[12px] text-ink-soft">+{ringPercent(ringGrade(r))}%</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="flex min-h-0 flex-col items-center justify-center gap-2 overflow-y-auto rounded-lg border border-hairline bg-panel p-2 shadow-1">
+          <RingArt id={chosen} size={112} />
+          <Button className="w-full shrink-0" onClick={() => onPick(chosen)} data-action="propose">Propose with the {goodName(chosen)} ›</Button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -459,19 +467,10 @@ function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: R
   )
 }
 
-/** The place card, the stage's backdrop behind her bust: its frame on its ground, and a wedding's guests' faces along its
- * top. */
-function PlaceBackdrop({ card, guests, nameOf }: { card: PlaceCard; guests: readonly string[]; nameOf: (id: string) => string }) {
-  return (
-    <span aria-hidden className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 70%)` }}>
-      {guests.length > 0 && (
-        <span className="absolute top-2 left-2 z-10 flex -space-x-1.5" data-guests={guests.join(',')}>
-          {guests.map((g) => <Avatar key={g} id={g} size={32} label={nameOf(g)} />)}
-        </span>
-      )}
-      <span className="absolute bottom-6 left-4"><BuildingArt frame={card.frame} scale={3} /></span>
-    </span>
-  )
+function WeddingGuests({ guests, nameOf }: { guests: readonly string[]; nameOf: (id: string) => string }) {
+  return <span aria-hidden className="absolute top-2 left-2 z-10 flex -space-x-1.5" data-guests={guests.join(',')}>
+    {guests.map(g => <Avatar key={g} id={g} size={32} label={nameOf(g)} />)}
+  </span>
 }
 
 /** The choices: full width, 48 pt, each with its gain on the button; a replay opens every option and pays nothing,

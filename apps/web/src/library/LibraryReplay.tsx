@@ -1,8 +1,9 @@
 import { eventOf, replaySteps, type BookReplay, type FarmSave, type Step, type StoryOutfit, type StoryPack } from '@farm/domain'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { environment } from '../dialogue/scene-context'
 import { SceneLookProvider } from '../dialogue/Bust'
-import { LifeScene, NIGHT_BACKDROP, stepsForLife, type LifeKind } from '../loop/LifeScene'
+import { LifeScene, lifeEnvironment, stepsForLife, type LifeKind } from '../loop/LifeScene'
 import { Frame } from '../loop/ScenePlayer'
 import type { MasterView } from '../master/master'
 import { namer } from '../story/people'
@@ -29,7 +30,7 @@ export default function LibraryReplay({ save, pack, master, id, entry, onClose }
       : !scene ? <p className="p-4">Loading scene…</p>
         : <SceneLookProvider value={{ own: scene.outfit, moments: entry.moments ?? [], day, leads: [id] }}>
           <LifeScene id={id} steps={replaySteps(scene.steps).filter(step => !('illustration' in step))} nameOf={nameOf}
-            farmer={save.farmer.name} backdrop={entry.script === 'wedding-night' ? NIGHT_BACKDROP : null} onDone={onClose} data={{ 'data-library-replay': entry.key }} />
+            farmer={save.farmer.name} atmosphere={entry.source === 'life' || entry.script === 'wedding-night' ? lifeEnvironment(save, entry.script as LifeKind | 'wedding-night', day) : environment(save, 'fields', 'afternoon', day)} onDone={onClose} data={{ 'data-library-replay': entry.key }} />
         </SceneLookProvider>}
   </Frame>, document.body)
 }
