@@ -144,7 +144,11 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 |---|---|---|
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
 
-The Forge is [deferred pending a redesign](../roadmap.md#deferred).
+## Authoring for review
+
+[F110 — The Forge and the crew's tools](tasks/F110-forge-rework.md) proposes a restored workshop, crew-wide
+tool upgrades and independent paths for the Ring Bench. The Forge remains [deferred](../roadmap.md#deferred)
+until the design is approved.
 
 The [Phase 3.5 balance trials](../game-mechanics.md#progression-balance-through-farm-rank-10) ran from a solo start
 through Farm Rank 10 and one more year. They record staffing, food, bills and exact-grade stock at each roster size.
