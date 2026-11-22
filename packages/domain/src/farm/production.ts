@@ -78,7 +78,11 @@ function hardSurplusFloors(save: FarmSave): Record<string, number> {
   const protect = (id: string, count: number) => { floors[id] = (floors[id] ?? 0) + count }
   for (const plan of Object.values(save.farm.stationPlans ?? {})) for (const target of plan) {
     const source = goodOf(target.output)?.input
-    if (source) protect(source, Math.max(0, target.target - goodCount(save.items, target.output)) * stationJobUnits(target.output))
+    if (!source) continue
+    const inProcess = Object.values(save.loads).flat().reduce((sum, load) =>
+      parseStockKey(load.item)?.id === target.output ? sum + load.count : sum, 0)
+    const missing = Math.max(0, target.target - goodCount(save.items, target.output) - inProcess)
+    protect(source, missing * stationJobUnits(target.output))
   }
   const recipe = restaurantRecipe(save.farm.recipePin ?? '')
   for (const line of recipe?.ingredients ?? []) protect(line.id, line.count)
