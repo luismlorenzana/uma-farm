@@ -58,19 +58,40 @@ The baseline audit enumerated **924 unique stock IDs** using the domain catalogu
 | 192 seed IDs | Keep the seed-packet overlay and own/shop cue. A crop family shares its produce icon. Preserve exact crop, season and grade in text and on the stock record. | Shop rows and seed picker, warehouse, payouts and input forecasts. |
 | 80 Kitchen dishes | Retain their dedicated `dish-…` atlas entries. | Include kitchen, recipes, reserved meals, wedding reception, and cooking contest in coverage checks. |
 | 120 Restaurant dishes | Replace the current 30 borrowed category sprites with a dedicated frame per dish. Author eight batches of 15 from the actual recipe names and ingredients. Give near-neighbours distinct carrier/silhouette and garnish relevant to the finished dish. | Restaurant recipes, discover/unlock, ingredient choice, cooked output, sell/ship, meals and warehouse. Use exact dish IDs where another recipe consumes one. |
-| 10 wedding rings | Replace borrowed empty settings with complete bands for Copper, Tin, Iron, Silver, Cobalt, Gold, Platinum, Titanium, Mythril and Orichalcum. Vary setting/profile and material enough to identify at 32 px. Use a distinct band stance and gem profile for the final tier. | Ring Bench shop/commission and pickup, warehouse, proposal and ring upgrade, spouse details, Library and shipping. Material, grade, cost and effect stay visible. |
+| 10 wedding rings | Author a distinct band and stone setting for each grade, with matching detail art for pickup and proposal. See [wedding ring art](#wedding-ring-art). | Ring Bench shop/commission and pickup, warehouse, proposal and ring upgrade, spouse details, Library and shipping. Material, grade, cost and effect stay visible. |
 | 7 tools × 5 tiers | Draw a recognizable base and tier treatment for `watering-can`, `hoe`, `brush`, `pick`, `hammer`, `rod` and `axe`. Maintain a readable silhouette through tier five. Use material accents or shape details plus the tier label. | Forge upgrade and install, equipment view, relevant work previews. The artwork represents the shared fleet equipment state. |
 | 4 heirlooms | `earrings` as a pair, V-shaped pendant `necklace`, horizontal `bracelet` arc, and a clasp `brooch`. Match the heirloom family and keep each silhouette distinct from a wedding band. | Forge ordering, pickup and gift, the recipient's slots and relevant outfit lock/unlock details. |
 | General game art | Audit item-like rewards, minigame props, loan-type rows, chart/festival symbols, farm buildings and town markers. Farm's map marks `coop`, `board`, `dock`, `expeditions`, `town` and `boat` as borrowing building frames today. Draw originals for those six and check any remaining blank or misleading visual found in play. Keep building sprites on the map and wide conversation art in the dialogue renderer. | Surface audit records the screen, displayed object key, current asset, dedicated/intentional reuse/borrowed/missing, replacement and screenshot evidence. Covers locked, held, queued, completed, and reward states where they exist. |
 
 Export transparent 32×32 icons through the platform's deterministic atlas pipeline. Review them at native size and on the actual light and dark UI. Keep 2× art crisp and overlays outside the subject's important features. Choose stable frame keys `ring-gN`, exact dish IDs, ungraded conversion IDs, `tool/<id>/tier-N` and `heirloom/<id>`. Add a Farm art sheet or append within an appropriate family while retaining existing frame metadata and positions. Keep `ItemIcon` as the stock renderer and use its frame contract for Forge artwork. Resolve exact named art first, then declared grade/seed composition. Keep a readable label on any unknown legacy item. A coverage command compares all stock and visual-only keys to exported frames and fails on missing art or unapproved placeholder mappings. Grade and stars still come from the game, independent of the sprite key.
 
+### Wedding ring art
+
+Give all ten rings the same three-quarter viewing angle and a visible band opening. Make each grade recognizable by band silhouette and setting geometry before colour. Copper should look carefully handmade. The endgame rings add finer metalwork, bolder stone cuts and more unusual band shapes.
+
+| Ring | Band and setting |
+|---|---|
+| Copper · G1 | Wide hammered copper band with a tiny flush-set pale stone. |
+| Tin · G2 | Pale twin-groove band, low profile and three small inlaid dots. |
+| Iron · G3 | Dark squared signet with a flat inset violet stone. |
+| Silver · G4 | Narrow polished band and a round four-claw solitaire. |
+| Cobalt · G5 | Two sweeping blue shoulders framing an offset pear-cut stone. |
+| Gold · G6 | Warm shoulders with three separate stones and a larger round center. |
+| Platinum · G7 | Split shoulders and a rectangular green emerald cut. |
+| Titanium · G8 | Broad, angular two-tone band and a slim angled inset. |
+| Mythril · G9 | Pale intertwined shoulders beneath a wide icy marquise. |
+| Orichalcum · G10 | Champagne-gold leaf shoulders and an elongated, bezel-set opal kite. |
+
+Draft v002 contains all ten native-size sprites and a larger Orichalcum illustration. For the final set, author a matching detail illustration for each design for close views at Ring Bench pickup and proposal confirmation. The small inventory, spouse, Library and shipping views use the atlas. Resolve both assets by the same `ring-gN` key and load the larger image on demand. The atlas remains visible if a detail image is unavailable. Keep the commission's material, cost, grade and effect readable in the UI.
+
+Review the icon beside its adjacent grades at 24 and 32 px, including on light and dark panels. Match the setting, band, stone and palette to its detail illustration. Compare the actual closed ring shape against the current borrowed frame, and verify that a commissioned ring keeps the same art through pickup, inventory, proposal, and spouse details.
+
 ## Source, review and publishing
 
 | Location | Contents and responsibility |
 |---|---|
 | `uma-art-authoring/content/authoring/scene-studies/farm-life/<place>/<variant>/vNNN/` | Private native source, exact prompt and reference roles, hashes, provenance, review, crop evidence, and exact-byte approval. The three new environment plates are v001 drafts. The approved v002 solo/duo armchairs are already in Art Authoring's `assets/farm-life/scene-studies/v002/`. |
-| `uma-art-authoring/content/authoring/item-studies/farm-life/<family>/vNNN/` | Private style studies, variants and review material. `forge-inventory/v001` is the rings, tools and heirlooms concept sheet. Use it for silhouette reference when drawing final pixels. |
+| `uma-art-authoring/content/authoring/item-studies/farm-life/<family>/vNNN/` | Private style studies, variants and review material. `forge-inventory/v001` is the rings, tools and heirlooms concept sheet. The revised ten-ring atlas and Orichalcum detail study are in `ring-icons/v002`. The first atlas stays in `ring-icons/v001` for comparison. |
 | `uma-platform/packages/art` and the package's authoring/export sources | Deterministic atlas source, runtime environment manifests and optimized exports of approved original work, contact sheets and coverage tests. Add a Changeset, release the minor version, and pin it exactly in Farm. Preserve prior art exports. |
 | `uma-story-authoring/content/farm/story/` | Existing script and place cues. Use `place` steps for actual moves, and only author new lines when a scene itself needs them. Keep backward-compatible keys and use the existing private `story:ship` workflow for any edited story. |
 | `uma-farm/apps/web/src/dialogue/` and `apps/web/src/items/` | Resolver, stage, alias table, typed fallbacks, icon maps, and runtime QA. Visual mappings use the existing save schema. |
