@@ -173,6 +173,7 @@ How each workshop is built:
 
 | Step | What |
 |---|---|
+| 3.1 **Conversation and game art** | [F112](handoff/tasks/F112-conversation-art.md) gives conversations a shared environment stage and completes the asset catalogue for scenes, stock, tools, jewelry and missing game art. |
 | 3.2 **Animation** | The farm-work animations from the sprite pipeline, and the items' flights |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
 | 3.7 **Map appearance** | The [painted map plan](design/game-design.md#the-maps-2026-11-15) and the [HD-2D farm pilot](handoff/tasks/F103-hd2d-farm.md) start from the same place targets. F103 is testing the landscape farm's Field and Pond band before wider map authoring. |
