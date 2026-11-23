@@ -99,7 +99,7 @@ describe('the field\'s sign on the farm map', () => {
     s = withTile(s, 2, { ...bareTile('tilled'), crop: 'carrot' })
     s = withTile(s, 3, bareTile('tilled'))
     useGame.setState({ uid: 'u1', status: 'ready', save: s })
-    await render(<FarmRoute />)
+    await render(<FarmRoute />, '/?map=tiles')
     expect($$('[data-tile]')).toHaveLength(0)
     const sign = $('[data-field-sign]')!
     expect(sign.getAttribute('href')).toBe('/field')
@@ -116,6 +116,45 @@ describe('the field\'s sign on the farm map', () => {
     await render(<Routes><Route path="/" element={<FarmRoute />} /><Route path="/field" element={<FieldRoute />} /></Routes>, '/?tile=4')
     expect(path).toBe('/field?tile=4')
     expect($('[data-tile-sheet="4"]')).not.toBeNull()
+  })
+})
+
+describe('the illustrated Farm and local destinations', () => {
+  it('opens the painted map, all six regions, and the existing activity links', async () => {
+    useGame.setState({ uid:'u1',status:'ready',save:farm() })
+    await render(<FarmRoute />)
+    expect($('[data-farm-overview]')).not.toBeNull()
+    const regions = ['farm','forest','pond','barns','living','work']
+    expect($$('[data-region-target]').map(node => node.dataset.regionTarget)).toEqual(regions)
+    for (const region of regions) {
+      await click(`[data-region-target="${region}"]`)
+      expect($('[data-farm-region]')?.dataset.farmRegion).toBe(region)
+      expect(save().today.actions).toBe(0)
+      await click('[data-farm-region] header a')
+    }
+    await click('[data-region-target="farm"]')
+    expect($('[data-region-destination="fields:0"]')?.getAttribute('href')).toBe('/field?plot=1')
+    expect($('[data-region-destination="mill"]')?.getAttribute('href')).toContain('peek=mill')
+  })
+
+  it('enters an unlocked room and returns from a separate conversation to the same door', async () => {
+    const base = farm()
+    const id = fixture.pack!.cast.umas[0]!.characterId
+    useGame.setState({ uid:'u1',status:'ready',save:{
+      ...base, roster:{ [id]:newRosterUma(1) },
+      love:{ [id]:{...newLove(),stage:'spouse',level:1,wed:1,house:0} },
+      today:{ ...base.today, actions:10 },
+    } })
+    await render(<FarmRoute />, '/?region=living')
+    await click('[data-region-destination="house:0"]')
+    expect($('[data-world-plate="home-table"]')).not.toBeNull()
+    await click(`[data-world-actor="${id}"]`)
+    expect($('[data-her-menu]')?.dataset.herMenu).toBe(id)
+    expect($('[data-world-plate]')).toBeNull()
+    await click('[data-her-menu] [data-action="back"]')
+    expect(path).toBe('/?region=living&door=house%3A0')
+    expect($('[data-world-plate="home-table"]')).not.toBeNull()
+    expect(save().today.actions).toBe(10)
   })
 })
 

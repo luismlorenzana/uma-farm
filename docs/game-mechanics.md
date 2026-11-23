@@ -610,55 +610,22 @@ Back returns to where you were.
 
 #### Home: the farm map
 
-The farm map is Home: a landscape tile map you look across, seven cells tall (a cell is 44 points, 40 on a short screen)
-and wider than the screen, so it scrolls sideways. From the left: the woods' edge, the field's sign over the pond's edge,
-a path, then the farm's places on lots of two by two, three to a column, and the road to town at the far end. The field
-itself has its own screen ([the field's screen](#the-fields-screen)): the map shows only its sign, a lot's size, so the
-farm's places start six columns sooner than when the map held the field's 40 tiles.
+Home opens on the painted farm map. Tap a marked area or its matching shortcut. Each area opens a local HD-2D scene with a straight overhead path, tappable entrances and a destination list. Drag to pan or tap Zoom in to look closer. The list stays available when 3D is unavailable.
 
-```
- ◄──────────────────────── scrolls sideways ────────────────────────►
- ┌────────┬──────────────┬─┬───────────┬───────────┬────────────┬─────────┬────┐
- │        │ 6 to water   │ │ Shipping  │ Farmhouse │ Mill       │ Gate    │    │
- │ the    │ ┌▣▣▣≈≈○≈▲┐   │p│ bin       │           │            │         │ To │
- │ woods' │ └≈○≈≈▲≈≈≈┘   │a│ Warehouse │ a house   │ Sawmill    │ Board   │    │
- │ edge   │   Fields     │t│           │           │            │         │town│
- │        ├──────────────┤h│ (grass)   │ a house   │ Smokehouse │ Dock    │    │
- │        │ the pond's   │ │           │           │            │ …and 4  │    │
- │        │ edge         │ │           │           │            │ columns │    │
- └────────┴──────────────┴─┴───────────┴───────────┴────────────┴─────────┴────┘
-   the field's sign: plot 1 drawn small, tile by tile, its counts above it, a dot a plot once there are two
-```
+| Area | What you can open |
+|---|---|
+| **Farm** | Plot and orchard signs, the Mill and the Gate. Crops show their growth and watering state, with totals for ripe tiles, dry plants and empty tilled soil. |
+| **Forest** | Trails to the six gathering areas and the Sawmill. The trail list shows which areas you can reach. |
+| **Pond** | The existing fishing spots, the Smokehouse and the Dock. The Boat appears at the Dock once built. |
+| **Barns** | Coop and Barn doors, current animals and how many have goods ready. |
+| **Living** | The Farmhouse and other homes. The directory shows everyone assigned a room and where she is. Tap a resident at home to talk, or follow her location when she is working or in town. |
+| **Work** | Production, storage, extraction, shipping and Requests. The Work board is available here. |
 
-- **The woods' edge** (two columns down the left side) is where you forage and chop; **the pond's edge** (under the
-  field's sign) is where you fish. Both are drawn with the forest's and the Fishery's art and take the world's names when
-  it gives them.
-- **The field's sign** stands beside the woods, a lot's size: a wooden board with plot 1 drawn small, a square a tile in
-  its ground's colour (grass, earth, soil, watered soil) and a dot for a crop (green growing, blue watered, gold ripe), a
-  dot under it for each plot once the farm has more than one, and the Fields' name. Above it, the whole field's counts at
-  a glance, each only when it isn't 0: **"6 to water"** (growing and dry), **"2 ripe"**, **"3 to plant"** (empty tilled
-  soil). Its spoken name says them all ("Fields, 2 plots, 6 to water, 2 ripe"). A tap opens the field's screen.
-- **The lots,** column by column: the yard (the Shipping bin and the Warehouse, open ground below them since the Dorm
-  retired); the homestead's houses (the
-  Farmhouse and two lots from day 1, more columns as the household grows); the stations (the Mill, the Sawmill, the
-  Smokehouse); the Gate, the Requests board and the Dock; the ranch (the Coop, the Barn, the Kitchen); the Mine, the
-  Smelter and the Restaurant; the Quarry, the Cutter and the Forge.
-- **The road to town** closes the map: a tap opens the town's screen. The town's places (the shop, the festival ground,
-  the expedition post, the town itself) are in town, and the Menu lists them.
-- **Opening a place** opens its panel or quick look at the right, the map left as it was.
+A building door opens a room before its existing activity controls. Outdoor targets open the field, trail, fishing or other action panel directly. The destination list gives the reason a locked place cannot open. The road opens Town for free. Opening a door or selecting a person is also free. Actions keep their existing costs.
 
-**Field and Pond (F103).** Home opens on the Field and Pond scene on browsers with WebGL 2.
-The 3D view looks down over the west band, with the main path running straight across the screen. The woods, fields,
-fishery, shipping bin and Farmhouse open their usual screens.
-Drag the ground to pan. **All farm places** opens the full tile map. To return, choose **Field and Pond** beside the
-farm's info button. The active map stays selected for the session. The tile map also opens if the renderer fails.
+Morning farmworkers appear at jobs from the day's receipt. Before the work is recorded, their placement is marked as planned. Housed Umas return to their assigned homes at night, with expeditions accounted for. A sprite or her Here now entry opens the full-screen portrait conversation. Back returns to the same section or room and keeps the farm camera position.
 
-The scene shows plot 1's ground, crops and watering. The Fields label counts work across all cleared plots. Crew
-labels show the hands expected to do work in the band under the current rota and work board. While the morning
-report is open they reflect work recorded overnight. A few stand-in sprites mark the jobs in the scene. Seasons
-follow the farm date and the light turns to dusk when a quarter or fewer of the day's actions remain.
-Home starts in **Saver**, with a lower render resolution and smaller shadows. **Phone test** records up to ten foreground minutes,
-showing FPS, the 95th-percentile frame gap, draws and estimated graphics memory.
+The original tile map stays available from Home's map controls. It includes the **Field and Pond** review and **Phone test**, which records FPS, frame gaps, draw calls and estimated graphics memory for the original rendering slice.
 
 Each place's building and what opens it (the Boat is moored at the Dock and drawn there):
 
@@ -3496,7 +3463,7 @@ watering and care over the year, and the same shift cycle continued into Spring 
 
 #### The map
 
-The town overview is painted from above. Tap one of six districts, then tap the roof, façade or landmark in its painting to walk there for free. All town returns to the overview. The panel alongside the painting lists today's services and who's here. A direct link selects the destination's district.
+The town overview is painted from above. Tap one of six districts, then tap a building or landmark to open its destination. A building has its own room, service controls and people on site. The Plaza, Market, Harbour and Track use outdoor views. Tap a person in the scene or in the location list to open her full-screen conversation. Back returns to that destination. District and All town buttons take you back through the maps. Walking is free. A direct link opens the destination.
 
 | District | Destinations |
 |---|---|

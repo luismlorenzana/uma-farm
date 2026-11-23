@@ -21,6 +21,9 @@ import { Button, HelpButton, LockedIcon, Sheet } from '@luismlorenzana/uma-kit/u
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
+import { FarmWorld } from '../world/FarmWorld'
+import { sceneCoversWorld } from '../world/scene-cover'
+import { regionFromParams } from '../world/farm-regions'
 import type { FieldPondReviewProps } from '../hd2d/FieldPondReview'
 import { GuideContent } from '../guide/Guide'
 import { masterReady, useMaster } from '../master/master'
@@ -49,23 +52,10 @@ const DigPanel = lazy(() => import('./RanchPanels').then((m) => ({ default: m.Di
 const FieldPondReview = lazy<ComponentType<FieldPondReviewProps>>(
   () => import('../hd2d/FieldPondReview').catch(() => ({ default: FieldPondUnavailable })),
 )
-const FIELD_POND = 'farm:field-pond'
 
 function FieldPondUnavailable({ onUnavailable }: FieldPondReviewProps) {
   useEffect(onUnavailable, [onUnavailable])
   return null
-}
-
-function storedFieldPond(): boolean {
-  if (typeof WebGL2RenderingContext === 'undefined') return false
-  try { return sessionStorage.getItem(FIELD_POND) !== '0' } catch { return true }
-}
-
-function rememberFieldPond(on: boolean) {
-  try {
-    if (on) sessionStorage.setItem(FIELD_POND, '1')
-    else sessionStorage.setItem(FIELD_POND, '0')
-  } catch { /* A private session can play with the view open until it leaves the map. */ }
 }
 
 const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
@@ -103,18 +93,19 @@ function useReadyNow(save: FarmSave) {
 }
 
 /** A cell's size: the map's seven rows fill the page's height, 40 to 52 points. */
-function useCell(): [React.RefObject<HTMLDivElement | null>, number] {
+function useCell(active: boolean): [React.RefObject<HTMLDivElement | null>, number] {
   const ref = useRef<HTMLDivElement | null>(null)
   const [cell, setCell] = useState(CELL)
   useEffect(() => {
     const el = ref.current
+    if (!active) return
     if (!el || typeof ResizeObserver === 'undefined') return
     const fit = () => setCell(Math.max(MIN_CELL, Math.min(52, Math.floor(el.clientHeight / MAP_ROWS))))
     fit()
     const observer = new ResizeObserver(fit)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [active])
   return [ref, cell]
 }
 
@@ -169,11 +160,10 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const [params, setParams] = useSearchParams()
   const location = useLocation()
   const requested = params.get('map') === 'field-pond'
-  const [preview, setPreview] = useState(() => requested || storedFieldPond())
+  const [preview, setPreview] = useState(requested)
   const [previewReady, setPreviewReady] = useState(false)
   const [previewFailed, setPreviewFailed] = useState(false)
   const choosePreview = useCallback((on: boolean) => {
-    rememberFieldPond(on)
     setPreview(on)
     setPreviewFailed(false)
     if (!on) setPreviewReady(false)
@@ -191,18 +181,22 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
     setParams(next, { replace: true, state: location.state as unknown })
   }, [choosePreview, location.state, params, requested, setParams])
   const leave = useLeave()
-  const [scroll, cell] = useCell()
+  const legacy = params.get('map') === 'tiles' || preview || previewFailed
+  const region = regionFromParams(params)
+  const [scroll, cell] = useCell(legacy)
+  const talents = useTalents()
   const readyNow = useReadyNow(save)
   const hearts = useMemo(() => new Set(readyNow.map((r) => r.id)), [readyNow])
   const story = useStory()
   const master = useMaster()
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const { lots, road, cols } = mapLots(homesteadShown(save))
-  const covered = peek !== undefined || params.get('sheet') !== null
+  const covered = peek !== undefined || params.has('sheet') || sceneCoversWorld(params) || params.has('farmUma')
   const peekWords = peek ? placeWordsOf(story, peek.id) : null
   const close = () => {
     const next = new URLSearchParams(location.search)
     next.delete('peek')
+    next.delete('spot')
     const rest = next.toString()
     leave(`/${rest ? `?${rest}` : ''}`)
   }
@@ -213,7 +207,9 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const fields = placeWordsOf(story, 'fields')
   return (
     <>
-      <div ref={scroll} hidden={previewReady} className="absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-contain" data-farm-scroll>
+      {!legacy && <FarmWorld save={save} pack={story} master={master.status === 'ready' ? master.view : null}
+        talentOf={talents.of} region={region} covered={covered || save.summary !== null} />}
+      {legacy && <div ref={scroll} hidden={previewReady} className="absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-contain" data-farm-scroll>
         <div className="relative" style={{ width: cols * cell, height: MAP_ROWS * cell, background: '#9cc27a' }} data-farm-map data-cell={cell}>
           {/* The woods' edge: forage and chop. */}
           <Link to="/?peek=forest" {...hop} aria-label={`${woods.name}: forage or chop`} className="absolute" style={at(WOODS, cell)} data-place="forest">
@@ -278,7 +274,8 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
             <span className="[writing-mode:vertical-rl]">To town</span>
           </Link>
         </div>
-      </div>
+      </div>}
+      {legacy && <Link to="/" className="absolute left-2 top-2 z-20 grid min-h-11 place-items-center rounded-md bg-panel px-3 font-semibold" onClick={() => choosePreview(false)}>‹ Farm map</Link>}
       {preview && (
         <div className={`absolute inset-0 ${previewReady ? '' : 'invisible'}`}>
           <Suspense fallback={null}>
@@ -287,7 +284,8 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           </Suspense>
         </div>
       )}
-      <FarmHelp onPreview={previewReady ? undefined : () => choosePreview(true)} />
+      {(!region || legacy) && !params.has('farmUma') && <FarmHelp onPreview={legacy && !previewReady ? () => choosePreview(true) : undefined} />}
+      {!legacy && !region && <Link to="/?map=tiles" className="absolute left-2 top-2 z-10 grid min-h-11 place-items-center rounded-md bg-panel px-2 text-xs font-semibold" data-tile-map>Tile map</Link>}
       {(previewFailed || (preview && !previewReady)) && (
         <p role="status" className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-panel px-3 py-2 text-[12px] shadow-2">
           {previewFailed ? 'Field and Pond is unavailable. Tile map restored.' : 'Loading Field and Pond…'}
@@ -303,7 +301,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           focusKey={`${previewReady ? '[data-field-pond] ' : ''}[data-place="${peek.id}"]`}
         >
           {peek.id === 'forge' ? <ForgeEntrance save={save} />
-            : peek.id === 'forest' || peek.id === 'fishery' ? <GatherPanel save={save} place={peek.id} />
+            : peek.id === 'forest' || peek.id === 'fishery' ? <GatherPanel save={save} place={peek.id} selected={params.get('spot')} />
               : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
                 : isStation(peek.id) && placeOpen(save, peek) && stationBuilt(save, peek.id) ? <StationPanel save={save} station={peek.id} />
                   : isHome(peek.id) && placeBuilt(save, peek.id) ? <Suspense fallback={null}><RanchPanel save={save} home={peek.id} /></Suspense>

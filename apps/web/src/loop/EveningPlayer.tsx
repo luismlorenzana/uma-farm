@@ -27,7 +27,6 @@ import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
 import { outingEnvironment } from '../dialogue/scene-context'
-import { WalkOn } from '../hd2d/WalkOn'
 import { LifeScene } from './LifeScene'
 import { Frame } from './ScenePlayer'
 import { spendHerEvening } from './evening-actions'
@@ -223,7 +222,7 @@ export function EveningScene({ save, pack, master, id, name, role, kind, partner
         ? (
           <SceneLookProvider value={{ own: event.outfit, moments: eveningMoments(kind), day, leads: partner ? [id, partner] : [id] }}>
             <LifeScene id={id} steps={partner ? [...event.steps, { say: partner, line: sharedLine ?? 'I’m glad we shared this evening.' }] : event.steps}
-              nameOf={names} farmer={save.farmer.name} walkOn={<WalkOn who={partner ? [id, partner] : [id]} outfit="spring" />} atmosphere={outingEnvironment(save, kind, day)} onDone={onDone} illustrated={eveningIllustration(eveningScene(role, kind))}
+              nameOf={names} farmer={save.farmer.name} atmosphere={outingEnvironment(save, kind, day)} onDone={onDone} illustrated={eveningIllustration(eveningScene(role, kind))}
               data={{ 'data-evening-scene': eveningScene(role, kind) }} />
           </SceneLookProvider>
         )

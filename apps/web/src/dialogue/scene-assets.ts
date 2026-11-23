@@ -1,3 +1,9 @@
+import estateOffice from '../world/rooms/estate-office.webp'
+import littleStudio from '../world/rooms/little-studio.webp'
+import bakery from '../world/rooms/laurel-bakery.webp'
+import salon from '../world/rooms/mejiro-salon.webp'
+import garage from '../world/rooms/espoir-garage.webp'
+import coop from '../world/rooms/coop.webp'
 import small0 from '@luismlorenzana/uma-art/farm-scenes/fields-896.webp?url'
 import large0 from '@luismlorenzana/uma-art/farm-scenes/fields-1600.webp?url'
 import small1 from '@luismlorenzana/uma-art/farm-scenes/fishery-896.webp?url'
@@ -40,8 +46,6 @@ import small19 from '@luismlorenzana/uma-art/farm-scenes/chapel-bell-896.webp?ur
 import large19 from '@luismlorenzana/uma-art/farm-scenes/chapel-bell-1600.webp?url'
 import small20 from '@luismlorenzana/uma-art/farm-scenes/mill-896.webp?url'
 import large20 from '@luismlorenzana/uma-art/farm-scenes/mill-1600.webp?url'
-import small21 from '@luismlorenzana/uma-art/farm-scenes/coop-896.webp?url'
-import large21 from '@luismlorenzana/uma-art/farm-scenes/coop-1600.webp?url'
 import small22 from '@luismlorenzana/uma-art/farm-scenes/barn-896.webp?url'
 import large22 from '@luismlorenzana/uma-art/farm-scenes/barn-1600.webp?url'
 import small23 from '@luismlorenzana/uma-art/farm-scenes/sawmill-896.webp?url'
@@ -103,7 +107,7 @@ import large50 from '@luismlorenzana/uma-art/farm-scenes/sitting-solo-1600.webp?
 import small51 from '@luismlorenzana/uma-art/farm-scenes/sitting-duo-896.webp?url'
 import large51 from '@luismlorenzana/uma-art/farm-scenes/sitting-duo-1600.webp?url'
 import innLobby from '../town/art/inn-lobby.jpg'
-export const sceneAssets: Readonly<Record<string,readonly [string,string]>> = {
+export const sceneAssets: Readonly<Record<string,readonly [string,string?]>> = {
   'fields': [small0,large0],
   'fishery': [small1,large1],
   'forest': [small2,large2],
@@ -125,7 +129,12 @@ export const sceneAssets: Readonly<Record<string,readonly [string,string]>> = {
   'festival': [small18,large18],
   'chapel-bell': [small19,large19],
   'mill': [small20,large20],
-  'coop': [small21,large21],
+  'coop': [coop],
+  'estate-office': [estateOffice],
+  'little-studio': [littleStudio],
+  'laurel-bakery': [bakery],
+  'mejiro-salon': [salon],
+  'espoir-garage': [garage],
   'barn': [small22,large22],
   'sawmill': [small23,large23],
   'smokehouse': [small24,large24],

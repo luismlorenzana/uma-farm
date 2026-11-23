@@ -140,8 +140,10 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
 
 /** The woods' edge or the pond's: each area or spot in the farmer's reach with its season's finds, and Forage, Chop or
  * Fish, one action each. */
-export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlace }) {
-  const rows = reachRows(save, place)
+export function GatherPanel({ save, place, selected }: { save: FarmSave; place: GatherPlace; selected?: string | null }) {
+  const all = reachRows(save, place)
+  const picked = all.find(row => row.id === selected)
+  const rows = picked ? [picked] : all
   const { note, error, busy, run } = useAct(place)
   const out = actionsLeft(save) === 0
   return (

@@ -1,0 +1,12 @@
+.farm-world-overview { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; overflow:auto; container-type:size; }
+.farm-world-painting { position:relative; flex:none; width:min(100%,calc((100cqh - 44px) * 1.7778)); aspect-ratio:16/9; min-height:0; container-type:size; }
+.farm-world-painting > img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; }
+.farm-world-hotspot { position:absolute; z-index:1; transform:translate(-50%,-50%); min-height:44px; min-width:70px; padding:3px 9px; display:grid; place-content:center; text-align:center; color:#fffaf0; border:1px solid #e8cf98; background:#253a2ae8; border-radius:8px; font-weight:700; line-height:1.1; font-size:14px; box-shadow:0 3px 10px #17302160; }
+.farm-world-hotspot small { font-size:11px; font-weight:500; margin-top:2px; }
+.farm-world-road { right:2%; top:47%; transform:translateY(-50%); }
+.farm-world-shortcuts { display:flex; flex-wrap:wrap; gap:2px; justify-content:center; }
+.farm-world-shortcuts a { display:grid; min-height:44px; padding:0 9px; place-items:center; font-size:12px; font-weight:600; }
+.farm-world-section { position:absolute; inset:0; padding:4px 8px 8px; display:flex; flex-direction:column; }
+.farm-world-section[hidden] { display:none; }
+.farm-world-split { display:grid; grid-template-columns:minmax(0,2.1fr) minmax(140px,1fr); gap:8px; flex:1; min-height:0; }
+.farm-depth-door { position:absolute; min-height:44px; max-width:30%; display:grid; place-items:center; transform:translateX(-50%); padding:2px 5px; border-radius:6px; border:1px solid #e5c893; background:#243728ed; color:#fff8e8; font-size:11px; font-weight:600; text-align:center; }

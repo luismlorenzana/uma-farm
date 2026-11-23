@@ -224,7 +224,7 @@ describe('the town', () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<TownPage />, '/town')
     await find('[data-town-map]')
-    expect($('[data-place-name]')?.textContent).toBe('The Plaza')
+    expect($('[data-town-district="overview"]')).not.toBeNull()
     const districts = $$('[data-district]').map(node => node.dataset.district!)
     expect(districts).toEqual(['plaza', 'market', 'library', 'harbour', 'workshop', 'hilltop'])
     const visited: string[] = []
@@ -240,6 +240,8 @@ describe('the town', () => {
         if (id === 'store') expect($('[data-post-item="seeds"]')?.getAttribute('href')).toBe('/town?at=store&sheet=shop')
         if (id === 'mayor') expect(words($('[data-keeper]'))).toBe('Ember · The mayor')
         if (id === 'plaza') expect($('[data-keeper]')).toBeNull()
+        expect($('[data-town-destination]')?.dataset.townDestination).toBe(id)
+        await click(await find('[data-town-district-back]'))
       }
       await click(await find('[data-town-overview]'))
     }
@@ -281,6 +283,13 @@ describe('the town', () => {
     await render(<TownPage />, '/town?at=bakery')
     await find('[data-place-panel="bakery"]')
     expect($$('[data-place-panel] [data-person]').map((p) => p.dataset.person)).toEqual(['90001'])
+    await click(await find('[data-world-actor="90001"]'))
+    expect($('[data-her-menu]')?.dataset.herMenu).toBe('90001')
+    expect($('[data-world-plate]')).toBeNull()
+    await click(await find('[data-her-menu] [data-action="back"]'))
+    expect(path).toBe('/town?at=bakery')
+    expect($('[data-town-destination]')?.dataset.townDestination).toBe('bakery')
+    expect(save().today.actions).toBe(0)
   })
 
   it('introduce yourself, talk and give a gift, each an action: her meeting scene plays, and the save keeps the days', async () => {
@@ -370,7 +379,8 @@ describe('the town', () => {
     await click($(`[data-person-row="${SISTER}"]`))
     expect(path).toContain(`uma=${SISTER}`)
     expect(path).toContain(`at=${townDay(met, fixture.pack!).where.get(SISTER)}`)
-    await render(<TownPage />, '/town?view=people')
+    await click(await find('[data-her-menu] [data-action="back"]'))
+    expect(path).toBe('/town?view=people')
     await type(await find('[data-search]'), 'nobody')
     expect($('[data-none]')?.textContent).toBe('No one by that name.')
   })

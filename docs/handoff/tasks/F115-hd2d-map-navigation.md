@@ -1,6 +1,6 @@
 # F115 · Painted maps, HD-2D locations and building interiors
 
-**Status · Authoring and implementation spec.** The farm overview becomes a painted map with six tappable regions. Each opens a local HD-2D scene. Doors and other entrances open the destination at that location. Tapping an available Uma opens the separate full-screen conversation.
+**Status · Implemented.** The farm overview becomes a painted map with six tappable regions. Each opens a local HD-2D scene. Doors and other entrances open the destination at that location. Tapping an available Uma opens the separate full-screen conversation.
 
 [Field and Pond](F103-hd2d-farm.md) is the live exterior and performance pilot. [F114](F114-hd2d-actors.md) supplied the live Tier 1 walking sprites. F113 supplied the painted town, its six districts and 17 destinations. Keep the existing save, stable place IDs, job rules and action costs as the source for this work.
 
@@ -78,4 +78,4 @@ Keep storefront, counter and person interactions distinct. An interior can be an
 | Homes and Town | Finish household doors, all 17 town destinations, interiors and service entry. | Every assigned resident remains listed in Living. Move a resident from the Inn and swap her room. Confirm daytime work, away status, bedtime return, valid actor taps and no duplicate physical presence. Tap through all six districts. |
 | Release review | Verify content delivery and signed-in Home Screen use on physical iPhone. | Check portrait dialogue and splash takeover from both environments, scene return and replays, cold and cached load, background/resume, missing art and context recovery. Capture the F103 phone session before increasing visual budgets. |
 
-The painted overview, its first HD-2D section, a working door and a full-screen conversation should be playable together before commissioning the remaining rooms. This verifies the navigation and authoring contract against a real save.
+Local Chrome walkthroughs covered all six farm exteriors and all 17 town destinations at 844 × 390 and 667 × 375. The solo save kept the Mill locked. Synthetic 10-, 20- and 50-Uma tests cover crew and household presence. The physical iPhone performance and signed-in Home Screen review remains open.
