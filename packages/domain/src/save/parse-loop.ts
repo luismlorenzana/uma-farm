@@ -25,6 +25,7 @@ import { MAX_STARS, parseStockKey } from './warehouse'
 import { parseFestival } from './parse-festivals'
 import { COHORTS } from './long-game'
 import { CONTESTS } from '../festivals/state'
+import type { RequestBook, RequestOrder, RequestSlot } from '../town/requests'
 
 /** Work places with four notification slots each. Restaurant service has no scheduled output. */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter', 'coop', 'barn', 'kitchen'] as const
@@ -438,7 +439,35 @@ export function parseDiary(value: unknown, path: string): SaveV6['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'accounts', 'workHistory', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
+function parseTownRequests(value: unknown, path: string, today: number): RequestBook {
+  const book = object(value, path, ['slots', 'pending'])
+  const orders = object(book.slots, `${path}.slots`, ['food', 'makers', 'town'])
+  const slots: RequestBook['slots'] = {}
+  for (const slot of ['food', 'makers', 'town'] as const satisfies readonly RequestSlot[]) {
+    if (orders[slot] === undefined) continue
+    const at = `${path}.slots.${slot}`
+    const o = object(orders[slot], at, ['id', 'title', 'from', 'worker', 'item', 'count', 'stars', 'posted', 'due', 'status', 'payment', 'closed'])
+    const posted = int(o.posted, `${at}.posted`, 1, today)
+    const item = typeof o.item === 'string' && (isGoodId(o.item) || isDishId(o.item)) ? o.item : fail(`${at}.item`, 'unknown request good')
+    const status = oneOf(o.status, `${at}.status`, ['offered', 'accepted', 'cancelled', 'delivered'] as const)
+    const order: RequestOrder = {
+      id: key(o.id, `${at}.id`), title: financeTitle(o.title, `${at}.title`), from: key(o.from, `${at}.from`),
+      worker: o.worker === null ? null : typeof o.worker === 'string' && isRosterId(o.worker) ? o.worker : fail(`${at}.worker`, 'expected an Uma id'),
+      item, count: int(o.count, `${at}.count`, 1, 99), stars: int(o.stars, `${at}.stars`, 1, MAX_STARS),
+      posted, due: o.due === null ? null : int(o.due, `${at}.due`, posted, today + 6), status,
+    }
+    if (status === 'delivered') {
+      order.payment = count(o.payment, `${at}.payment`)
+      order.closed = int(o.closed, `${at}.closed`, posted, today)
+    } else if (o.payment !== undefined || o.closed !== undefined) {
+      fail(at, 'only delivered orders have a payment and completion date')
+    }
+    slots[slot] = order
+  }
+  return { slots, pending: count(book.pending, `${path}.pending`) }
+}
+
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'accounts', 'workHistory', 'pantry', 'market', 'chapter', 'goals', 'discoveries', 'requests', 'reserves', 'carrotRows', 'fieldPlans', 'cropProofs',
   'collectionCaps', 'stationPlans', 'surplus', 'fishingModes', 'manualCatches', 'fishRemainders', 'financeLog', 'surplusSettings', 'projectPin', 'recipePin', 'toolPin'] as const
 
 function parseStationPlans(value: unknown, path: string): NonNullable<SaveV6['farm']['stationPlans']> {
@@ -567,10 +596,11 @@ function parseFinanceLog(value: unknown, path: string, today: number): FinanceEn
 function parseAccounts(value: unknown, path: string, today: number): NightAccount[] {
   const records = list(value, path, 0, INCOME_NIGHTS).map((raw, i): NightAccount => {
     const at = `${path}.${i}`
-    const row = object(raw, at, ['day', ...ACCOUNT_TOTALS, 'restaurant', 'repaymentBudget'])
+    const row = object(raw, at, ['day', ...ACCOUNT_TOTALS, 'restaurant', 'repaymentBudget', 'townOrders'])
     const amountOf = (key: typeof ACCOUNT_TOTALS[number]) => count(row[key], `${at}.${key}`)
     return { day: int(row.day, `${at}.day`, 1, today),
       shipping: amountOf('shipping'), food: amountOf('food'), upkeep: amountOf('upkeep'), loans: amountOf('loans'), owed: amountOf('owed'),
+      ...(row.townOrders === undefined ? {} : { townOrders: count(row.townOrders, `${at}.townOrders`) }),
       ...(row.restaurant === undefined ? {} : { restaurant: count(row.restaurant, `${at}.restaurant`) }),
       ...(row.repaymentBudget === undefined ? {} : { repaymentBudget: count(row.repaymentBudget, `${at}.repaymentBudget`) }) }
   })
@@ -624,6 +654,7 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV6['
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
     // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
     market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isShippableId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),
+    ...(o.requests === undefined ? {} : { requests: parseTownRequests(o.requests, `${path}.requests`, today) }),
     ...(o.discoveries === undefined ? {} : { discoveries: counts(o.discoveries, `${path}.discoveries`, (id) => isGoodId(id) || isDishId(id), 'unknown ingredient', (v, at) => int(v, at, 0, today)) }),
     ...(o.cropProofs === undefined ? {} : o.cropProofs === true ? { cropProofs: true as const } : fail(`${path}.cropProofs`, 'expected true')),
     ...(o.reserves === undefined ? {} : { reserves: counts(o.reserves, `${path}.reserves`, isGoodId, 'unknown reserve ingredient', (v, at) => int(v, at, 1, MAX_PRODUCTION_TARGET)) }),
@@ -683,9 +714,9 @@ export function parseBinLines(value: unknown, path: string): BinSale[] {
  * no food lines. */
 export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
   const gold = (v: unknown, at: string, min = 0) => int(v, at, min, Number.MAX_SAFE_INTEGER)
-  return unique(list(value, path, 0, MAX_LOANS + 6).map((v, i): MoneyLine => {
+  return unique(list(value, path, 0, MAX_LOANS + 7).map((v, i): MoneyLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['loan', 'staff', 'pantry', 'takeout', 'upkeep', 'short', 'paid-up'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['loan', 'staff', 'pantry', 'takeout', 'upkeep', 'short', 'paid-up', 'town-orders'] as const)
     switch (kind) {
       case 'staff': {
         const m = object(v, at, ['kind', 'mouths', 'days'])
@@ -714,6 +745,7 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
         const s = object(v, at, ['kind', 'owed', 'nights'])
         return { kind, owed: gold(s.owed, `${at}.owed`, 1), nights: gold(s.nights, `${at}.nights`, 1) }
       }
+      case 'town-orders': return { kind, gold: gold(object(v, at, ['kind', 'gold']).gold, `${at}.gold`, 1) }
       case 'paid-up': return { kind, owed: gold(object(v, at, ['kind', 'owed']).owed, `${at}.owed`, 1) }
     }
   }), path, (m) => (m.kind === 'loan' ? `loan:${m.for}` : m.kind))

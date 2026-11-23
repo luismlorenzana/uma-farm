@@ -7,6 +7,7 @@ import { stationJobUnits } from '../gathering/ids'
 import { heldFor, pickFor } from './builds'
 import { farmPlace, isBuildPlace, placeBuilt, type FarmPlaceId } from './places'
 import { MAX_PRODUCTION_TARGET, MAX_SURPLUS } from '../goods/production-catalogue'
+import { requestHolds } from '../town/request-stock'
 import { ship, shipCrate, type CrateLine } from '../save/bin'
 import { mealsNeeded, pantryMeals, plainBatch } from './food'
 import { SaveRuleError } from '../save/rules'
@@ -116,12 +117,14 @@ export function surplusStock(save: FarmSave, id: string, floors = hardSurplusFlo
   const settings = save.farm.surplusSettings
   const override = settings?.floors?.[id]
   const protectedStock = floors[id] ?? 0
-  const count = goodCount(save.items, id)
+  const holds = requestHolds(save, id)
+  const reserved = [...holds.values()].reduce((sum, count) => sum + count, 0)
+  const count = goodCount(save.items, id) - reserved
   const keepAll = standard === KEEP_ALL || override === KEEP_ALL
   const base = override ?? (save.farm.surplus ? 0 : standard)
   const heldStars = settings?.minStars?.[id] ?? 6
-  const low = (save.items[id] ?? []).slice(0, heldStars - 1).reduce((sum, n) => sum + n, 0)
-  return { standard, override, protectedStock, heldStars, available: keepAll ? 0 : Math.min(low, Math.max(0, count - Math.max(base, protectedStock))) }
+  const low = (save.items[id] ?? []).slice(0, heldStars - 1).reduce((sum, n, index) => sum + n - (holds.get(index + 1) ?? 0), 0)
+  return { standard, override, protectedStock: protectedStock + reserved, heldStars, available: keepAll ? 0 : Math.min(low, Math.max(0, count - Math.max(base, protectedStock))) }
 }
 
 export function configureSurplus<S extends FarmSave>(save: S, settings: { paused?: boolean; limit?: number; reset?: boolean }): S {
@@ -198,10 +201,11 @@ export function surplusCrate(save: FarmSave, manual = false): CrateLine[] {
   for (const id of goods) {
     if (room === 0) break
     const stock = surplusStock(save, id, floors)
+    const holds = requestHolds(save, id)
     let left = Math.min(room, stock.available)
     for (const [i, held] of (save.items[id] ?? []).entries()) {
       if (left === 0 || i + 1 >= stock.heldStars) break
-      const count = Math.min(held, left)
+      const count = Math.min(held - (holds.get(i + 1) ?? 0), left)
       if (count > 0) lines.push({ id, stars: i + 1, count })
       left -= count
       room -= count

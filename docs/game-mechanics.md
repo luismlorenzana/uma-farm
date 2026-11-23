@@ -526,7 +526,7 @@ The steps as the game lists them:
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
 | 2 | `farmhandsWork` | Read the completed morning shift (or run the crew at night for a legacy date). Farmhands work in invitation order. Cooks and station hands with orders can use spare actions after later workers bring ingredients in. An action gives a point of practice. Goods go to the Warehouse, meals to the pantry, and each Uma’s main place is where she spent the most actions |
 | 2 | `theFarmEats` | The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil |
-| 2 | `settleTheAccounts` | The bin’s pay and the Restaurant’s sales and tips join the last seven nights’ income. Takeout (15g a meal), upkeep and arrears have first claim on cash. Loans draw from that night’s income up to the cash left after covering those bills. The farm runs at half pace from a second consecutive short night until the bill is paid |
+| 2 | `settleTheAccounts` | The bin’s pay, town orders, and the Restaurant’s sales and tips join the last seven nights’ income. Takeout (15g a meal), upkeep and arrears have first claim on cash. Loans draw from that night’s income up to the cash left after covering those bills. The farm runs at half pace from a second consecutive short night until the bill is paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
 | 3 | `ranchNightChores` | Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only |
@@ -711,7 +711,7 @@ What a tap does:
 
 **Locks.** A locked place shows a lock, and its quick look says why:
 - **A place to build** (see [Building](#building)): "Farm Rank 3" before its rank offers it. "Not built" leads to its Build card, and "Builds tonight" marks a paid build.
-- **The Requests board:** "Opens with 5 Umas met"; then "Opens soon", its game not built.
+- **The Requests board:** Meet five Umas, then open the same orders as the Plaza and Café.
 - **"Opens soon":** a place that stands while its game is still in development.
 - **The Forge** has two entrances on its quick look. The workshop can be restored at Farm Rank 3.
   The Ring Bench opens the morning after the first played Romance 8 event.
@@ -3487,7 +3487,7 @@ watering and care over the year, and the same shift cycle continued into Spring 
 
 ```
  the farm map ──► the Town opens for free (the town and its shop stay open for the day)
-                    the map: its places (the six spots, the shops and offices, the story's workplaces and homes)
+                    the painted map: six districts, seventeen public destinations, and a shared Inn
                       tap a place (free) ──► who's here now, with faces · its keeper at her post, and her post's menu
                         tap an Uma ──► her menu: Introduce yourself · 1 │ Talk · 1 │ Give a gift · 1 │ Ask her out · 2
                                                  │ Invite her to work · 1 │ Her event · 1, when it's Ready
@@ -3496,25 +3496,34 @@ watering and care over the year, and the same shift cycle continued into Spring 
 
 #### The map
 
-The town's places, in four groups on the map:
+The town overview is painted from above. Tap one of six districts, then tap the roof, façade or landmark in its painting to walk there for free. All town returns to the overview. The panel alongside the painting lists today's services and who's here. A direct link selects the destination's district.
 
-| Group | Its places | Who's there |
-|---|---|---|
-| **Around town** | The six spots: the plaza, the market, the café, the harbour, the library and the hilltop track (their names and lines `town.json`'s, else the game's) | Everyone whose schedule puts her there that day: the default schedule's, and anyone the story places there |
-| **Shops and offices** | The general store, the rancher's, the mayor's office and the smithy | Their keepers at their posts, and anyone the story places there |
-| **Workplaces** and **Homes** | The story's own (`town.json`'s `locations`, by `kind`) | Who the story places there |
-| **Elsewhere** | The story's other spots | Who the story places there |
+| District | Destinations |
+|---|---|
+| Plaza | Plaza noticeboard, Mayor's Office, Estate Office, Little Studio |
+| Market | Market stalls, General Store, Little Bakery, Salon |
+| Library & Café | Town Library, Café |
+| Harbour | Quay, Harbour Inn |
+| Smithy & Ranch | Smithy, Garage, Rancher's |
+| Hilltop | Hilltop Track, Expedition post |
 
-- **You arrive at the plaza** (`/town?at=plaza`), marked **You're here**. A tap on another place goes there (`?at=<id>`):
-  free, and Back still returns to the farm.
-- **Each place on the map** shows its name, how many are there now on its badge, and their first four faces.
-- **A crowded spot:** a spot holds everyone the schedules put there, with no cap (with a cast of a hundred on the default
-  schedule, about a third are out each day, five or six a spot, more where many share a favourite). Its tile keeps its
-  count on the badge and its first four faces, then "+n"; where you are lists everyone.
-- **Where you are**, beside the map: its name and line, **Here now · n** with each Uma's face and name in a grid that
-  scrolls (a ♥ on one you've met, a ✓ on one you've talked with today), or "No one's here now."; then its keeper at her
-  post and her post's menu.
-- **The top bar** shows the actions left, as everywhere.
+All 25 town professions offer services from the building panel. A working counter names the Uma on her morning or afternoon shift. A self-service counter stays available. The reports use live farm stock, facilities, recipes, seasonal sources, tools, and festival records. Services link to the existing work, gathering, shopping, household and festival screens.
+
+#### Harbour Inn
+
+Every Uma in the town cast lives at the Inn until she takes a farm room. Umas without an outing, town shift or farm shift can be found in the lobby. The directory shows residents where they are today and opens their ordinary conversation and event menu. A spouse waiting for a room stays on the directory. A housed spouse leaves the directory, keeps her weekly town and farm shifts, and comes home to the farm. The Inn still provides meal and expedition planning after its residents move out.
+
+Links that used to go to an authored house open the Inn. An existing story setting, scene id or Library replay keeps its authored location and original history.
+
+#### Town Library, Kitchen and Café
+
+Browse Kitchen recipes, the Restaurant's recipe index, and guides to exact-grade ingredients from Day 1. Once the Kitchen stands at Farm Rank 3, learn Trout Grill permanently for 500g or exchange the farm's exact Trout G2 discovery for the lesson. Possessing a bought Trout alone does not teach it. Select the recipe in the regular Kitchen menu. Each portion takes two Trout or two Trout Fillets of the same quality plus an herb or spice. The first Café order takes one cooked portion. The Restaurant still needs its own stage clears and each exact-grade discovery. Book stock and recipe proof are shown separately.
+
+#### Town Requests
+
+The farm's Requests board, Plaza noticeboard and Café share one book. It opens at five Umas met. The Cafe's first Trout Grill order is available once the Kitchen stands and stays offerable until delivered. Three weekly slots offer Food, Makers and Town orders from 18 authored definitions. Qualifying ingredients and proof use the catalogue's exact item IDs. Recurring orders last seven days from acceptance. Accept and cancel are free. Accept holds eligible stock against automatic surplus shipping. Cancel, expire or deliver to release the hold.
+
+Delivery spends one regular action and takes the exact goods. The player sees the actual posting Uma, where available. The price starts from the warehouse goods' bin value at delivery or the Kitchen dish's base plate value at its stars. An additional 10% is capped at 250g. Base value counts for Farm Rank once. The payout appears under **Town orders** in the next morning's receipt and Ledger, and joins the normal upkeep and loan accounting.
 
 The six spots, by the story's ids, so a `spot` trigger or a Town note can name one. `town.json` names each, gives it a
 line and a keeper; whatever it leaves, the game's own plays:
@@ -3560,13 +3569,10 @@ presence through `town/town.ts`. Personal time uses the authored outing, routine
 <!-- /live -->
 
 - **Without a weekly profession,** her story's schedule uses her routine's first stop
-  whose days of the season and seasons hold, else her job on its days, else her home. A location the map doesn't hold is
-  passed over; with none left, the story hasn't scheduled her. On a day none of it holds, she's at home, off the map.
+  whose days of the season and seasons hold, else her job on its days. Retired houses and days at home resolve to the Harbour Inn.
 - **The fallback for an Uma without a profession or written schedule** is her favourite spot (her cast `spot`, else the six in turn by her
-  place in the cast) on every third day of each season, starting on day 1, 2 or 3 by her place in the cast, so a third
-  of the cast is out each day and the next Uma in the cast is out the day after. The same four days every season.
-- **A spot** holds everyone the schedules put there; the map shows a crowded one by its count and "+n" ([the
-  map](#the-map)).
+  place in the cast) on every third day of each season, starting on day 1, 2 or 3 by her place in the cast. She is at the Inn on her other personal days.
+- **Each destination** fits everyone the schedules put there. The door shows a count and the panel lists the Umas.
 - **The posts:** the mayor's assigned post is permanent. Town professions show the cast members working that day,
   and an uncovered counter offers self-service. Only a playable Uma or the mayor has a town menu. Old links to
   retired town portraits open the map.
@@ -3629,7 +3635,7 @@ invite her to work only where she's in front of you: **on the farm** when she li
 it's her farm day (a farmhand), else **in town where she is today**, once you've gone into town (`whereYouMeet`).
 Her menu in town is always where she is; her profile follows the same rule ([her profile](#her-profile)). **Her Ready
 event plays from anywhere** (her menu, her profile, the morning's Ready line, the calendar). Why: going into town takes
-one of the day's actions and the map shows who's where, so the town is where the day's talks happen, her schedule says
+no actions and the map shows who's where, so the town is where the day's talks happen, her schedule says
 which days, and an Uma on the farm is always in front of you; an event is her route's milestone, offered by the
 morning, the calendar and the People page, so a day she's at home never strands it. **Where she is never gates an
 occasion** either: her birthday, a festival's day and night and the story's days play from the calendar wherever she is
@@ -4382,7 +4388,7 @@ Your life with the Umas opens the homestead and the town:
 | The sixth wedding | House 6 to build (160,000g), the house before it standing | Spouses in `love` |
 | 3 married | The homestead's second row on the map | Spouses in `love` |
 | 6 married | The homestead's third row on the map | Spouses in `love` |
-| 5 Umas met | The Requests board’s place (its game comes later) | Umas on the roster |
+| 5 Umas met | The shared Town Requests board | Umas on the roster |
 <!-- /live -->
 
 - **"Met"** is everyone on the roster today, on the farm or in town (see [meeting her](#meeting-her)).

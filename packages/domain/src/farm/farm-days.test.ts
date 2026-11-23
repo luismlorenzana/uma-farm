@@ -78,13 +78,16 @@ describe('her farm days', () => {
     expect(morning.roster[ONE]!.practice).toEqual(save.roster[ONE]!.practice)
   })
 
-  it('has a spouse in her room on the farm every day, and one waiting for a room in town by her schedule', () => {
+  it('keeps a housed spouse on the farm and one waiting for a room at the Inn between outings', () => {
     const base = farm(on('spring', 1))
     const housed: SaveV4 = { ...base, love: { ...base.love, [THREE]: { ...newLove(), stage: 'spouse', level: 0, wed: 1, house: 0 } } }
     for (let day = 1; day <= 48; day++) expect(onFarmToday(housed, PACK, THREE, day), `day ${day}`).toBe(true)
     const waiting: SaveV4 = { ...base, love: { ...base.love, [THREE]: { ...newLove(), stage: 'spouse', level: 0, wed: 1 } } }
-    const out = Array.from({ length: 12 }, (_, i) => i + 1).filter((day) => townDay({ ...waiting, calendar: { day } }, PACK).where.has(THREE))
-    expect(out).toEqual([3, 6, 9, 12])
+    const days = Array.from({ length: 12 }, (_, i) => i + 1)
+    const places = days.map(day => townDay(waiting, PACK, day).where.get(THREE))
+    expect(places.filter(at => at === 'harbour-inn')).toHaveLength(8)
+    expect(days.filter(day => places[day - 1] !== 'harbour-inn')).toEqual([3, 6, 9, 12])
+    expect(places.every(Boolean)).toBe(true)
     for (let day = 1; day <= 12; day++) expect(onFarmToday(waiting, PACK, THREE, day)).toBe(false)
   })
 

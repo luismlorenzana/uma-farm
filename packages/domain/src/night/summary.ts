@@ -36,6 +36,7 @@ kind: 'sold'
  * - `short`: gold `owed` after a short night, and the short nights in a row (`nights`: 1 warns, 2 and on is half pace);
  * - `paid-up`: the upkeep owed from before is paid, the half pace over. */
 export type MoneyLine =
+  | { kind: 'town-orders'; gold: number }
   | { kind: 'loan'; for: string; paid: number; left: number; title?: string }
   | { kind: 'staff'; mouths: number; days: number }
   | { kind: 'pantry'; meals: number; spoiled: number; fed: number }

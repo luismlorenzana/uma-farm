@@ -11,7 +11,7 @@ import {
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
 import { forgetArrived } from '../story/news'
-import { keepOnCast, prepareStorySave, storyReady } from '../story/story'
+import { keepOnCast, prepareStorySave, prepareTownRequests, storyReady } from '../story/story'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, readStoredRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
@@ -181,6 +181,7 @@ export async function commit(save: FarmSave): Promise<void> {
       loadingShift = false
     }
   }
+  save = prepareTownRequests(save)
   useGame.setState({ save, dirty: true })
   await persist()
   scheduleSync()

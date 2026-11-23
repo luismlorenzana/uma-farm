@@ -230,8 +230,8 @@ export interface FoodBill {
  * nights. Takeout, upkeep and arrears reserve their cash first. Each loan draws in order from the night's remaining
  * income and spare cash. When a bill is short, the farm pays takeout first and counts consecutive short nights.
  */
-export function settleAccounts<S extends FarmSave>(save: S, income: number, food: FoodBill | null = null, restaurant = 0): { save: S; lines: MoneyLine[] } {
-  const lines: MoneyLine[] = []
+export function settleAccounts<S extends FarmSave>(save: S, income: number, food: FoodBill | null = null, restaurant = 0, townOrders = 0): { save: S; lines: MoneyLine[] } {
+  const lines: MoneyLine[] = townOrders ? [{ kind: 'town-orders', gold: townOrders }] : []
   let gold = save.gold
   const takeout = (food?.takeout ?? 0) * TAKEOUT_PRICE
   const due = upkeepOf(save).gold + save.farm.owed
@@ -269,7 +269,7 @@ export function settleAccounts<S extends FarmSave>(save: S, income: number, food
   if (owed > 0) lines.push({ kind: 'short', owed, nights: short })
   else if (save.farm.owed > 0) lines.push({ kind: 'paid-up', owed: save.farm.owed })
   const book = [...save.farm.income, income].slice(-INCOME_NIGHTS)
-  const record: NightAccount = { day: save.calendar.day, shipping: income - restaurant, ...(restaurant ? { restaurant } : {}),
+  const record: NightAccount = { day: save.calendar.day, shipping: income - restaurant - townOrders, ...(restaurant ? { restaurant } : {}), ...(townOrders ? { townOrders } : {}),
     ...(repaymentBudget ? { repaymentBudget } : {}), food: bought, upkeep: paid, loans: save.gold - gold - bought - paid, owed }
   const accounts = [...(save.farm.accounts ?? []).filter(entry => entry.day < record.day), record].slice(-INCOME_NIGHTS)
   return { save: { ...account, gold, farm: { ...account.farm, owed, short, income: book, accounts } }, lines }

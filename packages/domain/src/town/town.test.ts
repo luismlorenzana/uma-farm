@@ -93,8 +93,8 @@ describe('the map', () => {
   it('holds the six spots, the four shops and offices, then the story\'s locations, each of the town\'s people at one post', () => {
     const p = pack({ town: TOWN })
     const map = townLocations(p)
-    expect(map.map((l) => l.id)).toEqual([...SPOT_IDS, ...SHOP_IDS, 'blue-cottage', 'bakery', 'old-pier'])
-    expect(map.map((l) => l.group)).toEqual([...SPOT_IDS.map(() => 'spot'), ...SHOP_IDS.map(() => 'shop'), 'home', 'work', 'spot'])
+    expect(map.map((l) => l.id)).toEqual([...SPOT_IDS, ...SHOP_IDS, 'blue-cottage', 'bakery', 'old-pier', 'estate-office', 'little-studio', 'laurel-bakery', 'mejiro-salon', 'espoir-garage', 'harbour-inn', 'expeditions'])
+    expect(map.map((l) => l.group)).toEqual([...SPOT_IDS.map(() => 'spot'), ...SHOP_IDS.map(() => 'shop'), 'home', 'work', 'spot', ...Array<string>(7).fill('work')])
     expect(map.find((l) => l.id === 'blue-cottage')).toMatchObject({ name: 'The Blue Cottage', line: 'An invented home.', keeper: null })
     // One post each: town.json's keepers at their spots first, so the mayor, the shopkeeper and the rancher it puts at
     // the plaza, the market and the harbour leave their counters; the smith keeps the smithy.
@@ -134,7 +134,7 @@ describe('her life in town', () => {
     const where = (day: number) => [townDay(save(day), p).where.get('9200007'), townDay(save(day), p).by.get('9200007')]
     expect(where(farmDay({ year: 1, season: 'spring', day: 3 }))).toEqual(['library', 'routine'])
     expect(where(farmDay({ year: 1, season: 'spring', day: 4 }))).toEqual(['bakery', 'job'])
-    expect(where(farmDay({ year: 1, season: 'spring', day: 9 }))).toEqual(['blue-cottage', 'home'])
+    expect(where(farmDay({ year: 1, season: 'spring', day: 9 }))).toEqual(['harbour-inn', 'home'])
     expect(where(farmDay({ year: 1, season: 'summer', day: 3 }))).toEqual(['old-pier', 'routine'])
     expect(where(farmDay({ year: 2, season: 'autumn', day: 2 }))).toEqual(['bakery', 'job'])
     expect(lifeHolds({ days: [3], seasons: ['spring'] }, farmDay({ year: 3, season: 'spring', day: 3 }))).toBe(true)
@@ -150,7 +150,7 @@ describe('her life in town', () => {
     expect(scheduleOf(p, '9200007')).toEqual({ own: true, stops: [{ at: 'cafe', seasons: ['winter'], by: 'job' }] })
     const winter = townDay(save(farmDay({ year: 1, season: 'winter', day: 5 })), p)
     expect([winter.where.get('9200007'), winter.by.get('9200007')]).toEqual(['cafe', 'job'])
-    expect(townDay(save(5), p).where.has('9200007')).toBe(false)
+    expect(townDay(save(5), p).where.get('9200007')).toBe('harbour-inn')
     expect(whereOn(p, '9200007', 5)).toEqual({ at: null, by: null })
     expect(seasonSchedule(p, '9200007', 'spring')).toEqual([{ at: null, by: null, days: [...Array(DAYS_PER_SEASON).keys()].map((d) => d + 1) }])
     // A schedule whose every place the map doesn't hold isn't one: the default plays.
@@ -191,9 +191,11 @@ describe('the default schedule', () => {
 
   it('puts a third of the cast out each day, everyone at her spot with no cap, and nobody at random', () => {
     const one = townDay(save(spring(1)), p)
-    expect(one.where.size).toBe(34)
-    expect([townDay(save(spring(2)), p).where.size, townDay(save(spring(3)), p).where.size]).toEqual([33, 33])
-    for (const [id, spot] of one.where) expect([spot, one.by.get(id)]).toEqual([defaultSpot(p, id), 'default'])
+    expect(one.at.get('harbour-inn')).toHaveLength(66)
+    expect(one.where.size).toBe(100)
+    expect([townDay(save(spring(2)), p).at.get('harbour-inn')?.length, townDay(save(spring(3)), p).at.get('harbour-inn')?.length]).toEqual([67, 67])
+    for (const [id, spot] of one.where) expect([spot, one.by.get(id)]).toEqual(defaultDays(castPlace(p, id)).includes(1)
+      ? [defaultSpot(p, id), 'default'] : ['harbour-inn', 'home'])
     for (const id of PEOPLE) expect(one.where.has(id)).toBe(false)
     for (const id of [...SHOP_IDS, 'blue-cottage']) expect(one.at.get(id)).toEqual([])
     // The same town all day, every season alike, for every player.
@@ -324,7 +326,7 @@ describe('her menu', () => {
     expect(whereYouMeet(goToTown(save()), p, stranger)).toEqual({ here: false, farm: false, at: null })
     // On a day her schedule says nothing she's at home.
     const days = pack({ town: TOWN, cast: { umas: [{ characterId: '9200007', job: { at: 'cafe', days: [1] } }] } })
-    expect(whereYouMeet(goToTown(meet(save(2), '9200007', days).save), days, '9200007')).toEqual({ here: false, farm: false, at: null })
+    expect(whereYouMeet(goToTown(meet(save(2), '9200007', days).save), days, '9200007')).toEqual({ here: true, farm: false, at: 'harbour-inn' })
   })
 
   it('a talk and a gift each cost an action, once a day each, and the save keeps her last talk and gift day', () => {

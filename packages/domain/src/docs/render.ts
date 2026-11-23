@@ -187,7 +187,7 @@ function umaMilestonesBlock(): string {
     ['The first Romance 8 anyone plays', 'The ring bench at the Forge (the night after)', '`memories`, then `forge.bench`'],
     ...HOUSE_COSTS.map((cost, i) => [`The ${ORDINAL[i + 1]} wedding`, `House ${i + 1} to build (${g(cost)}), the house before it standing`, 'Spouses in `love`']),
     ...HOMESTEAD_ROW_MARRIED.slice(1).map((n, i) => [`${n} married`, `The homestead's ${ORDINAL[i + 2]} row on the map`, 'Spouses in `love`']),
-    [`${BOARD_MET} Umas met`, 'The Requests board’s place (its game comes later)', 'Umas on the roster'],
+    [`${BOARD_MET} Umas met`, 'The shared Town Requests board', 'Umas on the roster'],
   ])
 }
 

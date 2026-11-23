@@ -24,6 +24,7 @@ import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import type { FishingSpotId, ForestAreaId, StationId } from '../gathering/ids'
 import { seedId, type CarrotGrade, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
+import type { RequestBook } from '../town/requests'
 import { isRestaurantDish } from '../restaurant/rules'
 import { ROOMS_PER_WING } from './long-game'
 import type { Account, OlderSave } from './save'
@@ -624,6 +625,7 @@ export interface NightAccount {
   day: number
   shipping: number
   restaurant?: number
+  townOrders?: number
   repaymentBudget?: number
   food: number
   upkeep: number
@@ -706,6 +708,7 @@ export interface SaveV6 {
     pantry: PantryLot[]; market: Record<string, number>
     /** First production day by exact stock ID. Legacy crop evidence can be read without stamping the save. */
     discoveries?: Record<string, number>
+    requests?: RequestBook
     cropProofs?: true
     reserves?: Record<string, number>
     /** A Spring carrot plan by zero-based plot and row. */

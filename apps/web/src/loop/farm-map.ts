@@ -86,6 +86,7 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['kitchen', '/?sheet=kitchen'],
   ['restaurant', '/?sheet=restaurant'],
   ['bin', '/?sheet=bin'],
+  ['board', '/?sheet=requests'],
   ['shop', '/?sheet=shop'],
   ['festival', '/?sheet=festival'],
   ['warehouse', '/warehouse'],
