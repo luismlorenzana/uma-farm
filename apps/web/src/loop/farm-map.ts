@@ -4,8 +4,22 @@
 // town at the far end. The field itself is its own screen, a plot a page (`/field`); the map shows its sign, a lot's
 // size, with its counts. Where a tap goes, and why a place is locked. Pure, so the map and the tests read the same.
 import {
-  benchOpen, farmRankOf, placeBuilt, placeOpen, type FarmPlace, type FarmPlaceId, type HomesteadPlace, type PlaceOpens, type FarmSave,
+  benchOpen, farmRankOf, placeBuilt, placeOpen, readyIn, stationBuilt, STATIONS,
+  type DigId, type FarmPlace, type FarmPlaceId, type HomesteadPlace, type PlaceOpens, type FarmSave, type RanchHome, type StationId,
 } from '@farm/domain'
+
+export const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
+export const isHome = (id: string): id is RanchHome => id === 'coop' || id === 'barn'
+export const isDig = (id: string): id is DigId => id === 'mine' || id === 'quarry'
+/** A place's tag on the map: a load ready tomorrow, the goods waiting in the Coop or the Barn, the floor a dig is on. */
+export function placeTag(save: FarmSave, id: FarmPlaceId): string | null {
+  if (isStation(id) && stationBuilt(save, id) && save.loads[id]?.length) return 'Ready tomorrow'
+  if (isHome(id) && placeBuilt(save, id)) {
+    const ready = readyIn(save, id)
+    return ready > 0 ? `${ready} to collect` : null
+  }
+  return isDig(id) && placeBuilt(save, id) ? `Floor ${Math.max(1, save.places[id].deepest)}` : null
+}
 
 /** The map's height in cells: three lots of two, and a path's row. */
 export const MAP_ROWS = 7

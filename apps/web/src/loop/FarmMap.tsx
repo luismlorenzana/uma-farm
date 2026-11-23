@@ -13,8 +13,8 @@
 // is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
 // gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
-  ANIMAL_HOME, benchOpen, HEIRLOOMS, TOOL_NAMES, toolTierName, chapterTitle, farmPlace, fieldCounts, FIELD_COLUMNS, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt,
-  STATIONS, type BuildPlace, type DigId, type FarmPlace, type FarmPlaceId, type FarmSave, type RanchHome, type StationId,
+  benchOpen, HEIRLOOMS, TOOL_NAMES, toolTierName, chapterTitle, farmPlace, fieldCounts, FIELD_COLUMNS, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt,
+  type BuildPlace, type FarmPlace, type FarmSave,
 } from '@farm/domain'
 import { PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, LockedIcon, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -32,7 +32,7 @@ import { useStory } from '../story/story'
 import { dismissSummary } from './actions'
 import { RingArt } from '../items/RingArt'
 import { BuildingArt, FieldSignArt, Trees, Water } from './farm-art'
-import { CELL, FIELD, lockOf, MAP_ROWS, mapLots, MIN_CELL, placeLink, POND, WOODS, type Area } from './farm-map'
+import { CELL, FIELD, isDig, isHome, isStation, lockOf, MAP_ROWS, mapLots, MIN_CELL, placeLink, placeTag, POND, WOODS, type Area } from './farm-map'
 import { countsWords } from './farm-view'
 import { GatherPanel, StationPanel } from './FarmPanels'
 import { GatePeek } from './GatePeek'
@@ -56,19 +56,6 @@ const FieldPondReview = lazy<ComponentType<FieldPondReviewProps>>(
 function FieldPondUnavailable({ onUnavailable }: FieldPondReviewProps) {
   useEffect(onUnavailable, [onUnavailable])
   return null
-}
-
-const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
-const isHome = (id: string): id is RanchHome => id === 'coop' || id === 'barn'
-const isDig = (id: string): id is DigId => id === 'mine' || id === 'quarry'
-/** A place's tag on the map: a load ready tomorrow, the goods waiting in the Coop or the Barn, the floor a dig is on. */
-function placeTag(save: FarmSave, id: FarmPlaceId): string | null {
-  if (isStation(id) && stationBuilt(save, id) && save.loads[id]) return 'Ready tomorrow'
-  if (isHome(id) && placeBuilt(save, id)) {
-    const ready = save.ranch.animals.filter((a) => a.ready && ANIMAL_HOME[a.kind] === id).length
-    return ready > 0 ? `${ready} to collect` : null
-  }
-  return isDig(id) && placeBuilt(save, id) ? `Floor ${Math.max(1, save.places[id].deepest)}` : null
 }
 
 /** `/`, with an optional `?peek=<place>` (a quick look). An unknown one drops the panel; a tile's link from before the

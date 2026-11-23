@@ -153,7 +153,7 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
               <Link to={entranceLink(region,entrance)} className={CONTROL} state={BACK} data-region-destination={entrance.id}
                 data-locked={entrance.locked ? true : undefined}>
                 <span className="min-w-0 flex-1">{entrance.name}</span>
-                {(entrance.locked || entrance.detail) && <small className="max-w-[50%] text-right text-ink-soft">{entrance.locked ?? entrance.detail}</small>}
+                {(entrance.locked || entrance.detail) && <small className="max-w-[50%] text-right text-ink-soft" data-tag={entrance.locked ? undefined : true}>{entrance.locked ?? entrance.detail}</small>}
               </Link>
             </li>)}</ul>}
           {region === 'work' && !selected && <Link className={CONTROL} to="/book?view=work" state={BACK}>Work board</Link>}

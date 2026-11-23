@@ -1,7 +1,7 @@
 import {
   farmPlace, FIELD_PLOTS, homesteadShown, isBuildPlace, placeWordsOf, type StationId, type FarmPlaceId, type FarmSave, type StoryPack,
 } from '@farm/domain'
-import { lockOf, placeLink } from '../loop/farm-map'
+import { lockOf, placeLink, placeTag } from '../loop/farm-map'
 import { reachRows } from '../loop/farm-view'
 import { binView } from '../loop/goods-view'
 import { houseLot } from '../loop/homestead-map'
@@ -94,7 +94,7 @@ export function farmEntrances(save: FarmSave, pack: StoryPack | null, region: Fa
       locked: lockOf(save, place) ?? undefined,
       plate: interiors[id],
       buildingTonight: isBuildPlace(place) && save.farm.builds.includes(place.id),
-      detail: batches ? `${batches} ${batches === 1 ? 'batch' : 'batches'} in progress` : shipping ? 'Ready to ship' : undefined,
+      detail: batches ? `${batches} ${batches === 1 ? 'batch' : 'batches'} in progress` : shipping ? 'Ready to ship' : placeTag(save, id) ?? undefined,
     })
   }
   return doors
