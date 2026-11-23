@@ -58,8 +58,8 @@ export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, pa
   return (
     <div className="relative z-10 flex min-h-0 flex-1 flex-row items-stretch gap-4 px-4 pt-1 pb-4" data-scene-row {...data}>
       <SceneBackground environment={environment ?? shared} />
-      {walkOn}
       <BustPanel bust={bust} backdrop={backdrop} onTap={onTap} data={panel} />
+      {walkOn}
       {footer ? <div className="relative flex min-h-0 min-w-0 flex-1 flex-col justify-end pt-1">
         <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-hairline bg-panel/95 shadow-2">
           <div className="min-h-0 overflow-y-auto overscroll-contain px-3 py-2" data-stage-scroll>{children}</div>
