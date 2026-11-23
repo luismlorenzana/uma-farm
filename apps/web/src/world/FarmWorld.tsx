@@ -19,6 +19,8 @@ const RegionDepth = lazy(() => import('./FarmRegionDepth').catch(() => ({
   default: () => <p role="status" className="p-3">Use the destination list to explore this section.</p>,
 })))
 const START_POSE: CameraPose = { x:0,z:0,zoom:1 }
+// The farm route unmounts while a field or warehouse screen is open.
+const lastFarmCamera: Partial<Record<FarmRegion,CameraPose>> = {}
 const BACK = { back:true }
 const CONTROL = 'flex min-h-11 items-center gap-2 rounded-md border border-hairline bg-panel px-2 text-sm font-semibold'
 
@@ -101,7 +103,7 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
   const location = useLocation()
   const navigate = useNavigate()
   const leave = useLeave()
-  const [camera,setCamera] = useState<Partial<Record<FarmRegion,CameraPose>>>({})
+  const [camera,setCamera] = useState<Partial<Record<FarmRegion,CameraPose>>>(() => ({ ...lastFarmCamera }))
   const entrances = useMemo(() => region ? farmEntrances(save,pack,region) : [],[save,pack,region])
   const presence = useMemo(() => region ? farmPresence(save,pack,talentOf) : null,[save,pack,talentOf,region])
   const allTown = useMemo(() => pack ? townDay(save,pack) : null,[save,pack])
@@ -143,7 +145,10 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
           {!covered && (!actor || !found) && (selected
             ? <WorldPlate save={save} place={selected.plate!} cast={cast.map(person => ({...person,name:name(person.id)}))} open={open} />
             : <SectionScene region={region} save={save} entrances={entrances} cast={region === 'living' ? [] : cast} name={name} open={open} night={!period}
-                pose={camera[region] ?? START_POSE} setPose={pose => setCamera(previous => ({...previous,[region]:pose}))} />)}
+                pose={camera[region] ?? START_POSE} setPose={pose => {
+                  lastFarmCamera[region] = pose
+                  setCamera(previous => ({...previous,[region]:pose}))
+                }} />)}
         </div>
         <aside className="min-h-0 min-w-0 space-y-2 overflow-y-auto overscroll-contain pr-1" aria-label={selected ? 'Room and people' : 'Destinations and people'}>
           {selected ? <Link className={CONTROL + ' justify-center bg-accent'} to={withinRegion(selected.to,region,selected.id)} state={BACK}>
