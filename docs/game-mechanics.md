@@ -617,9 +617,9 @@ Home opens on the painted farm map. Tap a marked area or its matching shortcut. 
 | **Farm** | Plot and orchard signs, the Mill and the Gate. Crops show their growth and watering state, with totals for ripe tiles, dry plants and empty tilled soil. |
 | **Forest** | Trails to the six gathering areas and the Sawmill. The trail list shows which areas you can reach. |
 | **Pond** | The existing fishing spots, the Smokehouse and the Dock. The Boat appears at the Dock once built. |
-| **Barns** | Coop and Barn doors, current animals and how many have goods ready. |
+| **Barns** | Coop and Barn doors, the Silo, current animals and how many are fed or have goods ready. |
 | **Living** | The Farmhouse and other homes. The directory shows everyone assigned a room and where she is. Tap a resident at home to talk, or follow her location when she is working or in town. |
-| **Work** | Production, storage, extraction, shipping and Requests. The Work board is available here. |
+| **Work** | Production, storage, extraction, shipping, Requests and the Expedition post. The Work board is available here. |
 
 A building door opens a room before its existing activity controls. Outdoor targets open the field, trail, fishing or other action panel directly. The destination list gives the reason a locked place cannot open. The road opens Town for free. Opening a door or selecting a person is also free. Actions keep their existing costs.
 

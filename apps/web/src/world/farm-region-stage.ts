@@ -102,6 +102,10 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
     anchors.set(entrance.id,[x, .06, z + 1.94])
     if (entrance.locked) {
       stamp('box','#b1a281',[x,.025,z],[3.9,.05,2.6])
+      if (entrance.buildingTonight) {
+        for (const offset of [-1.25, 1.25]) stamp('box','#946742',[x+offset,.6,z],[.17,1.2,2.25])
+        stamp('box','#cfad6f',[x,1.15,z],[2.9,.12,.22])
+      }
       continue
     }
     if (entrance.id.startsWith('fields:')) field(x,z,Number(entrance.id.slice(7)))
@@ -115,12 +119,21 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
       stamp('disc','#518b83',[x,.04,z],[2.58,1.78,1],0,-Math.PI/2)
       stamp('box','#9a7556',[x,.14,z+.72],[1.6,.19,2.4])
       if (placeBuilt(save,'boat')) stamp('round','#775f49',[x+.9,.3,z-.4],[1.05,.35,1.31])
+    } else if (entrance.id === 'bin') {
+      stamp('box','#9a7850',[x,.39,z],[1.38,.76,1.12])
+      if (entrance.detail) for (const offset of [-.31,0,.31]) stamp('round','#c6a657',[x+offset,.83,z],[.22,.24,.25])
     } else if (entrance.plate) house(x,z,entrance.id)
     else {
       stamp('box','#87674d',[x,.53,z],[1.38,.95,.72])
       stamp('box','#bc9467',[x,1.03,z],[1.53,.16,.83])
     }
     if (entrance.id === 'coop' || entrance.id === 'barn') {
+      if (entrance.id === 'coop') {
+        stamp('box','#b1a087',[x+2.35,1.17,z],[.78,2.3,.78])
+        stamp('cone','#866550',[x+2.35,2.57,z],[.71,.67,.71])
+      }
+      stamp('box','#9b7650',[x-1.52,.18,z+1.58],[.83,.25,.4])
+      stamp('box','#779ba2',[x+1.53,.17,z+1.58],[.82,.25,.42])
       const animals = save.ranch.animals.filter(animal => ANIMAL_HOME[animal.kind] === entrance.id)
       animals.slice(0,8).forEach((animal,index) => {
         const px = x-2.5+(index%4)*.53
@@ -128,7 +141,9 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
         const poultry = entrance.id === 'coop'
         const color = ['cow','chicken'].includes(animal.kind) ? '#efdfc2' : '#b59774'
         stamp('round',color,[px,poultry ? .25 : .39,pz],[.37,poultry ? .36 : .48,poultry ? .45 : .6])
-        stamp('round',animal.ready ? '#e4bc68' : color,[px+.15,poultry ? .39 : .65,pz+.18],[.24,.24,.24])
+        stamp('round',color,[px+.15,poultry ? .39 : .65,pz+.18],[.24,.24,.24])
+        if (animal.ready) stamp('round','#e4bc68',[px,.12,pz+.31],[.13,.18,.13])
+        if (animal.fed) stamp('box','#b3934d',[px-.1,.06,pz+.37],[.18,.09,.11])
       })
     }
   }

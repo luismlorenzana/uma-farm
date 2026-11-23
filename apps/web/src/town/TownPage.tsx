@@ -130,7 +130,7 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
           {here ? <>
             <div className="flex min-h-11 shrink-0 items-center gap-2">
               <button type="button" onClick={() => goDistrict(district?.id ?? null)} className="min-h-11 rounded-md border border-hairline px-2 text-xs font-semibold" data-town-district-back>‹ {district?.label ?? 'Town map'}</button>
-              <strong className="font-display min-w-0 flex-1 truncate text-lg">{here.loc.name}</strong>
+              <h2 className="font-display min-w-0 flex-1 truncate text-lg font-bold" data-place-name>{here.loc.name}</h2>
               <button type="button" onClick={() => goDistrict(null)} className="min-h-11 px-2 text-xs font-semibold" data-town-overview>All town</button>
             </div>
             <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,2fr)_minmax(140px,1fr)] gap-2" data-town-destination={here.loc.id} data-place-kind={townOutdoors(here.loc.id) ? 'outdoor' : 'interior'}>
@@ -196,14 +196,13 @@ export function Face({ id, size, name }: { id: string; size: number; name: strin
 
 // --- Where you are ----------------------------------------------------------------------------------------------------
 
-/** Where you are: its name and line, who's here now, and its keeper at her post with her post's menu. */
+/** The destination's services and people. */
 function Place({ view, save, pack, nameOf, onOpen }: { view: LocationView; save: SaveV4; pack: StoryPack; nameOf: NameOf; onOpen: (id: string) => void }) {
   const location = useLocation()
   const { loc, here, keeper } = view
   const menu = loc.group === 'shop' ? postMenu(loc.id as Parameters<typeof postMenu>[0]) : []
   return (
     <section aria-label={loc.name} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-place-panel={loc.id}>
-      <h2 className="font-display text-[18px] leading-tight font-bold" data-place-name>{loc.name}</h2>
       {loc.line && <p className="text-[13px] text-ink-soft">{loc.line}</p>}
       {loc.id === 'expeditions' && (
         <Link to={placeBuilt(save, 'expeditions') ? withParam(location, 'sheet', 'expeditions') : '/?peek=expeditions'} state={{ back: true }}

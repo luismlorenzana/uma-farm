@@ -124,7 +124,7 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
   }
   const found = actor && cast.some(person => person.id === actor)
   const details = region === 'farm' ? countsWords(fieldCounts(save)).join(' · ')
-    : region === 'barns' ? `${save.ranch.animals.length} animals · ${save.ranch.animals.filter(animal => animal.ready).length} ready`
+    : region === 'barns' ? `${save.ranch.animals.filter(animal => animal.fed).length}/${save.ranch.animals.length} fed · ${save.ranch.animals.filter(animal => animal.ready).length} ready`
     : region === 'work' && save.farm.builds.length ? `${save.farm.builds.length} scheduled construction` : null
   const houses = region === 'living' ? save.homestead.houses.flatMap((house,index) => {
     if (selected && selected.id !== `house:${index}`) return []

@@ -1,8 +1,9 @@
 import {
-  farmPlace, FIELD_PLOTS, homesteadShown, placeWordsOf, type FarmPlaceId, type FarmSave, type StoryPack,
+  farmPlace, FIELD_PLOTS, homesteadShown, isBuildPlace, placeWordsOf, type StationId, type FarmPlaceId, type FarmSave, type StoryPack,
 } from '@farm/domain'
 import { lockOf, placeLink } from '../loop/farm-map'
 import { reachRows } from '../loop/farm-view'
+import { binView } from '../loop/goods-view'
 import { houseLot } from '../loop/homestead-map'
 
 export const FARM_REGIONS = {
@@ -11,7 +12,7 @@ export const FARM_REGIONS = {
   pond: { label: 'Pond', at: [18, 70], places: ['fishery', 'smokehouse', 'dock', 'boat'] },
   barns: { label: 'Barns', at: [78, 29], places: ['coop', 'barn'] },
   living: { label: 'Living', at: [78, 63], places: [] },
-  work: { label: 'Work', at: [49, 80], places: ['kitchen', 'mine', 'smelter', 'quarry', 'cutter', 'forge', 'warehouse', 'restaurant', 'bin', 'board'] },
+  work: { label: 'Work', at: [49, 80], places: ['kitchen', 'mine', 'smelter', 'quarry', 'cutter', 'forge', 'warehouse', 'restaurant', 'bin', 'board', 'expeditions'] },
 } as const satisfies Record<string, { label: string; at: readonly [number, number]; places: readonly FarmPlaceId[] }>
 
 export type FarmRegion = keyof typeof FARM_REGIONS
@@ -22,7 +23,7 @@ export const regionOf = (place: string | null | undefined): FarmRegion | undefin
   const parent = place.split(':')[0]!
   return REGIONS.find(region => (FARM_REGIONS[region].places as readonly string[]).includes(parent))
 }
-const sheetPlaces: Record<string, string> = { kitchen: 'kitchen', forge: 'forge', bench: 'forge', restaurant: 'restaurant', bin: 'bin', requests: 'board' }
+const sheetPlaces: Record<string, string> = { kitchen: 'kitchen', forge: 'forge', bench: 'forge', restaurant: 'restaurant', bin: 'bin', requests: 'board', expeditions: 'expeditions' }
 
 export interface FarmEntrance {
   id: string
@@ -31,6 +32,7 @@ export interface FarmEntrance {
   detail?: string | undefined
   locked?: string | undefined
   plate?: string | undefined
+  buildingTonight?: boolean | undefined
 }
 
 export function regionUrl(region: FarmRegion, door?: string): string {
@@ -57,7 +59,7 @@ export function regionFromParams(params: URLSearchParams): FarmRegion | undefine
 
 const interiors: Readonly<Record<string, string>> = {
   mill:'mill', sawmill:'sawmill', smokehouse:'smokehouse', coop:'coop', barn:'barn',
-  kitchen:'kitchen', smelter:'smelter', cutter:'cutter', forge:'forge', warehouse:'warehouse', restaurant:'restaurant',
+  kitchen:'kitchen', smelter:'smelter', cutter:'cutter', forge:'forge', warehouse:'warehouse', restaurant:'restaurant', expeditions:'expeditions',
 }
 
 export function farmEntrances(save: FarmSave, pack: StoryPack | null, region: FarmRegion): FarmEntrance[] {
@@ -85,11 +87,14 @@ export function farmEntrances(save: FarmSave, pack: StoryPack | null, region: Fa
       continue
     }
     const place = farmPlace(id)!
+    const batches = save.loads[id as StationId]?.length ?? 0
+    const shipping = id === 'bin' && binView(save).lines.length > 0
     doors.push({
       id, name: placeWordsOf(pack, id).name, to: placeLink(save, place),
       locked: lockOf(save, place) ?? undefined,
       plate: interiors[id],
-      detail: id in save.loads ? 'Batch in progress' : undefined,
+      buildingTonight: isBuildPlace(place) && save.farm.builds.includes(place.id),
+      detail: batches ? `${batches} ${batches === 1 ? 'batch' : 'batches'} in progress` : shipping ? 'Ready to ship' : undefined,
     })
   }
   return doors
