@@ -362,14 +362,14 @@ In year 4:
 
 ## The maps (2026-11-15)
 
-The owner asked for a real hand-drawn town map and farm map with clickable places. **Not planned until now:** the town
-is a list of places, and the farm is a clean tile map. The plan, as Phase 3's step 3.7:
+The current navigation design is in [F115](../handoff/tasks/F115-hd2d-map-navigation.md). Phase 3.7 uses painted
+landscape overviews for both sides of the road, then lets the player enter the relevant place.
 
-- **Two painted maps, landscape:** the town (Willowmere, its six spots, its shops and offices, the homes the story
-  names) and the farm (its buildings, fields, woods, pond and mine), each one large painting, panned when it's wider
-  than the screen, tinted by season and time of day.
-- **Clickable places** are data, not drawing: each place is a shape over the painting (a polygon in the map's pixels),
-  with its name, its badge for who's there, and its page. A new building appears as its own painted piece placed on
-  the farm map, so the farm still grows.
-- **Who paints:** under the art split, ChatGPT draws only characters and Claude draws in code, which can't paint. A
-  painted map needs the owner's call (below).
+- **Farm** opens to a painted overview with six regions. A region opens a local HD-2D exterior with live farm state.
+  A building door opens its interior. An outdoor target opens its activity.
+- **Town** opens to F113's painted overview and six district maps. Building doors open illustrated interiors with
+  standing residents and the location's services.
+- **People** are placed according to current work, shifts, outings and residence. Living lists every farm resident
+  under her assigned house, with current whereabouts for those away.
+- **Conversation** takes over the full screen when the player taps an available Uma. The existing dialogue engine
+  plays its portraits, dialogue and splashes, then returns to the originating place.

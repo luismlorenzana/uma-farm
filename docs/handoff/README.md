@@ -147,7 +147,9 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 | Packet | Work | Status |
 |---|---|---|
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
-| [F114](tasks/F114-hd2d-actors.md) | Tier 1 walking sprites on the farm, painted town and residential scenes | Implementation and candidate verification. |
+| [F115](tasks/F115-hd2d-map-navigation.md) | Painted farm and town maps, HD-2D sections, doors and sprite interactions | Spec ready. Navigation pilot next. |
+
+[F114](tasks/F114-hd2d-actors.md) shipped the ten Tier 1 walking wardrobes. Its sprite delivery and the F103 device review support the new packet.
 
 **The Forge is open** (F110). [Shared tools and heirlooms](../game-mechanics.md#the-forge-workshop) have their
 own orders, and the Ring Bench stays available on the Romance 8 path.
