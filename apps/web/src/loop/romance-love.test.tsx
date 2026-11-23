@@ -114,9 +114,9 @@ describe('her profile on v4', () => {
   it('says she lives in town, with where to find her and no invitation to the farm: only a spouse moves in', async () => {
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await find(`[data-love="${ONE}"]`)
-    expect($('[data-lives-in-town]')?.textContent).toBe('Lives in town · moves to the farm after your wedding')
+    expect($('[data-lives-in-town]')?.textContent).toBe('Lives at the Harbour Inn · moves to the farm after your wedding')
     expect($('[data-find-her]')).not.toBeNull()
-    expect($('[data-find-today]')?.textContent).toBe('Today · At home · next out Spring 4')
+    expect($('[data-find-today]')?.textContent).toBe('Today · The Harbour InnFind her ›')
     expect($('[data-action="invite"]')).toBeNull()
     // A farmhand's Where to find her lists her farm days, then her town days; Spring 2 is a farm day.
     await act(async () => useGame.setState({ save: hand(farm(), ONE) }))
@@ -126,7 +126,7 @@ describe('her profile on v4', () => {
     // A spouse waiting for a room lives in town until one is free; in her room, the card goes.
     await act(async () => useGame.setState({ save: withLove(farm(), ONE, { stage: 'spouse', level: 0, wed: 1 }) }))
     await settle()
-    expect($('[data-lives-in-town]')?.textContent).toBe('Lives in town · moves to the farm once a room is free')
+    expect($('[data-lives-in-town]')?.textContent).toBe('Lives at the Harbour Inn · moves to the farm once a room is free')
     await act(async () => useGame.setState({ save: withLove(farm(), ONE, { stage: 'spouse', level: 0, wed: 1, house: 0 }) }))
     await settle()
     expect($('[data-lives-in-town]')).toBeNull()

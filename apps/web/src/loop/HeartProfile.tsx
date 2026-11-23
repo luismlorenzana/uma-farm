@@ -139,7 +139,7 @@ export function TownCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; i
           <p key={i} className="text-ink-soft" data-find-line={l.at ?? 'home'}>{i === 0 && <span className="font-semibold text-ink">{find.season} · </span>}{l.text}</p>
         ))}
       </div>
-      {!atHome(save, id) && <p className="text-[14px]" data-lives-in-town><span className="font-semibold">Lives in town</span>
+      {!atHome(save, id) && <p className="text-[14px]" data-lives-in-town><span className="font-semibold">Lives at the Harbour Inn</span>
         <span className="text-ink-soft"> · {waiting ? 'moves to the farm once a room is free' : 'moves to the farm after your wedding'}</span></p>}
     </section>
   )

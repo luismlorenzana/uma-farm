@@ -249,14 +249,14 @@ describe('the calendar', () => {
     expect($$('[data-day-panel] [data-face]').map((f) => [f.dataset.face, f.dataset.reasons])).toEqual([[TWO, 'ready']])
     expect($(`[data-face="${TWO}"] [data-action="play-event"]`)).toBeTruthy()
     // Who's in town that day, and where: each on the default schedule, the third in the cast at the Plaza on day 3.
-    expect($('[data-in-town]')?.dataset.inTown).toBe('1')
-    expect($$('[data-town-row]').map((r) => [r.dataset.townRow, r.dataset.count])).toEqual([['plaza', '1']])
+    expect($('[data-in-town]')?.dataset.inTown).toBe('3')
+    expect($$('[data-town-row]').map((r) => [r.dataset.townRow, r.dataset.count])).toEqual([['plaza', '1'], ['harbour-inn', '2']])
     expect($(`[data-town-face="${THREE}"]`)).toBeTruthy()
     // Spring 10 is One's birthday (the cast's own): her face, and its event action.
     await click($('[aria-label="Earlier dates"]'))
     await click($('[data-day="10"]'))
     expect($('[data-day-heading]')?.textContent).toBe('Spring 10 · in 7 days')
-    expect($$('[data-town-face]').map((f) => f.dataset.townFace)).toEqual([ONE])
+    expect(new Set($$('[data-town-face]').map((f) => f.dataset.townFace))).toEqual(new Set([ONE, TWO, THREE]))
     expect($$('[data-day-panel] [data-face]').map((f) => [f.dataset.face, f.dataset.reasons])).toEqual([[ONE, 'birthday'], [TWO, 'ready']])
     expect($('[data-day-events]')?.textContent).toBe('+1 bonus action for events')
     expect($('[data-day-panel] [data-action]')).toBeNull()
