@@ -1,6 +1,6 @@
 import {
   acceptRequest, boardOpen, CAFE_TUTORIAL, cancelRequest, dateOf, deliverRequest, FISHERY, FISHING_SPOTS,
-  FOREST, FOREST_AREAS, goodOf, ingredientSources, itemNameOf, requestCards, requestDeliveryLock, STATION_JOBS,
+  FOREST, FOREST_AREAS, goodName, goodOf, ingredientSources, requestCards, requestDeliveryLock, STATION_JOBS,
   stationJobOf, taskLock, workKey, type FarmSave, type FarmTask, type RequestCard,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -65,7 +65,8 @@ export default function RequestsSheet() {
                 const card = cards.find(entry => entry.slot === slot)
                 if (!card) return <div key={slot} className="rounded-md border border-hairline p-2"><h3 className="text-micro">{SLOT_NAMES[slot]}</h3><p className="text-sm text-ink-soft">No order right now.</p></div>
                 const lock = requestDeliveryLock(save, card)
-                const grade = goodOf(card.item)?.grade
+                const good = goodOf(card.item)
+                const grade = good?.grade
                 const source = grade && ingredientSources(card.item)[0]
                 return (
                   <section key={slot} className="space-y-1 rounded-lg border border-hairline bg-panel p-2" data-request={card.id} data-status={card.status}>
@@ -73,7 +74,7 @@ export default function RequestsSheet() {
                     <h3 className="text-[15px] font-bold">{card.title}</h3>
                     <div className="flex items-center gap-2 text-sm">
                       <ItemIcon id={card.item} size={28} />
-                      <span>{card.count} × {itemNameOf(card.item)}{grade ? ` G${grade}` : ''}{card.stars > 1 ? ` · ★${card.stars}+` : ''}</span>
+                      <span>{card.count} × {goodName(card.item)}{grade && !good?.base ? ` G${grade}` : ''}{card.stars > 1 ? ` · ★${card.stars}+` : ''}</span>
                     </div>
                     <p className="text-xs text-ink-soft">
                       {card.status === 'delivered' ? `Delivered · ${gold(card.payment)}` : `${card.held}/${card.count} held · ${card.due === null ? card.id === CAFE_TUTORIAL ? 'No deadline' : '7 days to deliver' : `Due ${shortDate(card.due, save.calendar)}`}${card.held === card.count ? ` · ${gold(card.payment)}` : ` · about ${gold(card.payment)}`}`}
