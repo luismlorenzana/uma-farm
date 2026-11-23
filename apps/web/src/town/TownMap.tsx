@@ -1,4 +1,8 @@
 import { TOWN_DISTRICTS, type TownDistrict } from '@farm/domain'
+import { ActorLayer } from '../hd2d/ActorLayer'
+import { hasWalkingArt } from '../hd2d/character-art'
+import { paintedRoutes } from '../hd2d/painted-routes'
+import type { ArtIndex } from '@luismlorenzana/uma-data'
 import type { LocationView } from './town-view'
 import townArt from './art/town.jpg'
 import plazaArt from './art/plaza.jpg'
@@ -46,10 +50,11 @@ interface Target {
   count?: number
 }
 
-export function TownMap({ district, views, here, onDistrict, onGo }: {
+export function TownMap({ district, views, here, art, onDistrict, onGo }: {
   district: TownDistrict | undefined
   views: readonly LocationView[]
   here: string
+  art: ArtIndex | null
   onDistrict: (id: string | null) => void
   onGo: (id: string) => void
 }) {
@@ -57,6 +62,12 @@ export function TownMap({ district, views, here, onDistrict, onGo }: {
     const location = views.find(view => view.loc.id === id)
     return location ? [{ id, label: location.loc.name.replace(/^The /, ''), at: buildings[id], count: location.here.length }] : []
   }) : TOWN_DISTRICTS.map(({ id, label }) => ({ id, label, at: districts[id] }))
+  const actors = district ? targets.flatMap(({ id, at: [left, top, width, height] }) => {
+    const people = views.find(view => view.loc.id === id)?.here.filter(id => hasWalkingArt(art, id)) ?? []
+    const x = (left + width * .54) / 100
+    const y = Math.min(.87, (top + height + 3) / 100)
+    return paintedRoutes(people, [[x, y], [Math.min(.89, x + .08), y + .027]])
+  }).slice(0, 6) : []
   return (
     <nav aria-label="Town map" className="flex min-h-0 w-[64%] shrink-0 flex-col gap-1" data-town-map>
       <div className="flex min-h-11 items-center justify-between gap-1">
@@ -66,6 +77,7 @@ export function TownMap({ district, views, here, onDistrict, onGo }: {
       <div className="town-art-frame rounded-lg border border-hairline bg-sunken">
         <div className="town-art" data-town-district={district?.id ?? 'overview'}>
           <img src={district ? districtArt[district.id] : townArt} alt="" width={1080} height={720} draggable={false} />
+          {actors.length > 0 && <ActorLayer actors={actors} outfit="spring" />}
           {targets.map(({ id, label, at: [left, top, width, height], count }) => {
             const selected = !!district && here === id
             return (

@@ -19,6 +19,7 @@ import { useLocation } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { ArtCue } from '../dialogue/Illustration'
 import { lastSay, Line, nextSay } from '../dialogue/Line'
+import { WalkOn } from '../hd2d/WalkOn'
 import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
@@ -112,7 +113,7 @@ function Scene({ save, id, title, steps, nameOf, leaving, onDone }: {
         <WordingChoice options={step.choice} farmer={save.farmer.name} bust={{ ...last, name: nameOf(last.who) }}
           onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
       ) : step ? (
-        <Stage bust={{ who, name: nameOf(who), emote }} next={nextSay(shown, cursor + 1)} onTap={() => setAt(cursor + 1)}>
+        <Stage bust={{ who, name: nameOf(who), emote }} walkOn={<WalkOn who={[id]} outfit="spring" />} next={nextSay(shown, cursor + 1)} onTap={() => setAt(cursor + 1)}>
           <Line key={cursor} step={step} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
         </Stage>
       ) : <div className="flex-1" />}
