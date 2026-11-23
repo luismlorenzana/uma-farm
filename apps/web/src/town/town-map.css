@@ -42,6 +42,8 @@
 }
 
 .town-art-target > span {
+  position: relative;
+  z-index: 11;
   display: flex;
   align-items: center;
   justify-content: center;

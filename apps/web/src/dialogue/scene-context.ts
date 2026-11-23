@@ -34,9 +34,9 @@ export function environmentAt(steps: readonly Step[], cursor: number, base: Scen
   return { ...base, place, view, nextPlace }
 }
 
-const aliases: Readonly<Record<string,string>> = { town: 'plaza', shop: 'store' }
-const places = new Set(`fields fishery forest orchard-bench plaza market library track harbour harbour-wall hilltop-track overlook sea-pier home-table home-threshold bedroom forge restaurant festival chapel-bell mill coop barn sawmill smokehouse kitchen mine smelter quarry cutter bin warehouse board dock boat store rancher mayor smith expeditions dorm dorm-porch cafe-morning festival-night bedroom-morning town-work harbour-inn fields-winter gate cafe pond-night sitting-solo sitting-duo`.split(' '))
-const interiors = new Set('bedroom bedroom-morning cafe cafe-morning sitting-solo sitting-duo home-table home-threshold library mill barn smokehouse kitchen smelter cutter warehouse store rancher mayor smith expeditions restaurant forge town-work harbour-inn'.split(' '))
+const aliases: Readonly<Record<string,string>> = { town: 'plaza', shop: 'store', bakery: 'laurel-bakery' }
+const places = new Set(`fields fishery forest orchard-bench plaza market library track harbour harbour-wall hilltop-track overlook sea-pier home-table home-threshold bedroom forge restaurant festival chapel-bell mill coop barn sawmill smokehouse kitchen mine smelter quarry cutter bin warehouse board dock boat store rancher mayor smith expeditions dorm dorm-porch cafe-morning festival-night bedroom-morning town-work harbour-inn fields-winter gate cafe pond-night sitting-solo sitting-duo estate-office little-studio laurel-bakery mejiro-salon espoir-garage`.split(' '))
+const interiors = new Set('bedroom bedroom-morning cafe cafe-morning sitting-solo sitting-duo home-table home-threshold library mill barn smokehouse kitchen smelter cutter warehouse store rancher mayor smith expeditions restaurant forge town-work harbour-inn coop estate-office little-studio laurel-bakery mejiro-salon espoir-garage'.split(' '))
 const explicitlyNight = new Set(['pond-night','festival-night','sitting-solo','sitting-duo'])
 
 export function resolveEnvironment(context: SceneEnvironment, story?: StoryPack | null) {

@@ -1,7 +1,7 @@
 // The illustrated town and its People list. Walking and entering town are free.
-// Selecting a door keeps its district visible and opens the service and people panel beside it.
+// Doors open a distinct destination with its services and the people on site.
 // Town conversations, shop sheets and authored location links use the same URL and story pack.
-import { CAST, HARBOUR_INN, innResidents, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
+import { CAST, HARBOUR_INN, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
@@ -17,9 +17,9 @@ import { storyReady, useStory } from '../story/story'
 import { IntoTown } from '../loop/GoodsSheets'
 import { intoTown } from '../loop/actions'
 import { HerMenu } from './HerMenu'
-import { ActorLayer } from '../hd2d/ActorLayer'
-import { hasWalkingArt } from '../hd2d/character-art'
-import { paintedRoutes } from '../hd2d/painted-routes'
+import { WorldPlate } from '../world/WorldPlate'
+import { currentTownDay, townOutdoors } from '../world/town-places'
+import { sceneCoversWorld } from '../world/scene-cover'
 import innLobby from './art/inn-lobby.jpg'
 import { TownMap } from './TownMap'
 import { ServiceSheet, TownServices } from './TownServices'
@@ -42,8 +42,6 @@ function paramsTo(location: { pathname: string; search: string }, set: Readonly<
   return `${location.pathname}${search ? `?${search}` : ''}`
 }
 type NameOf = (id: string) => string
-/** Where you arrive in town. */
-const START = 'plaza'
 
 export default function TownPage() {
   const save = useLoopSave()
@@ -64,17 +62,19 @@ export default function TownPage() {
   if (!save) return null
   const view: View = params.get('view') === 'people' ? 'people' : 'map'
   // The view rides in the URL; replacing keeps Back's way to the farm.
+  const candidate = params.get('uma') ?? params.get('talk')
+  const talking = Boolean(candidate && pack && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)))
   const setView = (next: View) => navigate(withParam(location, 'view', next === 'people' ? 'people' : null), { replace: true, state: location.state })
   return (
     <div className="absolute inset-0 flex flex-col" data-page="town" data-view={view}>
-      <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }}>
+      {!talking && !sceneCoversWorld(params) && <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }}>
         {save.today.town && (
           <span className="flex items-center gap-2">
             <Tabs label="Views" value={view} onChange={setView} options={[{ value: 'map', label: 'Map' }, { value: 'people', label: 'People' }]} />
             <Link to={withParam(location, 'sheet', 'shop')} state={{ back: true }} className="flex min-h-11 shrink-0 items-center rounded-md border border-hairline-strong px-3 text-[14px] font-semibold" data-action="shop">Shop</Link>
           </span>
         )}
-      </PlaceHeader>
+      </PlaceHeader>}
       <main className="min-h-0 flex-1" data-town-scroll>
         {save.today.town ? (
           <MasterGate>{(master) => (pack ? <Town save={save} pack={pack} master={master} view={view} /> : <p className="p-4 text-ink-soft">Loading…</p>)}</MasterGate>
@@ -104,33 +104,45 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   const navigate = useNavigate()
   const leave = useLeave()
   const nameOf = useMemo(() => namer(master, pack), [master, pack])
-  const day = useMemo(() => townDay(save, pack), [save, pack])
+  const day = useMemo(() => currentTownDay(save, pack), [save, pack])
   const views = useMemo(() => locationViews(day, pack, save), [day, pack, save])
   const asked = params.get('at')
   const at = asked ? publicTownPlace(pack, asked) : null
   const chosenDistrict = params.get('district')
   const district = TOWN_DISTRICTS.find(entry => entry.id === chosenDistrict) ?? (at ? districtOf(at) : undefined)
-  const here = views.find((v) => v.loc.id === at) ?? views.find((v) => v.loc.id === START)!
+  const here = views.find((v) => v.loc.id === at)
   const candidate = params.get('uma') ?? params.get('talk')
   const uma = candidate && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)) ? candidate : null
   // Walking between places is free: replacing keeps Back's way to the farm.
-  const go = (at: string) => navigate(paramsTo(location, { at, district: null }), { replace: true, state: location.state })
+  const go = (at: string) => navigate(paramsTo(location, { at, district: null }), { state: { back:true } })
   const goDistrict = (id: string | null) => {
     const next = TOWN_DISTRICTS.find(entry => entry.id === id)
-    navigate(paramsTo(location, { district: next?.id ?? null, at: next?.places[0] ?? null }), { replace: true, state: location.state })
+    navigate(paramsTo(location, { district: next?.id ?? null, at: null }), { state: { back:true } })
   }
+  const covered = sceneCoversWorld(params)
   const services = params.get('service') ?? (['inn', 'town-guide', 'town-garage'].includes(params.get('sheet') ?? '') ? params.get('sheet') : null)
   // Her menu over the town: at her place when she's out (so Back returns there), else over where you are.
   const open = (id: string, at?: string | null) => navigate(paramsTo(location, { ...(at ? { at, district: null } : {}), uma: id }), { state: { back: true } })
   return (
     <>
-      {view === 'map' ? (
-        <div className="flex h-full min-h-0 flex-row gap-3 px-4 pt-2 pb-3" data-town-today={day.where.size}>
-          <TownMap district={district} views={views} here={here.loc.id} art={master.art} onDistrict={goDistrict} onGo={go} />
-          <Place key={here.loc.id} view={here} save={save} pack={pack} master={master} nameOf={nameOf} onOpen={(id) => open(id)} />
+      {view === 'map' ? (!uma && !covered && (
+        <div className="flex h-full min-h-0 flex-col gap-1 px-3 pt-1 pb-2" data-town-today={day.where.size}>
+          {here ? <>
+            <div className="flex min-h-11 shrink-0 items-center gap-2">
+              <button type="button" onClick={() => goDistrict(district?.id ?? null)} className="min-h-11 rounded-md border border-hairline px-2 text-xs font-semibold" data-town-district-back>‹ {district?.label ?? 'Town map'}</button>
+              <h2 className="font-display min-w-0 flex-1 truncate text-lg font-bold" data-place-name>{here.loc.name}</h2>
+              <button type="button" onClick={() => goDistrict(null)} className="min-h-11 px-2 text-xs font-semibold" data-town-overview>All town</button>
+            </div>
+            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,2fr)_minmax(140px,1fr)] gap-2" data-town-destination={here.loc.id} data-place-kind={townOutdoors(here.loc.id) ? 'outdoor' : 'interior'}>
+              <WorldPlate save={save} place={here.loc.id} {...(here.loc.id === HARBOUR_INN ? { art:innLobby } : {})}
+                cast={[...new Set([...here.here,...(here.keeper ? [here.keeper.characterId] : [])])].map(id => ({ id, name:nameOf(id), outfit:'spring' }))}
+                open={id => open(id)} />
+              <Place key={here.loc.id} view={here} save={save} pack={pack} nameOf={nameOf} onOpen={id => open(id)} />
+            </div>
+          </> : <TownMap district={district} views={views} nameOf={nameOf} onDistrict={goDistrict} onGo={go} onOpen={open} />}
         </div>
-      ) : (
-        <div className="h-full overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
+      )) : (
+        <div className="h-full overflow-y-auto overscroll-contain px-4 pt-3 pb-6" hidden={Boolean(uma) || covered}>
           <People save={save} pack={pack} day={day} nameOf={nameOf} onOpen={(id, at) => open(id, at)} />
         </div>
       )}
@@ -184,20 +196,13 @@ export function Face({ id, size, name }: { id: string; size: number; name: strin
 
 // --- Where you are ----------------------------------------------------------------------------------------------------
 
-/** Where you are: its name and line, who's here now, and its keeper at her post with her post's menu. */
-function Place({ view, save, pack, master, nameOf, onOpen }: { view: LocationView; save: SaveV4; pack: StoryPack; master: MasterView; nameOf: NameOf; onOpen: (id: string) => void }) {
+/** The destination's services and people. */
+function Place({ view, save, pack, nameOf, onOpen }: { view: LocationView; save: SaveV4; pack: StoryPack; nameOf: NameOf; onOpen: (id: string) => void }) {
   const location = useLocation()
   const { loc, here, keeper } = view
-  const residents = loc.id === HARBOUR_INN ? new Set(innResidents(save, pack)) : null
-  const lobby = residents ? paintedRoutes(here.filter(id => residents.has(id) && hasWalkingArt(master.art, id)), [[.4, .82], [.63, .83]]) : []
   const menu = loc.group === 'shop' ? postMenu(loc.id as Parameters<typeof postMenu>[0]) : []
   return (
     <section aria-label={loc.name} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-place-panel={loc.id}>
-      <h2 className="font-display text-[18px] leading-tight font-bold" data-place-name>{loc.name}</h2>
-      {residents && <div className="relative mt-1 aspect-[16/7] shrink-0 overflow-hidden rounded-lg">
-        <img src={innLobby} alt="" className="h-full w-full object-cover" />
-        {lobby.length > 0 && <ActorLayer actors={lobby} outfit="spring" height={44} />}
-      </div>}
       {loc.line && <p className="text-[13px] text-ink-soft">{loc.line}</p>}
       {loc.id === 'expeditions' && (
         <Link to={placeBuilt(save, 'expeditions') ? withParam(location, 'sheet', 'expeditions') : '/?peek=expeditions'} state={{ back: true }}

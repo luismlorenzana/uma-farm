@@ -6,11 +6,13 @@ import { sceneAssets } from './scene-assets'
 const start: SceneEnvironment = { place: 'gate', phase: 'morning', season: 'spring' }
 
 describe('conversation environments', () => {
-  it('has an asset at both sizes for each built-in place and phase', () => {
-    for (const place of new Set([...STORY_PLACES, ...GAME_LOCATIONS])) {
+  it('resolves each built-in place and phase to a plate and fallback', () => {
+    const rooms = ['coop', 'estate-office', 'little-studio', 'laurel-bakery', 'mejiro-salon', 'espoir-garage']
+    for (const place of new Set([...STORY_PLACES, ...GAME_LOCATIONS, ...rooms])) {
       for (const phase of ['morning','afternoon','night'] as const) {
         const selected = resolveEnvironment({ ...start, place, phase })
-        expect(sceneAssets[selected.key]?.length, place).toBe(2)
+        expect(sceneAssets[selected.key]?.[0], place).toEqual(expect.any(String))
+        if (!rooms.includes(selected.key)) expect(sceneAssets[selected.key]?.length, place).toBe(2)
         expect(sceneAssets[selected.fallback]?.length, place).toBe(2)
       }
     }

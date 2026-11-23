@@ -117,7 +117,7 @@ describe('the rancher\'s and the Coop', () => {
     expect(work).toContainEqual({ key: 'ranch:coop', to: '/?peek=coop', text: 'The Coop · 1 good to collect' })
     await render(<FarmRoute />, '/?peek=coop')
     await find('[data-ranch="coop"]')
-    expect($('[data-place="coop"] [data-tag]')?.textContent).toBe('1 to collect')
+    expect($('[data-region-destination="coop"] [data-tag]')?.textContent).toBe('1 to collect')
     await click($('[data-action="collect"]'))
     expect(save().items.egg).toEqual([1, 0, 0, 0, 0])
     expect($('[data-note]')?.textContent).toBe('Collected · +Egg')
@@ -144,7 +144,7 @@ describe('the Mine', () => {
     }
     expect(save().places.mine).toEqual({ deepest: 3, stairs: 2 })
     expect(save().today.actions).toBe(6)
-    expect($('[data-place="mine"] [data-tag]')?.textContent).toBe('Floor 3')
+    expect($('[data-region-destination="mine"] [data-tag]')?.textContent).toBe('Floor 3')
   })
 })
 

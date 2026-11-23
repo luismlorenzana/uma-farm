@@ -6,8 +6,8 @@ import type { CharacterSpritePlayer } from '@luismlorenzana/uma-stage/character-
 interface Figure extends WalkingArt { route: ActorRoute; player: CharacterSpritePlayer; offset: number }
 
 /** An overlay on a painted location. Layout coordinates are the image's normalized feet positions. */
-export function ActorLayer({ actors, outfit, height = 38, oneWay = false }: {
-  actors: readonly ActorRoute[]; outfit: WalkingOutfit; height?: number; oneWay?: boolean
+export function ActorLayer({ actors, outfit, height = 38, oneWay = false, standing = false, onArt }: {
+  actors: readonly ActorRoute[]; outfit: WalkingOutfit; height?: number; oneWay?: boolean; standing?: boolean; onArt?(id: string): void
 }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const signature = JSON.stringify(actors)
@@ -34,7 +34,7 @@ export function ActorLayer({ actors, outfit, height = 38, oneWay = false }: {
       if (canvas.height !== tall) canvas.height = tall
       ctx.clearRect(0, 0, width, tall)
       ctx.imageSmoothingEnabled = false
-      const positions = figures.map(figure => ({ figure, pose: routePose(figure.route, time, figure.offset, oneWay) }))
+      const positions = figures.map(figure => ({ figure, pose: standing ? { x:figure.route.stop[0],y:figure.route.stop[1],facing:'front' as const,moving:false } : routePose(figure.route, time, figure.offset, oneWay) }))
       positions.sort((a, b) => a.pose.y - b.pose.y)
       for (const { figure, pose } of positions) {
         const { cell, foot } = figure.sprite
@@ -43,7 +43,7 @@ export function ActorLayer({ actors, outfit, height = 38, oneWay = false }: {
         ctx.drawImage(figure.image, crop.x, crop.y, cell.width, cell.height,
           Math.round(width * pose.x - foot.x * ratio), Math.round(tall * pose.y - foot.y * ratio), cell.width * ratio, height * scale)
       }
-      if (!oneWay || time < 2600) schedule()
+      if (!standing && (!oneWay || time < 2600)) schedule()
     }
     const schedule = () => {
       if (!pending && shown && !document.hidden && figures.length && !disposed) pending = requestAnimationFrame(frame)
@@ -68,6 +68,7 @@ export function ActorLayer({ actors, outfit, height = 38, oneWay = false }: {
         if (!disposed) {
           figures.push({ ...art, route: routes[index]!, player: new CharacterSpritePlayer(art.sprite), offset: oneWay ? 0 : index * 740 })
           canvas.dataset.walkingActors = String(figures.length)
+          onArt?.(routes[index]!.id)
           schedule()
         }
       }).catch(() => undefined)
@@ -82,6 +83,6 @@ export function ActorLayer({ actors, outfit, height = 38, oneWay = false }: {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       delete canvas.dataset.walkingActors
     }
-  }, [signature, outfit, height, oneWay])
+  }, [signature, outfit, height, oneWay, standing, onArt])
   return <canvas ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" />
 }

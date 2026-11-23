@@ -57,32 +57,32 @@ function lastOfHers(steps: readonly Step[]): string {
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 const actionWords = (n: number): string => `${n} action${n === 1 ? '' : 's'}`
 
-export function HerMenu({ id, save, pack, master, day, nameOf, onClose }: {
-  id: string; save: SaveV4; pack: StoryPack; master: MasterView; day: TownDay; nameOf: NameOf; onClose: () => void
+export function HerMenu({ id, save, pack, master, day, nameOf, onClose, farmSetting }: {
+  id: string; save: SaveV4; pack: StoryPack; master: MasterView; day: TownDay; nameOf: NameOf; onClose: () => void; farmSetting?: string
 }) {
   const person = townOf(pack).byId.get(id) ?? null
   const name = nameOf(id)
-  const at = day.where.get(id) ?? null
+  const at = farmSetting ? null : day.where.get(id) ?? null
   const place = at ? townLocation(pack, at) ?? null : null
   // Her post: the shop or office of her role, else the spot she keeps.
   const post = person ? townLocations(pack).find((l) => l.keeper === id) ?? null : null
-  const where = person ? post?.name ?? 'In town' : place ? `${place.name}${hereWords(pack, id, day.by.get(id)) ? ` · ${hereWords(pack, id, day.by.get(id))}` : ''}` : null
+  const where = farmSetting ? 'On the farm' : person ? post?.name ?? 'In town' : place ? `${place.name}${hereWords(pack, id, day.by.get(id)) ? ` · ${hereWords(pack, id, day.by.get(id))}` : ''}` : null
   return (
     <SceneLookProvider value={{ day: save.calendar.day, leads: [id] }}>
-      <div className="absolute inset-0 z-20 flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={`${name} in town`} data-her-menu={id} data-at={at ?? undefined}>
+      <div className="fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={`${name} ${farmSetting ? 'on the farm' : 'in town'}`} data-her-menu={id} data-at={at ?? undefined}>
         <header className="flex min-h-11 items-center justify-between gap-2 px-4">
           <p className="text-micro truncate text-ink-soft" data-her-where>{where ?? 'Not in town now'}</p>
           <button type="button" onClick={onClose} className="min-h-11 rounded-full px-4 text-[15px] font-semibold text-ink-soft" data-action="back">Back</button>
         </header>
         {person ? <Keeper id={id} pack={pack} save={save} nameOf={nameOf} shop={post?.group === 'shop' ? post.id as ShopId : null} />
-          : <Uma id={id} name={name} save={save} pack={pack} master={master} at={at} nameOf={nameOf} />}
+          : <Uma id={id} name={name} save={save} pack={pack} master={master} at={at} nameOf={nameOf} farmSetting={farmSetting} />}
       </div>
     </SceneLookProvider>
   )
 }
 
 /** One of the cast, or anyone who lives in town: her line on the engine, and her menu. */
-function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: string; save: SaveV4; pack: StoryPack; master: MasterView; at: string | null; nameOf: NameOf }) {
+function Uma({ id, name, save, pack, master, at, nameOf, farmSetting }: { id: string; name: string; save: SaveV4; pack: StoryPack; master: MasterView; at: string | null; nameOf: NameOf; farmSetting?: string | undefined }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [said, setSaid] = useState<{ line: string; emote: Expression } | null>(null)
@@ -94,7 +94,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
   const met = !!save.roster[id]
   const love = save.love[id]
   // On the farm today: she lives there (a spouse in her room), or it's her farm day (a farmhand).
-  const onFarm = met && onFarmToday(save, pack, id)
+  const onFarm = met && (Boolean(farmSetting) || onFarmToday(save, pack, id))
   const livesOnFarm = met && atHome(save, id)
   const temperament = talentTable(master).get(outfitFor(id))?.temperament ?? 'steady'
   const fillName = (line: string) => line.split('{name}').join(name)
@@ -134,7 +134,9 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
         setNote(r.paid > 0 ? `+${r.paid} ♥` : null)
         setNotes(r.notes)
         // Today's talk plays over the town: her greeting, then her line or a small talk.
-        navigate(withParam(location, 'life', `talk:${id}`), { state: { back: true } })
+        const talkUrl = new URL(withParam(location, 'life', `talk:${id}`), 'https://farm.local')
+        if (farmSetting) talkUrl.searchParams.set('sceneAt',farmSetting)
+        navigate(talkUrl.pathname + talkUrl.search, { state: { back: true } })
       })
       case 'gift': return setGiving(true)
       case 'work': return act(async () => {
@@ -168,7 +170,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
     </ul>}
   </> : undefined
   return (
-    <Stage environment={environment(save, at ?? (onFarm ? 'fields' : 'plaza'))} bust={{ who: id, name, emote: shown.emote }}
+    <Stage environment={environment(save, farmSetting ?? at ?? (onFarm ? 'fields' : 'plaza'))} bust={{ who: id, name, emote: shown.emote }}
       footer={controls} data={{ 'data-her': id, 'data-met': met || undefined }}>
       <div className="flex flex-wrap items-baseline gap-x-2">
         <p className="font-display min-w-0 truncate text-[17px] font-bold" data-her-name data-speaker={at || onFarm ? true : undefined}>{name}</p>
