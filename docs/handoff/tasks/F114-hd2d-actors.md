@@ -1,5 +1,7 @@
 # F114 · Tier 1 walking sprites and HD-2D
 
+**Status · Live.** The Tier 1 batch and app deployment were verified. The next navigation and dialogue staging changes are specified in [F115](F115-hd2d-map-navigation.md).
+
 F114 continues [Field and Pond](F103-hd2d-farm.md) and the painted town introduced in F113. The painted overview opens the six district maps. Their building footprints remain interactive. Each district can show its current residents and on-duty staff by the entrances. The Inn lobby and farm commons use current presence and room assignments. Date and festival walk-ons and solo and duo visits use the same wardrobe and animation timing.
 
 | Scene | Wardrobe | Who can appear |
@@ -20,4 +22,4 @@ Each identity has Spring, Farm Work and Pajamas. The three variants use individu
 
 ## Next HD-2D surfaces
 
-Extend the Field and Pond renderer to the orchard, ranch and production yards. Author scene routes for those yards, then for farm housing and town approaches. Use the same three variants and crew receipts for every additional location. Building interactions stay tied to the existing farm and town state. F103's wider look and iPhone review tracks the environment and performance decisions.
+[F115](F115-hd2d-map-navigation.md) defines the six Farm regions, local HD-2D scenes, building interiors and direct sprite taps. F103 tracks the iPhone environment and performance review.

@@ -118,7 +118,7 @@ and 3.6 MiB of estimated graphics resources. The standalone iPhone run is the pe
 The owner approves the field composition and approves the phone measurements at a readable tier. The two
 landscape sizes have clear targets and reliable fallback. A Day 1 save, a first harvest and the 50-Uma fixture
 agree with today's farm rules and routes. The shared look pilot and the asset ownership needed to extend it
-are recorded with the slice. Then choose whether to extend the west band across the full farm.
+are recorded with the slice. The [F115 map packet](F115-hd2d-map-navigation.md) applies the pilot to separate Farm sections reached from a painted overview.
 
 ## Deliver
 
