@@ -161,6 +161,8 @@ The [Work calendar](game-mechanics.md#farmhands) shows allocations and gaps by d
 
 **F111 is in.** Shared credit, partial repayments, wedding ring commissions, and standard surplus policies are part of the farm economy. The [playthroughs](game-mechanics.md#f111-finance-and-default-surplus-playthroughs) cover a solo first wedding, six-figure orders and default shipping with 10, 20 and 50 Umas.
 
+**F113 is authored.** The [town and professions packet](handoff/tasks/F113-town-and-professions.md) starts with the Town Library, Kitchen, Café and a shared Requests board. It specifies six tappable districts, one Harbour Inn residence for the town cast, and services and work for all 25 professions.
+
 How each workshop is built:
 
 - **Planned fresh, one at a time,** live from its first day, opened by Farm Rank and its build, with the default story
