@@ -23,6 +23,8 @@ import type { CastId } from '../story/cast'
 import { castEntry, castOrder, type StoryPack } from '../story/pack'
 import { favouriteSpotOf, herHomeOf, herJobOf, herRoutineOf, storyLocationsOf, townLinesOf, townOf } from '../story/placeholders'
 import { professionOf, professionShift } from './professions'
+import { DISTRICT_LOCATIONS, HARBOUR_INN, professionCounter, publicTownPlace } from './districts'
+import { placeBuilt } from '../farm/places'
 
 /** The town's shops and offices: each one's name, line, the role that keeps it, and what it offers. */
 export interface TownShop {
@@ -52,7 +54,7 @@ export interface TownLocationPlayed {
   readonly keeper: string | null
 }
 
-type TownPack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'master'>>
+type TownPack = SchedulePack
 
 /** The town map's locations, in the map's order: the six spots (their names, lines and keepers the pack's, else the
  * game's), the four shops and offices, then the story's homes, workplaces and spots in `town.json`'s order. Each of the
@@ -74,7 +76,9 @@ export function townLocations(pack: Pick<StoryPack, 'cast'> & Partial<Pick<Story
   }))
   const shops = SHOP_IDS.map((id): TownLocationPlayed => ({ id, group: 'shop', name: SHOPS[id].name, line: SHOPS[id].line, keeper: shopKeeper.get(id) ?? null }))
   const story = storyLocationsOf(pack).map((l): TownLocationPlayed => ({ id: l.id, group: l.kind ?? 'spot', name: l.name, line: l.line ?? '', keeper: null }))
-  return [...spots, ...shops, ...story]
+  const additions: TownLocationPlayed[] = DISTRICT_LOCATIONS.filter(loc => !story.some(authored => authored.id === loc.id))
+    .map(loc => ({ ...loc, group: 'work', keeper: null }))
+  return [...spots, ...shops, ...story, ...additions]
 }
 
 /** One of the town map's locations by id, or undefined. */
@@ -179,7 +183,7 @@ export function whereOn(pack: SchedulePack, id: string, day: number, clock?: Far
   const job = professionOf(pack, id)
   if (job) {
     const shift = professionShift(pack, id, day)
-    if (shift === 'town') return { at: job.profession.at, by: 'job' }
+    if (shift === 'town') return { at: professionCounter(job.profession), by: 'job' }
     const outing = shift === 'off' ? castEntry(pack, id)?.freeAt : undefined
     if (outing) return { at: outing, by: 'routine' }
   }
@@ -286,6 +290,24 @@ export function worksOn(save: Pick<SaveV4, 'roster' | 'love' | 'calendar'> & Par
   return shift === null ? onFarmToday(save, pack, id, day) : shift === 'farm'
 }
 
+export const innResidents = (save: Pick<SaveV4, 'love'>, pack: TownPack): string[] =>
+  townsfolk(pack).filter(id => !atHome(save, id))
+
+type TownPresence = Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Partial<Pick<SaveV4, 'expeditions' | 'buildings'>>
+
+function townPresence(save: TownPresence, pack: TownPack, id: string, day: number): { at: string | null; by: HereBy | null } {
+  const placed = whereOn(pack, id, day, save.calendar)
+  if (placed.by === 'job' && professionOf(pack, id)?.profession.id === 'expedition-outfitter'
+    && save.buildings && placeBuilt({ buildings: save.buildings }, 'expeditions')) return { at: 'expeditions', by: 'job' }
+  if (placed.at !== null) {
+    const at = publicTownPlace(pack, placed.at)
+    if (at !== HARBOUR_INN || !atHome(save, id) || placed.by !== 'home') {
+      return { at, by: at !== placed.at ? 'home' : placed.by }
+    }
+  }
+  return atHome(save, id) ? { at: null, by: null } : { at: HARBOUR_INN, by: 'home' }
+}
+
 /** One day in town: who's at each location, and where each one out is. */
 export interface TownDay {
   readonly day: number
@@ -300,14 +322,14 @@ export interface TownDay {
 /** The town on a day (the save's, unless another is given): everyone who lives in town where her schedule puts her (the
  * story's, else the default), the rest at home off the map. An Uma on the farm that day (a spouse in her room, or a
  * farmhand on her farm day) isn't in town. A spot holds everyone the schedules put there. A day ahead reads the save as it stands. */
-export function townDay(save: Pick<SaveV4, 'calendar' | 'roster' | 'love'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: TownPack, day = save.calendar.day): TownDay {
+export function townDay(save: TownPresence, pack: TownPack, day = save.calendar.day): TownDay {
   const locations = townLocations(pack)
   const at = new Map<string, string[]>(locations.map((l) => [l.id, []]))
   const where = new Map<string, string>()
   const by = new Map<string, HereBy>()
   for (const id of townsfolk(pack)) {
     if (awayOn(save, id, day) || onFarmToday(save, pack, id, day)) continue
-    const placed = whereOn(pack, id, day, save.calendar)
+    const placed = townPresence(save, pack, id, day)
     if (placed.at === null || placed.by === null) continue
     at.get(placed.at)?.push(id)
     where.set(id, placed.at)
@@ -330,10 +352,10 @@ export const livesInTown = (pack: SchedulePack, id: string): boolean => castOrde
 /** Where you meet her now (the talk-and-gift rule, and the evening's): on the farm when she lives there (a spouse in her
  * room) or it's her farm day (a farmhand), else where her schedule puts her in town today; she's in front of you there
  * once you've gone into town. */
-export function whereYouMeet(save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'> & Partial<Pick<SaveV4, 'expeditions'>>, pack: SchedulePack, id: string): MeetWhere {
+export function whereYouMeet(save: TownPresence & Pick<SaveV4, 'today'>, pack: TownPack, id: string): MeetWhere {
   if (awayOn(save, id, save.calendar.day)) return { here: false, farm: false, at: null }
   if (onFarmToday(save, pack, id)) return { here: true, farm: true, at: null }
-  const at = livesInTown(pack, id) ? whereOn(pack, id, save.calendar.day, save.calendar).at : null
+  const at = livesInTown(pack, id) ? townPresence(save, pack, id, save.calendar.day).at : null
   return { here: at !== null && save.today.town, farm: false, at }
 }
 

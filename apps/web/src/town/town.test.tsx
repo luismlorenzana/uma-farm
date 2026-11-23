@@ -220,38 +220,31 @@ describe('the town', () => {
     expect($('[data-action="shop"]')).not.toBeNull()
   })
 
-  it('shows the map\'s places in their groups; walking between them is free, and each lists who\'s there now', async () => {
+  it('opens each of six painted districts, walks to all 17 places for free, and keeps their real services', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<TownPage />, '/town')
     await find('[data-town-map]')
-    expect($$('[data-map-group]').map((g) => g.dataset.mapGroup)).toEqual(['spots', 'shops', 'work'])
-    expect($$('[data-location]').map((l) => l.dataset.location)).toEqual(['plaza', 'market', 'cafe', 'harbour', 'library', 'track', 'store', 'rancher', 'mayor', 'smith', 'bakery'])
-    // You arrive at the Plaza.
-    expect($('[data-location][data-at]')?.dataset.location).toBe('plaza')
     expect($('[data-place-name]')?.textContent).toBe('The Plaza')
-    // Both who live in town are out, somewhere; the counts add up.
-    expect($('[data-out]')?.dataset.out).toBe('2')
-    expect($$('[data-location]').reduce((n, l) => n + Number(l.dataset.hereCount), 0)).toBe(2)
-    const sister = townDay(farm(), fixture.pack!).where.get(SISTER)!
-    await click($(`[data-location="${sister}"]`))
-    expect(path).toBe(`/town?at=${sister}`)
+    const districts = $$('[data-district]').map(node => node.dataset.district!)
+    expect(districts).toEqual(['plaza', 'market', 'library', 'harbour', 'workshop', 'hilltop'])
+    const visited: string[] = []
+    for (const district of districts) {
+      await click($(`[data-district="${district}"]`))
+      const ids = $$('[data-location]').map(node => node.dataset.location!)
+      for (const id of ids) {
+        await click($(`[data-location="${id}"]`))
+        expect($('[data-place-panel]')?.dataset.placePanel).toBe(id)
+        expect(path).toBe(`/town?at=${id}`)
+        visited.push(id)
+        if (id === 'cafe') expect(words($('[data-keeper]'))).toBe('Fable · The smith')
+        if (id === 'store') expect($('[data-post-item="seeds"]')?.getAttribute('href')).toBe('/town?at=store&sheet=shop')
+        if (id === 'mayor') expect(words($('[data-keeper]'))).toBe('Ember · The mayor')
+        if (id === 'plaza') expect($('[data-keeper]')).toBeNull()
+      }
+      await click(await find('[data-town-overview]'))
+    }
+    expect(new Set(visited).size).toBe(17)
     expect(save().today.actions).toBe(0)
-    expect($$('[data-place-panel] [data-person]').map((p) => p.dataset.person)).toContain(SISTER)
-    expect(words($(`[data-person="${SISTER}"]`))).toBe('Invented Sister')
-    // The café: Fable keeps it, at her post.
-    await click($('[data-location="cafe"]'))
-    expect($('[data-place-name]')?.textContent).toBe('Invented Café')
-    expect(words($('[data-keeper]'))).toBe('Fable · The smith')
-    // The general store: its keeper sells seeds; the mayor's office takes build orders and lends toward them.
-    await click($('[data-location="store"]'))
-    expect(words($('[data-keeper]'))).toBe('Dune · The shopkeeper')
-    expect($('[data-post-item="seeds"]')?.getAttribute('href')).toBe('/town?at=store&sheet=shop')
-    await click($('[data-location="mayor"]'))
-    expect(words($('[data-keeper]'))).toBe('Ember · The mayor')
-    expect($$('[data-post-item]').map((p) => [p.dataset.postItem, p.getAttribute('href')])).toEqual([['build', '/town?at=mayor&sheet=mayor'], ['loan', '/town?at=mayor&sheet=mayor']])
-    // The plaza's keeper is at her office, so the plaza shows none.
-    await click($('[data-location="plaza"]'))
-    expect($('[data-keeper]')).toBeNull()
   })
 
   it('at the mayor\'s office, borrows toward the Mill, builds it on the loan, and repays it', async () => {
@@ -287,7 +280,6 @@ describe('the town', () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(day) })
     await render(<TownPage />, '/town?at=bakery')
     await find('[data-place-panel="bakery"]')
-    expect($('[data-location="bakery"]')?.dataset.hereCount).toBe('1')
     expect($$('[data-place-panel] [data-person]').map((p) => p.dataset.person)).toEqual(['90001'])
   })
 

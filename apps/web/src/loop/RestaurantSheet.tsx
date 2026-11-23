@@ -266,7 +266,7 @@ function sourceHint(save: FarmSave, id: string): string {
 import { pinRecipeStock } from '@farm/domain'
 import { changeHomestead } from './homestead-actions'
 
-function RecipeBook({ save }: { save: FarmSave }) {
+export function RecipeBook({ save }: { save: FarmSave }) {
   const next = nextRestaurantStage(save)
   const [stage, setStage] = useState(Math.max(1, save.workshops.restaurant?.cleared ?? next))
   const [filter, setFilter] = useState<'ready' | 'need' | 'stage'>('stage')

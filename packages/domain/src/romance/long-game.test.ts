@@ -12,6 +12,7 @@ import { checkBible, checkHousehold } from '../story/authored'
 import { storyPackFrom } from '../story/pack'
 import { eventOf, householdOf, storyDaysOf } from '../story/placeholders'
 import { professionShift, WEEKDAYS } from '../town/professions'
+import { innResidents } from '../town/town'
 import { playEvent } from './events'
 import { birthdaysOf, dayOfYear } from './days'
 import { planWedding } from './wedding'
@@ -100,12 +101,14 @@ describe('marriages and the festival calendar', () => {
   it('houses all fifty after actual weddings and holds the soft ending on Winter 12, with the festival exactly one year later', async () => {
     let save = newFarm()
     const order = [...ids].reverse()
+    expect(innResidents(save, pack)).toHaveLength(50)
     for (const [i, id] of order.entries()) {
       const day = i < 48 ? 2 + i : 222
       if (day !== save.calendar.day) save = moveDay(save, day)
       const before = professionShift(pack, id, day)
       save = await wed(save, id)
       expect(save.love[id]?.house).toBe(0)
+      expect(innResidents(save, pack)).toHaveLength(49 - i)
       expect(professionShift(pack, id, save.calendar.day)).toEqual(before)
       expect(roomsOf(save.homestead.houses[0]!)).toBeGreaterThanOrEqual(i + 1)
     }

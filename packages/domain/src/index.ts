@@ -224,6 +224,8 @@ export type { HerJob, LifeWhen, LocationKind, RoutineStop, ShopId, TownLocation 
 export * from './library/receipts'
 export * from './library/books'
 export * from './town/professions'
+export * from './town/requests'
+export * from './town/districts'
 export * from './save/long-game'
 export * from './romance/long-game'
 export * from './forge/state'

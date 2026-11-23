@@ -566,7 +566,7 @@ describe('a route to marriage, simulated', () => {
       expect(new Set(all('devoted', place).map((x) => x.met)).size).toBe(1)
     }
     // Before she's a farmhand, the default schedule has her in town on four days of the season's twelve.
-    expect(reachShare(all('devoted', 'default'), 'before')).toBeCloseTo(1 / 3, 1)
+    expect(reachShare(all('devoted', 'default'), 'before')).toBe(1)
     // Once she's one, she's on the farm on her farm days: the default schedule's other eight, or every day with a home.
     for (const x of all('devoted', 'default')) expect(x.farmDays / x.reach.afterDays).toBeCloseTo(2 / 3, 1)
     for (const x of all('devoted', 'home')) expect(x.farmDays).toBe(x.reach.afterDays)

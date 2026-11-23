@@ -147,7 +147,7 @@ describe('the scaffold: only what’s missing, from the default story, marked', 
       const today = { ...save, calendar: { ...save.calendar, day } }
       expect([...townDay(today, now).where]).toEqual([...townDay(today, before).where])
     }
-    expect([1, 2, 3, 4].map((day) => townDay({ ...save, calendar: { day } }, now).where.get(ONE) ?? null)).toEqual(['cafe', null, null, 'cafe'])
+    expect([1, 2, 3, 4].map((day) => townDay({ ...save, calendar: { day } }, now).where.get(ONE) ?? null)).toEqual(['cafe', 'harbour-inn', 'harbour-inn', 'cafe'])
     expect(townDay({ ...save, calendar: { day: 2 } }, now).by.get(TWO)).toBe('routine')
   })
 

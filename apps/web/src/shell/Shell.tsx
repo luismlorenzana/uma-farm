@@ -30,6 +30,7 @@ const FIELD_PATH = '/field'
 const MenuSheet = lazy(() => import('./MenuSheet').then((module) => ({ default: module.MenuSheet })))
 const SyncWarning = lazy(() => import('./SyncWarning').then(module => ({ default: module.SyncWarning })))
 const OutOfActions = lazy(() => import('./OutOfActions'))
+const RequestsSheet = lazy(() => import('../town/RequestsSheet'))
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
 const ScenePlayer = lazy(() => import('../loop/ScenePlayer'))
 const NameSheet = lazy(() => import('../loop/NameSheet'))
@@ -114,6 +115,7 @@ export function Shell() {
           </Suspense>}
           {gallery && free && !read && !playing && <Suspense fallback={null}><Gallery key={gallery} id={gallery} /></Suspense>}
           {sheet === 'kitchen' && free && <Suspense fallback={null}><KitchenSheet /></Suspense>}
+          {sheet === 'requests' && free && <Suspense fallback={null}><RequestsSheet /></Suspense>}
           {sheet === 'restaurant' && free && <Suspense fallback={null}><RestaurantSheet /></Suspense>}
           {sheet === 'contest' && free && <Suspense fallback={null}><ContestSheet /></Suspense>}
           {sheet === 'festival' && free && <Suspense fallback={null}><FestivalSheet /></Suspense>}

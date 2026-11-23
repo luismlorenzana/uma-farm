@@ -28,6 +28,7 @@ let seam: {
   festivalsOf: (pack: StoryPack) => readonly Festival[]
   specialDaysOf: (pack: StoryPack) => SpecialDays
   activateLongGame: (save: FarmSave, pack: StoryPack | null) => FarmSave
+  refreshTownRequests: (save: FarmSave, pack: StoryPack | null) => FarmSave
 } | null = null
 const listeners = new Set<() => void>()
 
@@ -51,10 +52,10 @@ function turnOn(next: StoryPack): void {
 /** Loads the pack once (the boot and the night wait on it, as they do on master data) and turns the resolver on. A
  * failure lets the next call try again. Resolves the pack as it stands now (`keepOnCast` may have grown its cast). */
 export function storyReady(): Promise<StoryPack> {
-  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf, specialDaysOf, activateLongGame }) => {
+  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf, specialDaysOf, activateLongGame, refreshTownRequests }) => {
     const loaded = await loadStoryPack()
     base = loaded
-    seam = { install: installStory, withCast, festivalsOf, specialDaysOf, activateLongGame }
+    seam = { install: installStory, withCast, festivalsOf, specialDaysOf, activateLongGame, refreshTownRequests }
     turnOn(loaded)
     return loaded
   }).catch((error: unknown) => {
@@ -63,6 +64,8 @@ export function storyReady(): Promise<StoryPack> {
   })
   return loading.then(() => pack!)
 }
+
+export const prepareTownRequests = (save: FarmSave): FarmSave => seam?.refreshTownRequests?.(save, pack) ?? save
 
 export const prepareStorySave = (save: FarmSave): FarmSave => seam?.activateLongGame(save, pack) ?? save
 

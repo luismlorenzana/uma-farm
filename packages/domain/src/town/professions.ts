@@ -53,6 +53,13 @@ export function professionShift(pack: ProfessionPack, id: string, day: number): 
   return weekday === schedule.profession.off ? 'off' : schedule.town.includes(weekday) ? 'town' : 'farm'
 }
 
+/** The provider for a specific job id, including jobs without a legacy scene role. */
+export function professionWorker(pack: ProfessionPack | null, save: Partial<Pick<SaveV4, 'expeditions'>>, day: number, id: string): string | null {
+  const job = pack?.town?.professions?.find(profession => profession.id === id)
+  if (!job || !pack) return null
+  return job.partners.find(partner => professionShift(pack, partner, day) === 'town' && !awayOn(save, partner, day)) ?? null
+}
+
 /** An actual on-duty speaker. Off days and expeditions leave the role vacant. */
 export function onDuty(pack: ProfessionPack, save: Partial<Pick<SaveV4, 'expeditions'>>, day: number, role: CastId): string | null {
   const job = pack.town?.professions?.find(profession => profession.role === role)

@@ -102,6 +102,7 @@ import small50 from '@luismlorenzana/uma-art/farm-scenes/sitting-solo-896.webp?u
 import large50 from '@luismlorenzana/uma-art/farm-scenes/sitting-solo-1600.webp?url'
 import small51 from '@luismlorenzana/uma-art/farm-scenes/sitting-duo-896.webp?url'
 import large51 from '@luismlorenzana/uma-art/farm-scenes/sitting-duo-1600.webp?url'
+import innLobby from '../town/art/inn-lobby.jpg'
 export const sceneAssets: Readonly<Record<string,readonly [string,string]>> = {
   'fields': [small0,large0],
   'fishery': [small1,large1],
@@ -149,6 +150,7 @@ export const sceneAssets: Readonly<Record<string,readonly [string,string]>> = {
   'festival-night': [small43,large43],
   'bedroom-morning': [small44,large44],
   'town-work': [small45,large45],
+  'harbour-inn': [innLobby, innLobby],
   'fields-winter': [small46,large46],
   'gate': [small47,large47],
   'cafe': [small48,large48],

@@ -87,6 +87,7 @@ export function moneyLines(lines: readonly MoneyLine[], names: ProjectNames): Mo
       case 'short': return line.nights >= 2
         ? { key: 'short', text: `Short of upkeep · ${gold(line.owed)} owed · farmhands at half pace`, tag: 'Half pace', warn: true }
         : { key: 'short', text: `Short of upkeep · ${gold(line.owed)} owed`, tag: 'Warning', warn: true }
+      case 'town-orders': return { key: 'town-orders', text: `Town orders · +${gold(line.gold)}` }
       case 'paid-up': return { key: 'paid-up', text: `Upkeep paid up · ${gold(line.owed)} owed`, tag: 'Paid' }
     }
   })

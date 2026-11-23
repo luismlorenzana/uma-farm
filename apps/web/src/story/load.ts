@@ -14,6 +14,7 @@ import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { CONTENT } from '../content/client'
 import { masterReady, setMasterLens, type MasterView } from '../master/master'
 import { deviceIndexStore, loadReleasedPack } from './delivery'
+export { refreshTownRequests } from '@farm/domain'
 import { keepArrived } from './news'
 import { unknownName } from './story'
 

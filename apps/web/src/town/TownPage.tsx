@@ -12,7 +12,7 @@
 // Tap anyone (`?uma=<id>`) for her menu on the dialogue engine (`HerMenu.tsx`). Faces load as they scroll into view.
 // Names and faces are master data's and the pack's, at run time. Its title is the town's name when the world gives
 // one. Loaded on demand.
-import { CAST, placeNameOf, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
+import { CAST, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
@@ -28,11 +28,13 @@ import { storyReady, useStory } from '../story/story'
 import { IntoTown } from '../loop/GoodsSheets'
 import { intoTown } from '../loop/actions'
 import { HerMenu } from './HerMenu'
+import { TownMap } from './TownMap'
+import { ServiceSheet, TownServices } from './TownServices'
 
 const ExpeditionSheet = lazy(() => import('./ExpeditionSheet'))
 const MayorSheet = lazy(() => import('./MayorSheet'))
 const RancherSheet = lazy(() => import('./RancherSheet'))
-import { findPeople, locationViews, mapGroups, peopleRows, PEOPLE_SORTS, postMenu, sortPeople, type LocationView, type PeopleSort } from './town-view'
+import { findPeople, locationViews, peopleRows, PEOPLE_SORTS, postMenu, sortPeople, type LocationView, type PeopleSort } from './town-view'
 
 type View = 'map' | 'people'
 
@@ -96,7 +98,7 @@ export default function TownPage() {
 function About() {
   return (
     <GuideContent topic="town">
-      <p>Your cast lives in town: tap a place to walk there, free, and see who’s there now. Each Uma keeps her own days: the story’s home, work and favourite places, or her favourite spot every third day. Her profile and the calendar show them.</p>
+      <p>Tap a district, then a building to open its services and see who’s there. Walking is free. Umas live at the Harbour Inn until they move into a farm room. Her profile shows her town and farm shifts.</p>
       <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, ask her out (two actions, one evening a day), and her event when it’s ready.</p>
       <p>Umas staff the shops on their town shifts. You can shop on days off. The mayor’s office takes build orders and lends toward them.</p>
     </GuideContent>
@@ -112,19 +114,27 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   const day = useMemo(() => townDay(save, pack), [save, pack])
   const views = useMemo(() => locationViews(day, pack, save), [day, pack, save])
   const asked = params.get('at')
-  const here = views.find((v) => v.loc.id === asked) ?? views.find((v) => v.loc.id === START)!
+  const at = asked ? publicTownPlace(pack, asked) : null
+  const chosenDistrict = params.get('district')
+  const district = TOWN_DISTRICTS.find(entry => entry.id === chosenDistrict) ?? (at ? districtOf(at) : undefined)
+  const here = views.find((v) => v.loc.id === at) ?? views.find((v) => v.loc.id === START)!
   const candidate = params.get('uma') ?? params.get('talk')
   const uma = candidate && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)) ? candidate : null
   // Walking between places is free: replacing keeps Back's way to the farm.
-  const go = (at: string) => navigate(withParam(location, 'at', at), { replace: true, state: location.state })
+  const go = (at: string) => navigate(paramsTo(location, { at, district: null }), { replace: true, state: location.state })
+  const goDistrict = (id: string | null) => {
+    const next = TOWN_DISTRICTS.find(entry => entry.id === id)
+    navigate(paramsTo(location, { district: next?.id ?? null, at: next?.places[0] ?? null }), { replace: true, state: location.state })
+  }
+  const services = params.get('service') ?? (['inn', 'town-guide', 'town-garage'].includes(params.get('sheet') ?? '') ? params.get('sheet') : null)
   // Her menu over the town: at her place when she's out (so Back returns there), else over where you are.
-  const open = (id: string, at?: string | null) => navigate(paramsTo(location, { ...(at ? { at } : {}), uma: id }), { state: { back: true } })
+  const open = (id: string, at?: string | null) => navigate(paramsTo(location, { ...(at ? { at, district: null } : {}), uma: id }), { state: { back: true } })
   return (
     <>
       {view === 'map' ? (
         <div className="flex h-full min-h-0 flex-row gap-3 px-4 pt-2 pb-3" data-town-today={day.where.size}>
-          <TownMap groups={mapGroups(views)} here={here.loc.id} nameOf={nameOf} onGo={go} out={day.where.size} />
-          <Place view={here} save={save} nameOf={nameOf} onOpen={(id) => open(id)} />
+          <TownMap district={district} views={views} here={here.loc.id} onDistrict={goDistrict} onGo={go} />
+          <Place key={here.loc.id} view={here} save={save} pack={pack} nameOf={nameOf} onOpen={(id) => open(id)} />
         </div>
       ) : (
         <div className="h-full overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
@@ -135,6 +145,8 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
         <HerMenu key={uma} id={uma} save={save} pack={pack} master={master} day={day} nameOf={nameOf}
           onClose={() => leave(paramsTo(location, { uma: null, talk: null }))} />
       )}
+      {services && <ServiceSheet key={services} id={services} save={save} pack={pack} day={day} nameOf={nameOf}
+        close={() => leave(paramsTo(location, { service: null, sheet: null }))} />}
       {params.get('sheet') === 'expeditions' && (
         <Suspense fallback={null}>
           <ExpeditionSheet save={save} nameOf={nameOf} talentOf={talentsFor(master)} onClose={() => leave(paramsTo(location, { sheet: null }))} />
@@ -177,56 +189,10 @@ export function Face({ id, size, name }: { id: string; size: number; name: strin
   )
 }
 
-// --- The map ----------------------------------------------------------------------------------------------------------
-
-/** How many faces a place's tile shows; a crowded spot shows "+n" after them, and where you are lists everyone. */
-const MAP_FACES = 4
-
-/** The map: its groups of places, each a tile with how many are there now and their first faces. Yours is marked. */
-function TownMap({ groups, here, nameOf, onGo, out }: { groups: ReturnType<typeof mapGroups>; here: string; nameOf: NameOf; onGo: (id: string) => void; out: number }) {
-  return (
-    <nav aria-label="The town map" className="@container min-h-0 w-[56%] shrink-0 overflow-y-auto overscroll-contain rounded-lg border border-hairline bg-sunken p-2"
-      data-town-map>
-      <p className="px-1 pb-1 text-[12px] text-ink-soft" data-out={out}>{out === 0 ? 'No one’s out today.' : `${out} out today · walking is free`}</p>
-      <div className="space-y-2">
-        {groups.map((g) => (
-          <section key={g.key} aria-label={g.title} data-map-group={g.key}>
-            <h2 className="text-micro px-1 pb-1">{g.title}</h2>
-            <ul className="grid grid-cols-2 gap-1.5 @md:grid-cols-3">
-              {g.places.map((v) => {
-                const at = v.loc.id === here
-                return (
-                  <li key={v.loc.id}>
-                    <button type="button" onClick={() => onGo(v.loc.id)} aria-current={at ? 'location' : undefined}
-                      aria-label={`${v.loc.name}, ${v.here.length === 0 ? 'no one there now' : `${v.here.length} there now`}${at ? ', you’re here' : ''}`}
-                      className={`flex min-h-14 w-full flex-col justify-between gap-1 rounded-md border px-2 py-1.5 text-left shadow-1 ${at ? 'border-accent bg-panel ring-2 ring-accent' : 'border-hairline bg-panel/85'}`}
-                      data-location={v.loc.id} data-here-count={v.here.length} data-at={at || undefined}>
-                      <span className="flex items-center gap-1">
-                        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{v.loc.name}</span>
-                        {v.here.length > 0 && <span className="shrink-0 rounded-full bg-[#c2385e] px-1.5 text-[11px] font-bold text-white tabular-nums">{v.here.length}</span>}
-                      </span>
-                      <span className="flex h-6 items-center -space-x-1.5">
-                        {v.here.slice(0, MAP_FACES).map((id) => <Face key={id} id={id} size={24} name={nameOf(id)} />)}
-                        {/* A crowded spot: its count on the badge, its first faces, then how many more. */}
-                        {v.here.length > MAP_FACES && <span className="pl-2.5 text-[11px] font-semibold text-ink-soft tabular-nums" data-more-here={v.here.length - MAP_FACES}>+{v.here.length - MAP_FACES}</span>}
-                        {at && <span className="ml-auto pl-2 text-[11px] font-semibold text-accent-strong">You’re here</span>}
-                      </span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-        ))}
-      </div>
-    </nav>
-  )
-}
-
 // --- Where you are ----------------------------------------------------------------------------------------------------
 
 /** Where you are: its name and line, who's here now, and its keeper at her post with her post's menu. */
-function Place({ view, save, nameOf, onOpen }: { view: LocationView; save: SaveV4; nameOf: NameOf; onOpen: (id: string) => void }) {
+function Place({ view, save, pack, nameOf, onOpen }: { view: LocationView; save: SaveV4; pack: StoryPack; nameOf: NameOf; onOpen: (id: string) => void }) {
   const location = useLocation()
   const { loc, here, keeper } = view
   const menu = loc.group === 'shop' ? postMenu(loc.id as Parameters<typeof postMenu>[0]) : []
@@ -235,8 +201,10 @@ function Place({ view, save, nameOf, onOpen }: { view: LocationView; save: SaveV
       <h2 className="font-display text-[18px] leading-tight font-bold" data-place-name>{loc.name}</h2>
       {loc.line && <p className="text-[13px] text-ink-soft">{loc.line}</p>}
       {loc.id === 'expeditions' && (
-        <Link to={withParam(location, 'sheet', 'expeditions')} state={{ back: true }} className="mt-2 grid min-h-11 place-items-center rounded-md bg-accent font-semibold text-accent-ink">Open post ›</Link>
+        <Link to={placeBuilt(save, 'expeditions') ? withParam(location, 'sheet', 'expeditions') : '/?peek=expeditions'} state={{ back: true }}
+          className="mt-2 grid min-h-11 place-items-center rounded-md bg-accent font-semibold text-accent-ink">{placeBuilt(save, 'expeditions') ? 'Open post' : 'Post requirements'} ›</Link>
       )}
+      <TownServices at={loc.id} pack={pack} save={save} nameOf={nameOf} />
       <h3 className="text-micro pt-2 pb-1">Here now · {here.length}</h3>
       {here.length === 0 ? <p className="text-[13px] text-ink-soft" data-nobody>No one’s here now.</p> : (
         <ul className="grid grid-cols-4 gap-1" data-here={here.length}>

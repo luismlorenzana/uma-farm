@@ -206,11 +206,11 @@ function Accounts({ save }: { save: FarmSave }) {
         <thead><tr className="text-ink-soft">{['Night', 'Sales', 'Food', 'Upkeep', 'Loans', 'Net'].map(label =>
           <th key={label} scope="col" className="px-1 py-1 font-semibold">{label}</th>)}</tr></thead>
         <tbody className="divide-y divide-hairline">{[...entries].reverse().map(entry => {
-          const delta = entry.shipping + (entry.restaurant ?? 0) - entry.food - entry.upkeep - entry.loans
+          const delta = entry.shipping + (entry.restaurant ?? 0) + (entry.townOrders ?? 0) - entry.food - entry.upkeep - entry.loans
           return <tr key={entry.day} data-account-day={entry.day}>
             <th scope="row" className="px-1 py-2 font-medium">{dateWords(entry.day, save.calendar)}
               {entry.owed > 0 && <span className="block text-danger">{gold(entry.owed)} owed</span>}</th>
-            <td className="px-1">{gold(entry.shipping)} bin{entry.restaurant ? <span className="block">{gold(entry.restaurant)} restaurant</span> : null}</td><td className="px-1">{gold(entry.food)}</td>
+            <td className="px-1">{gold(entry.shipping)} bin{entry.restaurant ? <span className="block">{gold(entry.restaurant)} restaurant</span> : null}{entry.townOrders ? <span className="block">{gold(entry.townOrders)} town orders</span> : null}</td><td className="px-1">{gold(entry.food)}</td>
             <td className="px-1">{gold(entry.upkeep)}</td><td className="px-1">{gold(entry.loans)}</td>
             <td className={`px-1 font-semibold ${delta < 0 ? 'text-danger' : 'text-success'}`}>{delta < 0 ? '−' : '+'}{gold(Math.abs(delta))}</td>
           </tr>

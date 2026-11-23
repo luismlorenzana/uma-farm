@@ -68,6 +68,7 @@ import { checkGoalsNight, type GoalsTonight } from '../farm/diary'
 import { deliverForge } from '../forge/orders'
 import { raiseBuilds } from '../farm/builds'
 import { settleAccounts, type FoodBill } from '../farm/economy'
+import { payTownOrders, refreshTownRequests } from '../town/requests'
 import { eatTonight } from '../farm/food'
 import { settleUnfinished } from '../kitchen/kitchen'
 import { aptitudeUps, fedThisMorning, handsTonight, settleCrewShift } from '../farm/farmhands'
@@ -214,8 +215,9 @@ export const theFarmEats: NightStep = (night) => {
 export const settleTheAccounts: NightStep = (night) => {
   const shift = night.save.workshops.restaurant?.last
   const served = shift?.day === night.before.calendar.day ? shift.sales + shift.tips : 0
-  const income = night.notes.sold.reduce((n, sale) => n + sale.gold, served)
-  const { save, lines } = settleAccounts(night.save, income, night.notes.food, served)
+  const orders = payTownOrders(night.save)
+  const income = night.notes.sold.reduce((n, sale) => n + sale.gold, served + orders.gold)
+  const { save, lines } = settleAccounts(orders.save, income, night.notes.food, served, orders.gold)
   return { ...night, save, notes: { ...night.notes, money: lines } }
 }
 /** Step 2, first: **the farmhands' night.** Each farmhand on her farm day (the day being settled; on a town day she's
@@ -634,7 +636,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step' },
   { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'Read the completed morning shift (or run the crew at night for a legacy date). Farmhands work in invitation order. Cooks and station hands with orders can use spare actions after later workers bring ingredients in. An action gives a point of practice. Goods go to the Warehouse, meals to the pantry, and each Uma’s main place is where she spent the most actions' },
   { step: 2, name: 'theFarmEats', run: theFarmEats, what: 'The farm eats: the farmer, every spouse in her room and every farmhand on her farm day, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; the parties leaving tonight pack their dishes and two meals per member per day away (takeout if short); a meal keeps three days, then any left over spoil' },
-  { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bin’s pay and the Restaurant’s sales and tips join the last seven nights’ income. Takeout (15g a meal), upkeep and arrears have first claim on cash. Loans draw from that night’s income up to the cash left after covering those bills. The farm runs at half pace from a second consecutive short night until the bill is paid' },
+  { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bin’s pay, town orders, and the Restaurant’s sales and tips join the last seven nights’ income. Takeout (15g a meal), upkeep and arrears have first claim on cash. Loans draw from that night’s income up to the cash left after covering those bills. The farm runs at half pace from a second consecutive short night until the bill is paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day' },
   { step: 3, name: 'ranchNightChores', run: ranchNightChores, what: 'Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only' },
@@ -673,7 +675,7 @@ export function runNight<S extends FarmSave>(save: S, context: NightContext, ste
   const working = save.today.dayParts
     ? settleCrewShift(save, context.talentOf ?? talentsD, context.story ?? null) : save
   const start: Night = { before: working, save: working, context, notes: emptyNotes() }
-  return steps.reduce((night, step) => step.run(night), start).save as S
+  return refreshTownRequests(steps.reduce((night, step) => step.run(night), start).save, context.story ?? null) as S
 }
 
 /** Ends the day: the night's nine steps, then the player's one stamp, `now` in real time. */
