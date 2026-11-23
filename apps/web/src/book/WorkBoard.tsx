@@ -23,7 +23,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { awayWords } from '../loop/expedition-words'
 import { Avatar } from '../dialogue/Avatar'
-import { copyHandTask, copyHandTasks, enterDayPart, planSurplus, setHandTasks } from '../loop/actions'
+import { copyHandTask, copyHandTasks, enableUnassignedCrew, enterDayPart, planSurplus, setCrewAutomation, setHandTasks } from '../loop/actions'
 import { configureSurplus, defaultCrateLimit, SURPLUS_LIMIT_MAX } from '@farm/domain'
 import { changeHomestead } from '../loop/homestead-actions'
 import { RestockList } from '../loop/RestockList'
@@ -34,8 +34,9 @@ import { useMaster } from '../master/master'
 import { daysWords } from '../loop/schedule-words'
 import { useStory } from '../story/story'
 import { dayChips, jobWords, KITCHEN, nightWords, rowTiles, runsOn, taskWords } from './board-words'
-import { hasPreset, orderLink, workPresets, workRows, workSuggestions, type WorkRow, type WorkSuggestion } from './work-plan'
+import { forecastCrewOn, hasPreset, orderLink, plannedWorkDay, workPresets, workRows, workSuggestions, type WorkRow, type WorkSuggestion } from './work-plan'
 import { JobList } from './JobList'
+import { WeeklyCoverage } from './WeeklyCoverage'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 /** A season's farm days in words: "2, 3, 5, 6, 8, 9, 11, 12", "1–6, 9", "every day". */
@@ -56,7 +57,15 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   const suggestions = useMemo(() => workSuggestions(save, forecast, needs, talents.of), [save, forecast, needs, talents.of])
   const tonight = new Map(forecast.lines.map((line) => [line.id, line]))
   const rows = useMemo(() => workRows(save, forecast, needs), [save, forecast, needs])
-  const order = rows.find(row => row.key === new URLSearchParams(location.search).get('order'))
+  const orderKey = new URLSearchParams(location.search).get('order')
+  const selectedDay = plannedWorkDay(location.search, save.calendar.day)
+  const orderDay = selectedDay !== undefined && selectedDay >= save.calendar.day ? selectedDay : undefined
+  const plannedShift = useMemo(() => orderKey && orderDay !== undefined && orderDay > save.calendar.day
+    ? forecastCrewOn(save, orderDay, pack, talents.of) : null, [orderKey, orderDay, save, pack, talents.of])
+  const order = (plannedShift ? workRows(plannedShift.snapshot, plannedShift, plannedShift.needs) : rows).find(row => row.key === orderKey)
+  const autoCount = hands.filter(id => save.roster[id]?.autoWork).length
+  const unassigned = hands.filter(id => !save.roster[id]?.autoWork && !save.roster[id]?.tasks?.length).length
+  const [automationError, setAutomationError] = useState('')
   const budget = forecast.lines.reduce((sum, line) => sum + line.actions, 0)
   const spent = forecast.lines.reduce((sum, line) => sum + line.spent, 0)
   const canStart = crewShiftEnabled(save) && save.today.actions < MORNING_ACTIONS
@@ -88,6 +97,7 @@ export function WorkBoard({ save }: { save: FarmSave }) {
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
+          <p>Auto work uses any actions left after her orders for the farm’s priorities. It puts feeding, watering and meals ahead of production and gathering. Switch it off on her card to use only her own orders.</p>
           <p>You still buy seeds, fodder and animals, order construction, and take the stairs in the mines.</p>
         </GuideButton>
       </div>
@@ -100,11 +110,24 @@ export function WorkBoard({ save }: { save: FarmSave }) {
       <p className="rounded border border-hairline bg-panel p-2 text-[13px]" data-work-budget>
         <strong>{plural(forecast.lines.length, 'worker')} on shift</strong> · {spent}/{budget} crew actions {save.today.crew ? 'used' : 'forecast'} · {budget - spent} free
       </p>
-      {order && <AssignOrder key={order.key} row={order} save={save} hands={hands} forecast={tonight} nameOf={nameOf} />}
+      <section className="space-y-2 rounded border border-hairline bg-panel p-2" aria-label="Automatic crew assignments">
+        <h3 className="font-semibold">Auto assign jobs</h3>
+        <p className="text-[13px] text-ink-soft">{plural(autoCount, 'worker')} on auto.
+          New hires start on auto. They check farm coverage each shift after their own orders.</p>
+        {unassigned > 0 && <Button variant="secondary" onClick={() => {
+          setAutomationError('')
+          void enableUnassignedCrew().catch(error => setAutomationError(errorWords(error)))
+        }}>Enable for {plural(unassigned, 'unassigned worker')}</Button>}
+        {automationError && <p role="alert" className="text-danger">{automationError}</p>}
+        <WeeklyCoverage save={save} story={pack} talents={talents.of} />
+      </section>
+      {order && <AssignOrder key={order.key + '/' + orderDay} row={order} save={save} hands={hands}
+        forecast={plannedShift ? new Map(plannedShift.lines.map(line => [line.id, line])) : tonight}
+        day={orderDay} nameOf={nameOf} />}
       <Coverage suggestions={suggestions} nameOf={nameOf} />
       <details className="rounded-md border border-hairline bg-panel px-2">
         <summary className="min-h-11 cursor-pointer py-2 font-semibold">Browse jobs by place</summary>
-        <JobList rows={rows} nameOf={nameOf} />
+        <JobList rows={rows} nameOf={nameOf} forecast={!save.today.crew} />
       </details>
       <RestockList save={save} />
       {hands.length > 0 && <ProductionForecast before={save} after={forecast.save} pack={pack} />}
@@ -127,23 +150,25 @@ export function WorkBoard({ save }: { save: FarmSave }) {
   )
 }
 
-function AssignOrder({ row, save, hands, forecast, nameOf }: {
-  row: WorkRow; save: FarmSave; hands: string[]; forecast: ReadonlyMap<string, FarmhandLine>; nameOf: (id: string) => string
+function AssignOrder({ row, save, hands, forecast, day, nameOf }: {
+  row: WorkRow; save: FarmSave; hands: string[]; forecast: ReadonlyMap<string, FarmhandLine>; day?: number; nameOf: (id: string) => string
 }) {
   const [user, choose] = useState('')
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
+  const plannedToday = day === undefined || day === save.calendar.day
   const candidates = hands.filter(id => {
     const orders = save.roster[id]?.tasks ?? []
-    return orders.length < MAX_TASKS && !hasPreset(orders, row.task)
+    return (day === undefined || free(id) > 0) && orders.length < MAX_TASKS && !hasPreset(orders, row.task)
   }).sort((a, b) => free(b) - free(a))
   function free(id: string) {
     const day = forecast.get(id)
-    return save.today.crew || !day ? 0 : day.actions - day.spent
+    return (plannedToday && save.today.crew) || !day ? 0 : day.actions - day.spent
   }
   const selected = candidates.includes(user) ? user : candidates[0]
   return <section aria-label="Assign a work order" className="space-y-2 rounded border border-hairline bg-panel p-2">
     <h3 className="font-semibold">{row.label}</h3>
+    {day !== undefined && <p className="text-[13px] text-ink-soft">{shortDate(day, save.calendar)} · repeats on this Uma’s farm shifts</p>}
     {row.lock ? <p>{row.lock}</p> : candidates.length ? <>
       <label className="flex flex-wrap items-center gap-2 text-[13px]">Worker
         <select value={selected} onChange={event => choose(event.currentTarget.value)} className="min-h-11 bg-panel px-2">
@@ -157,7 +182,9 @@ function AssignOrder({ row, save, hands, forecast, nameOf }: {
         void copyHandTask(selected, row.task).then(() => setNotice('Assigned to ' + nameOf(selected) + '.'),
           error => setNotice(errorWords(error))).finally(() => setBusy(false))
       }}>Assign order</Button>
-    </> : <p className="text-[13px] text-ink-soft">{hands.length ? 'This order is already assigned or the boards are full.' : 'Invite a farmhand at Friendship 3 to assign this order.'}</p>}
+    </> : <p className="text-[13px] text-ink-soft">{!hands.length ? 'Invite a farmhand at Friendship 3 to assign this order.'
+      : day === undefined ? 'This order is already assigned or the boards are full.'
+        : 'No available worker can take this order on that shift. Check supplies or plan to cover it yourself.'}</p>}
     {notice && <p role="status" className="text-[13px]">{notice}</p>}
   </section>
 }
@@ -211,6 +238,10 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
   const offToday = pack && professionShift(pack, id, save.calendar.day) === 'off'
   const offTomorrow = pack && professionShift(pack, id, save.calendar.day + 1) === 'off'
   const plots = save.fields.plots.length
+  const toggleAuto = () => {
+    setError(null)
+    void setCrewAutomation([id], !uma.autoWork).catch(error => setError(errorWords(error)))
+  }
   const edit = (next: FarmTask[]) => { setError(null); setHandTasks(id, next).catch((e: unknown) => setError(errorWords(e))) }
   const move = (i: number) => edit(tasks.map((t, k) => (k === i - 1 ? tasks[i]! : k === i ? tasks[i - 1]! : t)))
   return (
@@ -235,14 +266,16 @@ function HandCard({ save, id, name, pack, talentOf, onAdd, cover, tonight }: {
         </p>
       )}
       {working
-        ? <p className="text-[13px]" data-tonight><span className="font-semibold">{save.today.crew ? 'Morning shift' : crewShiftEnabled(save) ? 'Shift forecast' : 'Tonight'} · </span><span className="text-ink-soft">{tonight ? nightWords(tonight) : '—'}</span></p>
+        ? <p className="text-[13px]" data-tonight><span className="font-semibold">{save.today.crew ? 'Morning shift' : crewShiftEnabled(save) ? 'Shift forecast' : 'Tonight'} · </span><span className="text-ink-soft">{tonight ? uma.autoWork && tonight.spent === 0 ? 'No work ready' : nightWords(tonight) : '—'}</span></p>
         : away ? <p className="text-[13px] font-semibold" data-away>{awayWords(away, save.calendar)}</p>
         : <p className="text-[13px] font-semibold" data-in-town={!offToday || undefined} data-day-off={offToday || undefined}>{offToday ? 'Day off' : 'In town today'}{back ? ` · back ${shortDate(back, save.calendar)}` : ''}</p>}
       {working && !worksOn(save, pack, id, save.calendar.day + 1) && (
         <p className="text-[12px] text-ink-soft">{awayOn(save, id, save.calendar.day + 1) ? 'Away tomorrow' : offTomorrow ? 'Day off tomorrow' : 'In town tomorrow'}</p>
       )}
+      <Button size="md" variant="secondary" aria-pressed={!!uma.autoWork} aria-label={'Automatic work for ' + name}
+        data-auto-work onClick={toggleAuto}>Auto work {uma.autoWork ? 'on' : 'off'}</Button>
       {tasks.length === 0 ? (
-        <p className="text-[13px] text-ink-soft" data-no-tasks>No orders yet. Add a task for her next farm shift.</p>
+        <p className="text-[13px] text-ink-soft" data-no-tasks>{uma.autoWork ? 'Uses the farm’s priorities each shift.' : 'No orders yet. Add a task for her next farm shift.'}</p>
       ) : (
         <ol className="divide-y divide-hairline rounded-md border border-hairline" aria-label={`${name}’s tasks`} data-tasks={tasks.length}>
           {tasks.map((task, i) => {

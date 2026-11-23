@@ -8,14 +8,14 @@
 // - **Give a gift · 1** (once a day): the gift picker, then her reaction, her face by her taste;
 // - **Ask her out · 2** (a friend for a hangout, a sweetheart or a spouse for a date): her evening (`?evening=<id>`), or
 //   why not; one evening a day across everyone;
-// - **Invite her to work · 1** (a friend, once): she's a farmhand from today, and her scene plays over the town
+// - **Farm invitation · 1** is a separate offer from Friendship 3: she's a farmhand from today, and her scene plays over the town
 //   (`?life=invited-to-work:<id>`: her route's, else the default story's at the farm gate);
 // - **Her event · 1** once it's Ready (the event player, over the town).
 // One of the town's people gets her post instead: her role, what she does, her ties, and her post's menu. One not out now
 // says so; one on the farm (she lives there, or it's her farm day) links her profile. A talk, a gift or an introduction
 // that unlocks a Town note says so. Loaded with the town's screen.
 import {
-  atHome, birthdaysOf, CAST, GAME_DAYS, giftLineV4, herMenu, isBirthday, nextOut, onFarmToday, stageWords, todaysTalk, townLineOf, townLocation, townLocations, townOf, YOU, type Expression,
+  atHome, birthdaysOf, CAST, farmInvitation, GAME_DAYS, giftLineV4, herMenu, isBirthday, nextOut, onFarmToday, stageWords, todaysTalk, townLineOf, townLocation, townLocations, townOf, YOU, type Expression,
   type MenuItem, type SaveV4, type ShopId, type Step, type StoryPack, type Taste, type TownDay,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -23,9 +23,10 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { environment } from '../dialogue/scene-context'
 import { SceneLookProvider } from '../dialogue/Bust'
-import { Line } from '../dialogue/Line'
+import { lineOf } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
 import type { MasterView } from '../master/master'
+import { FarmInvitation } from '../loop/FarmInvitation'
 import { GiftPicker } from '../loop/Love'
 import { talentTable } from '../loop/talents'
 import { shortDate } from '../loop/words'
@@ -104,7 +105,16 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
   // The line on the stage: the last act's; once you've talked today, her talk; else her line for the day in town.
   const shown = said ?? (save.today.chats.includes(id) && love ? { line: talkLine(), emote: 'happy' as const } : { line: fillName(townLineOf(save, pack, id)), emote: 'neutral' as const })
   const special = useSpecialDays()
-  const items = at || onFarm ? herMenu(save, pack, id, special ?? GAME_DAYS) : []
+  const present = Boolean(at || onFarm)
+  const menu = present || met ? herMenu(save, pack, id, special ?? GAME_DAYS) : []
+  const items = present ? menu : menu.filter(item => item.id === 'event')
+  const invitation = items.find(item => item.id === 'work')
+  const offer = farmInvitation(save, id)
+  const actions = items.filter(item => item.id !== 'work')
+  if (met && present && !actions.some(item => item.id === 'event')) {
+    actions.push({ id: 'event', label: 'Her event', cost: null, open: false, why: 'No event ready', done: false })
+  }
+  const text = lineOf({ say: id, line: shown.line }, save.farmer.name).text
   const act = (run: () => Promise<void>) => {
     if (busy) return
     setBusy(true)
@@ -146,34 +156,34 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       setNotes(r.notes)
     })
   }
+  const controls = actions.length > 0 || offer ? <>
+    {error && <p role="status" className="px-1 text-[12px] font-semibold text-danger" data-menu-error>{error}</p>}
+    {offer && <FarmInvitation reason={invitation ? invitation.why : 'Find her in person to invite her.'} busy={busy}
+      onInvite={() => { if (invitation?.open) press(invitation) }} />}
+    {!!actions.length && <ul className={met ? 'grid grid-cols-4 gap-1' : ''} data-menu={actions.map(item => item.id).join(' ')} aria-label="Conversation actions">
+      {actions.map(item => <li key={item.id} className="min-w-0">
+        <MenuButton item={item} busy={busy} onPress={() => press(item)}
+          to={item.id === 'event' ? withParam(location, 'event', id) : item.id === 'evening' ? withParam(location, 'evening', id) : null} />
+      </li>)}
+    </ul>}
+  </> : undefined
   return (
-    <Stage environment={environment(save, at ?? (onFarm ? 'fields' : 'plaza'))} bust={{ who: id, name, emote: shown.emote }} data={{ 'data-her': id, 'data-met': met || undefined }}>
-      <div className="flex shrink-0 items-baseline gap-2">
-        {/* Her name is the line box's speaker; with no line, it's here. */}
-        {!(at || onFarm) && <p className="font-display min-w-0 truncate text-[18px] font-bold" data-her-name>{name}</p>}
+    <Stage environment={environment(save, at ?? (onFarm ? 'fields' : 'plaza'))} bust={{ who: id, name, emote: shown.emote }}
+      footer={controls} data={{ 'data-her': id, 'data-met': met || undefined }}>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <p className="font-display min-w-0 truncate text-[17px] font-bold" data-her-name data-speaker={at || onFarm ? true : undefined}>{name}</p>
         <p className="shrink-0 text-[13px] font-semibold text-[#c2385e]" data-standing>{love ? stageWords(save, id) : 'Not met yet'}</p>
         {note && <p role="status" className="ml-auto shrink-0 text-[14px] font-bold text-[#c2385e]" data-paid>{note}</p>}
       </div>
       {at || onFarm ? (
-        <Line step={{ say: id, line: shown.line, emote: shown.emote }} nameOf={() => name} farmer={save.farmer.name} onNext={() => undefined} still />
+        <p className="mt-1 whitespace-pre-wrap break-words text-[14px] leading-snug" data-line={text} aria-live="polite">{text}</p>
       ) : null}
-      {error && <p role="status" className="text-[13px] font-semibold text-danger" data-menu-error>{error}</p>}
       <NoteFound ids={notes} pack={pack} />
       {onFarm ? (
         <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm today, her farm day.'} <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></p>
       ) : !at ? (
         <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar)}{met && <> <Link to={`/library?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her book ›</Link></>}</p>
       ) : null}
-      {items.length > 0 && (
-        <ul className="grid shrink-0 grid-cols-2 gap-1.5" data-menu={items.map((i) => i.id).join(' ')}>
-          {items.map((item) => (
-            <li key={item.id} className={item.id === 'introduce' || item.id === 'event' ? 'col-span-2' : ''}>
-              <MenuButton item={item} busy={busy} onPress={() => press(item)}
-                to={item.id === 'event' ? withParam(location, 'event', id) : item.id === 'evening' ? withParam(location, 'evening', id) : null} />
-            </li>
-          ))}
-        </ul>
-      )}
       {giving && <GiftPicker save={save} id={id} name={name} points={() => null} onGive={give} onClose={() => setGiving(false)} />}
     </Stage>
   )
@@ -181,26 +191,23 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
 
 /** One item of her menu: a button (or a link, for her event and her evening), its cost; greyed with why when closed. */
 function MenuButton({ item, busy, onPress, to }: { item: MenuItem; busy: boolean; onPress: () => void; to: string | null }) {
-  const primary = item.id === 'introduce' || item.id === 'event'
-  // The wide buttons say "· 1 action"; the paired ones "· 1", as the farm's do.
-  const cost = item.cost === null ? '' : primary ? ` · ${actionWords(item.cost)}` : ` · ${item.cost}`
-  const look = `flex min-h-11 w-full flex-col justify-center rounded-md px-3 py-1 text-left ${primary ? 'bg-accent text-accent-ink font-display font-bold' : 'border border-hairline bg-panel font-semibold'}`
-  if (!item.open) {
-    return (
-      <p className={`flex min-h-11 w-full min-w-0 flex-col justify-center rounded-md border border-hairline px-3 py-0.5 ${item.done ? 'bg-success/10' : 'bg-sunken/60'}`} data-item={item.id} data-why={item.why ?? undefined}>
-        <span className="truncate text-[14px] font-semibold text-ink-soft">{item.label}{cost}</span>
-        <span className={`truncate text-[11px] ${item.done ? 'font-semibold text-success' : 'text-ink-faint'}`}>{item.why}</span>
-      </p>
-    )
-  }
-  if (to) {
-    return <Link to={to} state={{ back: true }} className={look} data-item={item.id} data-action={`menu-${item.id}`}><span className="text-[15px]">{item.label}{cost} ›</span></Link>
-  }
-  return (
-    <button type="button" onClick={onPress} disabled={busy} className={`${look} disabled:opacity-60`} data-item={item.id} data-action={`menu-${item.id}`}>
-      <span className="text-[15px]">{item.label}{cost}</span>
-    </button>
-  )
+  const single = item.id === 'introduce'
+  const label = item.id === 'gift' ? 'Gift' : item.id === 'evening' ? 'Date' : item.id === 'event' ? 'Event' : item.label
+  const cost = item.cost === null ? '' : single ? ` · ${actionWords(item.cost)}` : ` · ${item.cost}`
+  const primary = item.open && (single || item.id === 'event')
+  const look = `flex min-h-11 w-full min-w-0 flex-col items-center justify-center rounded-md border px-0.5 leading-tight
+    ${primary ? 'border-transparent bg-accent text-accent-ink' : 'border-hairline bg-panel'}`
+  const reason = item.done ? 'Done ✓' : item.why?.includes('No actions') ? 'No actions'
+    : item.why?.startsWith('From Friendship') ? item.why : item.why?.includes('Warehouse') ? 'No gifts' : 'Unavailable'
+  const title = item.id === 'event' ? 'Go to event' : item.label
+  const aria = title + (item.cost === null ? '' : ', ' + actionWords(item.cost)) + (item.why ? ', ' + item.why : '')
+  const content = <><span className="max-w-full truncate text-[13px] font-semibold">{label}{cost}{to && item.open ? ' ›' : ''}</span>
+    {!item.open && <span className="max-w-full truncate text-[10px] text-ink-soft">{item.id === 'event' && item.cost === null ? 'Not ready' : reason}</span>}</>
+  return to && item.open && !busy
+    ? <Link to={to} state={{ back: true }} className={look} aria-label={aria} data-item={item.id} data-action={`menu-${item.id}`}>{content}</Link>
+    : <button type="button" disabled={!item.open || busy} onClick={onPress} className={look}
+      aria-label={aria} title={item.why ?? undefined} data-why={item.why ?? undefined} data-item={item.id}
+      data-action={`menu-${item.id}`}>{content}</button>
 }
 
 /** One of the town's people at her post: her role, what she does, her ties (they build no bond), and her post's menu. */

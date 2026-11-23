@@ -172,7 +172,7 @@ describe('the calendar', () => {
     await click(assigned.closest<HTMLButtonElement>('button'))
     expect($('[data-work-day-detail]')?.textContent).toContain('1 allocated')
     expect($('[data-work-job="fish:pond"]')?.textContent).toContain('3 actions')
-    expect($('[data-work-job="forage:woods"] a')?.getAttribute('href')).toBe('/book?view=work&order=forage%3Awoods')
+    expect($('[data-work-job="forage:woods"] a')?.getAttribute('href')).toBe('/book?view=work&order=forage%3Awoods&workDay=' + assigned.closest('[data-work-day]')?.getAttribute('data-work-day'))
     await click($$('button').find(button => button.textContent === 'Show all jobs'))
     expect($('[data-work-job="mine:mine"]')?.getAttribute('data-job-status')).toBe('locked')
     expect($$('[data-work-day]')).toHaveLength(12)

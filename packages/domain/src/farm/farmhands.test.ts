@@ -4,11 +4,14 @@
 // morning's lines, the save. Invented ids; no story pack unless named.
 import { describe, expect, it } from 'vitest'
 import { actionsLeft, DAY_ACTIONS, GAME_DAYS, goToTown, morningShiftDue, passDayPart, prepareDayChange, spendActions, spendForEvent } from './actions'
+import { needsWater } from '../fields/plantables'
+import { LAUNCH_CAST, withLaunchProfessions } from '../story/launch'
+import { worksOn } from '../town/town'
 import { FESTIVALS, festivalDayOfYear } from './calendar'
 import { upkeepOf, UPKEEP_RESIDENT } from './economy'
 import {
   aptitudeLevelOf, aptitudeOf, APTITUDE_POINTS, aptitudeQuality, aptitudeUps, aptitudesOf, aptitudeYield, BIG_LOAD, fedThisMorning, handActionsLeft, handDay, handsInOrder,
-  handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setTasks, settleCrewShift, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
+  handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setAutoWork, setTasks, settleCrewShift, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
 } from './farmhands'
 import { clearPlot, rowOfPlot } from '../fields/plots'
 import { talentsD, type TalentOf } from './talents'
@@ -45,6 +48,43 @@ const practice = (save: SaveV4, id: string, aptitude: AptitudeId, n: number): Sa
   ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, practice: { ...save.roster[id]!.practice, [aptitude]: n } } } })
 const night = (save: SaveV4, context: NightContext = CONTEXT): SaveV4 => runNight(save, context)
 const ROW1 = Array.from({ length: FIELD_COLUMNS }, (_, i) => i)
+
+describe('automatic crew work', () => {
+  it.each([10, 20, 50])('covers feeding and watering on every weekday with %i staggered farmhands', size => {
+    const pack = withLaunchProfessions(castPack(LAUNCH_CAST))
+    const ids = LAUNCH_CAST.slice(0, size)
+    const base = growing(farm(1), [0, 1, 2])
+    let save: SaveV4 = setAutoWork({
+      ...base, roster: Object.fromEntries(ids.map(id => [id, { ...newRosterUma(1), farmhand: 1 }])),
+      love: Object.fromEntries(ids.map(id => [id, newLove()])),
+      gold: 50_000, buildings: { ...base.buildings, coop: 1 },
+      ranch: { silo: 14, animals: [{ id: 'chicken-1', kind: 'chicken', fed: false, cared: false, ready: false, fondness: 0 }] },
+    }, ids, true)
+    for (let day = 1; day <= 7; day++) {
+      const expected = ids.filter(id => worksOn(save, pack, id))
+      const planned = handsTonight(save, save, talentsD, pack)
+      const settled = settleCrewShift(save, talentsD, pack)
+      expect(settled.today.crew?.jobs).toEqual(planned.jobs)
+      expect(planned.lines.map(line => line.id).sort()).toEqual([...expected].sort())
+      expect(planned.lines.every(line => line.spent <= line.actions)).toBe(true)
+      expect(settled.ranch.animals.every(animal => animal.fed)).toBe(true)
+      expect(fieldTiles(settled).some(needsWater)).toBe(false)
+      expect(parseSaveV6(json(settled))).toEqual(settled)
+      save = runNight(settled, { story: pack })
+    }
+  })
+
+  it('honors manual priorities and can disable automatic work without altering the orders', () => {
+    let save = tasks(growing(farm(), [0, 1]), A, [{ kind: 'fish', spot: 'pond' }])
+    save = setAutoWork(save, [A, B], true)
+    const shift = handsTonight(save, save, talentsD, null)
+    expect(shift.lines[0]).toMatchObject({ id: A, done: { fish: 3 } })
+    expect(shift.lines[1]).toMatchObject({ id: B, automatic: expect.any(Number), done: { water: 2 } })
+    const manual = setAutoWork(save, [A, B], false)
+    expect(manual.roster[A]?.tasks).toEqual(save.roster[A]?.tasks)
+    expect(handsTonight(manual, manual, talentsD, null).lines[1]?.spent).toBe(0)
+  })
+})
 
 describe('her day', () => {
   it('lets an early cook use spare actions after another worker harvests her ingredients', () => {

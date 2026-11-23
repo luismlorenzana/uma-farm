@@ -25,6 +25,7 @@
 // Her work counts as an Uma's work does: rank points in the day's activity (where she spent the most actions), the
 // challenges, bonds at the same place, her line, side by side's and the perks' extras, praise. Her reach is the farm's
 // (the Farm Rank's areas and spots). Pure; never stamps. Loaded with the night and the Book.
+import { autoJobs } from './auto-crew'
 import { DAYS_PER_SEASON, dateOf, type FarmClock } from './calendar'
 import { draw } from './draw'
 import { atPace, halfPace } from './economy'
@@ -265,6 +266,20 @@ export function setTasks<S extends FarmSave>(save: S, id: string, tasks: readonl
     return { ...rest, tiles: [...t.tiles].sort((a, b) => a - b), ...(plot ? { plot } : {}) }
   })
   return { ...save, roster: { ...save.roster, [id]: { ...uma, tasks: clean } } }
+}
+
+/** Control automatic work independently of the worker's manual orders. */
+export function setAutoWork<S extends FarmSave>(save: S, ids: readonly string[], enabled: boolean): S {
+  const roster = { ...save.roster }
+  let changed = false
+  for (const id of ids) {
+    const uma = roster[id]
+    if (uma?.farmhand === undefined || !!uma.autoWork === enabled) continue
+    const { autoWork: _previous, ...hand } = uma
+    roster[id] = enabled ? { ...hand, autoWork: true } : hand
+    changed = true
+  }
+  return changed ? { ...save, roster } : save
 }
 
 // --- Aptitude ------------------------------------------------------------------------------------------------
@@ -655,6 +670,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   const ship: (() => boolean)[] = []
   const automatic = !save.farm.surplus && !save.farm.surplusSettings?.paused
   let reservedShippingAction = false
+  const autoWorkers: { free: () => number; aptitude: (task: FarmTask) => number; assign: (task: FarmTask) => boolean }[] = []
   for (const [id, orders] of rosterTasks) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
@@ -667,10 +683,15 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     if (hand.restaurant) spentAt.set('restaurant', hand.restaurant)
     const madeAt = new Map<WorkPlace, string[]>()
     let items = 0
+    const autoOrders = new Set<string>()
+    const aptitudeAt = (task: FarmTask) => {
+      const aptitude = taskAptitude(task)
+      return aptitude ? levelIn(next.roster[id]!, aptitude, (a) => talentOf(id, a)) : 0
+    }
     const work = (task: FarmTask): boolean => {
       const aptitude = taskAptitude(task)
       // Her work's well fed (quality, a haul's count) is her well-fed days tonight, as her rank points read them.
-      const level = aptitude ? levelIn(next.roster[id]!, aptitude, (a) => talentOf(id, a)) : 0
+      const level = aptitudeAt(task)
       const step = stepOf(next, id, task, level, next.roster[id]!.wellFed > 0, talentOf, story)
       if (!step) return false
       next = aptitude ? practised(step.save, id, aptitude) : step.save
@@ -713,6 +734,15 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       })
       deferredGathering.push(gather)
     } else gather()
+    if (save.roster[id]!.autoWork) autoWorkers.push({
+      free: () => left,
+      aptitude: aptitudeAt,
+      assign: task => {
+        if (!work(task)) return false
+        autoOrders.add(workKey(task))
+        return true
+      },
+    })
     ship.push(() => left > 0 && work({ kind: 'ship-surplus' }))
     finishScheduled.push(() => {
       // An idle cook or station hand can use exact inputs brought in later in the same shift.
@@ -728,6 +758,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
       out.lines.push({
         kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
+        ...(autoOrders.size ? { automatic: autoOrders.size } : {}),
         ...(hand.kitchen > 0 ? { kitchen: hand.kitchen } : {}),
         ...(hand.restaurant ? { restaurant: hand.restaurant } : {}),
         ...(festival ? { festival } : {}),
@@ -749,6 +780,15 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   } while (previousFieldActions < fieldActions)
   for (const gather of deferredGathering) gather()
   for (const settle of finishScheduled) settle()
+  let available = autoWorkers.filter(worker => worker.free() > 0)
+  while (available.length) {
+    // Keep one action available to book for a workshop when only extra gathering remains.
+    const spare = available.reduce((sum, worker) => sum + worker.free(), 0) > 1
+    const assigned = autoJobs(next, story, spare).some(({ task }) =>
+      [...available].sort((a, b) => b.aptitude(task) - a.aptitude(task) || b.free() - a.free()).some(worker => worker.assign(task)))
+    if (!assigned) break
+    available = available.filter(worker => worker.free() > 0)
+  }
   if (automatic) ship.some(send => send())
   for (const settle of finish) settle()
   return { ...out, save: next, gathered: [...new Set(out.gathered)], jobs: [...jobs.values()] }

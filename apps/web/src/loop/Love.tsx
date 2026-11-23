@@ -10,7 +10,7 @@
 // (`?life=invited-to-work:<id>`). Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with
 // the Hearts tab.
 import {
-  actionsLeft, awayOn, birthdaysOf, canPraise, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isBirthday, isDishId, isFarmhand, LOVE_POINTS, todaysTalk,
+  actionsLeft, awayOn, birthdaysOf, canPraise, FAMILY_NAMES, farmInvitation, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isBirthday, isDishId, LOVE_POINTS, todaysTalk,
   townLocation, whereYouMeet, workBlock, YOU, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -22,6 +22,7 @@ import type { MasterView } from '../master/master'
 import { workOnce } from '../town/town-actions'
 import { chatHer, giftHer, praiseHer } from './actions'
 import { eveningButton } from './evening-view'
+import { FarmInvitation } from './FarmInvitation'
 import { gain } from './love-words'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
@@ -42,6 +43,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [giving, setGiving] = useState(false)
+  const [inviting, setInviting] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const birthdays = useMemo(() => birthdaysOf(pack, master.birthdays), [pack, master])
@@ -55,7 +57,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const out = actionsLeft(save) === 0 || !meet.here
   const chatBlocked = save.today.dayParts ? actionsLeft(save) === 0 || !!awayOn(save, id, save.calendar.day) : out
   const work = workBlock(save, id)
-  const invite = !isFarmhand(save, id) && work !== `From Friendship ${FRIEND_FROM}` && work !== 'Meet her first.'
+  const invite = farmInvitation(save, id)
   const evening = eveningButton(save, pack, id)
   // Today's talk, once you've had it: her greeting, then her line or a small talk (yours under your name).
   const talk = talked ? todaysTalk(save, pack, id, temperament ?? 'steady', birthdays).steps.flatMap((s) => ('say' in s ? [s] : [])) : []
@@ -98,15 +100,14 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
         )}
       </div>
       {invite && (
-        <Button variant="secondary" size="md" className="w-full" disabled={work !== null || !meet.here} data-action="invite-work"
-          onClick={() => void workOnce(id).then(() => {
+        <FarmInvitation reason={meet.here ? work : 'Find her in person to invite her.'} busy={inviting} onInvite={() => {
+          setInviting(true)
+          void workOnce(id).then(() => {
             setError(null)
             setNote('Farmhand ✓ She works the farm from today.')
-            // Her scene plays over the profile, the action spent.
             navigate(withParam(location, 'life', `invited-to-work:${id}`), { state: { back: true } })
-          }, fail)}>
-          Invite her to work · 1
-        </Button>
+          }, fail).finally(() => setInviting(false))
+        }} />
       )}
       {praise && (
         <Button size="md" className="w-full" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>

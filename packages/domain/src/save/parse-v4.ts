@@ -62,7 +62,7 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     outfit(id, at)
-    const u = object(raw, at, ['joined', 'ranks', 'wellFed', 'farmhand', 'tasks', 'practice'])
+    const u = object(raw, at, ['joined', 'ranks', 'wellFed', 'farmhand', 'autoWork', 'tasks', 'practice'])
     const joined = day(u.joined, `${at}.joined`)
     if (joined > today) fail(`${at}.joined`, 'after today')
     out[id] = { joined, ranks: parseRanks(u.ranks, `${at}.ranks`), wellFed: count(u.wellFed, `${at}.wellFed`) }
@@ -71,6 +71,10 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
       const hired = day(u.farmhand, `${at}.farmhand`)
       if (hired > today || hired < joined) fail(`${at}.farmhand`, 'expected a day from the day she joined to today')
       out[id].farmhand = hired
+    }
+    if (u.autoWork !== undefined) {
+      if (out[id].farmhand === undefined || u.autoWork !== true) fail(`${at}.autoWork`, 'expected an automatic farmhand')
+      out[id].autoWork = true
     }
     // Her tasks on the work board (a farmhand's) and her practice: absent before any (the save grows them in place).
     if (u.tasks !== undefined) {

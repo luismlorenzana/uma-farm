@@ -39,8 +39,8 @@ export function BustPanel({ bust: written, backdrop = null, onTap, data = {} }: 
 }
 
 /** The stage: the bust's panel on the left, `children` (the line, or the choices) on the right; `next` is preloaded. */
-export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, panel = {}, environment, children }: {
-  bust: OnStage | null; next?: { who: string; emote?: string | null } | null; backdrop?: ReactNode; onTap?: () => void; data?: Data; panel?: Data; environment?: SceneEnvironment; children: ReactNode
+export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, panel = {}, environment, footer, children }: {
+  bust: OnStage | null; next?: { who: string; emote?: string | null } | null; backdrop?: ReactNode; onTap?: () => void; data?: Data; panel?: Data; environment?: SceneEnvironment; footer?: ReactNode; children: ReactNode
 }) {
   const shared = useEnvironment()
   const art = useArtMode()
@@ -59,9 +59,14 @@ export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, pa
     <div className="relative z-10 flex min-h-0 flex-1 flex-row items-stretch gap-4 px-4 pt-1 pb-4" data-scene-row {...data}>
       <SceneBackground environment={environment ?? shared} />
       <BustPanel bust={bust} backdrop={backdrop} onTap={onTap} data={panel} />
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pt-2">
+      {footer ? <div className="relative flex min-h-0 min-w-0 flex-1 flex-col justify-end pt-1">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-hairline bg-panel/95 shadow-2">
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-3 py-2" data-stage-scroll>{children}</div>
+          <div className="shrink-0 space-y-1 border-t border-hairline p-1.5" data-stage-footer>{footer}</div>
+        </div>
+      </div> : <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pt-2">
         <div className="mt-auto flex shrink-0 flex-col gap-2 rounded-xl border border-hairline bg-panel/95 p-2.5 shadow-2">{children}</div>
-      </div>
+      </div>}
       {next && <PreloadLine who={next.who} emote={next.emote ?? null} />}
     </div>
   )

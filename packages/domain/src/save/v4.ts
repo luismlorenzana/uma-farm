@@ -413,6 +413,8 @@ export interface RosterUma {
   /** The day you invited her to work the farm: she's a farmhand from then on. Absent before (the save grows it in
    * place); the farmhands' work reads it. */
   farmhand?: number
+  /** Fill spare farm-shift actions from the shared priorities after her player orders. */
+  autoWork?: true
   /** Her tasks on the work board, in your order: a farmhand's. Absent before you set any (the save grows it in place). */
   tasks?: FarmTask[]
   /** The actions she has spent on each aptitude's task: her practice. Her level is read from it with her talent and

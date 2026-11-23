@@ -16,7 +16,7 @@ import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { nightWords } from './board-words'
-import { forecastCrewOn, workRows } from './work-plan'
+import { forecastCrewOn, plannedWorkDay, workRows } from './work-plan'
 import { JobList } from './JobList'
 
 const LAST_PAGE = Math.ceil(DAYS_PER_SEASON / CALENDAR_PAGE_SIZE) - 1
@@ -39,8 +39,9 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
   const today = save.calendar.day
   const current = dateOf(today, save.calendar)
-  const [selected, setSelected] = useState(current)
-  const [page, setPage] = useState(Math.floor((current.day - 1) / CALENDAR_PAGE_SIZE))
+  const initial = dateOf(plannedWorkDay(location.search, today) ?? today, save.calendar)
+  const [selected, setSelected] = useState(initial)
+  const [page, setPage] = useState(Math.floor((initial.day - 1) / CALENDAR_PAGE_SIZE))
   const touch = useRef<{ x: number; y: number } | null>(null)
   const { year, season } = selected
   const first = page * CALENDAR_PAGE_SIZE
@@ -97,7 +98,7 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
             const n = first + i + 1
             const covered = record ? total(record.covered) : null
             const missing = record ? total(record.missing) : null
-            const crew = live?.lines.filter(line => line.tasks > 0 || line.forge) ?? []
+            const crew = live?.lines.filter(line => line.tasks > 0 || line.automatic || line.forge) ?? []
             const { shown, more } = cellFaces(crew)
             return <li key={n} className="min-h-0 min-w-0">
               <button type="button" aria-pressed={n === chosenNumber} onClick={() => choose(season, year, n)}
@@ -129,12 +130,12 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
         {chosen.record ? <WorkDetails record={chosen.record} /> : <p className="py-2">No shift recorded.</p>}
         {chosen.live && <>
           <p className="mb-2" data-calendar-action-budget>{plural(lines.length, 'worker')} · {spent}/{budget} actions {actual ? 'used' : 'forecast'} · {budget - spent} free</p>
-          <JobList rows={rows} nameOf={nameOf} />
+          <JobList rows={rows} nameOf={nameOf} day={actual ? undefined : chosen.day ?? undefined} forecast={!actual} />
         </>}
         {chosen.live && !lines.length && <p className="my-2 text-ink-soft">No crew on the farm this day.</p>}
         {lines.length > 0 && <><h3 className="mt-2 font-semibold">Crew on the farm</h3><ul>
           {lines.map(line => <li key={line.id} className="flex flex-col border-b border-hairline py-1"><strong>{nameOf(line.id)}</strong>
-            <span>{plural(line.tasks + (line.forge ?? 0), 'order')}{line.forge ? ' · Forge assistant' : ''} · {line.spent ? nightWords(line) : '0 of ' + plural(line.actions, 'action') + ' used'}</span>
+            <span>{plural(line.tasks + (line.automatic ?? 0) + (line.forge ?? 0), 'order')}{line.forge ? ' · Forge assistant' : ''} · {line.spent ? nightWords(line) : '0 of ' + plural(line.actions, 'action') + ' used'}</span>
           </li>)}
         </ul></>}
         {chosen.live && <Link to="/book?view=work" className="mt-2 inline-flex min-h-11 items-center font-semibold text-accent">Edit work orders</Link>}

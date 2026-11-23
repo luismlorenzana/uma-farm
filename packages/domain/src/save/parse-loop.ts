@@ -749,11 +749,12 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
       return { kind, home: oneOf(r.home, `${at}.home`, RANCH_HOMES), fed: animals(r.fed, `${at}.fed`), hungry: animals(r.hungry, `${at}.hungry`), ready: animals(r.ready, `${at}.ready`) }
     }
     if (kind === 'farmhand') {
-      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items', 'kitchen', 'restaurant', 'festival', 'forge'])
+      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'automatic', 'done', 'items', 'kitchen', 'restaurant', 'festival', 'forge'])
       const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
       return {
         kind, id: member(f.id, `${at}.id`, roster), actions, spent: int(f.spent, `${at}.spent`, 0, actions), half: bool(f.half, `${at}.half`), fed: bool(f.fed, `${at}.fed`),
         tasks: int(f.tasks, `${at}.tasks`, 0, MAX_TASKS),
+        ...(f.automatic === undefined ? {} : { automatic: int(f.automatic, `${at}.automatic`, 1, actions) }),
         done: counts(f.done, `${at}.done`, (k) => (TASK_KINDS as readonly string[]).includes(k), 'unknown task'), items: count(f.items, `${at}.items`),
         // Her action at the Kitchen's play as its assistant (F92); older lines have none.
         ...(f.kitchen !== undefined ? { kitchen: int(f.kitchen, `${at}.kitchen`, 1, actions) } : {}),
