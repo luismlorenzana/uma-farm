@@ -43,11 +43,12 @@ import { talentTable } from './talents'
  * A short scene's steps, played: each line with the speaker's bust; she (`id`) stays on the stage through narration with
  * her last line's face; a choice is wording only, its `then` spliced in. `onDone` at its end, with the steps as played.
  */
-export function LifeScene({ id, steps: written, nameOf, farmer, atmosphere, illustrated = null, onDone, data = {} }: {
+export function LifeScene({ id, steps: written, nameOf, farmer, atmosphere, illustrated = null, onDone, data = {}, walkOn }: {
   id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; atmosphere?: SceneEnvironment; onDone: (played: readonly Step[]) => void
   /** Which of her illustrated scenes this is (the wedding night, a night in, the morning greeting): her illustrations by
    * the default mapping, unless the story names its own. */
   illustrated?: IllustratedScene | null
+  walkOn?: React.ReactNode
   data?: { [key: `data-${string}`]: string | number | boolean | undefined }
 }) {
   const inherited = useEnvironment()
@@ -78,7 +79,7 @@ export function LifeScene({ id, steps: written, nameOf, farmer, atmosphere, illu
   return (
     <>
       {art}
-      <Stage bust={{ who: bust, name: nameOf(bust), emote }} environment={current} next={next?.who === YOU ? null : next} onTap={() => setAt(cursor + 1)} data={data}>
+      <Stage bust={{ who: bust, name: nameOf(bust), emote }} environment={current} walkOn={walkOn} next={next?.who === YOU ? null : next} onTap={() => setAt(cursor + 1)} data={data}>
         <Line key={cursor} step={step} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
       </Stage>
     </>

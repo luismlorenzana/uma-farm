@@ -9,6 +9,7 @@ import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
+import { WalkOn } from '../hd2d/WalkOn'
 import { Avatar } from '../dialogue/Avatar'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { MasterGate } from '../master/MasterGate'
@@ -210,6 +211,7 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
   return <Frame title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
     <SceneLookProvider value={{ day: visit.day + (morning ? 1 : 0), leads: [scene.id], own: scene.outfit, portrait: scene.portrait }}>
       <LifeScene key={part} id={scene.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} atmosphere={environment(save, room, morning ? 'morning' : 'night', visit.day + (morning ? 1 : 0))}
+        walkOn={part === 0 ? <WalkOn who={visit.who} outfit="pajamas" /> : undefined}
         onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': scene.beat, 'data-visit-speaker': scene.id }} />
     </SceneLookProvider>
   </Frame>

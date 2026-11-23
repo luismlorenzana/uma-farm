@@ -1,6 +1,6 @@
 import {
-  clearPlot, DAYS_PER_SEASON, FARM_RANK_POINTS, FIELD_TILES, fieldCounts, handsTonight, handsWorking, newLove, newRosterUma,
-  newSave, plantTile, runNight, setTasks, talentsD, tillTile, waterTile, type FarmSave, type FarmTask,
+  clearPlot, DAYS_PER_SEASON, MORNING_ACTIONS, FARM_RANK_POINTS, FIELD_TILES, fieldCounts, handsTonight, handsWorking, newLove, newRosterUma,
+  newSave, plantTile, runNight, setTasks, settleCrewShift, talentsD, tillTile, waterTile, type FarmSave, type FarmTask,
 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { castPack } from '../../../../packages/domain/src/story/authored.fixture'
@@ -43,6 +43,25 @@ describe('the Field and Pond save projection', () => {
     expect(view(tomorrow)).toMatchObject({ season: 'summer', dusk: false, lastNight: true })
   })
 
+  it('places automatic work from the current receipt and keeps later quarters clear', () => {
+    const base = fresh()
+    const save = {
+      ...base,
+      today: { ...base.today, dayParts: true as const,
+        crew: { lines: [], worked: [], tended: [], made: [], gathered: [], jobs: [
+          { id: '9750001', key: 'fish:pond', actions: 2 },
+          { id: '9750001', key: 'forage:woods', actions: 1 },
+          { id: '9750002', key: 'water:1', actions: 2 },
+          { id: '9750003', key: 'water:0', actions: 2 },
+        ] } },
+    }
+    expect(visibleHands(view(save))).toEqual([
+      { id: '9750003', job: 'water', place: 'fields' },
+      { id: '9750001', job: 'fish', place: 'fishery' },
+    ])
+    expect(visibleHands(view({ ...save, today: { ...save.today, actions: MORNING_ACTIONS } }))).toEqual([])
+  })
+
   it.each([10, 20, 50])('uses the work rota and the morning report with %i farmhands', (size) => {
     const ids = Array.from({ length: size }, (_, i) => String(9_750_001 + i))
     const story = castPack(ids)
@@ -57,20 +76,19 @@ describe('the Field and Pond save projection', () => {
     const projection = fieldPondState(save, story, talentsD)
     const hands = [...projection.crew.forest, ...projection.crew.fishery]
     const forecast = handsTonight(save, save, talentsD, story)
-    const madeAHaul = forecast.lines.filter(({ done }) => done.forage || done.fish).map(({ id }) => id)
+    const madeAHaul = new Set(forecast.jobs?.filter(({ key, actions }) => actions > 0 && ['forage:woods', 'fish:pond'].includes(key)).map(({ id }) => id))
     const working = handsWorking(save, story)
     expect(hands.length).toBeGreaterThan(2)
     expect(hands.every(({ id }) => working.includes(id))).toBe(true)
-    expect(hands.map(({ id }) => id).sort()).toEqual(madeAHaul.sort())
+    expect(hands.every(({ id }) => madeAHaul.has(id))).toBe(true)
     expect(visibleHands(projection).length).toBeLessThanOrEqual(2)
 
-    const worked = runNight(save, { story, talentOf: talentsD })
-    const report = fieldPondState(worked, story, talentsD)
-    expect(report.lastNight).toBe(true)
-    expect([...report.crew.forest, ...report.crew.fishery]).toEqual(hands)
-    expect(save.summary).toBeNull()
+    const worked = settleCrewShift(save, talentsD, story)
+    const receipt = fieldPondState(worked, story, talentsD)
+    expect([...receipt.crew.forest, ...receipt.crew.fishery]).toEqual(hands)
+    expect(save.today.crew).toBeUndefined()
 
-    const changed = setTasks(save, hands[0]!.id, [])
-    expect(Object.values(fieldPondState(changed, story, talentsD).crew).flat().map(({ id }) => id)).not.toContain(hands[0]!.id)
+    const changed = setTasks(worked, hands[0]!.id, [])
+    expect(fieldPondState(changed, story, talentsD).crew).toEqual(receipt.crew)
   })
 })

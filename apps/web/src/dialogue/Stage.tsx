@@ -39,8 +39,8 @@ export function BustPanel({ bust: written, backdrop = null, onTap, data = {} }: 
 }
 
 /** The stage: the bust's panel on the left, `children` (the line, or the choices) on the right; `next` is preloaded. */
-export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, panel = {}, environment, footer, children }: {
-  bust: OnStage | null; next?: { who: string; emote?: string | null } | null; backdrop?: ReactNode; onTap?: () => void; data?: Data; panel?: Data; environment?: SceneEnvironment; footer?: ReactNode; children: ReactNode
+export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, panel = {}, environment, walkOn, footer, children }: {
+  bust: OnStage | null; next?: { who: string; emote?: string | null } | null; backdrop?: ReactNode; onTap?: () => void; data?: Data; panel?: Data; environment?: SceneEnvironment; walkOn?: ReactNode; footer?: ReactNode; children: ReactNode
 }) {
   const shared = useEnvironment()
   const art = useArtMode()
@@ -58,6 +58,7 @@ export function Stage({ bust, next = null, backdrop = null, onTap, data = {}, pa
   return (
     <div className="relative z-10 flex min-h-0 flex-1 flex-row items-stretch gap-4 px-4 pt-1 pb-4" data-scene-row {...data}>
       <SceneBackground environment={environment ?? shared} />
+      {walkOn}
       <BustPanel bust={bust} backdrop={backdrop} onTap={onTap} data={panel} />
       {footer ? <div className="relative flex min-h-0 min-w-0 flex-1 flex-col justify-end pt-1">
         <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-hairline bg-panel/95 shadow-2">

@@ -1,7 +1,7 @@
 // The illustrated town and its People list. Walking and entering town are free.
 // Selecting a door keeps its district visible and opens the service and people panel beside it.
 // Town conversations, shop sheets and authored location links use the same URL and story pack.
-import { CAST, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
+import { CAST, HARBOUR_INN, innResidents, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
@@ -17,6 +17,10 @@ import { storyReady, useStory } from '../story/story'
 import { IntoTown } from '../loop/GoodsSheets'
 import { intoTown } from '../loop/actions'
 import { HerMenu } from './HerMenu'
+import { ActorLayer } from '../hd2d/ActorLayer'
+import { hasWalkingArt } from '../hd2d/character-art'
+import { paintedRoutes } from '../hd2d/painted-routes'
+import innLobby from './art/inn-lobby.jpg'
 import { TownMap } from './TownMap'
 import { ServiceSheet, TownServices } from './TownServices'
 
@@ -122,8 +126,8 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
     <>
       {view === 'map' ? (
         <div className="flex h-full min-h-0 flex-row gap-3 px-4 pt-2 pb-3" data-town-today={day.where.size}>
-          <TownMap district={district} views={views} here={here.loc.id} onDistrict={goDistrict} onGo={go} />
-          <Place key={here.loc.id} view={here} save={save} pack={pack} nameOf={nameOf} onOpen={(id) => open(id)} />
+          <TownMap district={district} views={views} here={here.loc.id} art={master.art} onDistrict={goDistrict} onGo={go} />
+          <Place key={here.loc.id} view={here} save={save} pack={pack} master={master} nameOf={nameOf} onOpen={(id) => open(id)} />
         </div>
       ) : (
         <div className="h-full overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
@@ -181,13 +185,19 @@ export function Face({ id, size, name }: { id: string; size: number; name: strin
 // --- Where you are ----------------------------------------------------------------------------------------------------
 
 /** Where you are: its name and line, who's here now, and its keeper at her post with her post's menu. */
-function Place({ view, save, pack, nameOf, onOpen }: { view: LocationView; save: SaveV4; pack: StoryPack; nameOf: NameOf; onOpen: (id: string) => void }) {
+function Place({ view, save, pack, master, nameOf, onOpen }: { view: LocationView; save: SaveV4; pack: StoryPack; master: MasterView; nameOf: NameOf; onOpen: (id: string) => void }) {
   const location = useLocation()
   const { loc, here, keeper } = view
+  const residents = loc.id === HARBOUR_INN ? new Set(innResidents(save, pack)) : null
+  const lobby = residents ? paintedRoutes(here.filter(id => residents.has(id) && hasWalkingArt(master.art, id)), [[.4, .82], [.63, .83]]) : []
   const menu = loc.group === 'shop' ? postMenu(loc.id as Parameters<typeof postMenu>[0]) : []
   return (
     <section aria-label={loc.name} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-place-panel={loc.id}>
       <h2 className="font-display text-[18px] leading-tight font-bold" data-place-name>{loc.name}</h2>
+      {residents && <div className="relative mt-1 aspect-[16/7] shrink-0 overflow-hidden rounded-lg">
+        <img src={innLobby} alt="" className="h-full w-full object-cover" />
+        {lobby.length > 0 && <ActorLayer actors={lobby} outfit="spring" height={44} />}
+      </div>}
       {loc.line && <p className="text-[13px] text-ink-soft">{loc.line}</p>}
       {loc.id === 'expeditions' && (
         <Link to={placeBuilt(save, 'expeditions') ? withParam(location, 'sheet', 'expeditions') : '/?peek=expeditions'} state={{ back: true }}
