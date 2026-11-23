@@ -41,6 +41,11 @@ const buildings: Record<TownDistrict['places'][number], Footprint> = {
   expeditions: [61, 25, 35, 30],
 }
 
+// Foreground footpaths leave the building labels and their main hit areas clear on short screens.
+const streetStops: Readonly<Partial<Record<TownDistrict['id'], readonly [number, number]>>> = {
+  plaza: [.12, .27], market: [.45, .60], harbour: [.42, .56], hilltop: [.42, .57],
+}
+
 interface Target {
   id: string
   label: string
@@ -61,13 +66,12 @@ export function TownMap({ district, views, nameOf, onDistrict, onGo, onOpen }: {
     return location ? [{ id, label: location.loc.name.replace(/^The /, ''), at: buildings[id], count: location.here.length }] : []
   }) : TOWN_DISTRICTS.map(({ id, label }) => ({ id, label, at: districts[id] }))
   const places = new Map<string,string>()
-  const actors = district ? targets.filter(target => townOutdoors(target.id)).flatMap(({ id, at:[left,top,width,height] }) => {
-    const people = views.find(view => view.loc.id === id)?.here.slice(0,3) ?? []
-    return people.map((person,i) => {
-      places.set(person,id)
-      return {id:person,name:nameOf(person),outfit:'spring' as const,x:Math.min(.93,(left+width*.3)/100+i*.11),y:Math.min(.96,(top+height+16)/100)}
-    })
-  }).slice(0,6) : []
+  const stops = district && streetStops[district.id]
+  const outdoor = targets.find(target => townOutdoors(target.id))
+  const actors = stops && outdoor ? (views.find(view => view.loc.id === outdoor.id)?.here ?? []).slice(0,stops.length).map((person,i) => {
+    places.set(person,outdoor.id)
+    return {id:person,name:nameOf(person),outfit:'spring' as const,x:stops[i]!,y:.98}
+  }) : []
   return (
     <nav aria-label="Town map" className="flex min-h-0 w-full flex-1 flex-col gap-1" data-town-map>
       <div className="flex min-h-11 items-center justify-between gap-1">
@@ -87,7 +91,7 @@ export function TownMap({ district, views, nameOf, onDistrict, onGo, onOpen }: {
               </button>
             )
           })}
-          <WorldFigures key={district?.id} figures={actors} standing={false} open={id => onOpen(id, places.get(id)!)} />
+          <WorldFigures key={district?.id} figures={actors} height={40} standing={false} open={id => onOpen(id, places.get(id)!)} />
         </div>
       </div>
     </nav>
