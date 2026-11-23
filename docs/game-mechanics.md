@@ -3569,13 +3569,10 @@ presence through `town/town.ts`. Personal time uses the authored outing, routine
 <!-- /live -->
 
 - **Without a weekly profession,** her story's schedule uses her routine's first stop
-  whose days of the season and seasons hold, else her job on its days, else her home. A location the map doesn't hold is
-  passed over; with none left, the story hasn't scheduled her. On a day none of it holds, she's at home, off the map.
+  whose days of the season and seasons hold, else her job on its days. Retired houses and days at home resolve to the Harbour Inn.
 - **The fallback for an Uma without a profession or written schedule** is her favourite spot (her cast `spot`, else the six in turn by her
-  place in the cast) on every third day of each season, starting on day 1, 2 or 3 by her place in the cast, so a third
-  of the cast is out each day and the next Uma in the cast is out the day after. The same four days every season.
-- **A spot** holds everyone the schedules put there; the map shows a crowded one by its count and "+n" ([the
-  map](#the-map)).
+  place in the cast) on every third day of each season, starting on day 1, 2 or 3 by her place in the cast. She is at the Inn on her other personal days.
+- **Each destination** fits everyone the schedules put there. The door shows a count and the panel lists the Umas.
 - **The posts:** the mayor's assigned post is permanent. Town professions show the cast members working that day,
   and an uncovered counter offers self-service. Only a playable Uma or the mayor has a town menu. Old links to
   retired town portraits open the map.
@@ -3638,7 +3635,7 @@ invite her to work only where she's in front of you: **on the farm** when she li
 it's her farm day (a farmhand), else **in town where she is today**, once you've gone into town (`whereYouMeet`).
 Her menu in town is always where she is; her profile follows the same rule ([her profile](#her-profile)). **Her Ready
 event plays from anywhere** (her menu, her profile, the morning's Ready line, the calendar). Why: going into town takes
-one of the day's actions and the map shows who's where, so the town is where the day's talks happen, her schedule says
+no actions and the map shows who's where, so the town is where the day's talks happen, her schedule says
 which days, and an Uma on the farm is always in front of you; an event is her route's milestone, offered by the
 morning, the calendar and the People page, so a day she's at home never strands it. **Where she is never gates an
 occasion** either: her birthday, a festival's day and night and the story's days play from the calendar wherever she is

@@ -1,17 +1,6 @@
-// The Town: `/town`, down the farm map's road. Entering this screen and walking between its locations are free.
-// Two views, the second `?view=people`, and the Shop:
-// - **The map:** its locations in groups (the six spots, the shops and offices, the story's workplaces and homes), each
-//   with how many are there now, their first four faces and "+n" for a crowded one (a spot holds everyone the schedules
-//   put there); you're at one (`?at=<id>`, the Plaza to start), and a tap on
-//   another goes there. Beside the map, **where you are:** its name and line, who's here now (faces and names, as many as
-//   there are, in a grid that scrolls), and its keeper at her post with her post's menu (the general store's seeds; the
-//   mayor's office's build orders and loans, its sheet at `?sheet=mayor` (`MayorSheet.tsx`); the rancher's animals and
-//   fodder, her sheet at `?sheet=rancher` (`RancherSheet.tsx`));
-// - **People:** everyone who lives in town and the town's people, met or not, with where she is today, a search by
-//   name, and a sort, met first or by name; a tap goes to her.
-// Tap anyone (`?uma=<id>`) for her menu on the dialogue engine (`HerMenu.tsx`). Faces load as they scroll into view.
-// Names and faces are master data's and the pack's, at run time. Its title is the town's name when the world gives
-// one. Loaded on demand.
+// The illustrated town and its People list. Walking and entering town are free.
+// Selecting a door keeps its district visible and opens the service and people panel beside it.
+// Town conversations, shop sheets and authored location links use the same URL and story pack.
 import { CAST, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
