@@ -87,6 +87,12 @@ export function stageWords(save: Pick<SaveV4, 'roster' | 'love'>, id: string): s
 
 // --- The invitation to work ----------------------------------------------------------------------------------------
 
+/** The one-time offer stays available after Friendship 3 even if today's actions are spent. */
+export function farmInvitation(save: Pick<SaveV4, 'roster' | 'love'>, id: string): boolean {
+  const stage = umaStage(save, id)
+  return stage !== null && stage !== 'acquaintance' && !isFarmhand(save, id)
+}
+
 /** Why you can't invite her to work now, or null: you've met her, she's a friend (Friendship 3 and up), she isn't working
  * the farm already, and an action is left. */
 export function workBlock(save: Pick<SaveV4, 'roster' | 'love' | 'calendar' | 'today'>, id: string): string | null {
@@ -105,7 +111,7 @@ export function inviteToWork(save: SaveV4, id: string): SaveV4 {
   if (block === 'Meet her first.') throw new SaveRuleError('not-owned', block)
   if (block !== null && block !== 'No actions left today.') throw new SaveRuleError('locked', block === 'Works the farm ✓' ? 'She works the farm already.' : `Invite her once she’s a friend: Friendship ${FRIEND_FROM}.`)
   const spent = spend(save, 'invite')
-  return { ...spent, roster: { ...spent.roster, [id]: { ...spent.roster[id]!, farmhand: save.calendar.day } } }
+  return { ...spent, roster: { ...spent.roster, [id]: { ...spent.roster[id]!, farmhand: save.calendar.day, autoWork: true } } }
 }
 
 /** The farmhands, by id. */

@@ -14,7 +14,7 @@ import {
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, upgradeStation, waterTile,
-  type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
+  type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setAutoWork, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
   sendExpedition, removeOrchard, saveCropSeeds, setFieldPlan, setCropReserve, type CropId, type FieldPlan, type RegionId, type RanchHome, type Season,
   setCollectionCap, setFishingMode, setStationPlan, setStockReserve, setSurplusPlan, recordLibrary, festivalsOf,
@@ -199,6 +199,8 @@ export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
 }
 
 /** A farmhand's tasks on the work board, in your order: free. */
+export const setCrewAutomation = (ids: readonly string[], enabled: boolean) => change(s => setAutoWork(s, ids, enabled))
+export const enableUnassignedCrew = () => change(s => setAutoWork(s, Object.keys(s.roster).filter(id => !s.roster[id]?.tasks?.length), true))
 export const setHandTasks = (id: string, tasks: readonly FarmTask[]) => change((s) => setTasks(s, id, tasks))
 export const copyHandTasks = (id: string, orders: readonly FarmTask[]) => change((s) => {
   const tasks = [...s.roster[id]?.tasks ?? []]

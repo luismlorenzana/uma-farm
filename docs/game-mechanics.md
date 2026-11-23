@@ -3579,8 +3579,9 @@ Tap an Uma (`?uma=<id>`) for her menu, on [the dialogue engine](#the-dialogue-en
 in the day's outfit, her face changing as she answers; else her master-data bust), and on the right her name, how she
 stands with you (her stage in [the Uma loop](#the-uma-loop) with her ladder's level: "Not met yet", "Acquaintance · F1",
 "Friend · F3", "Farmhand · F5", "Sweetheart · R4", "Engaged", "Married · S2"), where she is (the place, and her job's
-words when she's at work), her line in the engine's line box, and her menu. Each item says its cost; one that isn't
-open is greyed with why. **Back** returns to the map.
+words when she's at work), and her dialogue. **Talk**, **Gift**, **Date**, and **Event** stay in a fixed row below the
+dialogue. Long greetings and replies scroll above the row. Each item shows its cost and whether it's available.
+**Back** returns to the map.
 
 <!-- live:her-menu -->
 | Item | Cost | When |
@@ -3607,12 +3608,11 @@ open is greyed with why. **Back** returns to the map.
   a friend from Friendship 3, a date with a sweetheart from Romance 1 or a spouse) and the day has its two actions:
   one evening a day across everyone, the same kinds and scenes as on the farm ([the evening](#the-evening)). Otherwise
   it says why: "From Friendship 3", "Spent this evening ✓", "Tonight's evening is spent", "That takes 2 actions.".
-- **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, keeps her life in
-  town, and is on the farm on her farm days from now on. Her scene plays over the town as soon as the action is spent ([the
-  invitation to work](#the-invitation-to-work)); then her menu says "Farmhand ✓" and her line ("The farm? I'd love to.
-  Count me in."), and "Works the farm ✓". Set her tasks on the work board in the Book ([farmhands](#farmhands)).
-- **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
-  action (a special day's event actions first), and with none left it doesn't start.
+- **Farm invitation** is a separate offer that stays on the conversation and relationship screens from Friendship 3
+  until accepted, including while out of actions. Invite her in person for one action to play her farm invitation
+  scene. She joins the crew on her existing farm days and starts on auto work.
+- **Event** opens the ready relationship scene directly over the conversation, including while she's at home. It takes
+  an action, using the special day's event actions first. The button shows **Not ready** while she has no scene ready.
 - **Not out now:** "At home today. Out on Spring 7, at the Library." (her next day out, from her schedule; with her profile once met); one on the farm: "She lives
   on the farm. Her profile ›" (a spouse in her room), or for a farmhand on her farm day "On the farm today, her farm day.
   Her profile ›" (her menu still works there: she's in front of you).
@@ -3761,6 +3761,18 @@ lists the work left, with supply shortages marked separately. **Assign next job*
 job and a worker with spare actions, using aptitude to break ties. Animal feed, meals, harvest and watering come first.
 The number of spare actions and the recommendations update as assignments change. A job link opens the worker picker
 for that job, including after the shift when it can be planned for the worker’s next farm day.
+
+**Auto assign jobs** is on for each new farmhand. Existing workers keep their settings and orders. **Enable for
+unassigned workers** switches on workers without orders. A worker’s own orders run first. With her remaining actions,
+she picks up work with the other automatic workers who are on shift, using the farm’s current stock, plots, buildings
+and targets. Feeding and watering come first, then meals and crop work, then care, production and surplus shipping.
+The crew can gather food for meals or supplies such as logs for a building. Extra gathering uses full hauls and leaves
+one crew action available when only optional work remains. She uses her existing action budget. Turn auto work off on
+her card to use her orders alone.
+
+**Next 7 days** shows which shifts can cover the farm’s daily work and which might be short of workers or supplies. A
+job selected on a future date opens the picker with that date’s available workers. The recurring order follows the
+chosen Uma’s farm shifts.
 
 **Jobs by place** includes the plots, all forage and chopping areas, fishing spots, mines, animals, station loads,
 cooking, seed saving and surplus shipping. **Show all jobs** also shows locked and idle locations. **Quick jobs** repeat

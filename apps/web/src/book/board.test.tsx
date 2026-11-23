@@ -144,6 +144,17 @@ describe('the work board in the Book', () => {
   })
 
 
+  it('enables automatic work for existing unassigned workers and keeps custom orders under their own control', async () => {
+    const base = farm()
+    useGame.setState({ save: { ...base, roster: { ...base.roster, [A]: { ...base.roster[A]!, tasks: [{ kind: 'water', tiles: [0] }] } } } })
+    await render(<BookPage />, '/book?view=work')
+    await click($$('button').find(button => button.textContent?.includes('Enable for 1 unassigned worker')) ?? null)
+    expect(useGame.getState().save?.roster[B]?.autoWork).toBe(true)
+    expect(useGame.getState().save?.roster[A]?.autoWork).toBeUndefined()
+    await click($(`[data-hand="${A}"] [data-auto-work]`))
+    expect(useGame.getState().save?.roster[A]).toMatchObject({ autoWork: true, tasks: [{ kind: 'water', tiles: [0] }] })
+  })
+
   it('opens a specific order from a goal and adds a complete plot routine in one save', async () => {
     await render(<BookPage />, '/book?view=work&order=forage%3Awoods')
     const form = $('[aria-label="Assign a work order"]')!

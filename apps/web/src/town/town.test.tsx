@@ -315,10 +315,10 @@ describe('the town', () => {
     expect($('[data-lives]')?.textContent).toBe('She lives in town: find her there.')
     await click($('[data-action="welcome"]'))
     await until(() => save().arrivals.includes(SISTER))
-    // Met: talk, a gift, Ask her out and the invitation to work (both from Friendship 3).
-    await find('[data-menu="talk gift evening work"]')
+    await find('[data-stage-footer] [data-menu="talk gift evening event"]')
     expect($('[data-standing]')?.textContent).toBe('Acquaintance · F0')
-    expect($('[data-item="work"]')?.dataset.why).toBe('From Friendship 3')
+    expect($('[data-farm-invitation]')).toBeNull()
+    expect($('[data-item="evening"]')?.dataset.why).toBe('From Friendship 3')
     await click($('[data-action="menu-talk"]'))
     await until(() => save().today.chats.includes(SISTER))
     // Today's talk plays over the town (no greetings or small talk of hers: her line alone); Skip closes it.
@@ -402,6 +402,26 @@ describe('the town', () => {
     expect(path).toBe(`/town?at=${at}&uma=90001`)
   })
 
+  it('keeps long dialogue above a fixed action bar with the event and a persistent farm invitation', async () => {
+    const original = fixture.pack!.bibles.get('90001')!
+    const longLine = 'The bakery is busy today. '.repeat(32)
+    const bibles = fixture.pack!.bibles as Map<string, typeof original>
+    bibles.set('90001', { ...original, townLines: [longLine] })
+    try {
+      const met = { ...farm(), roster: { 90001: newRosterUma(1) }, arrivals: ['90001'],
+        love: { 90001: { ...newLove(), level: 3, points: 5000 } } }
+      useGame.setState({ uid: 'u1', status: 'ready', save: met })
+      await render(<TownPage />, '/town?at=cafe&uma=90001')
+      const dialogue = await find('[data-stage-scroll] [data-line]')
+      expect(dialogue.textContent).toBe(longLine)
+      expect($('[data-stage-scroll] [data-menu]')).toBeNull()
+      const event = await find('[data-stage-footer] [data-action="menu-event"]')
+      expect(event.getAttribute('href')).toContain('event=90001')
+      await click(event)
+      await find('[data-event-player]')
+    } finally { bibles.set('90001', original) }
+  })
+
   it('invites a friend to work from her menu, an action: on the farm on her farm days from then, in town on her town days', async () => {
     const love = { stage: 'friendship' as const, level: 3, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] }
     const met: SaveV4 = { ...farm(), roster: { 90001: newRosterUma(1) }, love: { 90001: love }, arrivals: ['90001'] }
@@ -411,9 +431,15 @@ describe('the town', () => {
     await find('[data-her-menu="90001"]')
     expect($('[data-standing]')?.textContent).toBe('Friend · F3')
     // In front of you in town: Ask her out, 2 actions, opens her evening.
-    expect($('[data-item="evening"]')?.textContent).toBe('Ask her out · 2 ›')
-    expect($('[data-item="work"]')?.textContent).toBe('Invite her to work · 1')
-    await click($('[data-action="menu-work"]'))
+    expect($('[data-item="evening"]')?.textContent).toBe('Date · 2 ›')
+    expect($('[data-item="work"]')).toBeNull()
+    const invite = await find('[data-stage-footer] [data-farm-invitation] [data-action="invite-work"]')
+    expect(invite.textContent).toBe('Invite · 1')
+    await act(async () => useGame.setState({ save: { ...met, today: { ...met.today, actions: 10 } } }))
+    expect(invite.hasAttribute('disabled')).toBe(true)
+    expect($('[data-farm-invitation]')?.textContent).toContain('No actions left today.')
+    await act(async () => useGame.setState({ save: met }))
+    await click(invite)
     await until(() => save().roster['90001']?.farmhand === 5)
     expect(save().today.actions).toBe(1)
     // Her scene plays over the town, the action spent: the default story's, at the farm gate.
@@ -424,7 +450,8 @@ describe('the town', () => {
     await click($('[data-action="skip"]'))
     await until(() => !path.includes('life='))
     await until(() => $('[data-standing]')?.textContent === 'Farmhand · F3')
-    expect($('[data-item="work"]')?.dataset.why).toBe('Works the farm ✓')
+    expect($('[data-farm-invitation]')).toBeNull()
+    expect(save().roster['90001']?.autoWork).toBe(true)
     // Spring 5 is her farm day: she's on the farm, off the town's map, and her menu says so.
     expect($('[data-on-farm]')?.textContent).toBe('On the farm today, her farm day. Her book ›')
     expect($(`[data-place-panel="${at}"] [data-person="90001"]`)).toBeNull()

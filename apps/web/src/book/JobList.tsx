@@ -3,17 +3,19 @@ import { Link } from 'react-router'
 import { plural } from '../loop/words'
 import { orderLink, type WorkRow } from './work-plan'
 
-function JobLine({ row, nameOf, link }: { row: WorkRow; nameOf: (id: string) => string; link: boolean }) {
+function JobLine({ row, nameOf, link, day, forecast }: {
+  row: WorkRow; nameOf: (id: string) => string; link: boolean; day?: number; forecast: boolean
+}) {
   const { need, lock, scheduled, worked } = row
   const assigned = worked.length ? worked.map(({ id, actions }) => nameOf(id) + ' · ' + plural(actions, 'action')).join(', ')
     : scheduled.length ? 'Scheduled · ' + scheduled.map(nameOf).join(', ') : ''
   const status = lock ?? (need ? need.blocked ? 'Needs supplies' : need.optional
     ? scheduled.length || worked.length ? 'Capacity left' : 'No worker scheduled'
     : scheduled.length || worked.length ? 'Needs more coverage' : 'Needs a worker'
-    : worked.length ? 'Worked' : 'No work ready')
+    : worked.length ? (forecast ? 'Forecast covered' : 'Worked') : 'No work ready')
   return <li className="border-b border-hairline py-1.5" data-work-job={row.key}
     data-job-status={lock ? 'locked' : need?.blocked ? 'supplies' : need ? need.optional ? 'optional' : 'open' : worked.length ? 'worked' : 'idle'}>
-    {link && !lock ? <Link to={orderLink(row.key)} state={{ back: true }} className="flex min-h-11 items-center justify-between gap-1 font-semibold text-accent-strong">
+    {link && !lock ? <Link to={orderLink(row.key, day)} state={{ back: true }} className="flex min-h-11 items-center justify-between gap-1 font-semibold text-accent-strong">
       {row.label}<span aria-hidden>›</span>
     </Link> : <strong className="block">{row.label}</strong>}
     {assigned && <p className={worked.length || scheduled.length ? 'rounded bg-emerald-100 px-1 text-emerald-900' : 'text-ink-soft'}>{assigned}</p>}
@@ -22,7 +24,9 @@ function JobLine({ row, nameOf, link }: { row: WorkRow; nameOf: (id: string) => 
   </li>
 }
 
-export function JobList({ rows, nameOf, link = true }: { rows: WorkRow[]; nameOf: (id: string) => string; link?: boolean }) {
+export function JobList({ rows, nameOf, link = true, day, forecast = false }: {
+  rows: WorkRow[]; nameOf: (id: string) => string; link?: boolean; day?: number; forecast?: boolean
+}) {
   const [showAll, setShowAll] = useState(false)
   const visible = showAll ? rows : rows.filter(row => row.need || row.worked.length || row.scheduled.length)
 
@@ -41,7 +45,7 @@ export function JobList({ rows, nameOf, link = true }: { rows: WorkRow[]; nameOf
     </div>
     {visible.length ? groups.filter(group => group.rows.length).map(group => <div key={group.title} className="pt-1">
       <h4 className="text-[12px] font-semibold text-ink-soft">{group.title} · {group.rows.length}</h4>
-      <ul>{group.rows.map(row => <JobLine key={row.key} row={row} nameOf={nameOf} link={link} />)}</ul>
+      <ul>{group.rows.map(row => <JobLine key={row.key} row={row} nameOf={nameOf} link={link} day={day} forecast={forecast} />)}</ul>
     </div>)
       : <p className="text-ink-soft">No work ready on this date.</p>}
   </section>

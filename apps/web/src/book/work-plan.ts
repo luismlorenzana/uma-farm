@@ -26,7 +26,13 @@ export type WorkRow = JobPreset & {
   idle?: string
 }
 
-export const orderLink = (key: string): string => '/book?view=work&order=' + encodeURIComponent(key)
+export const orderLink = (key: string, day?: number): string =>
+  '/book?view=work&order=' + encodeURIComponent(key) + (day === undefined ? '' : '&workDay=' + day)
+
+export function plannedWorkDay(search: string, today: number): number | undefined {
+  const day = Number(new URLSearchParams(search).get('workDay'))
+  return Number.isSafeInteger(day) && day >= 1 && day <= today + 365 * 5 ? day : undefined
+}
 
 function job(task: FarmTask, plots: number): JobPreset {
   return { key: workKey(task), task, label: taskWords(task, plots) }

@@ -78,6 +78,8 @@ export interface FarmhandLine {
   half: boolean
   fed: boolean
   tasks: number
+  /** Distinct jobs the automatic planner picked up on this shift. */
+  automatic?: number
   done: Partial<Record<TaskKind, number>>
   items: number
   /** Her action at the Kitchen's play as its assistant, when she was (1). */
