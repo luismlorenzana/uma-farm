@@ -244,8 +244,13 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
   return {
     width:width+1.2,depth:depth+2.1,targetY:.68,anchors,
     scene:{id:place,title:place,root,figures:[],layers:{},cameras:{front:frame,tactics:frame,high:frame},
-      light:{...light,sky: night ? ['#28324a','#31394b'] : ['#b6a392','#cbb498'],
-        key:{...light.key,box:20,to:[0,0,0]},exposure:night?1.22:1.06},
+      light: {
+        ...light,
+        sky: night ? ['#28324a', '#31394b'] : ['#b6a392', '#cbb498'],
+        key: { ...light.key, box: 20, to: [0,0,0], ...(night ? { colour: '#ffcf96', intensity: 2.1, from: [-7, 14, 11] as GroundPoint } : {}) },
+        hemi: night ? { sky: '#b7c9ef', ground: '#b78e6e', intensity: 1.45 } : light.hemi,
+        exposure: night ? 1.22 : 1.06,
+      },
       update() {},
       dispose() {
         for(const mesh of root.children) (mesh as InstancedMesh).dispose()
