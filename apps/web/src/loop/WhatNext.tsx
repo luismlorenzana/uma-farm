@@ -483,7 +483,7 @@ export default function WhatNext({ onClose }: { onClose: () => void }) {
       </> : <>
         <Button size="md" variant="secondary" onClick={() => go('today')}>‹ Focus now</Button>
         {view === 'ranch' ? <RanchAndHousing save={save} /> : <FarmPath save={save} />}
-      </>
+      </>}
     </div>
   </Sheet>
 }
