@@ -9,7 +9,7 @@ import {
 } from '@farm/domain'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -261,7 +261,7 @@ function RanchAndHousing({ save }: { save: FarmSave }) {
 
 function FocusDetails({ label, note, children }: { label: string; note?: string; children: ReactNode }) {
   return <details className="rounded-md border border-hairline">
-    <summary className="min-h-11 cursor-pointer px-3 py-2 font-semibold">{label}{note && <span className="block text-[12px] font-normal text-ink-soft">{note}</span>}</summary>
+    <summary className="min-h-11 cursor-pointer px-3 py-1.5 font-semibold">{label}{note && <span className="block text-[12px] font-normal text-ink-soft">{note}</span>}</summary>
     <div className="space-y-3 px-3 pb-3">{children}</div>
   </details>
 }
@@ -309,11 +309,15 @@ function Focus({ save }: { save: FarmSave }) {
   const rooms = roomsInAll(save)
   const queued = save.farm.builds.length
   return <div className="space-y-3">
-    <section className="space-y-1 rounded-lg border border-accent/50 bg-panel p-3" aria-label="Recommended next action" data-next-action>
-      <p className="text-[12px] text-ink-soft">{dateWords(save.calendar.day, save.calendar)} · Farm Rank {rank}</p>
-      <h3 className="font-display text-lg font-bold">{suggestion.title}</h3>
+    <section className="space-y-1 rounded-lg border border-accent/50 bg-panel px-3 py-2" aria-label="Recommended next action" data-next-action>
+      <div className="flex flex-wrap items-center justify-between gap-x-3">
+        <div className="min-w-[12rem] flex-1">
+          <p className="text-[12px] text-ink-soft">{dateWords(save.calendar.day, save.calendar)} · Farm Rank {rank}</p>
+          <h3 className="font-display text-lg font-bold">{suggestion.title}</h3>
+        </div>
+        <span className="text-sm"><Action to={suggestion.to}>{suggestion.label}</Action></span>
+      </div>
       <p className="max-w-prose text-sm text-ink-soft">{suggestion.detail}</p>
-      <Action to={suggestion.to}>{suggestion.label}</Action>
     </section>
     {active && <TrackedGoal save={save} goal={active} nightGold={picked.gold} />}
     <div className="grid grid-cols-1 items-start gap-2 min-[650px]:grid-cols-2">
@@ -332,7 +336,7 @@ function Focus({ save }: { save: FarmSave }) {
           <Action to="/town?at=mayor&sheet=mayor">{gold(creditLeft(save))} credit left</Action></div>
         {save.farm.loans.map(loan => <p key={loan.for} className="text-[13px]">{loan.credit?.title ?? loan.for} · {loanWords(save, loan)}</p>)}
       </FocusDetails>
-      <FocusDetails label="Buildings, ranch and homes" note={queued ? `${queued} ready overnight` : `${save.ranch.animals.length} animals · ${rooms.rooms - rooms.taken} rooms free`}>
+      <FocusDetails label="Buildings and homes" note={queued ? `${queued} ready overnight` : `${save.ranch.animals.length} animals · ${rooms.rooms - rooms.taken} rooms free`}>
         {!placeBuilt(save, 'coop') && <p className="text-[13px]">Coop and chickens open at Farm Rank 2. The Barn opens at Rank 3.</p>}
         <div className="flex flex-wrap gap-x-3 text-sm"><Action to={rancher}>Rancher</Action><Action to="/?sheet=homestead">Homestead</Action></div>
         {next && <div>
@@ -462,15 +466,24 @@ function FarmPath({ save }: { save: FarmSave }) {
 export default function WhatNext({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   const [view, setView] = useState<'today' | 'ranch' | 'path'>('today')
+  const top = useRef<HTMLDivElement>(null)
+  const go = (selection: 'today' | 'ranch' | 'path') => {
+    top.current?.scrollIntoView?.({ block: 'start' })
+    setView(selection)
+  }
   if (!save) return null
   return <Sheet open onClose={onClose} size="wide" title="What Next?" label="What Next?" >
-    <div className="space-y-3 pb-2">
-      <div className="flex flex-wrap gap-1" role="group" aria-label="Goal view">
-        <Button size="md" variant={view === 'today' ? 'primary' : 'secondary'} aria-pressed={view === 'today'} onClick={() => setView('today')}>Focus now</Button>
-        <Button size="md" variant={view === 'ranch' ? 'primary' : 'secondary'} aria-pressed={view === 'ranch'} onClick={() => setView('ranch')}>Ranch &amp; homes</Button>
-        <Button size="md" variant={view === 'path' ? 'primary' : 'secondary'} aria-pressed={view === 'path'} onClick={() => setView('path')}>Farm path</Button>
-      </div>
-      {view === 'today' ? <Focus save={save} /> : view === 'ranch' ? <RanchAndHousing save={save} /> : <FarmPath save={save} />}
+    <div ref={top} className="space-y-3 pb-2">
+      {view === 'today' ? <>
+        <Focus save={save} />
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Farm guides">
+          <Button size="md" variant="secondary" onClick={() => go('ranch')}>Ranch &amp; homes</Button>
+          <Button size="md" variant="secondary" onClick={() => go('path')}>Farm path</Button>
+        </div>
+      </> : <>
+        <Button size="md" variant="secondary" onClick={() => go('today')}>‹ Focus now</Button>
+        {view === 'ranch' ? <RanchAndHousing save={save} /> : <FarmPath save={save} />}
+      </>
     </div>
   </Sheet>
 }
