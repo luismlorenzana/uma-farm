@@ -794,7 +794,11 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     const free = capacity()
     const due = gathering - (gathered.chop + gathered.forage + gathered.fish + gathered.mine)
     // Preserve a crew action for workshops if only discretionary work remains.
-    const matching = autoJobs(next, story, { spare: free > 1, reserved: due > 0 && free <= due + 1, done: gathered })
+    const canBatchWater = free > Math.max(0, due) + 2 && (next.tools['watering-can'] >= 3
+      || available.some(worker => worker.aptitude({ kind: 'water', tiles: [] }) >= TRICK_AT.waterRow))
+    const matching = autoJobs(next, story, {
+      spare: free > 1, reserved: due > 0 && free <= due + 1, canBatchWater, done: gathered,
+    })
       .find(({ task }) => [...available].sort((a, b) => b.aptitude(task) - a.aptitude(task) || b.free() - a.free())
         .some(worker => worker.assign(task)))
     if (!matching) break

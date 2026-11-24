@@ -2143,8 +2143,8 @@ The Warehouse holds everything the farm owns, by stars: each good has five count
   sells.
 
 Each exact ingredient can keep a reserve of up to 99 units across its stars. Roster seed saving, station loads,
-plain cooking and surplus shipping use stock above that floor. A station output's stock target also protects
-that exact grade from automatic cooking and surplus shipping. An explicitly selected recipe, station load
+plain cooking and surplus shipping use stock above that floor. A station target protects its exact output grade
+and inputs for the next regular load from routine cooking and surplus shipping. An explicitly selected recipe, station load
 or shipment can still use the goods under its usual rules.
 Price easing groups all grades of an ingredient into the same crate and groups each refined form separately.
 
@@ -3738,7 +3738,9 @@ for that job, including after the shift when it can be planned for the worker’
 **Auto assign jobs** is on for each new farmhand. Existing workers keep their settings and orders. **Enable for
 unassigned workers** switches on workers without orders. A worker’s own orders run first. With her remaining actions,
 she picks up work with the other automatic workers who are on shift, using the farm’s current stock, plots, buildings
-and targets. Animal feeding comes first. The scheduler reserves up to a quarter of spare automatic crew actions, capped at four, for gathering so a busy field still leaves time for wood, forage, fish or mining. Manual gathering counts toward that budget. The rest goes to watering, meals, harvest, surplus shipping, animal care and production. Gathering rotates between activities, favors the fullest open areas, and alternates between starting at the deepest open reach and rotating through the other reaches. Mining can use already discovered stairs when Farm Rank allows it. Turn auto work off on her card to use her orders alone.
+and targets. Animal feeding comes first. The scheduler reserves up to a quarter of spare automatic crew actions, capped at four, for gathering so a busy field still leaves time for wood, forage, fish or mining. Manual gathering counts toward that budget. The crew collects ready animal products early and starts the first ready load at each station with a production target ahead of preparing and sowing more ground. When a skilled worker or upgraded can can water a row at once, the crew fills an eligible seed row before watering it, as long as there is time left. It skips ordinary watering for crops that cannot ripen before withering. Orchard plants, crops that grow in the next season, and the marked festival crop still get watered. Gathering rotates between activities, favors the fullest open areas, and alternates between starting at the deepest open reach and rotating through the other reaches. Mining can use already discovered stairs when Farm Rank allows it. Turn auto work off on her card to use her orders alone.
+
+The [four-season crew balance](design/seasonal-crew-balance.md) records plot capacity by planted rows and every crew job for rosters of 20, 30 and 50.
 
 **Next 7 days** shows which shifts can cover the farm’s daily work and which might be short of workers or supplies. A
 job selected on a future date opens the picker with that date’s available workers. The recurring order follows the

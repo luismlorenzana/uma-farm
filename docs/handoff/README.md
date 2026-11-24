@@ -5,6 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F117 tunes Auto Work.** [Four-season crew balance](../design/seasonal-crew-balance.md) records the plot limits and job ledger for 20, 30 and 50 Umas with the same ranch and production demand.
+
 **F111 is implemented.** The mayor offers shared credit, goods advances and partial payments. The smith commissions wedding rings, and the bin and crew use standard surplus settings from day one. The [playthrough results](../game-mechanics.md#f111-finance-and-default-surplus-playthroughs) cover the solo wedding and rosters of 10, 20 and 50.
 
 **F109** gives gated relationships an alternate scene, keeps original scenes in the Library, adds a six-log starter ring, and exposes the complete Farm Rank path through What Next? beside Work.
