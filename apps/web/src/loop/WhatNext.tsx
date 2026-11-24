@@ -1,5 +1,5 @@
 import {
-  forgeMaterialRows, HEIRLOOMS, TOOL_IDS, TOOL_NAMES, toolTierName, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, binTotal, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
+  forgeMaterialRows, HEIRLOOMS, TOOL_IDS, TOOL_NAMES, toolTierName, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
   BUILD_PLACES, EXPEDITION_REGIONS, farmPlace, farmRankOf, farmRankOpens, FARM_RANK_POINTS, FIELD_PLOTS,
   creditLeft, buildOrders, pinSupplyProject, RING_DEPOSIT, STANDARD_RING_COST, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
   animalLock, extensionCost, handsTonight, houseOpensWords, HOUSE_COSTS, nextLot, readyTiles, roomsInAll, rungName, STATION_LEVELS, STATIONS, umaMilestones, workKey,
@@ -22,6 +22,8 @@ import { orderLink } from '../book/work-plan'
 import { taskWords } from '../book/board-words'
 import { useTalents } from './talents'
 import { starterGoals } from './starter-goals'
+import { nextAction } from './next-action'
+import { binView } from './goods-view'
 
 const number = (value: number) => value.toLocaleString('en-US')
 const gold = (value: number) => `${number(value)}g`
@@ -180,10 +182,8 @@ function StarterSteps({ save }: { save: FarmSave }) {
   </section>
 }
 
-function FieldAndCrew({ save }: { save: FarmSave }) {
+function FieldAndCrew({ save, forecast }: { save: FarmSave; forecast: ReturnType<typeof handsTonight> }) {
   const pack = useStory()
-  const { of } = useTalents()
-  const forecast = useMemo(() => handsTonight(save, save, of, pack), [save, of, pack])
   const needs = workNeeds(forecast.save, pack)
   const free = forecast.lines.reduce((sum, line) => sum + line.actions - line.spent, 0)
   return <section className="space-y-2" aria-label="Today's farm work">
@@ -255,18 +255,43 @@ function RanchAndHousing({ save }: { save: FarmSave }) {
   </section>
 }
 
+function FocusDetails({ label, children }: { label: string; children: ReactNode }) {
+  return <details className="rounded-md border border-hairline">
+    <summary className="flex min-h-11 cursor-pointer items-center px-3 font-semibold">{label}</summary>
+    <div className="space-y-3 px-3 pb-3">{children}</div>
+  </details>
+}
+
 function Focus({ save }: { save: FarmSave }) {
+  const pack = useStory()
+  const { of } = useTalents()
+  const forecast = useMemo(() => handsTonight(save, save, of, pack), [save, of, pack])
+  const staffed = forecast.lines.length
+  const automated = forecast.lines.filter(line => save.roster[line.id]?.autoWork).length
+  const suggestion = nextAction(save, save.today.crew ? 0 : staffed, automated)
   const rank = farmRankOf(save.farm.points)
   const next = nextFarmRank(save.farm.points)
   const ready = readyTiles(save)
-  const inBin = binTotal(save.bin, save.calendar.day, save.farm.market)
+  const inBin = binView(save).total
   const projects = BUILD_PLACES.filter(project => project.opens.rank <= rank && project.opens.game && project.group !== 'ranch')
     .filter(project => buildLock(save, project.id)?.by !== 'built')
     .sort((a, b) => a.opens.rank - b.opens.rank)
   return <div className="space-y-4">
-    <StarterSteps save={save} />
-    <FieldAndCrew save={save} />
-    <RestockList save={save} />
+    <section className="space-y-1.5 rounded-lg border border-accent/40 bg-panel p-3" aria-label="Recommended next action" data-next-action>
+      <h3 className="font-display text-lg font-bold">{suggestion.title}</h3>
+      <p className="max-w-prose text-sm text-ink-soft">{suggestion.detail}</p>
+      <Action to={suggestion.to}>{suggestion.label}</Action>
+      <p className="border-t border-hairline pt-2 text-[12px] text-ink-soft">
+        {gold(save.gold)} available{' · '}{gold(inBin)} queued{' · '}
+        {staffed ? `${staffed} ${save.today.crew ? 'worked this morning' : 'on the next shift'} · ${automated} on auto` : 'No crew on shift'}
+      </p>
+    </section>
+    <FocusDetails label="Farm work and starter goals">
+      <FieldAndCrew save={save} forecast={forecast} />
+      <StarterSteps save={save} />
+      <RestockList save={save} />
+    </FocusDetails>
+    <FocusDetails label="Farm Rank, buildings and credit">
     <section aria-label="Project credit" className="text-[13px]">
       <Action to="/town?at=mayor&sheet=mayor">{gold(creditLeft(save))} credit left</Action>
       {save.farm.loans.map(loan => <p key={loan.for}>{loan.credit?.title ?? loan.for} · {loanWords(save, loan)}</p>)}
@@ -291,7 +316,8 @@ function Focus({ save }: { save: FarmSave }) {
       <Action to="/book?view=work">Assign production to your crew</Action>
       {(save.buildings.forge ?? 0) > 0 && <ForgeGoals save={save} />}
     </section>
-    <WeddingPath save={save} />
+    </FocusDetails>
+    <FocusDetails label="First wedding"><WeddingPath save={save} /></FocusDetails>
   </div>
 }
 

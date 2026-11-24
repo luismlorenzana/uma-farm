@@ -1,6 +1,4 @@
 import { TOWN_DISTRICTS, type TownDistrict } from '@farm/domain'
-import { WorldFigures } from '../world/WorldPlate'
-import { townOutdoors } from '../world/town-places'
 import type { LocationView } from './town-view'
 import townArt from './art/town.jpg'
 import plazaArt from './art/plaza.jpg'
@@ -41,11 +39,6 @@ const buildings: Record<TownDistrict['places'][number], Footprint> = {
   expeditions: [61, 25, 35, 30],
 }
 
-// Foreground footpaths leave the building labels and their main hit areas clear on short screens.
-const streetStops: Readonly<Partial<Record<TownDistrict['id'], readonly [number, number]>>> = {
-  plaza: [.12, .27], market: [.45, .60], harbour: [.42, .56], hilltop: [.42, .57],
-}
-
 interface Target {
   id: string
   label: string
@@ -53,47 +46,27 @@ interface Target {
   count?: number
 }
 
-export function TownMap({ district, views, nameOf, onDistrict, onGo, onOpen }: {
+export function TownMap({ district, views, onDistrict, onGo }: {
   district: TownDistrict | undefined
   views: readonly LocationView[]
-  nameOf(id: string): string
-  onOpen(id: string, at: string): void
-  onDistrict: (id: string | null) => void
-  onGo: (id: string) => void
+  onDistrict(id: string): void
+  onGo(id: string): void
 }) {
   const targets: Target[] = district ? district.places.flatMap(id => {
     const location = views.find(view => view.loc.id === id)
     return location ? [{ id, label: location.loc.name.replace(/^The /, ''), at: buildings[id], count: location.here.length }] : []
   }) : TOWN_DISTRICTS.map(({ id, label }) => ({ id, label, at: districts[id] }))
-  const places = new Map<string,string>()
-  const stops = district && streetStops[district.id]
-  const outdoor = targets.find(target => townOutdoors(target.id))
-  const actors = stops && outdoor ? (views.find(view => view.loc.id === outdoor.id)?.here ?? []).slice(0,stops.length).map((person,i) => {
-    places.set(person,outdoor.id)
-    return {id:person,name:nameOf(person),outfit:'spring' as const,x:stops[i]!,y:.98}
-  }) : []
-  return (
-    <nav aria-label="Town map" className="flex min-h-0 w-full flex-1 flex-col gap-1" data-town-map>
-      <div className="flex min-h-11 items-center justify-between gap-1">
-        <h2 className="font-display px-1 text-base font-bold">{district?.label ?? 'Town districts'}</h2>
-        {district && <button type="button" onClick={() => onDistrict(null)} data-town-overview className="min-h-11 rounded-md border border-hairline px-2 text-xs font-semibold">‹ All town</button>}
-      </div>
-      <div className="town-art-frame rounded-lg border border-hairline bg-sunken">
-        <div className="town-art" data-town-district={district?.id ?? 'overview'}>
-          <img src={district ? districtArt[district.id] : townArt} alt="" width={1080} height={720} draggable={false} />
-          {targets.map(({ id, label, at: [left, top, width, height], count }) => {
-            return (
-              <button key={id} type="button" className="town-art-target"
-                style={{ left: `${left}%`, top: `${top}%`, width: `${width}%`, height: `${height}%` }}
-                onClick={() => district ? onGo(id) : onDistrict(id)} data-district={district ? undefined : id}
-                data-location={district ? id : undefined} data-here-count={count}>
-                <span>{label}{!!count && <b aria-label={`${count} here`}>{count}</b>}</span>
-              </button>
-            )
-          })}
-          <WorldFigures key={district?.id} figures={actors} height={40} standing={false} open={id => onOpen(id, places.get(id)!)} />
-        </div>
-      </div>
-    </nav>
-  )
+  const art = district ? districtArt[district.id] : townArt
+  return <nav aria-label={district?.label ?? 'Town districts'} className="town-art-frame" data-town-map>
+    <img className="town-art-surround" src={art} alt="" draggable={false} />
+    <div className="town-art" data-town-district={district?.id ?? 'overview'}>
+      <img src={art} alt="" width={1080} height={720} draggable={false} />
+      {targets.map(({ id, label, at:[left,top,width,height], count }) => <button key={id} type="button" className="town-art-target"
+        style={{ left:left+'%', top:top+'%', width:width+'%', height:height+'%' }}
+        onClick={()=>district ? onGo(id) : onDistrict(id)} data-district={district ? undefined : id}
+        data-location={district ? id : undefined} data-here-count={count}>
+        <span>{label}{!!count && <b aria-label={count+' here'}>{count}</b>}</span>
+      </button>)}
+    </div>
+  </nav>
 }

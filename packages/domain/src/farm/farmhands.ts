@@ -25,7 +25,7 @@
 // Her work counts as an Uma's work does: rank points in the day's activity (where she spent the most actions), the
 // challenges, bonds at the same place, her line, side by side's and the perks' extras, praise. Her reach is the farm's
 // (the Farm Rank's areas and spots). Pure; never stamps. Loaded with the night and the Book.
-import { autoJobs } from './auto-crew'
+import { autoJobs, gatheringJob, type GatheringCounts } from './auto-crew'
 import { DAYS_PER_SEASON, dateOf, type FarmClock } from './calendar'
 import { draw } from './draw'
 import { atPace, halfPace } from './economy'
@@ -42,7 +42,7 @@ import { CROPS, growsIn, needsWater } from '../fields/crops'
 import { harvestGrade, MAX_SEED_TARGET, plantingPlan, saveCropSeedsAt, SEED_BATCH, seedOutput } from '../fields/production'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
 import { brushCapacity, tillCapacity, waterTargets } from '../forge/tools'
-import { digFloorLock, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
+import { digFloorLock, dugCount, FACE_FINDS, faceAt, stairsLock, takeStairs } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
 import { gatherQuality, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
 import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
@@ -688,11 +688,13 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       const aptitude = taskAptitude(task)
       return aptitude ? levelIn(next.roster[id]!, aptitude, (a) => talentOf(id, a)) : 0
     }
-    const work = (task: FarmTask): boolean => {
+    const work = (task: FarmTask, automaticJob = false): boolean => {
       const aptitude = taskAptitude(task)
       // Her work's well fed (quality, a haul's count) is her well-fed days tonight, as her rank points read them.
       const level = aptitudeAt(task)
-      const step = stepOf(next, id, task, level, next.roster[id]!.wellFed > 0, talentOf, story)
+      const start = automaticJob && task.kind === 'mine' && task.floor === undefined && !stairsLock(next, task.dig)
+        ? takeStairs(next, task.dig) : next
+      const step = stepOf(start, id, task, level, start.roster[id]!.wellFed > 0, talentOf, story)
       if (!step) return false
       next = aptitude ? practised(step.save, id, aptitude) : step.save
       for (const { activity, event } of step.events) next = countChallenge(next, id, activity, event)
@@ -738,7 +740,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       free: () => left,
       aptitude: aptitudeAt,
       assign: task => {
-        if (!work(task)) return false
+        if (!work(task, true)) return false
         autoOrders.add(workKey(task))
         return true
       },
@@ -754,7 +756,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       }
     })
     finish.push(() => {
-      if (reserve && left > 0) open.some(work)
+      if (reserve && left > 0) open.some(task => work(task))
       if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
       out.lines.push({
         kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
@@ -781,12 +783,22 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   for (const gather of deferredGathering) gather()
   for (const settle of finishScheduled) settle()
   let available = autoWorkers.filter(worker => worker.free() > 0)
+  const capacity = () => available.reduce((sum, worker) => sum + worker.free(), 0)
+  const gathering = Math.min(4, Math.floor(capacity() / 4))
+  const gathered: GatheringCounts = { chop: 0, forage: 0, fish: 0, mine: 0 }
+  for (const { key, actions } of jobs.values()) {
+    const kind = key.split(':')[0]!
+    if (gatheringJob(kind)) gathered[kind] += actions
+  }
   while (available.length) {
-    // Keep one action available to book for a workshop when only extra gathering remains.
-    const spare = available.reduce((sum, worker) => sum + worker.free(), 0) > 1
-    const assigned = autoJobs(next, story, spare).some(({ task }) =>
-      [...available].sort((a, b) => b.aptitude(task) - a.aptitude(task) || b.free() - a.free()).some(worker => worker.assign(task)))
-    if (!assigned) break
+    const free = capacity()
+    const due = gathering - (gathered.chop + gathered.forage + gathered.fish + gathered.mine)
+    // Preserve a crew action for workshops if only discretionary work remains.
+    const matching = autoJobs(next, story, { spare: free > 1, reserved: due > 0 && free <= due + 1, done: gathered })
+      .find(({ task }) => [...available].sort((a, b) => b.aptitude(task) - a.aptitude(task) || b.free() - a.free())
+        .some(worker => worker.assign(task)))
+    if (!matching) break
+    if (gatheringJob(matching.task.kind)) gathered[matching.task.kind]++
     available = available.filter(worker => worker.free() > 0)
   }
   if (automatic) ship.some(send => send())

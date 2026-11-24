@@ -59,7 +59,7 @@ export function regionFromParams(params: URLSearchParams): FarmRegion | undefine
 
 const interiors: Readonly<Record<string, string>> = {
   mill:'mill', sawmill:'sawmill', smokehouse:'smokehouse', coop:'coop', barn:'barn',
-  kitchen:'kitchen', smelter:'smelter', cutter:'cutter', forge:'forge', warehouse:'warehouse', restaurant:'restaurant', expeditions:'expeditions',
+  kitchen:'kitchen', smelter:'smelter', cutter:'cutter', forge:'forge', warehouse:'warehouse', restaurant:'restaurant', expeditions:'expeditions', mine:'mine', quarry:'quarry',
 }
 
 export function farmEntrances(save: FarmSave, pack: StoryPack | null, region: FarmRegion): FarmEntrance[] {

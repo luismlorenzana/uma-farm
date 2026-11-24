@@ -11,7 +11,7 @@ import { FARM_REGIONS, REGIONS, farmEntrances, regionUrl, withinRegion, type Far
 import { countsWords } from '../loop/farm-view'
 import { awayFromWorld, farmPresence, residentTownPlace, type FarmActor } from './farm-presence'
 import type { CameraPose, ScenePoint } from './farm-region-stage'
-import { WorldFigures, WorldPlate } from './WorldPlate'
+import { WorldProfiles, WorldPlate } from './WorldPlate'
 import overview from './farm-overview.webp'
 import './farm-world.css'
 
@@ -90,7 +90,7 @@ function SectionScene({ region, save, entrances, cast, name, open, pose, setPose
             className="farm-depth-door" style={{left:`${point.x*100}%`,top:`${point.y*100}%`}}
             data-world-entrance={entrance.id}>{entrance.name}</Link>
         })}
-        <WorldFigures figures={visible(points)} open={open} standing={false} height={46} />
+        <WorldProfiles figures={visible(points)} open={open} />
       </>}
     </RegionDepth>
   </Suspense>
@@ -143,7 +143,8 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
       <div className="farm-world-split">
         <div className="relative flex min-h-0 min-w-0 overflow-hidden rounded-lg bg-sunken">
           {!covered && (!actor || !found) && (selected
-            ? <WorldPlate save={save} place={selected.plate!} cast={cast.map(person => ({...person,name:name(person.id)}))} open={open} />
+            ? <WorldPlate save={save} place={selected.plate!} cast={cast.map(person => ({...person,name:name(person.id)}))} open={open}
+                roomNumber={region === 'living' ? Number(selected.id.split(':')[1]) : 0} />
             : <SectionScene region={region} save={save} entrances={entrances} cast={region === 'living' ? [] : cast} name={name} open={open} night={!period}
                 pose={camera[region] ?? START_POSE} setPose={pose => {
                   lastFarmCamera[region] = pose

@@ -15,6 +15,7 @@ export interface RegionScene {
   anchors: ReadonlyMap<string, GroundPoint>
   width: number
   depth: number
+  targetY?: number
 }
 
 const EMPTY: LookAssets = {
@@ -198,19 +199,21 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
     stage.dispose()
     throw error
   }
-  function project(pose: CameraPose) {
+  function project(pose: CameraPose, prepare?: (points: ReadonlyMap<string, ScenePoint>) => void) {
     stage.resize()
     const aspect = Math.max(1, canvas.clientWidth / Math.max(1,canvas.clientHeight))
     stage.view.distance = Math.max(layout.width / aspect, layout.depth * .77) * 2.12 / pose.zoom
-    stage.target.set(pose.x,0,pose.z)
+    stage.target.set(pose.x,layout.targetY ?? 0,pose.z)
     stage.placeCamera()
     stage.camera.updateMatrixWorld()
-    stage.frame(0)
-    stage.render()
-    return new Map([...layout.anchors].map(([id, at]) => {
+    const points = new Map([...layout.anchors].map(([id, at]) => {
       const point = new Vector3(...at).project(stage.camera)
       return [id,{x:(point.x + 1) / 2,y:(1 - point.y) / 2}] as const
     }))
+    prepare?.(points)
+    stage.frame(0)
+    stage.render()
+    return points
   }
   return {
     project,
