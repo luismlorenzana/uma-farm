@@ -131,7 +131,7 @@ describe('the rail', () => {
 
 describe('the shell on the landscape stage', () => {
   it('is a rail and a bar: the rail down the left, then the bar over the page; the Menu comes in from the right', async () => {
-    await render(onStage(<Routes><Route element={<Shell />}><Route path="*" element={<p data-test-page>Page</p>} /></Route></Routes>), '/town?sheet=menu')
+    await render(onStage(<Routes><Route element={<Shell />}><Route path="*" element={<p data-test-page>Page</p>} /></Route></Routes>), '/town?view=people&sheet=menu')
     const frame = $('[data-kit="frame"]')!
     expect(frame.getAttribute('data-layout')).toBe('landscape')
     expect(frame.getAttribute('data-arrangement')).toBe('rail-and-bar')
@@ -144,6 +144,15 @@ describe('the shell on the landscape stage', () => {
     expect($(`${rail} a[aria-current="page"]`)?.textContent).toBe('Town')
     // The kit's sheet on a landscape stage is a panel from the right edge.
     await vi.waitFor(() => expect($('[data-kit="sheet"]')?.getAttribute('data-placement')).toBe('side'))
+  })
+
+  it('gives town maps and interiors the full stage', async () => {
+    for (const path of ['/town', '/town?district=library', '/town?at=library']) {
+      await render(onStage(<Routes><Route element={<Shell />}><Route path="*" element={<p data-test-page>Page</p>} /></Route></Routes>), path)
+      expect($('[data-test-page]')).not.toBeNull()
+      expect($(rail)).toBeNull()
+      expect($(bar)).toBeNull()
+    }
   })
 })
 

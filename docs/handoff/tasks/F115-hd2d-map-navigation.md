@@ -63,6 +63,8 @@ Keep storefront, counter and person interactions distinct. An interior can be an
 
 ## Art and implementation
 
+F116 completes the indoor kit as modeled rooms with reusable furniture, equipment and props. Characters stand on the room floor as sprites, and outdoor views use profile markers or location counts. Town navigation sits in a narrow sidebar beside the map.
+
 - **Farm painting.** Author one landscape base with six recognizable silhouettes linked by the landscape. Keep expandable lots separate so houses, wings and workshops reflect the save. Author normalized hotspot shapes against stable landmarks and review the compact landscape while selecting a door and a nearby person.
 - **HD-2D section kit.** Start with F103's straight paths, 41-degree overhead camera, native sprite scale and anchors, and its lazy shared renderer. Build each exterior as its own scene with clear ground paths, work anchors, doors and gathering markers. Produce the environment art in the established shared art pipeline, with released assets loaded only for the selected scene.
 - **Interior kit.** Author one recognizable room per location, with door return anchors, counters or activity anchors and visible standing positions. Reuse material palettes and lighting presets across home types. Keep painted backgrounds, approved sprites and story art in their existing publishing paths. The route and occupancy metadata can live in Farm. Private character art and story material stay outside Git.

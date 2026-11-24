@@ -1,7 +1,12 @@
-import { atHome, awayForNight, currentDatePeriod, townDay, type FarmSave, type StoryPack, type TownDay } from '@farm/domain'
+import { atHome, awayForNight, currentDatePeriod, townDay, type FarmSave, type StoryPack, type TownDay, type TownLocationPlayed } from '@farm/domain'
+import { isRoom, type RoomId } from './room-specs'
 
-const outdoors = new Set(['plaza','market','harbour','track','chapel-bell','overlook','sea-pier'])
-export const townOutdoors = (place: string): boolean => outdoors.has(place)
+const legacyRooms: Readonly<Record<string, RoomId>> = { bakery: 'laurel-bakery', salon: 'mejiro-salon', garage: 'espoir-garage' }
+
+export function townRoom(place: TownLocationPlayed): RoomId | undefined {
+  if (isRoom(place.id)) return place.id
+  return legacyRooms[place.id] ?? (place.group === 'work' || place.group === 'shop' ? 'estate-office' : undefined)
+}
 /** Town jobs and routines come from the story schedule. Housed residents return to their farm rooms at night. */
 export function currentTownDay(save: FarmSave, pack: StoryPack): TownDay {
   const day = townDay(save,pack)

@@ -9,6 +9,7 @@ import { LAUNCH_CAST, withLaunchProfessions } from '../story/launch'
 import { worksOn } from '../town/town'
 import { FESTIVALS, festivalDayOfYear } from './calendar'
 import { upkeepOf, UPKEEP_RESIDENT } from './economy'
+import { digFloor, stairsAfter } from '../gathering/digs'
 import {
   aptitudeLevelOf, aptitudeOf, APTITUDE_POINTS, aptitudeQuality, aptitudeUps, aptitudesOf, aptitudeYield, BIG_LOAD, fedThisMorning, handActionsLeft, handDay, handsInOrder,
   handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setAutoWork, setTasks, settleCrewShift, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
@@ -68,10 +69,49 @@ describe('automatic crew work', () => {
       expect(planned.lines.map(line => line.id).sort()).toEqual([...expected].sort())
       expect(planned.lines.every(line => line.spent <= line.actions)).toBe(true)
       expect(settled.ranch.animals.every(animal => animal.fed)).toBe(true)
-      expect(fieldTiles(settled).some(needsWater)).toBe(false)
+      expect(fieldTiles(settled).filter(needsWater).length, `day ${day}, crew ${JSON.stringify(planned.jobs)}`).toBe(0)
       expect(parseSaveV6(json(settled))).toEqual(settled)
       save = runNight(settled, { story: pack })
     }
+  })
+
+  it('keeps a 10-Uma roster gathering when an expanded field would take every action', () => {
+    const pack = withLaunchProfessions(castPack(LAUNCH_CAST))
+    const ids = LAUNCH_CAST.slice(0, 10)
+    const base = farm(2)
+    const active = fieldTiles(base).map(() => ({ ...bareTile('tilled'), crop: 'carrot' as const }))
+    const save = setAutoWork({
+      ...base,
+      roster: Object.fromEntries(ids.map(id => [id, { ...newRosterUma(1), farmhand: 1 }])),
+      fields: { plots: Array.from({ length: 3 }, () => ({ tiles: active })) },
+      farm: { ...base.farm, points: 950 },
+      buildings: { ...base.buildings, mine: 1 },
+      places: { ...base.places, mine: { deepest: 1, stairs: stairsAfter(1) } },
+    }, ids, true)
+    const shift = handsTonight(save, save, talentsD, pack)
+    const orders = (shift.jobs ?? []).map(job => job.key)
+    expect(orders.some(job => job.startsWith('water:'))).toBe(true)
+    expect(fieldTiles(shift.save).some(needsWater)).toBe(true)
+    expect(orders).toContain('chop:old-forest')
+    expect(orders).toContain('fish:lake')
+    expect(orders.some(job => job.startsWith('forage:'))).toBe(true)
+    if (orders.includes('mine:mine')) expect(digFloor(shift.save.places.mine)).toBeGreaterThan(1)
+    expect(shift.save.today.actions).toBe(save.today.actions)
+  })
+
+  it('follows discovered stairs on auto jobs while leaving a manual floor order in place', () => {
+    const base = farm()
+    const dig = { ...base, buildings: { ...base.buildings, mine: 1 },
+      places: { ...base.places, mine: { deepest: 1, stairs: stairsAfter(1) } } }
+    const save = setAutoWork(tasks(dig, A, [{ kind: 'mine', dig: 'mine', floor: 1 }]), [B], true)
+    const shift = handsTonight(save, save, talentsD, null)
+    expect(shift.jobs).toContainEqual({ id: A, key: 'mine:mine:1', actions: 3 })
+    expect(shift.jobs?.some(job => job.key === 'mine:mine')).toBe(false)
+    expect(digFloor(shift.save.places.mine)).toBe(1)
+    const auto = setAutoWork({ ...dig, today: { ...dig.today, hauls: { woods: 4, pond: 4 } } }, [A, B], true)
+    const mining = handsTonight(auto, auto, talentsD, null)
+    expect(mining.jobs?.some(job => job.key === 'mine:mine')).toBe(true)
+    expect(digFloor(mining.save.places.mine)).toBeGreaterThan(1)
   })
 
   it('honors manual priorities and can disable automatic work without altering the orders', () => {

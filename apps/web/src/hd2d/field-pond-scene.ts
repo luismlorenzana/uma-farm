@@ -1,15 +1,11 @@
 import { CROPS, FIELD_COLUMNS, FIELD_ROWS } from '@farm/domain'
-import { CharacterSpritePlayer } from '@luismlorenzana/uma-stage/character-player'
 import type { LookScene, SceneLight } from '@luismlorenzana/uma-stage/look'
 import {
-  BoxGeometry, CylinderGeometry, DataTexture, Group, IcosahedronGeometry, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial,
-  NearestFilter, Object3D, Shape, ShapeGeometry, Sprite, SpriteMaterial, SRGBColorSpace,
-  Texture, type BufferGeometry,
+  BoxGeometry, CylinderGeometry, Group, IcosahedronGeometry, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial,
+  Object3D, Shape, ShapeGeometry,
+  type BufferGeometry,
 } from 'three'
-import { visibleHands, type BandHand, type BandPlace, type BandState } from './field-pond-state'
-
-import { acquireWalkingArt, type WalkingArt } from './character-art'
-import { routePose, type ActorRoute } from './actor-route'
+import type { BandPlace, BandState } from './field-pond-state'
 
 type Point = readonly [number, number, number]
 export const BAND_ANCHORS: Record<BandPlace, Point> = {
@@ -32,11 +28,6 @@ const TREES = [
   [2.1, 16.7, 0.87], [6.9, 14.1, 0.71], [11.0, 0.95, 0.72], [22.3, 1.0, 0.75],
   [40.1, 1.21, 0.68], [43.4, 4.0, 1.0], [45.5, 2.2, 0.8], [45.2, 8.61, 0.85],
 ] as const
-const HAND_POSITIONS: Record<BandHand['place'], readonly Point[]> = {
-  fields: [[13.1, 0, 8.7], [18.9, 0, 7.3], [20.8, 0, 9.9]],
-  forest: [[7.1, 0, 10.7]], fishery: [[21.65, 0, 13.4]], bin: [[29.6, 0, 11.6]],
-}
-
 /** A warm low sun in the morning and a cool late-day fill. The grade runs in the shared post pipeline. */
 export function bandLight(dusk: boolean): SceneLight {
   return {
@@ -113,47 +104,13 @@ function shoreline() {
   return new ShapeGeometry(outline).rotateX(-Math.PI / 2)
 }
 
-const SPRITE = [
-  '..O....O....', '..H....H....', '..HHHHHH....', '.HHHHHHHH...', '.HHKHKKHH...',
-  '.HKKKKKKH...', '..KOKKOK....', '..HKKKKH....', '..HLLLLH....', '.TTTTTTTT...',
-  '.TKTTTTK....', '..TTTTTT....', '..TTTTTT....', '..BBBBBB....', '..BB..BB....', '.LLL..LLL...',
-]
-const TOOLS: Partial<Record<BandHand['job'], readonly [string, number, number][]>> = {
-  water: [['#75c7c4', 9, 9], ['#75c7c4', 10, 9], ['#75c7c4', 11, 10], ['#b9e6e2', 11, 12]],
-  fish: [['#d8b881', 9, 9], ['#d8b881', 10, 8], ['#d8b881', 11, 7], ['#e8dec4', 11, 8], ['#e8dec4', 11, 9]],
-  chop: [['#b9b3a2', 10, 6], ['#b9b3a2', 11, 6], ['#a47d50', 10, 7], ['#a47d50', 9, 8]],
-  harvest: [['#e28749', 9, 9], ['#e28749', 9, 10], ['#8d9d58', 10, 8]],
-  forage: [['#d4ad75', 9, 9], ['#cfad76', 10, 9], ['#a47d50', 9, 10], ['#a47d50', 10, 10]],
-  'ship-surplus': [['#bc955f', 9, 9], ['#bc955f', 10, 9], ['#a47d50', 9, 10], ['#a47d50', 10, 10]],
-}
-
-/** Original review figures. The record's actual outfit id chooses a stable stand-in palette. */
-function handSprite(hand: BandHand): DataTexture {
-  const variant = [...hand.id].reduce((seed, letter) => (seed * 31 + letter.charCodeAt(0)) >>> 0, 0) % 5
-  const coat = ['#ad506b', '#736aa8', '#c58b4f', '#457e78', '#647dba'][variant]!
-  const hair = ['#6d493a', '#3f394b', '#7e583e', '#554134', '#8e513a'][variant]!
-  const inks: Record<string, string> = { O: '#372b38', H: hair, K: '#e9b48a', T: coat, B: '#4d4255', L: '#eed9b1' }
-  const pixels = new Uint8Array(12 * 16 * 4)
-  function pixel(color: string, x: number, y: number) {
-    const rgb = Number.parseInt(color.slice(1), 16)
-    pixels.set([rgb >> 16, (rgb >> 8) & 255, rgb & 255, 255], ((15 - y) * 12 + x) * 4)
-  }
-  SPRITE.forEach((row, y) => [...row].forEach((ink, x) => { if (inks[ink]) pixel(inks[ink], x, y) }))
-  for (const [ink, x, y] of TOOLS[hand.job] ?? []) pixel(ink, x, y)
-  const texture = new DataTexture(pixels, 12, 16)
-  texture.magFilter = texture.minFilter = NearestFilter
-  texture.colorSpace = SRGBColorSpace
-  texture.needsUpdate = true
-  return texture
-}
-
 export interface FieldPondScene extends LookScene {
   setBand(view: BandState): void
 }
 
 export function buildFieldPond(initial: BandState): FieldPondScene {
-  const root = new Group(), fixed = new Group(), crops = new Group(), people = new Group()
-  root.add(fixed, crops, people)
+  const root = new Group(), fixed = new Group(), crops = new Group()
+  root.add(fixed, crops)
   const box = new BoxGeometry(), pebble = new IcosahedronGeometry(1, 0), crown = new IcosahedronGeometry(1, 1)
   const log = new CylinderGeometry(.48, .57, 1, 6), oval = shoreline()
   const materials: MeshStandardMaterial[] = []
@@ -247,63 +204,6 @@ export function buildFieldPond(initial: BandState): FieldPondScene {
   rippleStamps.commit(ripples, false)
   root.add(ripples)
   const figures: Mesh[] = []
-  const sprites: {
-    sprite: Sprite; y: number; route: ActorRoute; release: () => void
-    art?: WalkingArt; player?: CharacterSpritePlayer
-  }[] = []
-  let crewSignature = ''
-  let lastTime: number | null = null
-
-  function clearSprites() {
-    for (const { sprite, release } of sprites) {
-      release()
-      sprite.removeFromParent()
-      sprite.material.map?.dispose()
-      sprite.material.dispose()
-    }
-    sprites.length = 0
-  }
-
-  function updateHands(view: BandState) {
-    const hands = visibleHands(view)
-    const signature = hands.map(hand => `${hand.id}:${hand.place}:${hand.job}`).join(',')
-    const tint = view.dusk ? '#c0c4d9' : '#fff8eb'
-    if (signature === crewSignature) {
-      for (const { sprite } of sprites) sprite.material.color.set(tint)
-      return
-    }
-    crewSignature = signature
-    clearSprites()
-    const used = { fields: 0, forest: 0, fishery: 0, bin: 0 }
-    for (const hand of hands) {
-      const [x, y, z] = HAND_POSITIONS[hand.place][used[hand.place]++]!
-      const sprite = new Sprite(new SpriteMaterial({ map: handSprite(hand), color: tint, alphaTest: .42 }))
-      sprite.position.set(x, y + .11, z)
-      sprite.center.set(.5, 0)
-      sprite.scale.set(1.38, 1.84, 1)
-      people.add(sprite)
-      const lease = acquireWalkingArt(hand.id, 'farm-work')
-      const route: ActorRoute = { id: hand.id, start: [x - .85, z], stop: [x, z] }
-      const entry: typeof sprites[number] = { sprite, y: y + .11, route, release: lease.release }
-      sprites.push(entry)
-      void lease.ready.then(art => {
-        if (!art || !sprite.parent) return
-        const texture = new Texture(art.image)
-        texture.magFilter = texture.minFilter = NearestFilter
-        texture.generateMipmaps = false
-        texture.colorSpace = SRGBColorSpace
-        texture.needsUpdate = true
-        sprite.material.map?.dispose()
-        sprite.material.map = texture
-        const { cell, foot } = art.sprite
-        sprite.center.set(foot.x / cell.width, 1 - foot.y / cell.height)
-        sprite.scale.set(1.84 * cell.width / cell.height, 1.84, 1)
-        entry.art = art
-        entry.player = new CharacterSpritePlayer(art.sprite)
-      })
-    }
-  }
-
   function setBand(view: BandState) {
     const color = SEASONS[view.season]
     grass.color.set(color.grass); leaf.color.set(color.leaf); tip.color.set(color.tip)
@@ -333,7 +233,6 @@ export function buildFieldPond(initial: BandState): FieldPondScene {
       }
     }
     tiles.commit(crops)
-    updateHands(view)
   }
 
   const camera = { label: 'Field and Pond', target: BAND_TARGET, elevation: 41, azimuth: 0, distance: 53, fov: 31 }
@@ -343,24 +242,8 @@ export function buildFieldPond(initial: BandState): FieldPondScene {
     setBand,
     update(t) {
       ripples.position.x = Math.sin(t * .87) * .12
-      const delta = lastTime === null ? 0 : Math.max(0, Math.min(80, (t - lastTime) * 1000))
-      lastTime = t
-      for (const [i, hand] of sprites.entries()) {
-        if (!hand.art || !hand.player) {
-          hand.sprite.position.y = hand.y + Math.max(0, Math.sin(t * 2.1 + i)) * .03
-          continue
-        }
-        const pose = routePose(hand.route, t * 1000, i * 740)
-        const { x, y } = hand.player.update(delta, pose.facing, pose.moving)
-        const { page, cell } = hand.art.sprite
-        const texture = hand.sprite.material.map!
-        texture.repeat.set(cell.width / page.width, cell.height / page.height)
-        texture.offset.set(x / page.width, 1 - (y + cell.height) / page.height)
-        hand.sprite.position.set(pose.x, hand.y, pose.y)
-      }
     },
     dispose() {
-      clearSprites()
       for (const group of [fixed, crops, ripples]) removeInstances(group)
       for (const geometry of [box, pebble, crown, log, oval]) geometry.dispose()
       for (const material of materials) material.dispose()

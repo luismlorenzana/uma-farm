@@ -8,7 +8,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { talentsFor } from '../loop/talents'
 import { Avatar } from '../dialogue/Avatar'
-import { GuideContent } from '../guide/Guide'
+import { GuideButton, GuideContent } from '../guide/Guide'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -18,7 +18,7 @@ import { IntoTown } from '../loop/GoodsSheets'
 import { intoTown } from '../loop/actions'
 import { HerMenu } from './HerMenu'
 import { WorldPlate } from '../world/WorldPlate'
-import { currentTownDay, townOutdoors } from '../world/town-places'
+import { currentTownDay, townRoom } from '../world/town-places'
 import { sceneCoversWorld } from '../world/scene-cover'
 import innLobby from './art/inn-lobby.jpg'
 import { TownMap } from './TownMap'
@@ -65,9 +65,17 @@ export default function TownPage() {
   const candidate = params.get('uma') ?? params.get('talk')
   const talking = Boolean(candidate && pack && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)))
   const setView = (next: View) => navigate(withParam(location, 'view', next === 'people' ? 'people' : null), { replace: true, state: location.state })
+  const mapCanvas = view === 'map' && save.today.town
   return (
-    <div className="absolute inset-0 flex flex-col" data-page="town" data-view={view}>
-      {!talking && !sceneCoversWorld(params) && <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }}>
+    <div className={'absolute inset-0 flex '+(mapCanvas?'flex-row':'flex-col')} data-page="town" data-view={view}>
+      {mapCanvas && !talking && !sceneCoversWorld(params) && <aside className="town-map-sidebar" aria-label="Town controls">
+        <button type="button" onClick={()=>leave('/')} aria-label="Back to the farm">‹ Farm</button>
+        {params.has('district') && !params.has('at') && <button type="button" data-town-overview onClick={()=>navigate(paramsTo(location,{district:null}),{state:{back:true}})}>All town</button>}
+        <button type="button" onClick={()=>setView('people')}>People</button>
+        <Link to={withParam(location,'sheet','shop')} state={{back:true}} data-action="shop">Shop</Link>
+        <GuideButton topic="town" label="About the town" />
+      </aside>}
+      {!mapCanvas && !talking && !sceneCoversWorld(params) && <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }}>
         {save.today.town && (
           <span className="flex items-center gap-2">
             <Tabs label="Views" value={view} onChange={setView} options={[{ value: 'map', label: 'Map' }, { value: 'people', label: 'People' }]} />
@@ -75,7 +83,7 @@ export default function TownPage() {
           </span>
         )}
       </PlaceHeader>}
-      <main className="min-h-0 flex-1" data-town-scroll>
+      <main className="min-h-0 min-w-0 flex-1" data-town-scroll>
         {save.today.town ? (
           <MasterGate>{(master) => (pack ? <Town save={save} pack={pack} master={master} view={view} /> : <p className="p-4 text-ink-soft">Loading…</p>)}</MasterGate>
         ) : (
@@ -111,6 +119,7 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   const chosenDistrict = params.get('district')
   const district = TOWN_DISTRICTS.find(entry => entry.id === chosenDistrict) ?? (at ? districtOf(at) : undefined)
   const here = views.find((v) => v.loc.id === at)
+  const room = here ? townRoom(here.loc) : undefined
   const candidate = params.get('uma') ?? params.get('talk')
   const uma = candidate && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)) ? candidate : null
   // Walking between places is free: replacing keeps Back's way to the farm.
@@ -126,20 +135,20 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   return (
     <>
       {view === 'map' ? (!uma && !covered && (
-        <div className="flex h-full min-h-0 flex-col gap-1 px-3 pt-1 pb-2" data-town-today={day.where.size}>
+        <div className={'flex h-full min-h-0 flex-col '+(here?'gap-1 px-3 pt-1 pb-2':'')} data-town-today={day.where.size}>
           {here ? <>
             <div className="flex min-h-11 shrink-0 items-center gap-2">
               <button type="button" onClick={() => goDistrict(district?.id ?? null)} className="min-h-11 rounded-md border border-hairline px-2 text-xs font-semibold" data-town-district-back>‹ {district?.label ?? 'Town map'}</button>
               <h2 className="font-display min-w-0 flex-1 truncate text-lg font-bold" data-place-name>{here.loc.name}</h2>
               <button type="button" onClick={() => goDistrict(null)} className="min-h-11 px-2 text-xs font-semibold" data-town-overview>All town</button>
             </div>
-            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,2fr)_minmax(140px,1fr)] gap-2" data-town-destination={here.loc.id} data-place-kind={townOutdoors(here.loc.id) ? 'outdoor' : 'interior'}>
-              <WorldPlate save={save} place={here.loc.id} {...(here.loc.id === HARBOUR_INN ? { art:innLobby } : {})}
+            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,2.9fr)_minmax(150px,1fr)] gap-2" data-town-destination={here.loc.id} data-place-kind={room ? 'interior' : 'outdoor'}>
+              <WorldPlate active={!params.has('sheet')&&!params.has('service')} save={save} place={here.loc.id} room={room} {...(here.loc.id === HARBOUR_INN ? { art:innLobby } : {})}
                 cast={[...new Set([...here.here,...(here.keeper ? [here.keeper.characterId] : [])])].map(id => ({ id, name:nameOf(id), outfit:'spring' }))}
                 open={id => open(id)} />
               <Place key={here.loc.id} view={here} save={save} pack={pack} nameOf={nameOf} onOpen={id => open(id)} />
             </div>
-          </> : <TownMap district={district} views={views} nameOf={nameOf} onDistrict={goDistrict} onGo={go} onOpen={open} />}
+          </> : <TownMap district={district} views={views} onDistrict={goDistrict} onGo={go} />}
         </div>
       )) : (
         <div className="h-full overflow-y-auto overscroll-contain px-4 pt-3 pb-6" hidden={Boolean(uma) || covered}>

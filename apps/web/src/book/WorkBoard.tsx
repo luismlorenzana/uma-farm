@@ -97,8 +97,8 @@ export function WorkBoard({ save }: { save: FarmSave }) {
           <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>On her farm days she eats two meals on the farm: that’s her cost. On her town days she’s in town, and costs nothing.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid.</p>
-          <p>Auto work uses any actions left after her orders for the farm’s priorities. It puts feeding, watering and meals ahead of production and gathering. Switch it off on her card to use only her own orders.</p>
-          <p>You still buy seeds, fodder and animals, order construction, and take the stairs in the mines.</p>
+          <p>Auto work fills the actions left after her orders. It feeds animals first and keeps time for foraging, wood, fish and mining even when a larger field is busy. The crew can gather farther as Farm Rank opens new areas. Switch it off on her card to use only her own orders.</p>
+          <p>You buy seeds, fodder and animals, and order construction. An Uma on auto can take stairs already discovered at the mine or quarry when Farm Rank allows it.</p>
         </GuideButton>
       </div>
       {canStart && <div className="flex flex-wrap items-center gap-2 rounded-md border border-hairline bg-panel p-2">

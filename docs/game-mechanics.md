@@ -621,9 +621,9 @@ Home opens on the painted farm map. Tap a marked area or its matching shortcut. 
 | **Living** | The Farmhouse and other homes. The directory shows everyone assigned a room and where she is. Tap a resident at home to talk, or follow her location when she is working or in town. |
 | **Work** | Production, storage, extraction, shipping, Requests and the Expedition post. The Work board is available here. |
 
-A building door opens a room before its existing activity controls. Outdoor targets open the field, trail, fishing or other action panel directly. The destination list gives the reason a locked place cannot open. The road opens Town for free. Opening a door or selecting a person is also free. Actions keep their existing costs.
+A building door opens a modeled 3D room before its existing activity controls. Rooms have furniture and equipment arranged for their purpose. Outdoor targets open the field, trail, fishing or other action panel directly. The destination list shows why a locked place cannot open. The road opens Town for free. Opening a door or selecting a person is also free.
 
-Morning farmworkers appear at jobs from the day's receipt. Before the work is recorded, their placement is marked as planned. Housed Umas return to their assigned homes at night, with expeditions accounted for. A sprite or her Here now entry opens the full-screen portrait conversation. Back returns to the same section or room and keeps the farm camera position.
+Morning farmworkers at outdoor jobs are marked by profile pictures from the day's receipt. Before the work is recorded, their placement is marked as planned. Indoors, Umas stand on the room floor as HD-2D sprites. Housed Umas return to their assigned homes at night, with expeditions accounted for. A person marker or her Here now entry opens the full-screen portrait conversation. Back returns to the same section or room and keeps the farm camera position.
 
 The original tile map stays available from Home's map controls. It includes the **Field and Pond** review and **Phone test**, which records FPS, frame gaps, draw calls and estimated graphics memory for the original rendering slice.
 
@@ -3463,7 +3463,7 @@ watering and care over the year, and the same shift cycle continued into Spring 
 
 #### The map
 
-The town overview is painted from above. Tap one of six districts, then tap a building or landmark to open its destination. A building has its own room, service controls and people on site. The Plaza, Market, Harbour and Track use outdoor views. Tap a person in the scene or in the location list to open her full-screen conversation. Back returns to that destination. District and All town buttons take you back through the maps. Walking is free. A direct link opens the destination.
+The painted town overview fills the main canvas, with navigation in a compact sidebar. Tap one of six districts, then tap a building or landmark. A building has a fully modeled room, service controls and HD-2D sprites for people on site. Plaza, Market, Harbour and Track use outdoor views with portraits for people on site. Tap a person in the scene or in the location list to open her full-screen conversation. Back returns to that destination. District and All town buttons take you back through the maps. Walking is free. A direct link opens the destination.
 
 | District | Destinations |
 |---|---|
@@ -3738,10 +3738,7 @@ for that job, including after the shift when it can be planned for the worker’
 **Auto assign jobs** is on for each new farmhand. Existing workers keep their settings and orders. **Enable for
 unassigned workers** switches on workers without orders. A worker’s own orders run first. With her remaining actions,
 she picks up work with the other automatic workers who are on shift, using the farm’s current stock, plots, buildings
-and targets. Feeding and watering come first, then meals and crop work, then care, production and surplus shipping.
-The crew can gather food for meals or supplies such as logs for a building. Extra gathering uses full hauls and leaves
-one crew action available when only optional work remains. She uses her existing action budget. Turn auto work off on
-her card to use her orders alone.
+and targets. Animal feeding comes first. The scheduler reserves up to a quarter of spare automatic crew actions, capped at four, for gathering so a busy field still leaves time for wood, forage, fish or mining. Manual gathering counts toward that budget. The rest goes to watering, meals, harvest, surplus shipping, animal care and production. Gathering rotates between activities, favors the fullest open areas, and alternates between starting at the deepest open reach and rotating through the other reaches. Mining can use already discovered stairs when Farm Rank allows it. Turn auto work off on her card to use her orders alone.
 
 **Next 7 days** shows which shifts can cover the farm’s daily work and which might be short of workers or supplies. A
 job selected on a future date opens the picker with that date’s available workers. The recurring order follows the
@@ -3751,7 +3748,7 @@ chosen Uma’s farm shifts.
 cooking, seed saving and surplus shipping. **Show all jobs** also shows locked and idle locations. **Quick jobs** repeat
 each shift. **Combined plot orders** adds Harvest + water, Plant + water or the full crop routine in one step. The
 detailed editor still handles exact seeds, individual rows, collection targets and locations. Buying seeds, animals and
-fodder, constructing buildings and taking the stairs in a dig are farmer actions.
+fodder and constructing buildings are farmer decisions. The farmer can take discovered stairs by hand at any open dig.
 
 The **Work calendar** uses the same job list for the selected day. Before a shift it shows the forecast and scheduled
 workers. Afterward it shows who used actions on each order when the shift has a detailed record. Free actions and jobs
@@ -4364,11 +4361,7 @@ Your life with the Umas opens the homestead and the town:
 
 #### What Next?
 
-Open **What Next?** beside Work or in the menu. The starter goals track planting, harvesting, foraging, fishing,
-chopping, clearing and shipping using the farm’s existing lifetime counts. Either the farmer or the crew can make
-progress. These targets are guidance and have no extra reward or unlock requirement. Each goal links to its place
-and its crew order. The rest of **Focus now** shows remaining work after the current orders, Farm Rank progress,
-material and gold shortages, and the first wedding path.
+Open **What Next?** beside Work or in the menu. **Focus now** shows one action you can take, with a direct link and your current gold, queued shipments and crew status. It can send you to gather or ship your first goods, use spare produce, harvest, set up the crew, work on a pinned project or start your flock. Expand Farm work and starter goals for the lifetime planting, harvesting, foraging, fishing, chopping, clearing and shipping goals. Either you or the crew can make progress. Expand the other sections for Farm Rank, costs, credit and the first wedding.
 
 **Ranch & homes** shows the Coop and Barn’s costs, the rancher’s purchase prices, feed stock, room capacity,
 and the next house and extension. The Coop and its first Chicken open at Rank 2. The Barn opens at Rank 3. House 1

@@ -10,17 +10,13 @@
 // `?life=<meal>:<id>`); and the furniture set from 5 married, a piece a row and the house it stands in. "Married n/N" in
 // the header. Loaded on demand.
 import {
-  awayOn, BATCH_MEALS, currentDatePeriod, onFarmToday, houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, longGameEnabled, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4,
+  BATCH_MEALS, houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, longGameEnabled, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { ActorLayer } from '../hd2d/ActorLayer'
-import { hasWalkingArt } from '../hd2d/character-art'
-import { paintedRoutes } from '../hd2d/painted-routes'
-import { sceneAssets } from '../dialogue/scene-assets'
 import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
@@ -92,10 +88,7 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
       {(master) => {
         const nameOf = (id: string) => master.album.get(id)?.name ?? 'An Uma'
         const view = homesteadView(save, nameOf)
-        const period = currentDatePeriod(save)
-        const residents = view.houses.flatMap(row => row.rooms).filter((id): id is string =>
-          id !== null && hasWalkingArt(master.art, id) && !awayOn(save, id, save.calendar.day) && (!period || (pack !== null && onFarmToday(save, pack, id, save.calendar.day))))
-        const commons = paintedRoutes(residents, [[.39, .84], [.60, .85]])
+
         const cast = pack?.cast.umas.length ?? null
         return (
           <Sheet
@@ -115,10 +108,6 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
               </div>
               {view.married > 0 && longGameEnabled(save, pack) && <Link className="flex min-h-11 items-center rounded-md border border-hairline px-3 font-semibold"
                 to={withParam(location, 'visits', '1')} state={{ back: true }}>Night visits ›</Link>}
-              {commons.length > 0 && <div className="relative h-24 overflow-hidden rounded-lg">
-                <img src={sceneAssets['home-table']?.[0]} alt="" className="h-full w-full object-cover object-bottom" />
-                <ActorLayer actors={commons} outfit={period ? 'spring' : 'pajamas'} height={52} />
-              </div>}
               <Celebrations save={save} nameOf={nameOf} />
               <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="The houses">
                 {view.houses.map((row) => (

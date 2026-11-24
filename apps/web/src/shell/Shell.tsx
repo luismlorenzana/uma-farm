@@ -89,7 +89,7 @@ export function Shell() {
   return (
     <AppFrame
       landscape="rail-and-bar"
-      fullScreen={location.pathname === FIELD_PATH}
+      fullScreen={location.pathname === FIELD_PATH || (location.pathname === '/town' && search.get('view') !== 'people')}
       top={<FarmBar />}
       bottom={<FarmRail page={railPageOf(location.pathname)} />}
       overlays={
