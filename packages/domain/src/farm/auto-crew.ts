@@ -2,6 +2,7 @@ import { buildLock } from './builds'
 import { mealsNeeded, pantryMeals, plainBatch } from './food'
 import { BUILD_PLACES } from './places'
 import { workNeeds } from './work-coverage'
+import { dugCount } from '../gathering/digs'
 import { haulsToday, reachList } from '../gathering/hauls'
 import { animalsIn } from '../ranch/ranch'
 import type { FarmSave, FarmTask } from '../save/v4'
@@ -54,7 +55,7 @@ export function autoJobs(save: FarmSave, pack: SchedulePack | null, budget: Gath
     const turn = (GATHERING_ORDER.indexOf(task.kind) - firstJob + GATHERING_ORDER.length) % GATHERING_ORDER.length
     const pinnedLogs = needLogs && task.kind === 'chop'
     const score = base + completed / 100 + turn / 1000 - (pinnedLogs ? .004 : 0)
-    if (task.kind === 'mine') return [{ task, priority: score, areaUse: haulsToday(save, task.dig) }]
+    if (task.kind === 'mine') return [{ task, priority: score, areaUse: haulsToday(save, task.dig), areaOrder: save.farm.counts[dugCount(task.dig)] ?? 0 }]
     if (task.kind === 'fish') return [{ task, priority: score, areaUse: haulsToday(save, task.spot), areaOrder: fishOrder?.get(task.spot) ?? 0 }]
     return [{ task, priority: score, areaUse: haulsToday(save, task.area), areaOrder: woodsOrder?.get(task.area) ?? 0 }]
   })

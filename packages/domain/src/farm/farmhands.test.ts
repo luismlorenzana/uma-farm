@@ -9,7 +9,7 @@ import { LAUNCH_CAST, withLaunchProfessions } from '../story/launch'
 import { worksOn } from '../town/town'
 import { FESTIVALS, festivalDayOfYear } from './calendar'
 import { upkeepOf, UPKEEP_RESIDENT } from './economy'
-import { digFloor, stairsAfter } from '../gathering/digs'
+import { digFloor, dugCount, stairsAfter } from '../gathering/digs'
 import {
   aptitudeLevelOf, aptitudeOf, APTITUDE_POINTS, aptitudeQuality, aptitudeUps, aptitudesOf, aptitudeYield, BIG_LOAD, fedThisMorning, handActionsLeft, handDay, handsInOrder,
   handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setAutoWork, setTasks, settleCrewShift, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
@@ -112,6 +112,18 @@ describe('automatic crew work', () => {
     const mining = handsTonight(auto, auto, talentsD, null)
     expect(mining.jobs?.some(job => job.key === 'mine:mine')).toBe(true)
     expect(digFloor(mining.save.places.mine)).toBeGreaterThan(1)
+  })
+
+  it('uses a lone mining slot at the Quarry when the Mine has had more work', () => {
+    const base = farm()
+    const save = setAutoWork({ ...base,
+      roster: { [A]: base.roster[A]! },
+      buildings: { ...base.buildings, mine: 1, quarry: 1 },
+      farm: { ...base.farm, counts: { [dugCount('mine')]: 25 } },
+      today: { ...base.today, hauls: { woods: 4, pond: 4 } },
+    }, [A], true)
+    const shift = handsTonight(save, save, talentsD, null)
+    expect(shift.jobs?.[0]?.key).toBe('mine:quarry')
   })
 
   it('honors manual priorities and can disable automatic work without altering the orders', () => {
