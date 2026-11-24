@@ -13,7 +13,7 @@ export interface RoomActor {
 }
 interface PositionedProfile { id: string; name: string; x: number; y: number }
 
-const RoomDepth = lazy(() => import('./RoomDepth').catch(() => ({ default: ({ fallback }: { fallback: ReactNode }) => fallback })))
+const RoomDepth = lazy(() => import('./RoomDepth').catch(() => ({ default: ({ fallback }: { fallback: ReactNode }) => <>{fallback}</> })))
 
 export function WorldProfiles({ figures, open }: { figures: readonly PositionedProfile[]; open(id: string): void }) {
   return <>{figures.map(({id,name,x,y}) => <button key={id} type="button" aria-label={'Talk to '+name} data-world-actor={id}
