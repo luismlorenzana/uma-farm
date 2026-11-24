@@ -261,6 +261,20 @@ describe('married life', () => {
     expect(planVisit(save, pack, [a, b], 'pajamas', id => id === a)).toBeNull()
     expect(planVisit(save, pack, [a], 'pajamas', id => id === a)).not.toBeNull()
     const pair = planVisit(save, pack, [a, b], 'pajamas', noBirthday)!
+    for (const [duoArt, first, second] of [['recline', 'recline', 'kiss'], ['kneel', 'kneel', 'crawl-kiss']] as const) {
+      for (const who of [[a, b], [b, a]] as [string, string][]) {
+        const planned = { ...pair, who, duoArt }
+        const after = parseSaveV6(completeVisit(save, pack, planned, 0, noBirthday))
+        expect(nightVisits(after)).toEqual([planned])
+        for (const id of who) {
+          const memory = greaterLoveOf(after, id).memories[0]!
+          expect(memory).toEqual(planned)
+          const cues = visitBeats(pack, memory).flatMap(beat => beat.steps.flatMap(step => 'illustration' in step ? [step.illustration] : []))
+          expect(cues).toEqual(['duo-' + who[1] + '-' + first, 'duo-' + who[0] + '-' + second])
+          expect(visitBeats(pack, memory, true).flatMap(beat => beat.steps).some(step => 'illustration' in step)).toBe(false)
+        }
+      }
+    }
     save = completeVisit(save, pack, pair, 0, noBirthday)
     expect(nightVisits(save)).toEqual([pair])
     const evening = spendDuoEvening(save, pack, [a, b], 'walk', 80, false, noBirthday)

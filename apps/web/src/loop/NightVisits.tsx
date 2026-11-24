@@ -1,8 +1,8 @@
 import { byRelationship } from './relationship-order'
 import {
-  actionsLeft, crewShiftEnabled, passDayPart, anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoReady, editDuo, formalLooks, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
+  actionsLeft, crewShiftEnabled, passDayPart, anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoNightSceneId, DUO_NIGHT_SEQUENCES, duoReady, editDuo, formalLooks, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
   NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, useStoryDuos, visitBeats, wantsBirthdayAlone,
-  type Birthdays, type Duo, type FarmSave, type VisitKind, type StoryPack, type Visit,
+  type Birthdays, type Duo, type DuoNightVariant, type FarmSave, type VisitKind, type StoryPack, type Visit,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -10,6 +10,8 @@ import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
+import { useIllustrationsState } from '../dialogue/illustrations'
+import { seeIllustrationOnce, seeIllustrationsOnce } from './actions'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
@@ -92,9 +94,9 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
     const visit = planVisit(save, pack, who, kind, id => birthday(save, id), birthdays, kind === 'pajamas' ? undefined : look[who[0]] || undefined)
     if (visit) { setError(null); setActive({ visit, slot: visits.length }) }
   }
-  if (active) return <VisitScene save={save} pack={pack} visit={active.visit} nameOf={nameOf} busy={busy} error={error}
+  if (active) return <NewVisitScene save={save} pack={pack} visit={active.visit} nameOf={nameOf} busy={busy} error={error}
     onClose={() => setActive(null)}
-    onDone={() => void run(s => completeVisit(s, pack, active.visit, active.slot, id => birthday(s, id), birthdays), () => setActive(null))} />
+    onDone={played => void run(s => completeVisit(s, pack, played, active.slot, id => birthday(s, id), birthdays), () => setActive(null))} />
   return <Sheet open onClose={onClose} title={`Night visits · ${visits.length}/${NIGHT_VISITS}`} label="Night visits">
     <div className="space-y-3 pb-2" data-night-visits={visits.length}>
       <div className="flex flex-wrap gap-2" aria-label="Visit type">
@@ -195,9 +197,33 @@ function DuoEditor({ save, pack, nameOf, busy, run }: { save: FarmSave; pack: St
   </div>
 }
 
-function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, onDone, onClose }: {
+interface VisitSceneProps {
   save: FarmSave; pack: StoryPack; visit: Visit; morning?: boolean; nameOf: NameOf; busy?: boolean; error?: string | null; onDone: () => void; onClose: () => void
-}) {
+}
+type NewVisitProps = Omit<VisitSceneProps, 'onDone'> & { onDone: (visit: Visit) => void }
+
+function NewVisitScene(props: NewVisitProps) {
+  const { visit, onClose } = props
+  const [host, partner] = visit.who
+  const shared = partner && visit.kind === 'pajamas'
+  const hostArt = useIllustrationsState(shared ? host : null)
+  const partnerArt = useIllustrationsState(shared ? partner : null)
+  if (hostArt === 'loading' || partnerArt === 'loading') {
+    return <Sheet open title="Night visit" onClose={onClose}><p role="status">Loading scene…</p></Sheet>
+  }
+  const ready = partner && hostArt && partnerArt ? (Object.keys(DUO_NIGHT_SEQUENCES) as DuoNightVariant[]).filter(variant =>
+    DUO_NIGHT_SEQUENCES[variant].every(pose => hostArt.scenes.some(scene => scene.id === duoNightSceneId(partner, pose)) &&
+      partnerArt.scenes.some(scene => scene.id === duoNightSceneId(host, pose)))) : []
+  return <SelectedVisitScene {...props} choices={ready} />
+}
+
+function SelectedVisitScene({ choices, onDone, visit, ...props }: NewVisitProps & { choices: readonly DuoNightVariant[] }) {
+  const [duoArt] = useState(() => choices[Math.floor(Math.random() * choices.length)])
+  const played = duoArt ? { ...visit, duoArt } : visit
+  return <VisitScene {...props} visit={played} onDone={() => onDone(played)} />
+}
+
+function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, onDone, onClose }: VisitSceneProps) {
   const [part, setPart] = useState(0)
   const scene = visitBeats(pack, visit, morning)[part]
   const title = `${morning ? 'Morning' : visit.kind === 'anniversary' ? 'Anniversary ' + visit.anniversary : visit.kind === 'birthday' ? 'Birthday night' : 'Night visit'} · ${visit.who.map(nameOf).join(' & ')}`
@@ -207,7 +233,14 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
   </Sheet>
   const room = morning || scene.beat === 'bedside' ? 'bedroom'
     : scene.beat === 'farewell' ? 'home-threshold' : visit.who.length > 1 ? 'sitting-duo' : 'sitting-solo'
-  return <Frame title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
+  const recordArt = (owner: string, id: string) => {
+    const partner = visit.who.find(person => person !== owner)
+    const pose = partner && visit.duoArt && DUO_NIGHT_SEQUENCES[visit.duoArt].find(pose => duoNightSceneId(partner, pose) === id)
+    return partner && pose
+      ? seeIllustrationsOnce([[owner, id], [partner, duoNightSceneId(owner, pose)]])
+      : seeIllustrationOnce(owner, id)
+  }
+  return <Frame onIllustrationSeen={recordArt} title={title} label={title} scene={`visit:${visit.kind}:${part}`} onSkip={onClose} skipping={false}>
     <SceneLookProvider value={{ day: visit.day + (morning ? 1 : 0), leads: [scene.id], own: scene.outfit, portrait: scene.portrait }}>
       <LifeScene key={part} id={scene.id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} atmosphere={environment(save, room, morning ? 'morning' : 'night', visit.day + (morning ? 1 : 0))}
         onDone={() => setPart(part + 1)} data={{ 'data-visit-beat': scene.beat, 'data-visit-speaker': scene.id }} />

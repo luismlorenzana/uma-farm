@@ -2,7 +2,7 @@ import { int, list, object, record } from './parse'
 import { dateOf, yearsSince } from '../farm/calendar'
 import { fail, member, outfit, unique } from './parse-loop'
 import {
-  COHORTS, DUO_LIMIT, NIGHT_VISITS, TRUE_LOVE, celebrationDate, duoKey, festivalGiftWindow, isCelebration, unlockedLooks, visitLookKind, visitMemoryKey,
+  COHORTS, DUO_LIMIT, NIGHT_VISITS, TRUE_LOVE, celebrationDate, duoKey, festivalGiftWindow, isCelebration, isDuoNightVariant, unlockedLooks, visitLookKind, visitMemoryKey,
   type Celebration, type Cohort, type Duo, type GreaterLove, type LongGame, type Visit,
 } from './long-game'
 import { EVENING_KINDS, type SaveV4 } from './v4'
@@ -24,11 +24,13 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     game.celebrations[id as Celebration] = int(date, path, scheduled ?? 1, today)
   }
   const visitOf = (value: unknown, memory = false): Visit => {
-    const row = object(value, path, ['who', 'kind', 'looks', 'day', 'anniversary', 'birthday', ...(memory ? ['overnight'] : [])])
+    const row = object(value, path, ['who', 'kind', 'looks', 'day', 'anniversary', 'birthday', 'duoArt', ...(memory ? ['overnight'] : [])])
     const who = unique(list(row.who, path, 1, 2).map(id => member(id, path, spouses)), path) as Visit['who']
     const day = int(row.day, path, Math.max(...who.map(id => save.love[id]!.wed!)), today)
     const kind = row.kind
     if (kind !== 'pajamas' && kind !== 'anniversary' && kind !== 'birthday') return fail(path, 'unknown visit kind')
+    const duoArt = row.duoArt
+    if (duoArt !== undefined && (!isDuoNightVariant(duoArt) || kind !== 'pajamas' || who.length !== 2)) return fail(path, 'unknown duo bedtime art')
     const looks = list(row.looks, path, who.length, who.length).map((look, i) => int(look, path, 1, unlockedLooks(TRUE_LOVE, visitLookKind({ kind }, i))))
     if (kind !== 'anniversary' && row.anniversary !== undefined) fail(path, 'expected an anniversary')
     if (kind !== 'birthday' && row.birthday !== undefined) fail(path, 'expected a birthday')
@@ -36,7 +38,7 @@ export function parseLongGame(value: unknown, path: string, save: SaveV4): LongG
     const birthday = kind === 'birthday' ? int(row.birthday, path, dateOf(day, save.calendar).year, dateOf(day, save.calendar).year) : undefined
     if (row.overnight !== undefined && (row.overnight !== true || day >= today)) fail(path, 'expected a past overnight visit')
     return { who, day, kind, looks, ...(anniversary === undefined ? {} : { anniversary }), ...(birthday === undefined ? {} : { birthday }),
-      ...(row.overnight === true ? { overnight: true } : {}) }
+      ...(duoArt === undefined ? {} : { duoArt }), ...(row.overnight === true ? { overnight: true } : {}) }
   }
   for (const [id, value] of Object.entries(record(raw.love, path))) {
     member(id, path, spouses)

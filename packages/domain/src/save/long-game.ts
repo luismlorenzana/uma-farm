@@ -19,11 +19,22 @@ export type Duo = [string, string]
 export type NightKind = 'pajamas' | 'anniversary'
 export const VISIT_KINDS = ['pajamas', 'anniversary', 'birthday'] as const
 export type VisitKind = typeof VISIT_KINDS[number]
+export const DUO_NIGHT_SEQUENCES = {
+  recline: ['recline', 'kiss'],
+  kneel: ['kneel', 'crawl-kiss'],
+} as const
+export type DuoNightVariant = keyof typeof DUO_NIGHT_SEQUENCES
+type DuoNightPose = typeof DUO_NIGHT_SEQUENCES[DuoNightVariant][number]
+export const isDuoNightVariant = (value: unknown): value is DuoNightVariant => value === 'recline' || value === 'kneel'
+export const duoNightSceneId = (partner: string, pose: DuoNightPose): string => 'duo-' + partner + '-' + pose
+
 export interface Visit {
   day: number
   kind: VisitKind
   who: [string] | Duo
   looks: number[]
+  /** The two shared bedtime illustrations played in a pajama duo visit. */
+  duoArt?: DuoNightVariant
   /** Anniversary number, independent of the night on which it played. */
   anniversary?: number
   /** Farm year of the birthday, separate from the anniversary receipt. */
@@ -78,7 +89,7 @@ export function endingRecord(save: Pick<SaveV4, 'diary' | 'farm' | 'roster'>): N
 }
 
 export const isCelebration = (id: string): id is Celebration => (CELEBRATIONS as readonly string[]).includes(id)
-export const visitMemoryKey = (visit: Visit): string => [visit.kind, visit.who.join(':'), visit.looks.join(':')].join('/')
+export const visitMemoryKey = (visit: Visit): string => [visit.kind, visit.who.join(':'), visit.looks.join(':'), ...(visit.duoArt ? [visit.duoArt] : [])].join('/')
 export const duoKey = ([a, b]: Duo): string => [a, b].sort((x, y) =>
   Number(x.replace(/^s/, '')) - Number(y.replace(/^s/, '')) || x.localeCompare(y)).join(':')
 
