@@ -1,9 +1,9 @@
 import {
   ANNIVERSARY_LOOK_POINTS, benchOpen, farmPlace, forgeAssistants, forgeMaterialRows, formalLooks, giveHeirloom,
   goodName, goodOf, greaterLoveOf, HEIRLOOM_IDS, HEIRLOOMS, heirloomLock, heirloomOf, isBuildPlace, nextToolTier,
-  orderHeirloom, orderTool, parseStockKey, placeBuilt, practiceForging, TOOL_IDS, TOOL_NAMES, TOOL_RECIPES,
-  toolEffect, toolOrderLock, toolTierName, trackHeirloom, visitBeats, visitPortraitKey, type FarmSave, type ForgeMaterial,
-  type HeirloomId, type StationId, type ToolId, type UpgradeTier,
+  bestToolTier, handsTonight, installRackCopy, orderHeirloom, orderRackTool, rackCopies, rackOrderLock, rackRecipe, parseStockKey, placeBuilt, practiceForging, TOOL_IDS, TOOL_NAMES, TOOL_RECIPES,
+  toolEffect, toolTierName, trackHeirloom, trackRackTool, visitBeats, visitPortraitKey, type FarmSave, type ForgeMaterial,
+  type HeirloomId, type StationId, type ToolId, type ToolTier, type UpgradeTier,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -44,13 +44,13 @@ export default function ForgeSheet() {
   return <Sheet open size="wide" title="Forge workshop" label="Forge workshop" onClose={() => leave(withParam(location, 'sheet', null))}>
     <div className="space-y-3 pb-3" data-forge-workshop>
       <nav className="flex flex-wrap items-center gap-2">
-        <Button variant={!jewelTab ? 'primary' : 'secondary'} onClick={() => switchTab(false)} aria-pressed={!jewelTab}>Tools</Button>
+        <Button variant={!jewelTab ? 'primary' : 'secondary'} onClick={() => switchTab(false)} aria-pressed={!jewelTab}>Tool Rack</Button>
         <Button variant={jewelTab ? 'primary' : 'secondary'} onClick={() => switchTab(true)} aria-pressed={jewelTab}>Heirlooms</Button>
         {benchOpen(save) ? <Link className={LINK} to="/?sheet=bench" state={{ back: true }}>Ring Bench ›</Link> : <span className="text-ink-soft">Ring Bench · After Romance 8</span>}
       </nav>
       {jewelTab || placeBuilt(save, 'forge')
-        ? <Workshop key={`${jewelTab}:${params.get('recipient')}:${params.get('piece')}:${params.get('tool')}`} save={save} jewels={jewelTab}
-          initialRecipient={params.get('recipient')} initialPiece={params.get('piece')} initialTool={params.get('tool')} />
+        ? <Workshop key={`${jewelTab}:${params.get('recipient')}:${params.get('piece')}:${params.get('tool')}:${params.get('from')}`} save={save} jewels={jewelTab}
+          initialRecipient={params.get('recipient')} initialPiece={params.get('piece')} initialTool={params.get('tool')} initialFrom={params.get('from')} />
         : <Restore save={save} />}
     </div>
   </Sheet>
@@ -68,10 +68,11 @@ function Restore({ save }: { save: FarmSave }) {
 }
 
 import { CreditPurchase } from './CreditPurchase'
-import { pinToolStock } from '@farm/domain'
 
-function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }: {
-  save: FarmSave; jewels: boolean; initialRecipient: string | null; initialPiece: string | null; initialTool: string | null
+type SourceTier = Exclude<ToolTier, 5>
+
+function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool, initialFrom }: {
+  save: FarmSave; jewels: boolean; initialRecipient: string | null; initialPiece: string | null; initialTool: string | null; initialFrom: string | null
 }) {
   const pack = useStory()
   const master = useMaster()
@@ -80,6 +81,7 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
   const [recipient, chooseRecipient] = useState(() => initialRecipient && spouses.includes(initialRecipient) ? initialRecipient : spouses[0] ?? '')
   const [piece, choosePiece] = useState<HeirloomId>(() => HEIRLOOM_IDS.find(id => id === initialPiece) ?? 'earrings')
   const [tool, chooseTool] = useState<ToolId>(() => TOOL_IDS.find(id => id === initialTool) ?? 'watering-can')
+  const [source, chooseSource] = useState<SourceTier>(() => ([2, 3, 4] as const).find(tier => String(tier) === initialFrom) ?? 1)
   const [helper, chooseHelper] = useState('')
   const [useReserved, setReserved] = useState(false)
   const [practiceTier, setPracticeTier] = useState<UpgradeTier>(2)
@@ -100,15 +102,18 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
   const assistants = forgeAssistants(save, pack)
   const assistant = assistants.includes(helper) ? helper : undefined
   const [artReady, artLoading] = useHeirloomArt(jewels ? recipient : '', piece)
-  const tier = nextToolTier(save.tools[tool])
-  const recipe = jewels ? HEIRLOOMS[piece] : tier && TOOL_RECIPES[tier]
+  const copies = rackCopies(save, tool)
+  const from = source === 1 || copies.some(copy => copy.tier === source) ? source : 1
+  const tier = nextToolTier(from)!
+  const recipe = jewels ? HEIRLOOMS[piece] : rackRecipe(tool, tier)
+  const trackingTool = save.forge?.rackGoal?.tool === tool && save.forge.rackGoal.fromTier === from
   const order = jewels ? heirloomOf(save, recipient, piece) : undefined
-  const lock = jewels ? heirloomLock(save, recipient, piece, artReady, useReserved) : toolOrderLock(save, tool, useReserved)
+  const lock = jewels ? heirloomLock(save, recipient, piece, artReady, useReserved) : rackOrderLock(save, tool, from, useReserved)
   const anyReserved = recipe && forgeMaterialRows(save, recipe.materials).some(row => row.free < row.count && row.held >= row.count)
   const tracked = save.forge?.tracked?.recipient === recipient && save.forge.tracked.piece === piece
-  const canPractice = Object.values(save.tools).some(tier => tier > 1)
+  const canPractice = TOOL_IDS.some(id => bestToolTier(save, id) > 1)
   const current = save.forge?.tool
-  const installed = save.forge?.installed.find(order => order.tool === tool)
+  const installed = [...copies, ...(save.forge?.installed.filter(order => order.tool === tool) ?? [])].sort((a, b) => b.due - a.due)[0]
   const ready = (day: number) => shortDate(day, save.calendar)
   return <div className="space-y-3">
     {!jewels && current && <div className="rounded-md border border-hairline bg-panel p-2" data-tool-order={current.tool}>
@@ -140,10 +145,10 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
         {jewels ? HEIRLOOM_IDS.map(id => <Button key={id} variant={piece === id ? 'primary' : 'secondary'}
           aria-pressed={piece === id} onClick={() => { choosePiece(id); setReserved(false) }}><ItemIcon id={`heirloom/${id}`} size={24} />{HEIRLOOMS[id].name}</Button>)
           : TOOL_IDS.map(id => <Button key={id} variant={tool === id ? 'primary' : 'secondary'}
-            aria-pressed={tool === id} onClick={() => { chooseTool(id); setReserved(false) }}><ItemIcon id={`tool/${id}/tier-${save.tools[id]}`} size={24} />{TOOL_NAMES[id]} · {toolTierName(save.tools[id])}</Button>)}
+            aria-pressed={tool === id} onClick={() => { chooseTool(id); chooseSource(1); setReserved(false) }}><ItemIcon id={`tool/${id}/tier-${bestToolTier(save, id)}`} size={24} />{TOOL_NAMES[id]} · {rackCopies(save, id).length}</Button>)}
       </div>
       <div className="min-w-0 space-y-2" data-forge-selection={jewels ? piece : tool}>
-        <h3 className="flex items-center gap-2 font-display text-lg font-bold">{jewels ? <JewelMark piece={piece} /> : <ItemIcon id={`tool/${tool}/tier-${tier ?? save.tools[tool]}`} size={36} />}{jewels ? HEIRLOOMS[piece].name : TOOL_NAMES[tool]}</h3>
+        <h3 className="flex items-center gap-2 font-display text-lg font-bold">{jewels ? <JewelMark piece={piece} /> : <ItemIcon id={`tool/${tool}/tier-${tier}`} size={36} />}{jewels ? HEIRLOOMS[piece].name : TOOL_NAMES[tool]}</h3>
         {jewels && artReady && <details className="rounded border border-hairline px-2">
           <summary className="flex min-h-11 items-center font-semibold">Preview her look</summary>
           <div className="flex h-36 justify-center">
@@ -153,9 +158,20 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
           </div>
         </details>}
         {jewels ? <p>Formal look {HEIRLOOMS[piece].look} · {greaterLoveOf(save, recipient).points}/{ANNIVERSARY_LOOK_POINTS[HEIRLOOMS[piece].look - 1]} Greater Love</p>
-          : <><p>{toolTierName(save.tools[tool])}{tier ? ` → ${toolTierName(tier)}` : ''} · {toolEffect(tool, tier ?? save.tools[tool])}</p>
-            {installed?.finish === 'stamped' && <p className="text-ink-soft">Maker’s stamp · {ready(installed.due)}</p>}
-            {tier && <ToolForecast save={save} tool={tool} tier={tier} />}</>}
+          : <>
+            <p>Shared basics · {copies.length} upgraded {copies.length === 1 ? 'copy' : 'copies'}{save.tools[tool] > 1 && ` · Legacy ${toolTierName(save.tools[tool])} for the whole farm`}</p>
+            <ul className="flex flex-wrap gap-2 text-sm" aria-label="Copies by tier">{([2, 3, 4, 5] as const).map(level => <li key={level} className="rounded border border-hairline px-2 py-1">{toolTierName(level)} ×{copies.filter(copy => copy.tier === level).length}</li>)}</ul>
+            <label className="flex flex-wrap items-center gap-2">Order
+              <select className={SELECT} value={from} onChange={event => { chooseSource(Number(event.target.value) as SourceTier); setReserved(false) }}>
+                <option value={1}>Craft a Fitted copy</option>
+                {([2, 3, 4] as const).filter(level => copies.some(copy => copy.tier === level)).map(level =>
+                  <option key={level} value={level}>Upgrade {toolTierName(level)} to {toolTierName(nextToolTier(level)!)}</option>)}
+              </select>
+            </label>
+            <p className="text-sm">{toolEffect(tool, tier)}. Copies go to workers who use them.</p>
+            {installed?.finish === 'stamped' && <p className="text-ink-soft">Last maker’s stamp · {ready(installed.due)}</p>}
+            <ToolForecast save={save} tool={tool} tier={tier} from={from} nameOf={nameOf} />
+          </>}
         {order ? <div className="space-y-2">
           <p>{order.gifted ? formalLooks(save, recipient).includes(HEIRLOOMS[piece].look) ? 'Look unlocked' : 'Gifted · Needs Greater Love'
             : order.ready ? 'Ready to give' : `In progress · Ready ${ready(order.due)}`}</p>
@@ -170,18 +186,18 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
             s => trackHeirloom(s, recipient, piece), tracked ? 'Tracking cleared.' : 'Added to What Next?',
           )}>{tracked ? 'Stop tracking' : 'Track materials'}</Button>}
           {!jewels && <Button variant="secondary" disabled={busy} onClick={() => void run(
-            s => pinToolStock(s, tool), save.farm.toolPin === tool ? 'Tracking cleared.' : 'Tool materials protected.',
-          )}>{save.farm.toolPin === tool ? 'Stop tracking' : 'Track tool materials'}</Button>}
+            s => trackRackTool(s, tool, from), trackingTool ? 'Tracking cleared.' : 'Added to What Next?',
+          )}>{trackingTool ? 'Stop tracking' : 'Track tool materials'}</Button>}
           {lock && <p className="text-ink-soft">{jewels && artLoading && lock === 'Artwork coming.' ? 'Checking wardrobe art…' : lock}</p>}
           <Button disabled={busy || lock !== null} onClick={() => void run(
             s => jewels ? orderHeirloom(s, recipient, piece, artReady, pack, assistant, useReserved)
-              : orderTool(s, tool, pack, assistant, useReserved), 'Order placed.',
+              : orderRackTool(s, tool, from, pack, assistant, useReserved), 'Order placed.',
           )}>{jewels ? 'Commission heirloom' : 'Place tool order'}</Button>
           <CreditPurchase save={save} cost={recipe.gold} title={jewels ? HEIRLOOMS[piece].name : TOOL_NAMES[tool]}
             lock={jewels ? heirloomLock({ ...save, gold: recipe.gold }, recipient, piece, artReady, useReserved)
-              : toolOrderLock({ ...save, gold: recipe.gold }, tool, useReserved)}
+              : rackOrderLock({ ...save, gold: recipe.gold }, tool, from, useReserved)}
             order={s => jewels ? orderHeirloom(s, recipient, piece, artReady, pack, assistant, useReserved)
-              : orderTool(s, tool, pack, assistant, useReserved)} />
+              : orderRackTool(s, tool, from, pack, assistant, useReserved)} />
         </>}
         {message && <p role={error ? 'alert' : 'status'} className={error ? 'text-danger' : 'text-success'}>{message}</p>}
       </div>
@@ -191,7 +207,7 @@ function Workshop({ save, jewels, initialRecipient, initialPiece, initialTool }:
       <div className="space-y-2 pb-2">
         <label className="flex flex-wrap items-center gap-2">Tier
           <select className={SELECT} value={practiceTier} onChange={event => setPracticeTier(Number(event.target.value) as UpgradeTier)}>
-            {([2, 3, 4, 5] as const).filter(tier => Object.values(save.tools).some(value => value >= tier)).map(tier =>
+            {([2, 3, 4, 5] as const).filter(tier => TOOL_IDS.some(id => bestToolTier(save, id) >= tier)).map(tier =>
               <option key={tier} value={tier}>{toolTierName(tier)}</option>)}
           </select>
         </label>
@@ -248,14 +264,13 @@ function AssistantImpact({ save, id }: { save: FarmSave; id: string }) {
     {gap.gaps > 0 && ` ${gap.gaps} more work units open.`}</p>
 }
 
-function ToolForecast({ save, tool, tier }: { save: FarmSave; tool: ToolId; tier: UpgradeTier }) {
+function ToolForecast({ save, tool, tier, from, nameOf }: { save: FarmSave; tool: ToolId; tier: UpgradeTier; from: SourceTier; nameOf: (id: string) => string }) {
   const pack = useStory()
   const talents = useTalents().of
-  const due = save.calendar.day + TOOL_RECIPES[tier].days
+  const due = save.calendar.day + rackRecipe(tool, tier).days
   const forecast = useMemo(() => {
     const baseline = forecastCrewOn(save, due, pack, talents)
-    const upgraded = forecastCrewOn({ ...save, forge: save.forge ? { ...save.forge, tool: undefined } : undefined,
-      tools: { ...save.tools, [tool]: tier } }, due, pack, talents)
+    const upgraded = forecastCrewOn(installRackCopy(save, { tool, tier, fromTier: from, ordered: save.calendar.day, due }), due, pack, talents)
     const stats = (shift: typeof baseline) => ({
       crew: shift.lines.length,
       actions: shift.lines.reduce((sum, row) => sum + row.spent, 0),
@@ -263,9 +278,14 @@ function ToolForecast({ save, tool, tier }: { save: FarmSave; tool: ToolId; tier
       gaps: shift.needs.reduce((sum, row) => sum + row.count, 0),
     })
     return { before: stats(baseline), after: stats(upgraded) }
-  }, [save, due, pack, talents, tool, tier])
+  }, [save, due, pack, talents, tool, tier, from])
+  const used = useMemo(() => (handsTonight(save, save, talents, pack).jobs ?? []).flatMap(job => {
+    const copy = job.rackSlot === undefined ? undefined : save.forge?.rack?.[job.rackSlot]
+    return copy?.tool === tool ? [`${nameOf(job.id)} · ${toolTierName(copy.tier)}`] : []
+  }), [save, tool, talents, pack, nameOf])
   return <div className="space-y-1 rounded-md border border-hairline bg-panel p-2 text-sm">
     <p className="font-semibold">{shortDate(due, save.calendar)} · Crew preview</p>
+    {used.length > 0 && <p className="text-ink-soft">{save.today.crew ? 'Used today' : 'This shift'} · {[...new Set(used)].join(', ')}</p>}
     <p className="text-ink-soft">Based on {shortDate(save.calendar.day, save.calendar)} crops, stock and orders.</p>
     {forecast.before.crew === 0 ? <p>No crew scheduled. {toolEffect(tool, tier)}.</p>
       : <p>{forecast.before.actions} → {forecast.after.actions} crew actions · {forecast.before.gaps} → {forecast.after.gaps} work units open · {forecast.before.goods} → {forecast.after.goods} goods</p>}

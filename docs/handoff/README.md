@@ -5,6 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F118** adds the Tool Rack, the What's Next planner, the Library's Jewelry page, and floor navigation for modeled interiors. [Game mechanics](../game-mechanics.md#what-next) describe the planner and its crew priorities.
+
 **F117 tunes Auto Work.** [Four-season crew balance](../design/seasonal-crew-balance.md) records the plot limits and job ledger for 20, 30 and 50 Umas with the same ranch and production demand.
 
 **F111 is implemented.** The mayor offers shared credit, goods advances and partial payments. The smith commissions wedding rings, and the bin and crew use standard surplus settings from day one. The [playthrough results](../game-mechanics.md#f111-finance-and-default-surplus-playthroughs) cover the solo wedding and rosters of 10, 20 and 50.

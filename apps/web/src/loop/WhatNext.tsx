@@ -1,20 +1,23 @@
 import {
-  forgeMaterialRows, HEIRLOOMS, TOOL_IDS, TOOL_NAMES, toolTierName, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
+  HEIRLOOMS, TOOL_NAMES, workNeeds, ANIMALS, ANIMAL_KINDS, bar, benchOpen, buildCostWords, buildGoodsWords, buildLock, buildNeeds,
   BUILD_PLACES, EXPEDITION_REGIONS, farmPlace, farmRankOf, farmRankOpens, FARM_RANK_POINTS, FIELD_PLOTS,
   creditLeft, buildOrders, pinSupplyProject, RING_DEPOSIT, STANDARD_RING_COST, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
   animalLock, extensionCost, handsTonight, houseOpensWords, HOUSE_COSTS, nextLot, readyTiles, roomsInAll, rungName, STATION_LEVELS, STATIONS, umaMilestones, workKey,
+  eatTonight, festivalsOf, payTownOrders, knownRestaurantRecipes, longGameEnabled, NIGHT_VISITS, nightVisits, setCrewSupplyGoal, settleAccounts,
+  supplyGoals, supplySource, type SupplyGoal,
   type BuildPlace, type BuildNeed, type FarmSave, type FarmPlaceId,
 } from '@farm/domain'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { placeLink } from './farm-map'
-import { compareRelationships } from './relationship-order'
-import { dateWords } from './words'
+import { byRelationship, compareRelationships } from './relationship-order'
+import { dateWords, festivalWords } from './words'
 import { changeHomestead } from './homestead-actions'
 import { loanWords } from './money-words'
 import { RestockList } from './RestockList'
@@ -192,13 +195,14 @@ function FieldAndCrew({ save, forecast }: { save: FarmSave; forecast: ReturnType
       {forecast.lines.length ? forecast.lines.length + ' on shift · ' + free + ' crew actions free' : 'No crew on shift today'}
     </p>
     {!!needs.length && <ul className="divide-y divide-hairline rounded border border-hairline px-2 text-[13px]">
-      {needs.map(need => <li key={workKey(need.task)} className="flex items-center justify-between gap-2">
+      {needs.slice(0, 4).map(need => <li key={workKey(need.task)} className="flex items-center justify-between gap-2">
         <span><strong className="block">{taskWords(need.task, save.fields.plots.length)}</strong><small>{need.need}</small></span>
         {need.blocked ? need.task.kind === 'plant' ? <Action to="/?sheet=shop">Find seeds</Action>
           : <span className="text-[12px] text-ink-soft">Needs supplies</span>
           : <Action to={orderLink(workKey(need.task))}>Plan order</Action>}
       </li>)}
     </ul>}
+    {needs.length > 4 && <p className="text-[12px] text-ink-soft">{needs.length - 4} more orders on the Work Board.</p>}
     <div className="flex flex-wrap gap-x-4 text-[13px]">
       <Action to="/book?view=work">Work board</Action>
       <Action to="/book?view=work&workCalendar=1">Work calendar</Action>
@@ -255,88 +259,169 @@ function RanchAndHousing({ save }: { save: FarmSave }) {
   </section>
 }
 
-function FocusDetails({ label, children }: { label: string; children: ReactNode }) {
+function FocusDetails({ label, note, children }: { label: string; note?: string; children: ReactNode }) {
   return <details className="rounded-md border border-hairline">
-    <summary className="flex min-h-11 cursor-pointer items-center px-3 font-semibold">{label}</summary>
+    <summary className="min-h-11 cursor-pointer px-3 py-1.5 font-semibold">{label}{note && <span className="block text-[12px] font-normal text-ink-soft">{note}</span>}</summary>
     <div className="space-y-3 px-3 pb-3">{children}</div>
   </details>
 }
 
 function Focus({ save }: { save: FarmSave }) {
   const pack = useStory()
+  const master = useMaster()
+  const nameOf = namer(master.status === 'ready' ? master.view : null, pack)
   const { of } = useTalents()
   const forecast = useMemo(() => handsTonight(save, save, of, pack), [save, of, pack])
+  const remaining = workNeeds(forecast.save, pack)
   const staffed = forecast.lines.length
   const automated = forecast.lines.filter(line => save.roster[line.id]?.autoWork).length
-  const suggestion = nextAction(save, save.today.crew ? 0 : staffed, automated)
+  const candidate = pack && Object.keys(save.love).filter(id => save.roster[id] && save.love[id]?.stage !== 'spouse')
+    .sort(byRelationship(save)).find(id => readiness(save, pack, id).ready)
+  const spouse = Object.keys(save.love).filter(id => save.love[id]?.stage === 'spouse').sort(byRelationship(save))[0]
+  const pinned = supplyGoals(save)
+  const active = pinned.find(goal => goal.key === save.forge?.crewGoal) ?? pinned[0]
+  const dueWedding = candidate && save.love[candidate]?.stage === 'wedding'
+  const suggestion = nextAction(save, save.today.crew ? 0 : staffed, automated, {
+    event: candidate ? { id: candidate, name: nameOf(candidate), wedding: Boolean(dueWedding) } : undefined,
+    nightVisits: Boolean(spouse && longGameEnabled(save, pack) && nightVisits(save).length < NIGHT_VISITS),
+    tracked: active, ripeAfterCrew: readyTiles(forecast.save), crewShips: forecast.jobs?.some(job => job.key === 'ship-surplus'),
+    needsWork: Boolean(!save.today.crew && staffed && remaining.some(need => !need.blocked && ['water', 'harvest', 'care'].includes(need.task.kind))),
+  })
   const rank = farmRankOf(save.farm.points)
   const next = nextFarmRank(save.farm.points)
-  const ready = readyTiles(save)
-  const inBin = binView(save).total
-  const projects = BUILD_PLACES.filter(project => project.opens.rank <= rank && project.opens.game && project.group !== 'ranch')
-    .filter(project => buildLock(save, project.id)?.by !== 'built')
-    .sort((a, b) => a.opens.rank - b.opens.rank)
-  return <div className="space-y-4">
-    <section className="space-y-1.5 rounded-lg border border-accent/40 bg-panel p-3" aria-label="Recommended next action" data-next-action>
-      <h3 className="font-display text-lg font-bold">{suggestion.title}</h3>
-      <p className="max-w-prose text-sm text-ink-soft">{suggestion.detail}</p>
-      <Action to={suggestion.to}>{suggestion.label}</Action>
-      <p className="border-t border-hairline pt-2 text-[12px] text-ink-soft">
-        {gold(save.gold)} available{' · '}{gold(inBin)} queued{' · '}
-        {staffed ? `${staffed} ${save.today.crew ? 'worked this morning' : 'on the next shift'} · ${automated} on auto` : 'No crew on shift'}
-      </p>
-    </section>
-    <FocusDetails label="Farm work and starter goals">
-      <FieldAndCrew save={save} forecast={forecast} />
-      <StarterSteps save={save} />
-      <RestockList save={save} />
-    </FocusDetails>
-    <FocusDetails label="Farm Rank, buildings and credit">
-    <section aria-label="Project credit" className="text-[13px]">
-      <Action to="/town?at=mayor&sheet=mayor">{gold(creditLeft(save))} credit left</Action>
-      {save.farm.loans.map(loan => <p key={loan.for}>{loan.credit?.title ?? loan.for} · {loanWords(save, loan)}</p>)}
-    </section>
-    <section className="space-y-1" aria-label="Next Farm Rank">
-      <h3 className="font-display text-base font-semibold">{next ? `Reach Farm Rank ${next.rank}` : 'Farm Rank 10 reached'}</h3>
-      {next && <>
-        <progress className="w-full accent-accent" value={save.farm.points} max={next.points} aria-label={`Farm Rank ${next.rank} progress`} />
-        <p className="text-[13px]">{number(save.farm.points)}/{number(next.points)} points · {number(next.points - save.farm.points)} to go</p>
-        <p className="text-[13px] text-ink-soft">Ship goods you can spare. First-time shipments earn five extra points. Milestones and festival placements count overnight.</p>
-      </>}
-      <div className="flex flex-wrap gap-x-4">
-        <Action to="/?sheet=bin">{inBin > 0 ? `Shipping bin · ${gold(inBin)} queued` : 'Fill the shipping bin'}</Action>
-        <Action to="/field">{ready > 0 ? `Harvest · ${ready} ready` : 'Check crops'}</Action>
-        <Action to="/?sheet=calendar">Festival calendar</Action>
+  const projects = BUILD_PLACES.filter(project => project.opens.game && project.opens.rank <= rank && !['built', 'tonight'].includes(buildLock(save, project.id)?.by ?? ''))
+  const free = forecast.lines.reduce((sum, line) => sum + line.actions - line.spent, 0)
+  const dry = remaining.filter(need => need.task.kind === 'water').reduce((sum, need) => sum + need.count, 0)
+  const missingWork = remaining.filter(need => ['water', 'harvest', 'care', 'cook', 'load'].includes(need.task.kind)).length
+  const table = eatTonight(forecast.save, forecast.lines.map(line => line.id))
+  const shipping = binView(forecast.save).total
+  const orders = payTownOrders(table.save)
+  const service = orders.save.workshops.restaurant?.last
+  const sales = service?.day === save.calendar.day ? service.sales + service.tips : 0
+  const picked = settleAccounts({ ...orders.save, gold: orders.save.gold + shipping }, shipping + orders.gold + sales, {
+    takeout: table.takeout, pantry: table.pantry, spoiled: table.spoiled, fed: table.fed.length, staff: table.staff,
+  }, sales, orders.gold).save
+  const bill = picked.farm.accounts?.at(-1)
+  const net = picked.gold - save.gold
+  const dueTool = save.forge?.tool
+  const recipes = save.buildings.restaurant ? knownRestaurantRecipes(save).length : 0
+  const equip = save.forge?.rack?.length ?? 0
+  const rooms = roomsInAll(save)
+  const queued = save.farm.builds.length
+  return <div className="space-y-3">
+    <section className="space-y-1 rounded-lg border border-accent/50 bg-panel px-3 py-2" aria-label="Recommended next action" data-next-action>
+      <div className="flex flex-wrap items-center justify-between gap-x-3">
+        <div className="min-w-[12rem] flex-1">
+          <p className="text-[12px] text-ink-soft">{dateWords(save.calendar.day, save.calendar)} · Farm Rank {rank}</p>
+          <h3 className="font-display text-lg font-bold">{suggestion.title}</h3>
+        </div>
+        <span className="text-sm"><Action to={suggestion.to}>{suggestion.label}</Action></span>
       </div>
+      <p className="max-w-prose text-sm text-ink-soft">{suggestion.detail}</p>
     </section>
-    <section className="space-y-2" aria-label="Current projects">
-      <h3 className="font-display text-base font-semibold">Projects you can work toward now</h3>
-      {projects.length ? projects.map(project => <Project key={project.id} save={save} project={project} />)
-        : <p className="text-[13px] text-ink-soft">All available buildings are finished. Check land and upgrades in the Farm path.</p>}
-      <Action to="/book?view=work">Assign production to your crew</Action>
-      {(save.buildings.forge ?? 0) > 0 && <ForgeGoals save={save} />}
-    </section>
-    </FocusDetails>
-    <FocusDetails label="First wedding"><WeddingPath save={save} /></FocusDetails>
+    {active && <TrackedGoal save={save} goal={active} nightGold={picked.gold} />}
+    <div className="grid grid-cols-1 items-start gap-2 min-[650px]:grid-cols-2">
+      <FocusDetails label="Crew and fields" note={staffed ? `${staffed} on shift · ${dry ? dry + ' dry tiles left' : missingWork ? missingWork + ' jobs open' : 'essentials covered'}` : 'Solo today'}>
+        <FieldAndCrew save={save} forecast={forecast} />
+        <p className="text-[13px] text-ink-soft" data-farm-capacity>{staffed
+          ? `${free} spare crew actions under today’s conditions. Check the weekly calendar before planting more.`
+          : 'Plan planting around the watering and harvest work you can cover by hand.'}</p>
+        <StarterSteps save={save} />
+        <RestockList save={save} />
+      </FocusDetails>
+      <FocusDetails label="Money and credit" note={`${gold(save.gold)} on hand · ${net >= 0 ? '+' : '−'}${gold(Math.abs(net))} tonight`}>
+        <p className="text-sm" data-next-night-gold>{gold(shipping)} bin sales{orders.gold > 0 && ` · ${gold(orders.gold)} orders`} · {gold(bill?.food ?? 0)} food · {gold(bill?.upkeep ?? 0)} upkeep · {gold(bill?.loans ?? 0)} repayments.</p>
+        <p className="text-[13px] text-ink-soft">{gold(picked.gold)} projected cash after bills and the current crew shift. {picked.farm.owed > 0 && `${gold(picked.farm.owed)} still owed.`}</p>
+        <div className="flex flex-wrap gap-x-3 text-sm"><Action to="/book">Farm accounts</Action><Action to="/?sheet=bin">Shipping Bin</Action>
+          <Action to="/town?at=mayor&sheet=mayor">{gold(creditLeft(save))} credit left</Action></div>
+        {save.farm.loans.map(loan => <p key={loan.for} className="text-[13px]">{loan.credit?.title ?? loan.for} · {loanWords(save, loan)}</p>)}
+      </FocusDetails>
+      <FocusDetails label="Buildings and homes" note={queued ? `${queued} ready overnight` : `${save.ranch.animals.length} animals · ${rooms.rooms - rooms.taken} rooms free`}>
+        {!placeBuilt(save, 'coop') && <p className="text-[13px]">Coop and chickens open at Farm Rank 2. The Barn opens at Rank 3.</p>}
+        <div className="flex flex-wrap gap-x-3 text-sm"><Action to={rancher}>Rancher</Action><Action to="/?sheet=homestead">Homestead</Action></div>
+        {next && <div>
+          <p className="text-sm">Farm Rank {next.rank} · {number(next.points - save.farm.points)} points left</p>
+          <GoalBar label={`Farm Rank ${next.rank}`} have={save.farm.points} target={next.points} />
+        </div>}
+        {projects.length > 0 && <div className="space-y-1">{projects.map(project => <Project key={project.id} save={save} project={project} />)}</div>}
+      </FocusDetails>
+      <FocusDetails label="Production and tools" note={dueTool ? `${TOOL_NAMES[dueTool.tool]} ready ${dateWords(dueTool.due, save.calendar)}` : `${equip} upgraded copies · ${recipes}/120 recipes`}>
+        <div className="grid grid-cols-2 gap-x-2 text-sm">
+          <Action to="/?sheet=forge">Tool Rack</Action>
+          <Action to={placeBuilt(save, 'kitchen') ? '/?sheet=kitchen' : peek('kitchen')}>Kitchen</Action>
+          <Action to={placeBuilt(save, 'restaurant') ? '/?sheet=restaurant' : peek('restaurant')}>Restaurant</Action>
+          <Action to="/town?at=library">Town Library</Action>
+        </div>
+        <p className="text-[13px] text-ink-soft">Restaurant recipes need discoveries at the listed grades. Check tools before expanding the crew’s work.</p>
+      </FocusDetails>
+      <FocusDetails label="Relationships and jewelry" note={candidate ? `${nameOf(candidate)} · scene ready` : spouse ? `${nameOf(spouse)} · ${NIGHT_VISITS - nightVisits(save).length} visits left` : 'Work toward the first wedding'}>
+        <div className="flex flex-wrap gap-x-3 text-sm">
+          <Action to={candidate ? `/library?uma=${candidate}` : '/library'}>Uma Library</Action>
+          {spouse && <Action to={`/library?uma=${spouse}&page=jewelry`}>Jewelry</Action>}
+          {spouse && longGameEnabled(save, pack) && <Action to="/?visits=1">Night visits</Action>}
+        </div>
+        {save.forge?.heirlooms.filter(order => order.ready && !order.gifted).map(order => <p key={order.recipient + order.piece} className="text-sm">
+          <Action to={`/library?uma=${order.recipient}&page=jewelry`}>{HEIRLOOMS[order.piece].name} ready for {nameOf(order.recipient)}</Action>
+        </p>)}
+        {!spouse && <WeddingPath save={save} />}
+      </FocusDetails>
+      <FocusDetails label="Town and calendar" note={festivalWords(save.calendar.day, pack ? festivalsOf(pack) : undefined, save.calendar)}>
+        <div className="grid grid-cols-2 gap-x-2 text-sm">
+          <Action to="/town">Town map</Action><Action to="/?sheet=calendar">Calendar</Action>
+          <Action to="/town?at=cafe">Café</Action><Action to="/town?sheet=requests">Requests</Action>
+        </div>
+      </FocusDetails>
+    </div>
+    {pinned.filter(goal => goal !== active).map(goal => <FocusDetails key={goal.key} label={goal.title} note="Tracked">
+      <TrackedGoal save={save} goal={goal} nightGold={picked.gold} />
+    </FocusDetails>)}
   </div>
 }
 
-function ForgeGoals({ save }: { save: FarmSave }) {
-  const pack = useStory()
-  const needs = workNeeds(save, pack)
-  const due = save.forge?.tool
-  const priority = needs.some(need => need.task.kind === 'water') ? 'watering-can' : needs.some(need => need.task.kind === 'care') ? 'brush' : 'hoe'
-  const tool = save.tools[priority] < 5 ? priority : TOOL_IDS.find(id => save.tools[id] < 5)
-  const goal = save.forge?.tracked
-  const tracked = goal && HEIRLOOMS[goal.piece]
-  const missing = tracked && forgeMaterialRows(save, tracked.materials).reduce((n, row) => n + Math.max(0, row.count - row.free), 0)
-  return <div className="space-y-1">
-    {(due || tool) && <Action to={`/?sheet=forge&tool=${due?.tool ?? tool}`}>{due ? `${toolTierName(due.tier)} ${TOOL_NAMES[due.tool]} on order` : `Plan a ${TOOL_NAMES[tool!]} upgrade`}</Action>}
-    {goal && tracked && <Action to={`/?sheet=forge&tab=heirlooms&recipient=${goal.recipient}&piece=${goal.piece}`}>{tracked.name} · {missing ? `${missing} materials needed` : 'Materials ready'}</Action>}
-    {farmRankOf(save.farm.points) >= 8 && <Action to="/?sheet=forge&tab=heirlooms">Plan an heirloom commission</Action>}
-    {save.forge?.heirlooms.filter(order => order.ready && !order.gifted).map(order => <p key={`${order.recipient}:${order.piece}`}>
-      <Action to={`/?sheet=forge&tab=heirlooms&recipient=${order.recipient}&piece=${order.piece}`}>{HEIRLOOMS[order.piece].name} ready to give</Action></p>)}
-  </div>
+function TrackedGoal({ save, goal, nightGold }: { save: FarmSave; goal: SupplyGoal; nightGold: number }) {
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const assigned = save.forge?.crewGoal === goal.key
+  const crew = Object.values(save.roster).some(uma => uma.autoWork && uma.farmhand)
+  const missing = goal.lines.filter(line => line.held < line.count)
+  const short = Math.max(0, goal.gold - save.gold)
+  const after = Math.max(0, goal.gold - nightGold)
+  const ready = !missing.length && !short && !goal.discovery
+  async function toggle() {
+    setBusy(true)
+    try {
+      await changeHomestead(state => setCrewSupplyGoal(state, goal.key))
+      setMessage('')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return <section className="space-y-1.5 rounded-lg border border-hairline bg-panel p-3" aria-label="Tracked goal" data-next-tracked={goal.key}>
+    <p className="text-[12px] text-ink-soft">Tracked · {assigned ? 'On the crew’s list' : ready ? 'Supplies ready' : 'Stock protected'}</p>
+    <h3 className="font-display text-base font-bold">{goal.title}</h3>
+    {missing.length > 0 && <ul className="grid gap-1 min-[650px]:grid-cols-2" aria-label="Missing materials">
+      {missing.map(line => {
+        const source = supplySource(save, line.id)
+        return <li key={line.id} className="min-w-0 rounded border border-hairline px-2 text-sm">
+          <Action to={source.to}><ItemIcon id={line.id} size={20} /><span className="ml-1">{line.count - line.held} {line.name} needed</span></Action>
+          <p className="pb-1 text-[12px] text-ink-soft">{source.detail}{line.queued > 0 && ` · ${line.queued} refining`}</p>
+        </li>
+      })}
+    </ul>}
+    {goal.discovery ? <p className="text-sm">{goal.discovery} exact-grade discoveries missing.</p> : null}
+    {goal.gold > 0 && <p className="text-sm">{gold(goal.gold)} total · {short ? gold(short) + ' short' : 'Gold ready'}{after !== short && ` · ${gold(after)} short after tonight’s estimate`}</p>}
+    <div className="flex flex-wrap items-center gap-x-3 text-sm">
+      <Action to={goal.to}>Open goal</Action>
+      {(assigned || (!ready && crew)) && <Button size="md" variant="secondary" disabled={busy} onClick={() => void toggle()}>
+        {assigned ? 'Stop assigning crew' : 'Assign crew to this goal'}
+      </Button>}
+      {!ready && !assigned && !crew && <Action to="/book?view=work">Set up auto-work</Action>}
+    </div>
+    {assigned && <p className="text-[12px] text-ink-soft">Uses spare auto-work after daily needs and existing orders.</p>}
+    {message && <p role="alert">{message}</p>}
+  </section>
 }
 
 function FarmPath({ save }: { save: FarmSave }) {
@@ -381,15 +466,24 @@ function FarmPath({ save }: { save: FarmSave }) {
 export default function WhatNext({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   const [view, setView] = useState<'today' | 'ranch' | 'path'>('today')
+  const top = useRef<HTMLDivElement>(null)
+  const go = (selection: 'today' | 'ranch' | 'path') => {
+    top.current?.scrollIntoView?.({ block: 'start' })
+    setView(selection)
+  }
   if (!save) return null
-  return <Sheet open onClose={onClose} title="What Next?" label="What Next?" >
-    <div className="space-y-3 pb-2">
-      <div className="flex flex-wrap gap-1" role="group" aria-label="Goal view">
-        <Button size="md" variant={view === 'today' ? 'primary' : 'secondary'} aria-pressed={view === 'today'} onClick={() => setView('today')}>Focus now</Button>
-        <Button size="md" variant={view === 'ranch' ? 'primary' : 'secondary'} aria-pressed={view === 'ranch'} onClick={() => setView('ranch')}>Ranch &amp; homes</Button>
-        <Button size="md" variant={view === 'path' ? 'primary' : 'secondary'} aria-pressed={view === 'path'} onClick={() => setView('path')}>Farm path</Button>
-      </div>
-      {view === 'today' ? <Focus save={save} /> : view === 'ranch' ? <RanchAndHousing save={save} /> : <FarmPath save={save} />}
+  return <Sheet open onClose={onClose} size="wide" title="What Next?" label="What Next?" >
+    <div ref={top} className="space-y-3 pb-2">
+      {view === 'today' ? <>
+        <Focus save={save} />
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Farm guides">
+          <Button size="md" variant="secondary" onClick={() => go('ranch')}>Ranch &amp; homes</Button>
+          <Button size="md" variant="secondary" onClick={() => go('path')}>Farm path</Button>
+        </div>
+      </> : <>
+        <Button size="md" variant="secondary" onClick={() => go('today')}>‹ Focus now</Button>
+        {view === 'ranch' ? <RanchAndHousing save={save} /> : <FarmPath save={save} />}
+      </>}
     </div>
   </Sheet>
 }

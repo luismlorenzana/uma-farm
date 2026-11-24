@@ -5,6 +5,7 @@
 //   action, two finds), the stairs' progress and Take the stairs, free, once found and in the Farm Rank's reach.
 // Each says what the action brought, and the day's actions left.
 import {
+  bestToolTier,
   actionsLeft, toolChargesLeft, brushCapacity, animalName, ANIMALS, animalsIn, DIG_NAMES, digFloor, floorFinds, gradeAt, haulsToday, heartsOf, HOME_NAMES, HOME_ROOM, itemNameOf, readyIn, SILO_ROOM,
   stairsAfter, stairsFound, stairsLock, type Animal, type DigId, type FarmSave, type RanchHome,
   COLLECTION_CAPS, goodOf, gradeStepId, ranchProduct, type CollectionCap,
@@ -105,7 +106,7 @@ function AnimalRow({ save, animal, busy, out, run }: { save: FarmSave; animal: A
         <Button size="sm" className="flex-1" disabled={busy || out || animal.fed || save.ranch.silo === 0} data-action="feed"
           onClick={() => run(feedOne(animal.id).then(() => `Fed ${name}: its ${itemNameOf(rule.good).toLowerCase()} by morning`))}>Feed · 1</Button>
         <Button size="sm" variant="secondary" className="flex-1" disabled={busy || out || animal.cared} data-action="care"
-          onClick={() => run(careForOne(animal.id).then(() => `Cared for ${name}${save.tools.brush > 1 ? ' and nearby animals' : ': fonder'}`))}>{save.tools.brush > 1 ? `Care for up to ${brushCapacity(save.tools.brush)} · 1` : 'Care · 1'}</Button>
+          onClick={() => run(careForOne(animal.id).then(() => `Cared for ${name}${bestToolTier(save, 'brush') > 1 ? ' and nearby animals' : ': fonder'}`))}>{bestToolTier(save, 'brush') > 1 ? `Care for up to ${brushCapacity(bestToolTier(save, 'brush'))} · 1` : 'Care · 1'}</Button>
       </div>
     </li>
   )

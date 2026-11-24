@@ -2,7 +2,7 @@
 // silo), the woods' edge (forage or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
 // brought, and the day's actions left. Part of the farm map's chunk.
 import {
-  actionsLeft, toolChargesLeft, toolEffect, CROPS, cropBaseGrade, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
+  actionsLeft, bestToolTier, toolChargesLeft, toolEffect, CROPS, cropBaseGrade, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
   type HarvestReceipt,
   baseGoodId, FISH_MODES, FISH_MODE_NAMES, FISH_PROMOTION, goodCount, gradeVariants, MAX_PRODUCTION_TARGET, MAX_STATION_TARGETS,
   stationRecipes, type FishingSpotId, type FishMode, type StationId, type StationTarget,
@@ -72,9 +72,9 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
   const doIt = (a: TileAction) => {
     switch (a.kind) {
       case 'clear': return run(clearAt(index).then((found) => (found ? `Cleared · +1 ${itemNameOf(found)}` : 'Cleared')))
-      case 'till': return run(tillAt(index).then(() => save.tools.hoe > 1 ? toolEffect('hoe', save.tools.hoe) : 'Tilled'))
+      case 'till': return run(tillAt(index).then(() => bestToolTier(save, 'hoe') > 1 ? toolEffect('hoe', bestToolTier(save, 'hoe')) : 'Tilled'))
       case 'plant': return run(plantAt(index, a.seed).then(() => `Planted ${a.name}`))
-      case 'water': return run(waterAt(index).then(() => save.tools['watering-can'] > 1 ? toolEffect('watering-can', save.tools['watering-can']) : 'Watered: it grows tonight'))
+      case 'water': return run(waterAt(index).then(() => bestToolTier(save, 'watering-can') > 1 ? toolEffect('watering-can', bestToolTier(save, 'watering-can')) : 'Watered: it grows tonight'))
       case 'harvest': return run(harvestAt(index).then(harvestWords))
     }
   }

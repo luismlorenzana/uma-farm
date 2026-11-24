@@ -1,5 +1,6 @@
 import { buildLock } from './builds'
 import { mealsNeeded, pantryMeals, plainBatch } from './food'
+import { crewSupplyJobs } from './supply-goals'
 import { BUILD_PLACES } from './places'
 import { workNeeds, type WorkNeed } from './work-coverage'
 import { dugCount } from '../gathering/digs'
@@ -74,7 +75,7 @@ export function autoJobs(save: FarmSave, pack: SchedulePack | null, budget: Shif
     }
     if (task.kind === 'cook') return [{ task, priority: 2 }]
     if (task.kind === 'harvest') return [{ task, priority: 3 }]
-    if (task.kind === 'load' && !optional && loadsToday(save, task.station).length === 0) return [{ task, priority: 3.5 }]
+    if (task.kind === 'load' && !optional && save.farm.stationPlans?.[task.station] && loadsToday(save, task.station).length === 0) return [{ task, priority: 3.5 }]
     if (task.kind === 'ship-surplus') return save.farm.surplusSettings?.paused ? [] : [{ task, priority: 4 }]
     if (task.kind === 'plant') {
       if (!budget.spare) return []
@@ -97,5 +98,6 @@ export function autoJobs(save: FarmSave, pack: SchedulePack | null, budget: Shif
     if (task.kind === 'fish') return [{ task, priority: score, areaUse: haulsToday(save, task.spot), areaOrder: fishOrder?.get(task.spot) ?? 0 }]
     return [{ task, priority: score, areaUse: haulsToday(save, task.area), areaOrder: woodsOrder?.get(task.area) ?? 0 }]
   })
+  if (budget.spare && !budget.reserved) jobs.push(...crewSupplyJobs(save).map(task => ({ task, priority: 7.5 })))
   return jobs.sort((a, b) => a.priority - b.priority || (a.areaUse ?? 0) - (b.areaUse ?? 0) || (a.areaOrder ?? 0) - (b.areaOrder ?? 0))
 }

@@ -34,6 +34,7 @@ import { noteCupWork } from '../festivals/evidence'
 import { festivalBooked } from '../festivals/state'
 import { farmhands } from '../romance/loop'
 import { countChallenge, rankBenefits, type ChallengeEvent } from './rank-rules'
+import { crewStationTargets } from './supply-goals'
 import { shipSurplus, surplusCrate } from './production'
 import type { Activity } from './ranks'
 import { talentYield, type TalentOf, type TalentStep } from './talents'
@@ -41,7 +42,7 @@ import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowT
 import { CROPS, growsIn, needsWater } from '../fields/crops'
 import { harvestGrade, MAX_SEED_TARGET, plantingPlan, saveCropSeedsAt, SEED_BATCH, seedOutput } from '../fields/production'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
-import { brushCapacity, tillCapacity, waterTargets } from '../forge/tools'
+import { brushCapacity, copyCharges, tillCapacity, waterTargets } from '../forge/tools'
 import { digFloorLock, dugCount, FACE_FINDS, faceAt, stairsLock, takeStairs } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
 import { gatherQuality, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
@@ -54,7 +55,7 @@ import type { PerkPack } from '../romance/perk-terms'
 import { SaveRuleError } from '../save/rules'
 import {
   APTITUDE_IDS, FIELD_COLUMNS, FIELD_TILES, fieldIndex, fieldTiles, isOvergrown, MAX_TASKS, TILE_TASKS,
-  type AptitudeId, type DigId, type FarmSave, type FarmTask, type RosterUma, type TaskKind, type TileTaskKind,
+  type AptitudeId, type DigId, type FarmSave, type FarmTask, type RosterUma, type TaskKind, type TileTaskKind, type ToolId,
 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
 import { herJobOf } from '../story/placeholders'
@@ -416,7 +417,7 @@ export interface CrewReceipt {
   jobs?: WorkedOrder[]
 }
 
-export type WorkedOrder = { id: string; key: string; actions: number }
+export type WorkedOrder = { id: string; key: string; actions: number; rackSlot?: number }
 
 export interface HandsTonight extends CrewReceipt {
   save: FarmSave
@@ -518,7 +519,7 @@ function careStep(save: FarmSave, id: string, { home, feedOnly }: Extract<FarmTa
 }
 
 /** One action of a task, or null when it has nothing to do (or can't be worked tonight). */
-function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null): Step | null {
+function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null, equipped: number | null): Step | null {
   // Her tiles as field indices, on a plot the farm has (a plot not cleared has none).
   const tiles = isTileTask(task) ? taskTiles(task).filter((i) => tileOf(save, i) !== undefined) : []
   const at = (i: number) => tileOf(save, i)!
@@ -608,7 +609,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
     case 'forage': case 'chop': {
       if (reachLock(save, 'forest', task.area)) return null
       const by = gatherer(save, id, 'forest', task.kind, level, fed, talentOf, story, haulOf(task.kind, level))
-      const done = task.kind === 'forage' ? forageAt(save, task.area, by) : chopAt(save, task.area, by)
+      const done = task.kind === 'forage' ? forageAt(save, task.area, by) : chopAt(save, task.area, by, equipped)
       const edible = task.kind === 'forage' && done.haul.items.some((key) => isFoodId(parseStockKey(key)!.id))
       return { save: edible ? noteCupWork(done.save, id, 'wild') : done.save, n: 1, items: done.haul.items, events: [{ activity: 'foraging', event: { kind: 'gather', area: task.area as ForestAreaId, items: done.haul.items.length } }] }
     }
@@ -616,7 +617,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       if (reachLock(save, 'fishery', task.spot)) return null
       const by = gatherer(save, id, 'fishery', 'fish', level, fed, talentOf, story, castsAt(level))
       const mode = task.mode ?? save.farm.fishingModes?.[task.spot] ?? 'standard'
-      const done = fishAt(save, task.spot, by, mode, level)
+      const done = fishAt(save, task.spot, by, mode, level, false, equipped)
       return { save: done.caught.length ? noteCupWork(done.save, id, 'fish') : done.save, n: done.caught.length, items: done.haul.items, events: [{ activity: 'fishing', event: { kind: 'catch', spot: task.spot as FishingSpotId, fish: done.caught.length } }] }
     }
     case 'care': return careStep(save, id, task, level, story)
@@ -634,7 +635,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
     }
     case 'mine': {
       if (digFloorLock(save, task.dig, task.floor)) return null
-      const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story), task.floor)
+      const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story), task.floor, equipped)
       return { save: done.save, n: 1, items: done.face.items, events: [{ activity: 'mining', event: { kind: 'dig', floor: done.face.floor, items: done.face.items.length - (done.face.bonus ? 1 : 0) } }] }
     }
   }
@@ -655,11 +656,25 @@ function practised(save: FarmSave, id: string, aptitude: AptitudeId): FarmSave {
  * action is a point of practice in its aptitude; her goods go into the Warehouse at once (a load's the next morning, at
  * step 4); her harvests, hauls and catches count toward her challenges.
  */
+function toolForWork(save: FarmSave, task: FarmTask): ToolId | undefined {
+  switch (task.kind) {
+    case 'water': return 'watering-can'
+    case 'harvest': case 'till': return 'hoe'
+    case 'chop': return 'axe'
+    case 'fish': return 'rod'
+    case 'mine': return task.dig === 'mine' ? 'pick' : 'hammer'
+    case 'care':
+      if (!task.feedOnly && readyIn(save, task.home) === 0 && !animalsIn(save, task.home).some(animal => !animal.fed
+          && (save.ranch.silo > 0 || (grassLock(save) === null && fieldTiles(save).some(tile => tile.ground === 'weeds'))))) return 'brush'
+  }
+}
+
 export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 'today' | 'farm'>, talentOf: TalentOf, story: PerkPack | null): HandsTonight {
   if (save.today.crew) return crewWithBookings(save, save.today.crew)
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
   const jobs = new Map<string, WorkedOrder>()
+  const claimed = new Set<number>()
   const rosterTasks = new Map(handsWorking(save, story).map(id => [id, save.roster[id]!.tasks ?? []] as const))
   const fields = [...rosterTasks].flatMap(([id, orders]) => orders.filter(isTileTask).map(task => ({ id, task })))
   const fieldRetries: (() => void)[] = []
@@ -670,7 +685,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   const ship: (() => boolean)[] = []
   const automatic = !save.farm.surplus && !save.farm.surplusSettings?.paused
   let reservedShippingAction = false
-  const autoWorkers: { free: () => number; aptitude: (task: FarmTask) => number; assign: (task: FarmTask) => boolean }[] = []
+  const autoWorkers: { free: () => number; aptitude: (task: FarmTask) => number; tier: (task: FarmTask) => number; readyTool: (task: FarmTask) => boolean; assign: (task: FarmTask) => boolean }[] = []
   for (const [id, orders] of rosterTasks) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
@@ -688,22 +703,54 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       const aptitude = taskAptitude(task)
       return aptitude ? levelIn(next.roster[id]!, aptitude, (a) => talentOf(id, a)) : 0
     }
+    const equipped = new Map<ToolId, number>()
+    const pickCopy = (tool: ToolId): number | undefined => {
+      if (equipped.has(tool)) return equipped.get(tool)
+      const charged = tool === 'axe' || tool === 'rod' || tool === 'pick' || tool === 'hammer'
+      let tier = next.tools[tool]
+      let best: number | undefined
+      next.forge?.rack?.forEach((copy, index) => {
+        if (copy.tool !== tool || copy.tier < tier || claimed.has(index) || (charged && !copyCharges(next, index))) return
+        if (copy.tier === tier && (best !== undefined || !charged)) return
+        tier = copy.tier
+        best = index
+      })
+      return best
+    }
+    const tierAt = (task: FarmTask) => {
+      const tool = toolForWork(next, task)
+      if (!tool) return 1
+      return next.forge?.rack?.[pickCopy(tool) ?? -1]?.tier ?? next.tools[tool]
+    }
     const work = (task: FarmTask, automaticJob = false): boolean => {
       const aptitude = taskAptitude(task)
       // Her work's well fed (quality, a haul's count) is her well-fed days tonight, as her rank points read them.
       const level = aptitudeAt(task)
       const start = automaticJob && task.kind === 'mine' && task.floor === undefined && !stairsLock(next, task.dig)
         ? takeStairs(next, task.dig) : next
-      const step = stepOf(start, id, task, level, start.roster[id]!.wellFed > 0, talentOf, story)
+      const tool = toolForWork(start, task)
+      const slot = tool ? pickCopy(tool) : undefined
+      const tier = slot === undefined ? undefined : start.forge?.rack?.[slot]?.tier
+      const handTool = tool === 'hoe' || tool === 'watering-can' || tool === 'brush'
+      const working = handTool && tier ? { ...start, tools: { ...start.tools, [tool]: tier } } : start
+      const step = stepOf(working, id, task, level, start.roster[id]!.wellFed > 0, talentOf, story, slot ?? null)
       if (!step) return false
-      next = aptitude ? practised(step.save, id, aptitude) : step.save
+      if (tool && slot !== undefined) {
+        equipped.set(tool, slot)
+        claimed.add(slot)
+      }
+      const result = working === start ? step.save : { ...step.save, tools: start.tools }
+      next = aptitude ? practised(result, id, aptitude) : result
       for (const { activity, event } of step.events) next = countChallenge(next, id, activity, event)
       left -= 1
       if (isTileTask(task)) fieldActions++
       const key = workKey(task)
       const used = jobs.get(id + '/' + key)
-      if (used) used.actions++
-      else jobs.set(id + '/' + key, { id, key, actions: 1 })
+      if (used) {
+        used.actions++
+        if (slot !== undefined) used.rackSlot = slot
+      }
+      else jobs.set(id + '/' + key, { id, key, actions: 1, ...(slot === undefined ? {} : { rackSlot: slot }) })
       done[task.kind] = (done[task.kind] ?? 0) + step.n
       if (task.kind === 'ship-surplus') return true
       const place = taskPlace(task)
@@ -739,6 +786,8 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     if (save.roster[id]!.autoWork) autoWorkers.push({
       free: () => left,
       aptitude: aptitudeAt,
+      tier: tierAt,
+      readyTool: task => { const tool = toolForWork(next, task); return tool !== undefined && equipped.has(tool) },
       assign: task => {
         if (!work(task, true)) return false
         autoOrders.add(workKey(task))
@@ -750,7 +799,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       // An idle cook or station hand can use exact inputs brought in later in the same shift.
       for (const task of tasks) {
         if (left === 0) break
-        if (task.kind === 'cook' || (task.kind === 'load' && next.farm.stationPlans?.[task.station])) {
+        if (task.kind === 'cook' || (task.kind === 'load' && crewStationTargets(next, task.station))) {
           while (left > 0 && work(task)) { /* use only the actions left from her scheduled work */ }
         }
       }
@@ -794,12 +843,13 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     const free = capacity()
     const due = gathering - (gathered.chop + gathered.forage + gathered.fish + gathered.mine)
     // Preserve a crew action for workshops if only discretionary work remains.
-    const canBatchWater = free > Math.max(0, due) + 2 && (next.tools['watering-can'] >= 3
-      || available.some(worker => worker.aptitude({ kind: 'water', tiles: [] }) >= TRICK_AT.waterRow))
+    const water = { kind: 'water', tiles: [] } as FarmTask
+    const canBatchWater = free > Math.max(0, due) + 2
+      && available.some(worker => worker.tier(water) >= 3 || worker.aptitude(water) >= TRICK_AT.waterRow)
     const matching = autoJobs(next, story, {
       spare: free > 1, reserved: due > 0 && free <= due + 1, canBatchWater, done: gathered,
     })
-      .find(({ task }) => [...available].sort((a, b) => b.aptitude(task) - a.aptitude(task) || b.free() - a.free())
+      .find(({ task }) => [...available].sort((a, b) => b.aptitude(task) - a.aptitude(task) || b.tier(task) - a.tier(task) || Number(b.readyTool(task)) - Number(a.readyTool(task)) || b.free() - a.free())
         .some(worker => worker.assign(task)))
     if (!matching) break
     if (gatheringJob(matching.task.kind)) gathered[matching.task.kind]++

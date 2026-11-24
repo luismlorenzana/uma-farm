@@ -56,6 +56,14 @@ export function hasPreset(tasks: readonly FarmTask[], task: FarmTask): boolean {
 
 export function workRows(before: FarmSave, forecast: HandsTonight, needs: readonly WorkNeed[]): WorkRow[] {
   const jobs = workCatalog(before)
+  const keys = new Set(jobs.map(workKey))
+  for (const { key } of forecast.jobs ?? []) {
+    if (keys.has(key)) continue
+    const floor = /^mine:(mine|quarry):(\d+)$/.exec(key)
+    if (!floor) continue
+    keys.add(key)
+    jobs.push({ kind: 'mine', dig: floor[1] as 'mine' | 'quarry', floor: Number(floor[2]) })
+  }
   const gaps = new Map(needs.map(need => [workKey(need.task), need]))
   const scheduled = new Map<string, Set<string>>()
   const worked = new Map<string, WorkRow['worked']>()

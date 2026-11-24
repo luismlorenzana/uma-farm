@@ -37,7 +37,8 @@ export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
 export type { LoopPlaceId } from './parse-loop'
 
 import { parseLongGame } from './parse-long-game'
-import { parseForge, parseForgeHelper, parseToolCharges } from './parse-forge'
+import { BONUS_TOOLS } from '../forge/tools'
+import { parseForge, parseForgeHelper, parseRackCharges, parseToolCharges } from './parse-forge'
 import { MAX_LODGE_WINGS } from './long-game'
 
 export const SAVE_V5_KEYS = [
@@ -286,11 +287,12 @@ function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): C
     })),
     gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length)
       .map((value, i) => oneOf(value, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),
-    ...(o.jobs === undefined ? {} : { jobs: rows('jobs', crew.size * (MAX_TASKS + 1), ['id', 'key', 'actions'], (row, at) => ({
+    ...(o.jobs === undefined ? {} : { jobs: rows('jobs', crew.size * (MAX_TASKS + 1), ['id', 'key', 'actions', 'rackSlot'], (row, at) => ({
       id: member(row.id, at + '.id', crew),
       key: typeof row.key === 'string' && /^[a-z][a-z0-9-]*(?::[a-z0-9-]+){0,3}$/.test(row.key) && row.key.length <= 80
         ? row.key : fail(at + '.key', 'expected a work order'),
       actions: int(row.actions, at + '.actions', 1, 7),
+      ...(row.rackSlot === undefined ? {} : { rackSlot: int(row.rackSlot, at + '.rackSlot', 0, 349) }),
     })) }),
     ...(o.aptitudes === undefined ? {} : { aptitudes: rows('aptitudes', crew.size * APTITUDE_IDS.length,
       ['kind', 'outfitId', 'aptitude', 'level'], (row, at) => ({
@@ -302,7 +304,7 @@ function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): C
 }
 
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server', 'forgeHelper', 'toolCharges'])
+  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server', 'forgeHelper', 'toolCharges', 'rackCharges'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + (o.dayParts === true ? 2 : 1)).map((v, i) => {
@@ -354,6 +356,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     ...(o.cook === undefined ? {} : { cook: member(o.cook, `${path}.cook`, roster) }),
     ...(o.server === undefined ? {} : { server: member(o.server, `${path}.server`, roster) }),
     ...(o.forgeHelper === undefined ? {} : { forgeHelper: parseForgeHelper(o.forgeHelper, `${path}.forgeHelper`, roster) }),
+    ...(o.rackCharges === undefined ? {} : { rackCharges: parseRackCharges(o.rackCharges, `${path}.rackCharges`) }),
     ...(o.toolCharges === undefined ? {} : { toolCharges: parseToolCharges(o.toolCharges, `${path}.toolCharges`) }),
   }
 }
@@ -662,6 +665,10 @@ function parseFarmSave(value: unknown, path: string, version: 5 | 6): SaveV6 {
   checkFestivalSave(save, path)
   if (o.longGame !== undefined) save.longGame = parseLongGame(o.longGame, `${path}.longGame`, save)
   if (o.forge !== undefined) save.forge = parseForge(o.forge, `${path}.forge`, save)
+  for (const [slot, charges] of Object.entries(save.today.rackCharges ?? {})) {
+    const copy = save.forge?.rack?.[Number(slot)]
+    if (!copy || !(BONUS_TOOLS as readonly string[]).includes(copy.tool) || charges >= copy.tier) fail(path + '.today.rackCharges', 'expected charges for an installed gathering tool')
+  }
   const service = save.workshops.restaurant
   const played = save.workshops.played.restaurant
   if (service?.shift && (service.shift.day !== today || played !== today || save.workshops.current || (service.last?.day ?? 0) >= today)) {

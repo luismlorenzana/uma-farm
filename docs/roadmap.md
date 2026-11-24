@@ -157,7 +157,7 @@ The long game adds [staggered town shifts](game-mechanics.md#town-professions-an
 The [Work calendar](game-mechanics.md#farmhands) shows allocations and gaps by date. See the
 [first-year day-part pilot](game-mechanics.md#first-year-day-part-pilot) for the balance results.
 
-**F110 is in.** The [Forge](game-mechanics.md#the-forge-workshop) upgrades seven tools shared with the crew, and its four heirlooms unlock formal looks alongside Greater Love. The Ring Bench opens independently.
+The [Forge](game-mechanics.md#the-forge-workshop) makes individual upgraded copies of seven tools for the shared Tool Rack. Its four heirlooms unlock formal looks alongside Greater Love, and the independent Ring Bench crafts wedding rings. Her Jewelry page shows the ring and all four heirlooms.
 
 **F111 is in.** Shared credit, partial repayments, wedding ring commissions, and standard surplus policies are part of the farm economy. The [playthroughs](game-mechanics.md#f111-finance-and-default-surplus-playthroughs) cover a solo first wedding, six-figure orders and default shipping with 10, 20 and 50 Umas.
 

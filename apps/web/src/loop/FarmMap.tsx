@@ -357,7 +357,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const world = useMemo(() => (pack ? worldWords(pack) : NO_WORLD), [pack])
   const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf, noteOf, world) : []), [summary, nameOf, ready, pairs, home, chapterOf, noteOf, world])
   if (!summary) return null
-  const tools = save.forge?.installed.filter(order => order.due === summary.day) ?? []
+  const tools = [...save.forge?.installed ?? [], ...save.forge?.rack ?? []].filter(order => order.due === summary.day)
   const jewels = save.forge?.heirlooms.filter(order => order.ready === summary.day) ?? []
   return (
     <Sheet

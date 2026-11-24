@@ -141,7 +141,7 @@ export function chop<S extends FarmSave>(save: S, area: string): { save: S; haul
   return chopAt(spend(save, 'chop'), area, farmerGatherer(save, 'forest', CHOP_LOGS))
 }
 /** A chop itself, spending nothing. A thin area's chop is half (`haulAt`). */
-export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer): { save: S; haul: Haul } {
+export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer, equipped?: number | null): { save: S; haul: Haul } {
   const before = save.farm.counts[LOGS_CHOPPED] ?? 0
   const woods = sharesOn('forest', area, dateDayOf(save.calendar.day, save.calendar)).filter(([id]) => goodOf(id)?.family === 'woods')
   let items = save.items
@@ -153,7 +153,7 @@ export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer):
     items = addGoods(items, log, stars, 1)
     got.push(stockKey(log, stars))
   }
-  const bonus = takeToolCharge(save, 'axe', !thinToday(save, area))
+  const bonus = takeToolCharge(save, 'axe', !thinToday(save, area), equipped)
   if (bonus.roll) {
     const log = pickShare(woods, bonus.roll('kind'))
     const stars = starsOn(save, by.q, 'tool:axe:stars', save.today.toolCharges?.axe ?? 0)
@@ -175,7 +175,7 @@ export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul
   return { save: done.save, haul: done.haul, caught: done.caught[0] ?? null, extra: done.extra }
 }
 /** A cast itself, spending nothing: `by.count` fish (half at a thin spot, `haulAt`), each measured as it lands. */
-export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, mode: FishMode = 'standard', aptitude?: number, manual = false): { save: S; haul: Haul; caught: Measured[]; extra: Measured | null } {
+export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, mode: FishMode = 'standard', aptitude?: number, manual = false, equipped?: number | null): { save: S; haul: Haul; caught: Measured[]; extra: Measured | null } {
   let next: S = { ...save, today: hauled(save, spot) }
   const caught: Measured[] = []
   const casts = haulAt(save, spot, by.count)
@@ -192,7 +192,7 @@ export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer, 
       farm: { ...next.farm, counts: bump(next.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...next.diary, records } }
     caught.push({ fish: good, stars, cm, record: cm > best, ...(picked.id === good ? {} : { gradeId: picked.id }) })
   }
-  const bonus = takeToolCharge(next, 'rod', casts > 0 && !thinToday(save, spot))
+  const bonus = takeToolCharge(next, 'rod', casts > 0 && !thinToday(save, spot), equipped)
   let extra: Measured | null = null
   if (bonus.roll) {
     const index = save.today.toolCharges?.rod ?? 0

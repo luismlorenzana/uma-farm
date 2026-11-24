@@ -4,6 +4,7 @@ import {
 } from 'three'
 import { bandLight } from '../hd2d/field-pond-scene'
 import type { GroundPoint, RegionScene } from './farm-region-stage'
+import type { FloorPoint } from './room-walk'
 import { roomSpec, type Furnishing, type RoomId } from './room-specs'
 
 const palettes = {
@@ -21,7 +22,17 @@ const feet = [[-.25,1.62],[2.45,.65],[-2.65,.66],[-1.66,2.8],[1.56,2.9],[.15,-1.
   [-3.4,.45],[3.62,-.12],[-4.13,2.8],[4.24,2.78],[-4.3,1.1],[-3,2.8],[-.1,2.85],[3.1,2.78],
   [4.6,.75],[-1.35,-.9],[1.3,-.45]] as const
 
-export function buildRoom(place: RoomId, night: boolean, roomNumber: number, expanded: boolean): RegionScene {
+const footprint = {
+  counter: [2.66, .9], display: [2.12, .9], shelf: [2.25, .72], bookcase: [2.25, .72], chest: [1.33, .98],
+  crate: [1.33, .91], hay: [1.33, .91], desk: [1.64, 1.04], table: [1.64, 1.04], bench: [1.64, 1.04],
+  chair: [.65, .65], stool: [.65, .63], sofa: [2.4, 1.16], bed: [1.43, 2.24], lamp: [.52, .52],
+  plant: [.56, .56], barrel: [.9, .9], sink: [1.48, 1.15], stove: [1.48, 1.15], oven: [1.48, 1.15],
+  furnace: [1.48, 1.15], smoker: [1.48, 1.15], mill: [1.43, 1], saw: [1.43, 1], cutter: [1.43, 1],
+  anvil: [1.43, 1], winch: [1.43, 1], nest: [1.65, .84], trough: [1.65, .84], fence: [2.37, .22],
+  easel: [1.03, .46], ore: [1.4, 1.06],
+} as Partial<Record<Furnishing, readonly [number, number]>>
+
+export function buildRoom(place: RoomId, night: boolean, roomNumber: number, expanded: boolean): RegionScene & { clear(point: FloorPoint): boolean } {
   const spec = roomSpec(place)
   const [floor,wall,accent,wood] = palettes[spec.theme]
   const root = new Group()
@@ -66,7 +77,10 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
   box(wood,-.05,.024,3.92,2,.05,.42)
   box(cream,0,.033,3.6,1.38,.025,.36)
 
+  const furniture: { x: number; z: number; width: number; depth: number; turn: number }[] = []
   function furnish(kind:Furnishing,x:number,z:number,turn=0) {
+    const size = footprint[kind]
+    if (size) furniture.push({ x, z, width: size[0], depth: size[1], turn })
     function part(color:string,dx:number,y:number,dz:number,w:number,h:number,d:number,s:keyof typeof objects='box',tilt=0) {
       mark(s,color,x+dx*Math.cos(turn)+dz*Math.sin(turn),y,z+dz*Math.cos(turn)-dx*Math.sin(turn),w,h,d,turn,tilt)
     }
@@ -226,7 +240,13 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
   for (const item of spec.furniture) furnish(...item)
   if(place==='home-table'&&expanded) furnish('chair',4.17,1.55)
   if(place==='home-table'&&roomNumber>0) furnish(roomNumber%2?'map':'portrait',1.35,-3.92)
-  const clearFeet = feet.filter(([x,z])=>!spec.furniture.some(([kind,fx,fz])=>kind!=='rug'&&Math.hypot(fx-x,fz-z)<.8))
+  const clear = ({ x, z }: FloorPoint) => Math.abs(x) <= width / 2 - .3 && z >= -depth / 2 + .5 && z <= depth / 2 - .4
+    && !furniture.some(prop => {
+      const dx = x - prop.x, dz = z - prop.z
+      return Math.abs(dx * Math.cos(prop.turn) - dz * Math.sin(prop.turn)) < prop.width / 2 + .16
+        && Math.abs(dx * Math.sin(prop.turn) + dz * Math.cos(prop.turn)) < prop.depth / 2 + .16
+    })
+  const clearFeet = feet.filter(([x,z]) => clear({ x, z }))
   for (const [i,[x,z]] of clearFeet.entries()) anchors.set(String(i),[x,.035,z])
 
   const materials = new Map<string,MeshStandardMaterial>()
@@ -239,10 +259,10 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
     mesh.castShadow = true
     root.add(mesh)
   }
-  const frame = {label:place,target:[0,.59,0] as GroundPoint,elevation:40,azimuth:-9,distance:22,fov:33}
+  const frame = {label:place,target:[0,.59,0] as GroundPoint,elevation:40,azimuth:0,distance:22,fov:33}
   const light = bandLight(night)
   return {
-    width:width+1.2,depth:depth+2.1,targetY:.68,anchors,
+    width:width+1.2,depth:depth+2.1,targetY:.68,anchors,clear,
     scene:{id:place,title:place,root,figures:[],layers:{},cameras:{front:frame,tactics:frame,high:frame},
       light: {
         ...light,

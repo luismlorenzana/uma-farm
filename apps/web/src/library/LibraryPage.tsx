@@ -1,11 +1,12 @@
 import {
   archivedDiscoveries, atHome, awayOn, bookDiscoveries, bookHistory, bookMilestones, bookProgress, dateOf, festivalsOf, gradeOf,
-  GRADE_NAMES, greaterLoveOf, LAUNCH_CAST, levelWords, libraryEntryName, longGameEnabled, NO_BIRTHDAYS, SEASON_NAMES, TRUE_LOVE,
+  GRADE_NAMES, greaterLoveOf, handsTonight, LAUNCH_CAST, levelWords, libraryEntryName, longGameEnabled, NO_BIRTHDAYS, SEASON_NAMES, TOOL_NAMES, toolTierName, TRUE_LOVE,
   type FarmSave, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { GuideButton } from '../guide/Guide'
 import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { ItemIcon } from '../items/ItemIcon'
 import { Avatar } from '../dialogue/Avatar'
 import { ProfileChapters, ProfileDetails, TownCard } from '../loop/HeartProfile'
 import { nextCard, profileLine } from '../loop/hearts-view'
@@ -13,18 +14,19 @@ import { LoveActs } from '../loop/Love'
 import { byRelationship } from '../loop/relationship-order'
 import { umaRows } from '../loop/roster-view'
 import { WorkFacts, WorkSide } from '../loop/RosterAlbum'
-import { talentTable } from '../loop/talents'
+import { talentTable, useTalents } from '../loop/talents'
 import { useMaster, type MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
 import { MarriedLife } from './MarriedLife'
+import { Jewelry } from './Jewelry'
 import { RelationshipPage } from './RelationshipPage'
 import './library.css'
 
 const GalleryPage = lazy(() => import('./LibraryScenes'))
 const PER_TIER = 10
-const BOOK_PAGES = [['relationship', 'Relationship'], ['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story'], ['married', 'Married Life']] as const
+const BOOK_PAGES = [['relationship', 'Relationship'], ['profile', 'Profile'], ['abilities', 'Abilities'], ['chapters', 'Chapters'], ['scenes', 'Scenes'], ['history', 'Our Story'], ['married', 'Married Life'], ['jewelry', 'Jewelry']] as const
 export const libraryDate = (day: number | null, clock?: FarmSave['calendar']) => {
   if (day === null) return 'Date unknown'
   const { year, season, day: d } = dateOf(day, clock)
@@ -164,7 +166,11 @@ function ShelfView({ save, pack, days, master, params, shelves, order, setOrder,
 
 function OpenBook({ save, pack, days, master, id, params, shelves }: Base & { id: string; params: URLSearchParams; shelves: Shelf[] }) {
   const love = save.love[id]!
-  const pages = BOOK_PAGES.filter(([id]) => id !== 'married' || (love.stage === 'spouse' && longGameEnabled(save, pack)))
+  const pages = BOOK_PAGES.filter(([key]) => {
+    if (key === 'married') return love.stage === 'spouse' && longGameEnabled(save, pack)
+    if (key === 'jewelry') return ['proposal', 'wedding', 'spouse'].includes(love.stage) || love.ring !== undefined
+    return true
+  })
   const page = pages.find(([key]) => key === params.get('page')) ?? BOOK_PAGES[0]
   const nameOf = namer(master, pack)
   const name = nameOf(id)
@@ -199,6 +205,7 @@ function OpenBook({ save, pack, days, master, id, params, shelves }: Base & { id
         </>}
         {page[0] === 'scenes' && <Suspense fallback={<p>Loading scenes…</p>}><GalleryPage save={save} pack={pack} days={days} id={id} master={master} /></Suspense>}
         {page[0] === 'history' && <History save={save} pack={pack} id={id} tab={params.get('journal')} />}
+        {page[0] === 'jewelry' && <Jewelry save={save} pack={pack} id={id} />}
         {page[0] === 'married' && <MarriedLife save={save} pack={pack} id={id} nameOf={nameOf} />}
       </article>
     </div>
@@ -220,7 +227,7 @@ function BookProfile({ save, pack, days, id, nameOf, archived }: Omit<Base, 'mas
         <strong>{fact.value ?? (archived ? 'Previously discovered' : 'Undiscovered')}</strong>
         {fact.day !== null && <small>{libraryDate(fact.day, save.calendar)}</small>}
       </li>)}</ul>
-    <ProfileDetails save={save} pack={pack} id={id} nameOf={nameOf} />
+    <ProfileDetails save={save} pack={pack} id={id} nameOf={nameOf} showRing={false} />
   </>
 }
 
@@ -228,8 +235,29 @@ function Abilities({ save, pack, id, master }: Pick<Base, 'save' | 'pack' | 'mas
   const row = umaRows(save, [id], master?.album ?? new Map(), master ? talentTable(master) : null, pack)[0]
   return <>
     <div className="lib-head"><h2>Abilities</h2>{row && row.farmhand !== null && <Link className={button} to={`/book?hand=${id}`}>Work orders ›</Link>}</div>
+    {row?.farmhand != null && <ShiftEquipment save={save} pack={pack} id={id} />}
     {row && <><WorkFacts row={row} /><WorkSide row={row} /></>}
   </>
+}
+
+function ShiftEquipment({ save, pack, id }: Pick<Base, 'save' | 'pack'> & { id: string }) {
+  const { of } = useTalents()
+  const shift = useMemo(() => save.forge?.rack?.length ? handsTonight(save, save, of, pack) : null, [save, of, pack])
+  const onShift = shift?.lines.some(line => line.id === id)
+  const slots = [...new Set(shift?.jobs?.filter(job => job.id === id).flatMap(job => job.rackSlot ?? []) ?? [])]
+  return <section>
+    <div className="lib-head"><h3>Shift tools</h3><Link className={button} to="/?sheet=forge" state={{ back: true }}>Tool Rack ›</Link></div>
+    {slots.length ? <ul className="lib-lines" data-shift-tools={save.today.crew ? 'actual' : 'forecast'}>
+      {slots.map(slot => {
+        const copy = save.forge?.rack?.[slot]
+        return copy && <li key={slot}>
+          <ItemIcon id={`tool/${copy.tool}/tier-${copy.tier}`} size={24} />
+          <span>{toolTierName(copy.tier)} {TOOL_NAMES[copy.tool]}</span>
+          <small>{save.today.crew ? 'Used today' : 'Forecast today'}</small>
+        </li>
+      })}
+    </ul> : <p>{shift && !onShift ? 'Off shift today.' : 'No rack copies assigned today.'}</p>}
+  </section>
 }
 
 function History({ save, pack, id, tab }: Pick<Base, 'save' | 'pack'> & { id: string; tab: string | null }) {

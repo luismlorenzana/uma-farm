@@ -14,6 +14,7 @@ import { digFloor } from '../gathering/digs'
 import { cropBaseGrade, cropGoodId, cropSeedId } from '../goods/ids'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { seedForTile, taskLock, workKey } from './farmhands'
+import { crewStationTargets } from './supply-goals'
 import { surplusCrate } from './production'
 import type { SchedulePack } from '../town/town'
 
@@ -108,7 +109,7 @@ export function workNeeds(save: FarmSave, pack: SchedulePack | null, includeOpti
     const task = { kind: 'load', station } as const
     if (taskLock(save, task) || !loadsLeft(save, station)) continue
     const load = nextStationLoad(save, station, LOAD_SIZE)
-    const targets = save.farm.stationPlans?.[station]
+    const targets = crewStationTargets(save, station)
     const missing = targets?.filter(({ output, target }) =>
       target > goodCount(save.items, output) + loadsToday(save, station)
         .filter(row => parseStockKey(row.item)?.id === output).reduce((sum, row) => sum + row.count, 0)).length ?? 0

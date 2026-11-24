@@ -184,7 +184,7 @@ export function ProfileChapters({ save, pack, id, card, nameOf }: { save: SaveV4
   )
 }
 
-export function ProfileDetails({ save, pack, id, nameOf }: { save: SaveV4; pack: HeartsPack; id: string; nameOf: (id: string) => string }) {
+export function ProfileDetails({ save, pack, id, nameOf, showRing = true }: { save: SaveV4; pack: HeartsPack; id: string; nameOf: (id: string) => string; showRing?: boolean }) {
   const gifts = giftSlots(pack, save.love[id]!, id)
   const friend = friendLoved(save, pack, id)
   const hers = fromHer(save, pack, id)
@@ -201,7 +201,7 @@ export function ProfileDetails({ save, pack, id, nameOf }: { save: SaveV4; pack:
           </ul>
         </Section>
       )}
-      {ring && <RingSection id={id} ring={ring} />}
+      {showRing && ring && <RingSection id={id} ring={ring} />}
     </div>
   )
 }
@@ -225,7 +225,7 @@ function GallerySection({ save, id }: { save: SaveV4; id: string }) {
 }
 
 /** Her Ring: the engraving, her ring and its bonus, and a better ring to give. */
-function RingSection({ id, ring }: { id: string; ring: RingView }) {
+export function RingSection({ id, ring }: { id: string; ring: RingView }) {
   const [note, setNote] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const give = async (better: RingView['better'][number]) => {
