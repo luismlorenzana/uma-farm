@@ -126,6 +126,48 @@ describe('automatic crew work', () => {
     expect(shift.jobs?.[0]?.key).toBe('mine:quarry')
   })
 
+  it('sows the rest of a new row before watering it with a row-capable can', () => {
+    const base = growing(farm(), [0, 1])
+    const save = setAutoWork({
+      ...base,
+      fields: { plots: [{ tiles: fieldTiles(base).map((tile, index) =>
+        index >= 2 && index < FIELD_COLUMNS ? bareTile('tilled') : tile) }] },
+      tools: { ...base.tools, 'watering-can': 3 },
+      roster: Object.fromEntries([A, B].map(id =>
+        [id, { ...base.roster[id]!, practice: { plant: 60 } }])),
+    }, [A, B], true)
+    const shift = handsTonight(save, save, talentsD, null)
+    expect(shift.jobs?.filter(job => job.key === 'plant:0').reduce((n, job) => n + job.actions, 0)).toBe(3)
+    expect(shift.jobs?.filter(job => job.key === 'water:0').reduce((n, job) => n + job.actions, 0)).toBe(1)
+    expect(fieldTiles(shift.save).slice(0, FIELD_COLUMNS).every(tile => tile.crop === 'carrot' && tile.watered)).toBe(true)
+  })
+
+  it('collects eggs and starts an available planned station load before expanding the planted field', () => {
+    const base = farm()
+    const save = setAutoWork({
+      ...base, buildings: { ...base.buildings, coop: 1, mill: 1 },
+      fields: { plots: [{ tiles: fieldTiles(base).map(() => bareTile('tilled')) }] },
+      farm: { ...base.farm, stationPlans: { mill: [{ output: 'wheat-flour', target: 4 }] },
+        pantry: [{ day: 1, stars: 1, meals: 12 }] },
+      items: { ...base.items, wheat: [8, 0, 0, 0, 0] },
+      ranch: { silo: 8, animals: [{ id: 'hen', kind: 'chicken', fed: false, cared: false, ready: true, fondness: 15 }] },
+    }, [A, B], true)
+    const shift = handsTonight(save, save, talentsD, null)
+    const work = shift.jobs?.map(job => job.key) ?? []
+    expect(work.slice(0, 3)).toEqual(['care:coop', 'care:coop', 'load:mill'])
+    expect(shift.save.ranch.animals[0]).toMatchObject({ fed: true, ready: false })
+    expect(shift.save.loads.mill).toEqual([{ item: 'wheat-flour@1', count: 4 }])
+  })
+
+  it('waters crops that can still ripen or carry over while leaving doomed annuals dry', () => {
+    const base = growing(farm(30), [0, 1, 2])
+    const tiles = fieldTiles(base).map((tile, i) => i === 1 ? { ...tile, growth: 3 }
+      : i === 2 ? { ...tile, crop: 'apple' as const } : tile)
+    const save = setAutoWork({ ...base, fields: { plots: [{ tiles }] } }, [A, B], true)
+    const shift = handsTonight(save, save, talentsD, null)
+    expect(fieldTiles(shift.save).slice(0, 3).map(tile => tile.watered)).toEqual([false, true, true])
+  })
+
   it('honors manual priorities and can disable automatic work without altering the orders', () => {
     let save = tasks(growing(farm(), [0, 1]), A, [{ kind: 'fish', spot: 'pond' }])
     save = setAutoWork(save, [A, B], true)

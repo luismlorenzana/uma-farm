@@ -1,9 +1,10 @@
 import { type FarmSave, DIGS, RANCH_HOMES, type FarmTask, type RanchHome, type TaskKind, type TileTaskKind, fieldIndex, fieldTiles, isOvergrown } from '../save/v4'
 import type { FarmhandLine } from '../night/summary'
-import { DAYS_PER_YEAR } from './calendar'
+import { dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR } from './calendar'
 import { animalsIn, grassLock } from '../ranch/ranch'
 import { harvestGrade, plantingPlan, seedOutput, SEED_BATCH } from '../fields/production'
-import { seedsInSeason } from '../fields/fields'
+import { nightsLeft, seedsInSeason } from '../fields/fields'
+import { CROPS, growsIn } from '../fields/crops'
 import { needsWater } from '../fields/plantables'
 import { mealsNeeded, pantryMeals, plainBatch } from './food'
 import { LOAD_SIZE, loadsLeft, loadsToday, nextStationLoad } from '../gathering/stations'
@@ -75,13 +76,18 @@ export function workNeeds(save: FarmSave, pack: SchedulePack | null, includeOpti
   add({ kind: 'cook' }, 1, meals, meals + ' meals short' + (canCook ? '' : ' · needs ingredients'), !canCook)
 
   const seeds = seedsInSeason(save)
+  const { day } = save.calendar
+  const nights = DAYS_PER_SEASON - dateOf(day, save.calendar).day + 1
+  const nextSeason = dateOf(day + nights, save.calendar).season
+  const marked = save.workshops.festival?.mark?.tile
   for (const [plot, { tiles }] of save.fields.plots.entries()) {
     const ripe: number[] = [], dry: number[] = [], empty: number[] = [], managed: number[] = [], spare: number[] = []
     let supplied = 0
     tiles.forEach((tile, i) => {
       const index = fieldIndex(plot, i)
       if (tile.ready && harvestGrade(save, tile, index, 10) !== null) ripe.push(i)
-      if (needsWater(tile)) dry.push(i)
+      if (tile.crop && needsWater(tile) && (index === marked || CROPS[tile.crop].woody
+        || growsIn(tile.crop, nextSeason) || nightsLeft(tile) <= nights)) dry.push(i)
       if (tile.crop) return
       const plan = plantingPlan(save, index)
       if (plan === null || plan?.crop === null) return

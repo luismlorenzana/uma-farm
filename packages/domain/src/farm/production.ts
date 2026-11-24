@@ -4,6 +4,7 @@ import { restaurantRecipe } from '../restaurant/recipes'
 import { HEIRLOOMS, TOOL_RECIPES } from '../forge/catalogue'
 import { nextToolTier } from '../forge/state'
 import { stationJobUnits } from '../gathering/ids'
+import { LOAD_SIZE } from '../gathering/stations'
 import { heldFor, pickFor } from './builds'
 import { farmPlace, isBuildPlace, placeBuilt, type FarmPlaceId } from './places'
 import { MAX_PRODUCTION_TARGET, MAX_SURPLUS } from '../goods/production-catalogue'
@@ -21,11 +22,15 @@ export const SURPLUS_LIMIT_MAX = 250
 export const availableStock = (save: Pick<FarmSave, 'items'> & Partial<Pick<FarmSave, 'farm'>>, id: string): number =>
   Math.max(0, goodCount(save.items, id) - (save.farm?.reserves?.[id] ?? 0))
 
-/** A finished station order is stock the player asked to keep on hand. Routine meals and sales use its excess. */
+/** Routine meals and sales leave the planned stock and inputs for its next load on hand. */
 export function routineStockFloors(farm: Pick<FarmSave['farm'], 'reserves' | 'stationPlans'> | undefined): Record<string, number> {
   const floors = { ...farm?.reserves }
   for (const plan of Object.values(farm?.stationPlans ?? {})) for (const { output, target } of plan) {
     floors[output] = Math.max(floors[output] ?? 0, target)
+  }
+  for (const plan of Object.values(farm?.stationPlans ?? {})) for (const { output, target } of plan) {
+    const input = goodOf(output)?.input
+    if (input) floors[input] = (floors[input] ?? 0) + Math.min(LOAD_SIZE, target) * stationJobUnits(output)
   }
   return floors
 }
@@ -83,7 +88,9 @@ function hardSurplusFloors(save: FarmSave): Record<string, number> {
     const inProcess = Object.values(save.loads).flat().reduce((sum, load) =>
       parseStockKey(load.item)?.id === target.output ? sum + load.count : sum, 0)
     const missing = Math.max(0, target.target - goodCount(save.items, target.output) - inProcess)
-    protect(source, missing * stationJobUnits(target.output))
+    // The routine floor already covers one load. Protect the rest of a larger order when it is short.
+    const extra = Math.max(0, missing - Math.min(LOAD_SIZE, target.target))
+    protect(source, extra * stationJobUnits(target.output))
   }
   const recipe = restaurantRecipe(save.farm.recipePin ?? '')
   for (const line of recipe?.ingredients ?? []) protect(line.id, line.count)

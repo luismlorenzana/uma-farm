@@ -34,6 +34,18 @@ function farm(): FarmSave {
 }
 
 describe('F99 ranch, reserves and stations', () => {
+  it('leaves one load of inputs for the next planned refill after the output is stocked', () => {
+    const base = farm()
+    const save = setStationPlan({ ...base, items: { ...base.items,
+      'copper-ore': [24, 0, 0, 0, 0], 'copper-ingot': [10, 0, 0, 0, 0],
+    }, buildings: { ...base.buildings, smelter: 1 } }, 'smelter', [{ output: 'copper-ingot', target: 10 }])
+    const plan = setSurplusPlan(save, { goods: ['copper-ore', 'copper-ingot'], limit: 25 })
+    expect(surplusCrate(plan)).toEqual([{ id: 'copper-ore', stars: 1, count: 16 }])
+    const fish = setStationPlan({ ...base, items: { carp: [8, 0, 0, 0, 0] } },
+      'smokehouse', [{ output: 'carp-fillet', target: 8 }])
+    expect(plainBatch(fish)).toBeNull()
+    expect(startLoad(fish, 'smokehouse', 'carp-fillet@1', 8).loads.smokehouse).toHaveLength(1)
+  })
   it('fills an ordered output from a later worker and protects it from routine meals and shipping', () => {
     const base = farm()
     let save = setStationPlan({ ...base, ranch: { silo: 5, animals: [produce('cow', 60)] } },
@@ -85,13 +97,14 @@ describe('F99 ranch, reserves and stations', () => {
     expect(discovered(preview.save, milk)).toBe(true)
     expect(discovered(preview.save, yogurt)).toBe(false)
     expect(preview.lines.reduce((n, line) => n + (line.done['ship-surplus'] ?? 0), 0)).toBe(3)
-    expect(goodCount(preview.save.items, milk)).toBe(3)
+    expect(goodCount(preview.save.items, milk)).toBe(4)
     const morning = night(save)
     expect(morning.summary?.work.filter((line) => line.kind === 'farmhand')).toEqual(preview.lines)
     expect(morning.summary?.bin).toEqual([])
     expect(goodCount(morning.items, yogurt)).toBe(3)
     expect(discovered(morning, yogurt)).toBe(true)
-    expect(goodCount(morning.bin, 'carrot')).toBeGreaterThan(0)
+    expect(goodCount(morning.bin, 'carrot')).toBe(3)
+    expect(goodCount(morning.bin, milk)).toBe(0)
     const held = takeBack(morning, 'carrot', 1, 1)
     expect(night(held).summary?.bin.reduce((n, line) => n + line.count, 0)).toBe(2)
     expect(night(held).farm.discoveries?.[milk]).toBe(save.calendar.day)
