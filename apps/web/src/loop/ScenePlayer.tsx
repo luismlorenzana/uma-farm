@@ -52,12 +52,12 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
 
 /** The sheet's frame: the title line, Skip, and what plays. The pair conversations and the household's scenes play in
  * it too. */
-export function Frame({ title, label, scene, onSkip, skipping, atmosphere, children }: { atmosphere?: SceneEnvironment; title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
+export function Frame({ title, label, scene, onSkip, skipping, atmosphere, children, onIllustrationSeen = seeIllustrationOnce }: { onIllustrationSeen?: typeof seeIllustrationOnce; atmosphere?: SceneEnvironment; title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
   const inherited = useEnvironment()
   return (
     <EnvironmentProvider value={atmosphere ?? inherited}>
     <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
-      <ArtHost onSeen={seeIllustrationOnce}>
+      <ArtHost onSeen={onIllustrationSeen}>
         <FrameHeader title={title} onSkip={onSkip} skipping={skipping} />
         {children}
       </ArtHost>

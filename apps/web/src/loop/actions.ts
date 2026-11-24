@@ -227,12 +227,16 @@ export async function finishArrivalScene(id: string, played: ArrivalPlayed): Pro
 /** Her illustration seen, full screen in a scene: it joins her gallery for good, a player's change once. Already in (or
  * she isn't on the roster): nothing to save. */
 export async function seeIllustrationOnce(id: string, scene: string): Promise<void> {
+  await seeIllustrationsOnce([[id, scene]])
+}
+
+export async function seeIllustrationsOnce(cues: readonly (readonly [id: string, scene: string])[]): Promise<void> {
   const save = loopSave()
-  if (!save || seeIllustration(save, id, scene) === save) return
-  await change((s) => {
-    const next = seeIllustration(s, id, scene)
-    return next === s ? s : recordLibrary(next, id, `art:${scene}`)
-  })
+  if (!save || !cues.some(([id, scene]) => seeIllustration(save, id, scene) !== save)) return
+  await change(s => cues.reduce((before, [id, scene]) => {
+    const next = seeIllustration(before, id, scene)
+    return next === before ? before : recordLibrary(next, id, `art:${scene}`)
+  }, s))
 }
 
 /** A live vignette that actually reached its last line. */
