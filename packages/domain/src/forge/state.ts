@@ -9,6 +9,7 @@ export const HEIRLOOM_DAWNS: Record<HeirloomId, number> = { earrings: 2, necklac
 export interface ToolOrder {
   tool: ToolId
   tier: UpgradeTier
+  fromTier?: Exclude<ToolTier, 5>
   ordered: number
   due: number
   assistant?: string
@@ -31,8 +32,18 @@ export interface ForgeState {
   legacyLooks: Record<string, number[]>
   tool?: ToolOrder
   installed: ToolOrder[]
+  rack?: ToolOrder[]
+  rackGoal?: { tool: ToolId; fromTier: Exclude<ToolTier, 5> }
+  crewGoal?: string
   heirlooms: HeirloomOrder[]
   tracked?: { recipient: string; piece: HeirloomId }
+}
+
+export function releaseCrewGoal(forge: ForgeState, key: string): ForgeState {
+  if (forge.crewGoal !== key) return forge
+  const next = { ...forge }
+  delete next.crewGoal
+  return next
 }
 
 export const benchOpen = (save: Pick<FarmSave, 'buildings' | 'forge'>): boolean => save.forge?.bench ?? save.buildings.forge !== undefined

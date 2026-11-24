@@ -7,11 +7,11 @@ import { availableStock } from '../farm/production'
 import { goodName } from '../goods/names'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
-import type { FarmSave, ToolId } from '../save/v4'
+import type { FarmSave, ToolId, ToolTier } from '../save/v4'
 import { goodCount, takeGoods } from '../save/warehouse'
 import type { SchedulePack } from '../town/town'
-import { HEIRLOOMS, TOOL_RECIPES, type ForgeMaterial } from './catalogue'
-import { forgeState, heirloomOf, nextToolTier, type HeirloomId, type UpgradeTier } from './state'
+import { HEIRLOOMS, MAX_RACK_COPIES, TOOL_RECIPES, rackRecipe, type ForgeMaterial } from './catalogue'
+import { forgeState, heirloomOf, nextToolTier, releaseCrewGoal, type HeirloomId, type UpgradeTier } from './state'
 
 export function forgeMaterialRows(save: FarmSave, materials: readonly ForgeMaterial[]) {
   return materials.map(material => ({
@@ -83,9 +83,56 @@ export function orderTool<S extends FarmSave>(save: S, tool: ToolId, story: Sche
   return { ...paid, forge: { ...forgeState(save), tool: { tool, tier, ordered: day, due: day + recipe.days, ...(assistant ? { assistant } : {}) } } }
 }
 
+export const rackCopies = (save: Pick<FarmSave, 'forge'>, tool: ToolId, tier?: ToolTier) =>
+  (save.forge?.rack ?? []).filter(row => row.tool === tool && (tier === undefined || row.tier === tier))
+
+export function trackRackTool<S extends FarmSave>(save: S, tool: ToolId, fromTier: Exclude<ToolTier, 5>): S {
+  const { rackGoal, ...rest } = forgeState(save)
+  const existing = rackGoal ?? (save.farm.toolPin ? { tool: save.farm.toolPin, fromTier: 1 } : undefined)
+  const forge = existing ? releaseCrewGoal(rest, `tool:${existing.tool}:${existing.fromTier + 1}`) : rest
+  const farm = { ...save.farm }
+  delete farm.toolPin
+  return { ...save, farm, forge: existing?.tool === tool && existing.fromTier === fromTier ? forge : { ...forge, rackGoal: { tool, fromTier } } }
+}
+
+export function rackOrderLock(save: FarmSave, tool: ToolId, fromTier: Exclude<ToolTier, 5>, useReserved = false): string | null {
+  if (!placeBuilt(save, 'forge')) return 'Restore the Forge workshop.'
+  if (save.forge?.tool) return 'A tool order is in progress.'
+  if (fromTier === 1 && rackCopies(save, tool).length >= MAX_RACK_COPIES) return 'The rack is full for this tool.'
+  if (fromTier > 1 && !rackCopies(save, tool, fromTier).length) return 'Craft the previous tier first.'
+  const recipe = rackRecipe(tool, nextToolTier(fromTier)!)
+  return farmRankOf(save.farm.points) < recipe.rank ? `Opens at Farm Rank ${recipe.rank}.` : stockLock(save, recipe, useReserved)
+}
+
+export function orderRackTool<S extends FarmSave>(save: S, tool: ToolId, fromTier: Exclude<ToolTier, 5>, story: SchedulePack | null, assistant?: string, useReserved = false): S {
+  const lock = rackOrderLock(save, tool, fromTier, useReserved)
+  if (lock) throw new SaveRuleError('not-ready', lock)
+  const tier = nextToolTier(fromTier)!
+  const recipe = rackRecipe(tool, tier)
+  const day = save.calendar.day
+  const paid = pay(book(save, assistant, tier, story), recipe.materials, recipe.gold)
+  const state = forgeState(save)
+  const { rackGoal, ...rest } = state
+  const forge = rackGoal?.tool === tool && rackGoal.fromTier === fromTier ? releaseCrewGoal(rest, `tool:${tool}:${tier}`) : state
+  return { ...paid, forge: { ...forge, tool: { tool, tier, fromTier, ordered: day, due: day + recipe.days, ...(assistant ? { assistant } : {}) } } }
+}
+
+export function installRackCopy<S extends FarmSave>(save: S, order: import('./state').ToolOrder): S {
+  const state = forgeState(save)
+  const rack = [...state.rack ?? []]
+  if (order.fromTier === 1) rack.push(order)
+  else {
+    const index = rack.findIndex(row => row.tool === order.tool && row.tier === order.fromTier)
+    if (index < 0) return save
+    rack[index] = order
+  }
+  return { ...save, forge: { ...state, rack } }
+}
+
 export function trackHeirloom<S extends FarmSave>(save: S, recipient: string, piece: HeirloomId): S {
   if (save.love[recipient]?.stage !== 'spouse') throw new SaveRuleError('not-ready', 'Choose a spouse.')
-  const { tracked, ...forge } = forgeState(save)
+  const { tracked, ...rest } = forgeState(save)
+  const forge = tracked ? releaseCrewGoal(rest, `jewel:${tracked.recipient}:${tracked.piece}`) : rest
   const same = tracked?.recipient === recipient && tracked.piece === piece
   return { ...save, forge: same ? forge : { ...forge, tracked: { recipient, piece } } }
 }
@@ -97,7 +144,7 @@ export function orderHeirloom<S extends FarmSave>(save: S, recipient: string, pi
   const paid = pay(book(save, assistant, recipe.rank === 8 ? 4 : 5, story), recipe.materials, recipe.gold)
   const state = forgeState(save)
   const { tracked, ...rest } = state
-  const forge = tracked?.recipient === recipient && tracked.piece === piece ? rest : state
+  const forge = tracked?.recipient === recipient && tracked.piece === piece ? releaseCrewGoal(rest, `jewel:${recipient}:${piece}`) : state
   const day = save.calendar.day
   return { ...paid, forge: { ...forge, heirlooms: [...forge.heirlooms, { recipient, piece, ordered: day, due: day + recipe.days, ...(assistant ? { assistant } : {}) }] } }
 }
@@ -109,7 +156,7 @@ export function giveHeirloom<S extends FarmSave>(save: S, recipient: string, pie
 }
 
 export function practiceForging<S extends FarmSave>(save: S, tier: UpgradeTier, assistant: string, story: SchedulePack | null): S {
-  if (!placeBuilt(save, 'forge') || !Object.values(save.tools).some(installed => installed >= tier)) throw new SaveRuleError('locked', 'Install a tool at that tier first.')
+  if (!placeBuilt(save, 'forge') || (!Object.values(save.tools).some(installed => installed >= tier) && !save.forge?.rack?.some(row => row.tier >= tier))) throw new SaveRuleError('locked', 'Install a tool at that tier first.')
   const materials = [{ id: 'pine-plank', count: tier === 2 ? 2 : 1 }, ...(tier === 2 ? [] : [{ id: TOOL_RECIPES[tier].materials[0]!.id, count: 1 }])]
   const lock = stockLock(save, { gold: 0, materials }, false)
   if (lock) throw new SaveRuleError('not-ready', lock)
@@ -138,6 +185,9 @@ export function deliverForge<S extends FarmSave>(save: S): S {
   if (!tool || tool.due > day) {
     return heirlooms.some((row, index) => row !== forge.heirlooms[index]) ? { ...save, forge: { ...save.forge, heirlooms } } : save
   }
+  if (tool.fromTier !== undefined) return installRackCopy({ ...save, forge: { ...forge, heirlooms } }, {
+    ...tool, finish: tool.finish === 'stamped' ? 'stamped' : 'standard',
+  })
   return {
     ...save, tools: { ...save.tools, [tool.tool]: tool.tier },
     forge: { ...forge, heirlooms, installed: [...forge.installed.filter(order => order.tool !== tool.tool), { ...tool, finish: tool.finish === 'stamped' ? 'stamped' : 'standard' }] },

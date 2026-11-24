@@ -9,6 +9,7 @@
 //
 // A station is locked until built: the Farm Rank offers it, and it's built with gold and goods like every place
 // (`farm/builds.ts`). Loaded with the screens and the night.
+import { crewStationTargets } from '../farm/supply-goals'
 import { spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
 import { availableStock } from '../farm/production'
@@ -178,7 +179,7 @@ export function setStationPlan<S extends FarmSave>(save: S, station: StationId, 
 export function nextStationLoad(save: FarmSave, station: StationId, size: number): { option: StationOption; batches: number; target?: number } | null {
   if (loadsLeft(save, station) === 0) return null
   const options = stationOptions(save, station).filter((o) => o.available >= o.units).sort((a, b) => b.available - a.available)
-  const plan = save.farm.stationPlans?.[station]
+  const plan = crewStationTargets(save, station)
   if (!plan) {
     const option = options[0]
     return option ? { option, batches: Math.floor(Math.min(size, option.available) / option.units) } : null

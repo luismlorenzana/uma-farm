@@ -1,5 +1,6 @@
 import { byRelationship } from './relationship-order'
 import {
+  bestToolTier,
   activeContest, animalPreview, animalName, ANIMALS, aptitudeOf, castDerby, CONTESTS, contestCutoffs, contestDate, CROP_IDS, CUE_WORDS, cupCategory, cupPreview, cupWorkDay,
   dateDayOf, dateOf, derbyMeet, DERBY_TURN_MS, enterAnimal, enterCup, enterDerby, enterFlower, farmRankOf, festivalEntryLock, festivalHandLock, festivalResult,
   festivalsOf, FESTIVAL_ACTION_COST, FESTIVAL_CONTESTS, festivalStock, fieldTiles, FIELD_TILES, FISHING_SPOTS, flowerMarkLock, flowerPreview,
@@ -223,7 +224,7 @@ function Derby(props: FormProps) {
             return <option key={id} value={id} disabled={why !== null}>{SPOT_NAMES[id]}{why ? ` · ${why}` : ''}</option>
           })}
         </select></label>
-        <p>Rod Lv {save.tools.rod} · {save.farm.fishingModes?.[spot] ?? 'standard'}</p>
+        <p>Rod Lv {bestToolTier(save, 'rod')} · {save.farm.fishingModes?.[spot] ?? 'standard'}</p>
         <p className="text-ink-soft">{fish.map(([id]) => goodName(id)).join(' · ')}</p>
       </div>
       <div className={CARD}><p className="font-semibold">Three casts · Best two count</p>

@@ -2,7 +2,7 @@ import { ANIMAL_HOME, CROPS, cropLook, dateOf, FIELD_COLUMNS, FIELD_ROWS, placeB
 import { LookStage, type LookAssets, type LookScene } from '@luismlorenzana/uma-stage/look'
 import {
   BoxGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry,
-  InstancedMesh, Matrix4, MeshStandardMaterial, Object3D, Vector3,
+  InstancedMesh, Matrix4, MeshStandardMaterial, Object3D, Plane, Raycaster, Vector2, Vector3,
 } from 'three'
 import { bandLight } from '../hd2d/field-pond-scene'
 import type { FarmEntrance, FarmRegion } from './farm-regions'
@@ -215,8 +215,15 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
     stage.render()
     return points
   }
+  const ray = new Raycaster()
+  const floor = new Plane(new Vector3(0, 1, 0))
+  const hit = new Vector3()
   return {
     project,
+    floorPoint(x: number, y: number) {
+      ray.setFromCamera(new Vector2(x * 2 - 1, 1 - y * 2), stage.camera)
+      return ray.ray.intersectPlane(floor, hit) ? { x: hit.x, z: hit.z } : null
+    },
     dispose() {
       stage.stop()
       stage.key.shadow.dispose()

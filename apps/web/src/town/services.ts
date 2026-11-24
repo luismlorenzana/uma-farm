@@ -1,6 +1,6 @@
 import {
   ANIMALS, BONUS_TOOLS, CONTESTS, CROPS, CROP_IDS, FISHERY, FISHING_SPOTS, FOREST, FOREST_AREAS, SPOT_NAMES, AREA_NAMES,
-  TOOL_IDS, TOOL_NAMES, TOOL_RECIPES, buildCostWords, buildGoodsWords, buildNeeds, currentDatePeriod, dateOf,
+  TOOL_IDS, TOOL_NAMES, bestToolTier, rackCopies, rackRecipe, buildCostWords, buildGoodsWords, buildNeeds, currentDatePeriod, dateOf,
   farmPlace, farmRankOf, goodCount, goodName, heartsOf, ingredientSources, innResidents, isBuildPlace,
   loadsLeft, nextToolTier, pantryMeals, placeBuilt, professionOf, professionWorker,
   requestCards, restockList, stationOptions, toolChargesLeft, toolEffect, toolTierName,
@@ -74,13 +74,16 @@ export function serviceReport(id: ServiceId | 'garage', save: SaveV4, pack: Stor
         ...animals.map(animal => `${ANIMALS[animal.kind].name} · ${heartsOf(animal.fondness)} hearts · ${animal.fed ? 'Fed' : 'Needs feed'}`)]
     }
     case 'smith': {
-      const tool = save.farm.toolPin ?? 'hoe'
-      const tier = nextToolTier(save.tools[tool])
-      return tier ? [`${TOOL_NAMES[tool]} · ${toolTierName(tier)}`, ...TOOL_RECIPES[tier].materials.map(row => `${goodCount(save.items, row.id)}/${row.count} ${goodName(row.id)}`)] : [`${TOOL_NAMES[tool]} is fully upgraded.`]
+      const pin = save.forge?.rackGoal
+      const tool = pin?.tool ?? save.farm.toolPin ?? 'hoe'
+      const tier = nextToolTier(pin?.fromTier ?? 1)!
+      const recipe = rackRecipe(tool, tier)
+      return [`${TOOL_NAMES[tool]} · ${toolTierName(tier)}`, ...recipe.materials.map(row => `${goodCount(save.items, row.id)}/${row.count} ${goodName(row.id)}`)]
     }
     case 'garage': return TOOL_IDS.map(tool => {
       const bonus = BONUS_TOOLS.find(entry => entry === tool)
-      return `${TOOL_NAMES[tool]} · ${toolTierName(save.tools[tool])} · ${toolEffect(tool, save.tools[tool])}${bonus ? ` · ${toolChargesLeft(save, bonus)} charges left` : ''}`
+      const tier = bestToolTier(save, tool)
+      return `${TOOL_NAMES[tool]} · ${rackCopies(save, tool).length} copies · ${toolTierName(tier)} · ${toolEffect(tool, tier)}${bonus ? ` · ${toolChargesLeft(save, bonus)} charges left` : ''}`
     })
     case 'cook': return [orderLine, `Trout Grill portions held · ${goodCount(save.items, 'dish-fish-2')}`]
     case 'cafe-host':

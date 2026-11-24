@@ -1,5 +1,4 @@
-import { ANNIVERSARY_LOOK_POINTS, EVENINGS, formalLooks, HEIRLOOM_IDS, HEIRLOOMS, heirloomOf, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitLookKind, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
-import { JewelMark } from '../items/JewelMark'
+import { ANNIVERSARY_LOOK_POINTS, EVENINGS, formalLooks, greaterLoveOf, PAJAMA_POINTS, TRUE_LOVE, visitLookKind, type FarmSave, type NightKind, type StoryPack } from '@farm/domain'
 import { Link } from 'react-router'
 import { NightReplayLinks } from '../loop/NightReplayLinks'
 import { libraryDate } from './LibraryPage'
@@ -30,21 +29,7 @@ export function MarriedLife({ save, pack, id, nameOf }: { save: FarmSave; pack: 
         </ul>
       </section>
     })}
-    {save.love[id]?.stage === 'spouse' && <section className="pb-2" aria-label="Heirloom jewelry" data-heirloom-book={id}>
-      <h3>Heirlooms · {HEIRLOOM_IDS.filter(piece => heirloomOf(save, id, piece)?.gifted).length}/4 gifted</h3>
-      <ul className="grid grid-cols-2 gap-1">
-        {HEIRLOOM_IDS.map(piece => {
-          const recipe = HEIRLOOMS[piece]
-          const order = heirloomOf(save, id, piece)
-          return <li key={piece} className="rounded border border-hairline p-2">
-            <strong className="flex items-center gap-2"><JewelMark piece={piece} />{recipe.name}</strong>
-            <p>{order?.gifted ? `Gifted · ${libraryDate(order.gifted)}` : order?.ready ? 'Ready to give' : order ? `Ready ${libraryDate(order.due)}` : `Look ${recipe.look} · ${ANNIVERSARY_LOOK_POINTS[recipe.look - 1]} Greater Love`}</p>
-            {order?.gifted && order.assistant && <small>Prepared with {nameOf(order.assistant)}</small>}
-            {!order?.gifted && <Link to={`/?sheet=forge&tab=heirlooms&recipient=${id}&piece=${piece}`} state={{ back: true }} className="flex min-h-11 items-center font-semibold text-accent-strong">{order?.ready ? 'Give her the heirloom ›' : 'See commission ›'}</Link>}
-          </li>
-        })}
-      </ul>
-    </section>}
+    <Link className="lib-button" to={`/library?uma=${id}&page=jewelry`} replace>Jewelry and occasion looks ›</Link>
     <h3>Night memories</h3>
     <ul className="lib-lines">
       {heart.memories.map((visit, index) => {

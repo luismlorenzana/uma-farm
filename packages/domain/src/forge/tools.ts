@@ -24,12 +24,43 @@ export function toolEffect(tool: ToolId, tier: ToolTier): string {
   return tier === 1 ? 'Standard haul' : `Up to ${tier - 1} extra ${unit === 'catch' && tier > 2 ? 'catches' : unit + (tier > 2 && unit !== 'ore' ? 's' : '')} per day`
 }
 
-export const toolChargesLeft = (save: Pick<FarmSave, 'tools' | 'today'>, tool: BonusTool) =>
+type EquippedSave = Pick<FarmSave, 'tools'> & Partial<Pick<FarmSave, 'forge'>>
+
+export function bestToolTier(save: EquippedSave, tool: ToolId): ToolTier {
+  return (save.forge?.rack ?? []).reduce((best, copy) => copy.tool === tool && copy.tier > best ? copy.tier : best, save.tools[tool])
+}
+
+export function copyCharges(save: Partial<Pick<FarmSave, 'forge'>> & Pick<FarmSave, 'today'>, index: number) {
+  const copy = save.forge?.rack?.[index]
+  return copy ? Math.max(0, copy.tier - 1 - (save.today.rackCharges?.[index] ?? 0)) : 0
+}
+
+const legacyCharges = (save: Pick<FarmSave, 'tools' | 'today'>, tool: BonusTool) =>
   Math.max(0, save.tools[tool] - 1 - (save.today.toolCharges?.[tool] ?? 0))
 
-/** One extra item per eligible action. Its rolls do not advance the base haul's seeded stream. */
-export function takeToolCharge<S extends FarmSave>(save: S, tool: BonusTool, eligible = true) {
-  if (!eligible || toolChargesLeft(save, tool) === 0) return { save, roll: null }
+export const toolChargesLeft = (save: EquippedSave & Pick<FarmSave, 'today'>, tool: BonusTool) =>
+  (save.forge?.rack ?? []).reduce((sum, copy, index) => sum + (copy.tool === tool ? copyCharges(save, index) : 0), legacyCharges(save, tool))
+
+/** One extra item per eligible action. Each copy has its own roll and daily allowance. */
+export function takeToolCharge<S extends FarmSave>(save: S, tool: BonusTool, eligible = true, equipped?: number | null) {
+  if (!eligible) return { save, roll: null }
+  let slot = equipped
+  if (slot === undefined) {
+    let best = legacyCharges(save, tool) > 0 ? save.tools[tool] : 1
+    slot = null
+    save.forge?.rack?.forEach((copy, index) => {
+      if (copy.tool !== tool || copy.tier <= best || copyCharges(save, index) === 0) return
+      best = copy.tier
+      slot = index
+    })
+  }
+  if (slot !== null && slot !== undefined) {
+    if (save.forge?.rack?.[slot]?.tool !== tool || copyCharges(save, slot) === 0) return { save, roll: null }
+    const number = save.today.rackCharges?.[slot] ?? 0
+    const next: S = { ...save, today: { ...save.today, rackCharges: { ...save.today.rackCharges, [slot]: number + 1 } } }
+    return { save: next, roll: (kind: string) => draw(save.account.uid, save.calendar.day, `rack:${tool}:${slot}:${kind}`, number) }
+  }
+  if (legacyCharges(save, tool) === 0) return { save, roll: null }
   const number = save.today.toolCharges?.[tool] ?? 0
   const next: S = { ...save, today: { ...save.today, toolCharges: { ...save.today.toolCharges, [tool]: number + 1 } } }
   return { save: next, roll: (kind: string) => draw(save.account.uid, save.calendar.day, `tool:${tool}:${kind}`, number) }

@@ -623,7 +623,7 @@ Home opens on the painted farm map. Tap a marked area or its matching shortcut. 
 
 A building door opens a modeled 3D room before its existing activity controls. Rooms have furniture and equipment arranged for their purpose. Outdoor targets open the field, trail, fishing or other action panel directly. The destination list shows why a locked place cannot open. The road opens Town for free. Opening a door or selecting a person is also free.
 
-Morning farmworkers at outdoor jobs are marked by profile pictures from the day's receipt. Before the work is recorded, their placement is marked as planned. Indoors, Umas stand on the room floor as HD-2D sprites. Housed Umas return to their assigned homes at night, with expeditions accounted for. A person marker or her Here now entry opens the full-screen portrait conversation. Back returns to the same section or room and keeps the farm camera position.
+Morning farmworkers at outdoor jobs are marked by profile pictures from the day's receipt. Before the work is recorded, their placement is marked as planned. Indoors, Umas stand on the room floor as HD-2D sprites. Housed Umas return to their assigned homes at night, with expeditions accounted for. A person marker or her Here now entry opens the full-screen portrait conversation. Back returns to the same section or room at the previous position. Inside a room, tap the floor or use the arrow keys to walk. The camera follows along the floor at a fixed front-facing angle. Furniture and standing Umas block the path. Use Entrance to walk back to the doorway.
 
 The original tile map stays available from Home's map controls. It includes the **Field and Pond** review and **Phone test**, which records FPS, frame gaps, draw calls and estimated graphics memory for the original rendering slice.
 
@@ -4363,7 +4363,9 @@ Your life with the Umas opens the homestead and the town:
 
 #### What Next?
 
-Open **What Next?** beside Work or in the menu. **Focus now** shows one action you can take, with a direct link and your current gold, queued shipments and crew status. It can send you to gather or ship your first goods, use spare produce, harvest, set up the crew, work on a pinned project or start your flock. Expand Farm work and starter goals for the lifetime planting, harvesting, foraging, fishing, chopping, clearing and shipping goals. Either you or the crew can make progress. Expand the other sections for Farm Rank, costs, credit and the first wedding.
+Open **What Next?** beside Work or in the menu. **Focus now** shows one action for today. Expand Crew and fields for the shift’s shortfalls, starter goals, restocking and the Work Calendar. Money and credit estimates tonight’s cash after food, upkeep and loan repayments. The remaining sections link to buildings, housing, ranching, recipes, the Tool Rack, relationships, jewelry, and town services.
+
+Track a build, tool, heirloom or Restaurant recipe at its screen to keep supplies in stock. What Next? shows what is still missing and where it comes from. Choose **Assign crew to this goal** to let available auto-workers gather materials or fill an additional station target. The crew keeps its existing orders and daily work priorities. Gold goals use standard surplus shipping. Some ingredients still need you to choose a crop, buy an animal, use a catch mode, or cook a dish. The weekly crew forecast uses today's crops and stock.
 
 **Ranch & homes** shows the Coop and Barn’s costs, the rancher’s purchase prices, feed stock, room capacity,
 and the next house and extension. The Coop and its first Chicken open at Rank 2. The Barn opens at Rank 3. House 1
@@ -7143,19 +7145,27 @@ the first played Romance 8 and uses its own daily allowance. Either counter can 
 
 #### Shared tools
 
-One upgrade applies to all Umas and the player. You order one tool at a time. Orders cost one daytime action,
-the fee and exact materials. The old tool works through delivery, and the new tier installs automatically at dawn.
-Tool ingredients take any stars of the named material, drawing lower stars first. Protected stock takes an
-explicit override. The workshop previews the crew's assignments against the delivery date and current stock.
-What Next? links to restoration or a suggested tool. Work calendar shows the delivery date and includes installed
-tiers in its forecast. Morning reports link back to delivered tools.
+The Tool Rack starts with Basic tools. Commission a Fitted copy or upgrade one existing copy. Each installed copy
+goes to one worker who uses it during her shift. Umas can still work with Basic tools when all copies are assigned.
+You use the best available tool by hand. Older saves keep their farm-wide tiers and any pending legacy order.
 
-| Tier | Farm Rank | Exact materials for one upgrade | Fee | Lead time |
-|---|---:|---|---:|---|
-| Fitted | 3 | 6 Pine Planks | 300g | 1 dawn |
-| Iron | 4 | 4 Iron Ingots, 4 Pine Planks | 1,200g | 1 dawn |
-| Gold | 6 | 6 Gold Ingots, 4 Iron Ingots | 3,600g | 2 dawns |
-| Mythril | 8 | 8 Mythril Ingots, 4 Gold Ingots | 9,000g | 2 dawns |
+One order takes one daytime action, exact materials and a fee. Lower stars are spent first and spending reserved
+stock needs approval in the order form. Orders install automatically at dawn. The rack lists crew assignments and
+previews what the next copy would change. An Uma’s Abilities page shows the copies she uses or is forecast to use today. Work Calendar includes scheduled deliveries in its forecasts.
+
+| Tier | Farm Rank | Materials per copy | Lead time |
+|---|---:|---|---|
+| Fitted | 3 | 6 Pine Planks | 1 dawn |
+| Iron | 4 | 4 Pine Planks and 2 Iron Ingots for Brush, 3 for Axe and Rod, 4 for Watering Can and Hoe, or 5 for Pick and Hammer | 1 dawn |
+| Gold | 6 | 6 Gold Ingots and 4 Iron Ingots | 2 dawns |
+| Mythril | 8 | 8 Mythril Ingots and 4 Gold Ingots | 2 dawns |
+
+| Tool | Fitted | Iron | Gold | Mythril |
+|---|---:|---:|---:|---:|
+| Watering Can, Hoe | 300g | 1,200g | 3,600g | 9,000g |
+| Brush | 200g | 800g | 2,400g | 6,000g |
+| Axe, Rod | 250g | 1,000g | 3,000g | 7,500g |
+| Pick, Hammer | 350g | 1,400g | 4,200g | 10,500g |
 
 | Tool | Fitted | Iron | Gold | Mythril |
 |---|---|---|---|---|
@@ -7170,7 +7180,7 @@ tiers in its forecast. Morning reports link back to delivered tools.
 Tile and animal capacities apply per action on one plot or in one animal home, and crew skill can supply a
 higher capacity. The Hoe groups clear ground and adds 0.125 quality and 2 percentage points of seed return per
 tier above Basic. The Brush affects care, while feed and collection use their own actions. Gathering charges
-are shared farm-wide, with at most one extra item per eligible action. Ordinary seasonal and depth draws still
+are shared between player and crew per copy, with at most one extra item per eligible action. Ordinary seasonal and depth draws still
 set item grades. An extra catch or log comes from a full haul. Bonus items use separate rolls and ordinary
 work alone supplies challenge and stair credit. Fishing modes apply to extra fish too.
 

@@ -462,6 +462,7 @@ export interface TodayV4 {
   /** Actual farmhand output, carried until the night consumes it. */
   crew?: import('../farm/farmhands').CrewReceipt
   forgeHelper?: { id: CharacterId; tier: import('../forge/state').UpgradeTier }
+  rackCharges?: Record<number, number>
   toolCharges?: Partial<Record<import('../forge/tools').BonusTool, number>>
   /** The day's actions spent: the farm's tasks and outings (`farm/actions.ts`). */
   actions: number

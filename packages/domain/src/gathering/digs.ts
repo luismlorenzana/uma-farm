@@ -113,7 +113,7 @@ export function workFace<S extends FarmSave>(save: S, dig: DigId, floor?: number
  * at the Quarry their kind `'dig-kind:<dig>'`, their stars `'dig-stars:<dig>'`, n the farm's count of finds there), into
  * the Warehouse; the floor reached, and a face more toward its stairs. A dig thins as an area does: full finds its
  * first four faces a day, then half (`haulAt`). */
-export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger, floor = digFloor(save.places[dig])): { save: S; face: Face } {
+export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger, floor = digFloor(save.places[dig]), equipped?: number | null): { save: S; face: Face } {
   const at = save.places[dig]
   const before = save.farm.counts[dugCount(dig)] ?? 0
   const u = (what: string, k: number) => draw(save.account.uid, save.calendar.day, `${what}:${dig}`, before + k)
@@ -126,7 +126,7 @@ export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger, floo
     items = addGoods(items, good, stars, 1)
     got.push(stockKey(good, stars))
   }
-  const bonus = takeToolCharge(save, DIG_TOOL[dig])
+  const bonus = takeToolCharge(save, DIG_TOOL[dig], true, equipped)
   if (bonus.roll) {
     const good = findOn(dig, floor, bonus.roll('grade'), bonus.roll('kind'))
     const stars = drawStars(by.q, bonus.roll('stars'))

@@ -10,12 +10,27 @@ export const toolTierName = (tier: ToolTier) => TIER_NAMES[tier - 1]!
 export interface ForgeMaterial { id: string; count: number }
 interface Recipe { rank: number; gold: number; days: number; materials: readonly ForgeMaterial[] }
 
+export const MAX_RACK_COPIES = 50
+
 export const TOOL_RECIPES: Record<UpgradeTier, Recipe> = {
   2: { rank: 3, gold: 300, days: TOOL_DAWNS[2], materials: [{ id: 'pine-plank', count: 6 }] },
   3: { rank: 4, gold: 1200, days: TOOL_DAWNS[3], materials: [{ id: 'iron-ingot', count: 4 }, { id: 'pine-plank', count: 4 }] },
   4: { rank: 6, gold: 3600, days: TOOL_DAWNS[4], materials: [{ id: 'gold-ingot', count: 6 }, { id: 'iron-ingot', count: 4 }] },
   5: { rank: 8, gold: 9000, days: TOOL_DAWNS[5], materials: [{ id: 'mythril-ingot', count: 8 }, { id: 'gold-ingot', count: 4 }] },
 }
+const FITTED_FEES: Record<ToolId, number> = {
+  'watering-can': 300, hoe: 300, brush: 200, axe: 250, rod: 250, pick: 350, hammer: 350,
+}
+
+export function rackRecipe(tool: ToolId, tier: UpgradeTier) {
+  const base = TOOL_RECIPES[tier]
+  const gold = FITTED_FEES[tool] * ({ 2: 1, 3: 4, 4: 12, 5: 30 } as const)[tier]
+  const materials = tier === 3 ? base.materials.map(row => row.id !== 'iron-ingot' ? row : {
+    ...row, count: ({ brush: 2, axe: 3, rod: 3, pick: 5, hammer: 5 } as Partial<Record<ToolId, number>>)[tool] ?? row.count,
+  }) : base.materials
+  return { ...base, gold, materials }
+}
+
 interface HeirloomRecipe extends Recipe { name: string; look: 2 | 3 | 4 | 5 }
 export const HEIRLOOMS: Record<HeirloomId, HeirloomRecipe> = {
   earrings: { name: 'Diamond Earrings', look: 2, rank: 8, gold: 24000, days: HEIRLOOM_DAWNS.earrings, materials: [

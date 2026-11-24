@@ -1,10 +1,11 @@
 import { goodOf, isGoodId, isRingId, isShippableId } from '../goods/ids'
 import { isRestaurantDish } from '../restaurant/rules'
 import { restaurantRecipe } from '../restaurant/recipes'
-import { HEIRLOOMS, TOOL_RECIPES } from '../forge/catalogue'
-import { nextToolTier } from '../forge/state'
+import { HEIRLOOMS, TOOL_RECIPES, rackRecipe } from '../forge/catalogue'
+import { nextToolTier, releaseCrewGoal } from '../forge/state'
 import { stationJobUnits } from '../gathering/ids'
 import { LOAD_SIZE } from '../gathering/stations'
+import { goalInputs } from './supply-goals'
 import { heldFor, pickFor } from './builds'
 import { farmPlace, isBuildPlace, placeBuilt, type FarmPlaceId } from './places'
 import { MAX_PRODUCTION_TARGET, MAX_SURPLUS } from '../goods/production-catalogue'
@@ -97,6 +98,11 @@ function hardSurplusFloors(save: FarmSave): Record<string, number> {
   const tool = save.farm.toolPin
   const tier = tool ? nextToolTier(save.tools[tool]) : null
   if (tier && save.forge?.tool?.tool !== tool) for (const line of TOOL_RECIPES[tier].materials) protect(line.id, line.count)
+  const rack = save.forge?.rackGoal
+  if (rack && save.forge?.tool?.tool !== rack.tool) {
+    for (const line of rackRecipe(rack.tool, nextToolTier(rack.fromTier)!).materials) protect(line.id, line.count)
+  }
+  for (const [id, count] of Object.entries(goalInputs(save))) protect(id, count)
   const pin = farmPlace(save.farm.projectPin ?? '')
   if (isBuildPlace(pin) && !placeBuilt(save, pin.id) && !save.farm.builds.includes(pin.id)) {
     for (const line of pin.opens.cost.goods) {
@@ -170,17 +176,19 @@ export function setSurplusReserve<S extends FarmSave>(save: S, id: string, floor
 export function pinSupplyProject<S extends FarmSave>(save: S, id: FarmPlaceId): S {
   if (!isBuildPlace(farmPlace(id))) throw new SaveRuleError('locked', 'This project cannot be pinned.')
   const farm = { ...save.farm }
-  if (farm.projectPin === id) delete farm.projectPin
+  const previous = farm.projectPin
+  if (previous === id) delete farm.projectPin
   else farm.projectPin = id
-  return { ...save, farm }
+  return { ...save, farm, ...(save.forge && previous ? { forge: releaseCrewGoal(save.forge, 'build:' + previous) } : {}) }
 }
 
 export function pinRecipeStock<S extends FarmSave>(save: S, id: string): S {
   if (!restaurantRecipe(id)) throw new SaveRuleError('bad-job', 'Choose a Restaurant recipe.')
   const farm = { ...save.farm }
-  if (farm.recipePin === id) delete farm.recipePin
+  const previous = farm.recipePin
+  if (previous === id) delete farm.recipePin
   else farm.recipePin = id
-  return { ...save, farm }
+  return { ...save, farm, ...(save.forge && previous ? { forge: releaseCrewGoal(save.forge, 'recipe:' + previous) } : {}) }
 }
 
 export function pinToolStock<S extends FarmSave>(save: S, tool: ToolId): S {

@@ -16,7 +16,7 @@
 // (`fieldTiles`): plot 1's tiles are 0–39 as they always were, plot 2's 40–79, so a draw keyed by the index (`harvest:<i>`)
 // replays the same on plot 1.
 import { clearFlowerMark, flowerGrew, flowerHarvested, flowerPlanted, flowerWatered } from '../festivals/evidence'
-import { hoeQuality, hoeSeedsBack, tillCapacity, waterTargets } from '../forge/tools'
+import { bestToolTier, hoeQuality, hoeSeedsBack, tillCapacity, waterTargets } from '../forge/tools'
 import { spend } from '../farm/actions'
 import { dateDayOf, dateOf, DAYS_PER_SEASON, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -153,7 +153,7 @@ export function tillTile<S extends FarmSave>(save: S, index: number): S {
   tillable(tileAt(save, index))
   const first = Math.floor(index / FIELD_TILES) * FIELD_TILES
   const others = fieldTiles(save).slice(first, first + FIELD_TILES).flatMap((tile, i) => tile.ground === 'clear' && first + i !== index ? [first + i] : [])
-  return [index, ...others].slice(0, tillCapacity(save.tools.hoe)).reduce((next, target) => tillGround(next, target), spend(save, 'till'))
+  return [index, ...others].slice(0, tillCapacity(bestToolTier(save, 'hoe'))).reduce((next, target) => tillGround(next, target), spend(save, 'till'))
 }
 function tillable(tile: Tile): void {
   if (isOvergrown(tile.ground)) throw new SaveRuleError('bad-slot', 'Clear it first.')
@@ -200,7 +200,7 @@ export function waterTile<S extends FarmSave>(save: S, index: number): S {
     const target = first + i
     return target !== index && tile.crop !== null && !tile.ready && !tile.watered && !established(tile) ? [target] : []
   })
-  const targets = waterTargets([index, ...others], save.tools['watering-can'], 0, FIELD_COLUMNS)
+  const targets = waterTargets([index, ...others], bestToolTier(save, 'watering-can'), 0, FIELD_COLUMNS)
   return targets.reduce((next, target) => wetTile(next, target), spend(save, 'water'))
 }
 function wettable(tile: Tile): void {
@@ -257,7 +257,7 @@ export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Rea
   const { uid } = save.account
   const day = save.calendar.day
   const points = save.crops[crop.id] ?? 0
-  const q = harvestQuality(reaper?.terms ?? null, cropLevelOf(points), save.tools.hoe) + (reaper?.extra ?? 0)
+  const q = harvestQuality(reaper?.terms ?? null, cropLevelOf(points), reaper ? save.tools.hoe : bestToolTier(save, 'hoe')) + (reaper?.extra ?? 0)
   const many = reaper ? drawnCount(crop.yield * reaper.yield, draw(uid, day, `harvest-more:${index}`, 0)) : crop.yield
   const stars = Array.from({ length: many }, (_, n) => drawStars(q, draw(uid, day, `harvest:${index}`, n)))
   const receipt: HarvestReceipt = { crop: crop.id, stars: [0, 0, 0, 0, 0], seeds: 0 }
@@ -269,7 +269,7 @@ export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Rea
   if (upgrade || tile.grade) receipt.lots = lots
   let items = lots.reduce((all, lot) => addGoods(all, lot.id, lot.stars, 1), save.items)
   for (const s of stars) receipt.stars[s - 1]! += 1
-  if (draw(uid, day, `seeds:${index}`, 0) < (reaper?.seedsBack ?? seedsBackChance(null, save.tools.hoe))) {
+  if (draw(uid, day, `seeds:${index}`, 0) < (reaper?.seedsBack ?? seedsBackChance(null, bestToolTier(save, 'hoe')))) {
     items = addGoods(items, cropSeedId(crop.id, true, planted), 1, 1)
     receipt.seeds = 1
   }

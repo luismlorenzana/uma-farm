@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { payBuild } from '../farm/builds'
-import { settleCrewShift } from '../farm/farmhands'
+import { handsTonight, settleCrewShift } from '../farm/farmhands'
 import { talentsD } from '../farm/talents'
+import { crewStationTargets, crewSupplyJobs, setCrewSupplyGoal, supplyGoals } from '../farm/supply-goals'
 import { workFace } from '../gathering/digs'
 import { endDay } from '../night/end-day'
 import { benchOpen, makeStarterRing } from '../romance/bench'
@@ -11,11 +12,11 @@ import { newLove, newRosterUma, newSave, newTodayV4, type FarmSave } from '../sa
 import { addGoods, goodCount } from '../save/warehouse'
 import { storyPackFrom } from '../story/pack'
 import {
-  beginTempering, deliverForge, finishTool, forgeAssistants, giveHeirloom, orderHeirloom, orderTool, practiceForging,
+  beginTempering, deliverForge, finishTool, forgeAssistants, giveHeirloom, orderHeirloom, orderRackTool, orderTool, practiceForging, trackRackTool,
 } from './orders'
 import { activateForge, formalLooks, HEIRLOOM_IDS } from './state'
 import { HEIRLOOMS } from './catalogue'
-import { waterTargets } from './tools'
+import { bestToolTier, toolChargesLeft, waterTargets } from './tools'
 
 const ID = '9900001'
 const PARTNER = '9900002'
@@ -86,6 +87,52 @@ describe('the two Forge counters', () => {
     const practice = practiceForging(practiceDay, 2, ID, pack)
     expect(practice.today.actions).toBe(practiceDay.today.actions)
     expect(goodCount(practice.items, 'pine-plank')).toBe(0)
+  })
+})
+
+describe('Tool Rack', () => {
+  it('installs separate copies, upgrades one of them, and equips at most one per worker and shift', () => {
+    let save = spouse()
+    save = { ...save, items: addGoods(addGoods(save.items, 'pine-plank', 1, 32), 'iron-ingot', 1, 8) }
+    for (let n = 0; n < 2; n++) {
+      const order = orderRackTool(save, 'pick', 1, null)
+      save = deliverForge(parseSaveV6(day(order, save.calendar.day + 1)))
+    }
+    const upgrade = orderRackTool(save, 'pick', 2, null)
+    save = deliverForge(day(upgrade, save.calendar.day + 1))
+    expect(save.tools.pick).toBe(1)
+    expect(bestToolTier(save, 'pick')).toBe(3)
+    expect(save.forge?.rack?.map(copy => copy.tier)).toEqual([3, 2])
+    expect(toolChargesLeft(save, 'pick')).toBe(3)
+    const task = { kind: 'mine', dig: 'mine' } as const
+    save = {
+      ...save, roster: {
+        [ID]: { ...save.roster[ID]!, tasks: [task] },
+        [PARTNER]: { ...newRosterUma(1), farmhand: 1, tasks: [task] },
+      },
+      love: { ...save.love, [PARTNER]: newLove() },
+    }
+    const both = Array.from({ length: 7 }, (_, index) => day(save, save.calendar.day + index))
+      .find(at => handsTonight(at, at, talentsD, null).lines.length === 2)!
+    const manual = workFace(both, 'mine').save
+    const shift = settleCrewShift(manual, talentsD, null)
+    expect(shift.today.crew?.jobs?.filter(job => job.key === 'mine:mine').map(job => job.rackSlot)).toEqual([0, 1])
+    expect(shift.today.rackCharges).toEqual({ 0: 2, 1: 1 })
+    expect(parseSaveV6(shift).today).toEqual(shift.today)
+  })
+
+  it('keeps tracking separate from crew priorities and restores explicit station targets when paused', () => {
+    const save = trackRackTool(spouse(), 'watering-can', 1)
+    const goal = supplyGoals(save)[0]!
+    expect(goal.key).toBe('tool:watering-can:2')
+    expect(crewStationTargets(save, 'sawmill')).toBeUndefined()
+    expect(crewSupplyJobs(save)).toEqual([])
+    const assigned = setCrewSupplyGoal(save, goal.key)
+    expect(crewStationTargets(assigned, 'sawmill')).toEqual([{ output: 'pine-plank', target: 6 }])
+    expect(crewSupplyJobs(assigned)).toContainEqual({ kind: 'chop', area: 'woods' })
+    expect(parseSaveV6(assigned).forge?.crewGoal).toBe(goal.key)
+    expect(crewStationTargets(setCrewSupplyGoal(assigned, goal.key), 'sawmill')).toBeUndefined()
+    expect(assigned.farm.stationPlans).toBe(save.farm.stationPlans)
   })
 })
 

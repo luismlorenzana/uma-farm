@@ -125,7 +125,7 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
       <aside className="min-w-0 flex-[2] overflow-y-auto rounded-md border border-hairline bg-panel p-2 text-[13px]" aria-label="Selected day's work" data-work-day-detail>
         <h2 className="font-display text-[17px] font-bold">{chosen.day !== null ? shortDate(chosen.day, save.calendar) : SEASON_NAMES[season] + ' ' + chosenNumber}</h2>
         <p className="text-ink-soft">{recorded ? 'End-of-day record' : actual ? 'Morning shift complete' : isToday ? 'Today’s shift forecast' : chosen.day === null ? 'Date added later' : 'Forecast using current crops, stock and orders'}</p>
-        {[...save.forge?.installed ?? [], ...save.forge?.tool ? [save.forge.tool] : []].filter(order => order.due === chosen.day).map(order =>
+        {[...save.forge?.installed ?? [], ...save.forge?.rack ?? [], ...save.forge?.tool ? [save.forge.tool] : []].filter(order => order.due === chosen.day).map(order =>
           <Link key={order.tool} className="flex min-h-11 items-center font-semibold" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} ready ›</Link>)}
         {chosen.record ? <WorkDetails record={chosen.record} /> : <p className="py-2">No shift recorded.</p>}
         {chosen.live && <>

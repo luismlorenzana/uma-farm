@@ -1,11 +1,12 @@
 import { HEIRLOOM_IDS, HEIRLOOM_DAWNS, TOOL_DAWNS, type ForgeState, type HeirloomOrder, type ToolOrder, type UpgradeTier } from '../forge/state'
+import { MAX_RACK_COPIES } from '../forge/catalogue'
 import { BONUS_TOOLS } from '../forge/tools'
 import { bool, int, list, object, oneOf, record } from './parse'
-import { fail, member } from './parse-loop'
+import { fail, key, member } from './parse-loop'
 import { TOOL_IDS, type FarmSave, type TodayV4, type ToolId } from './v4'
 
 export function parseForge(value: unknown, path: string, save: FarmSave): ForgeState {
-  const data = object(value, path, ['bench', 'legacyLooks', 'tool', 'installed', 'heirlooms', 'tracked', 'ringOrder'])
+  const data = object(value, path, ['bench', 'legacyLooks', 'tool', 'installed', 'heirlooms', 'tracked', 'ringOrder', 'rack', 'rackGoal', 'crewGoal'])
   const today = save.calendar.day
   const roster = new Set(Object.keys(save.roster))
   const spouses = new Set([...roster].filter(id => save.love[id]?.stage === 'spouse'))
@@ -15,20 +16,31 @@ export function parseForge(value: unknown, path: string, save: FarmSave): ForgeS
     legacyLooks[id] = [...new Set(list(slots, path, 0, 4).map(slot => int(slot, path, 2, 5)))]
   }
   function readTool(value: unknown): ToolOrder {
-    const row = object(value, path, ['tool', 'tier', 'ordered', 'due', 'assistant', 'finish'])
+    const row = object(value, path, ['tool', 'tier', 'ordered', 'due', 'assistant', 'finish', 'fromTier'])
     const tool = oneOf(row.tool, path, TOOL_IDS)
     const tier = int(row.tier, path, 2, 5) as UpgradeTier
     const ordered = int(row.ordered, path, 1, today)
     const due = int(row.due, path, ordered + TOOL_DAWNS[tier], ordered + TOOL_DAWNS[tier])
     return { tool, tier, ordered, due,
+      ...(row.fromTier === undefined ? {} : { fromTier: int(row.fromTier, path, tier - 1, tier - 1) as 1 | 2 | 3 | 4 }),
       ...(row.assistant === undefined ? {} : { assistant: member(row.assistant, path, roster) }),
       ...(row.finish === undefined ? {} : { finish: oneOf(row.finish, path, ['in-progress', 'standard', 'stamped'] as const) }),
     }
   }
   const tool = data.tool === undefined ? undefined : readTool(data.tool)
-  if (tool && save.tools[tool.tool] !== tool.tier - 1) fail(path, 'expected next tool tier')
+  const rack = data.rack === undefined ? undefined : list(data.rack, path, 0, MAX_RACK_COPIES * TOOL_IDS.length).map(readTool)
+  if (rack?.some(row => row.fromTier === undefined || row.due > today)
+      || TOOL_IDS.some(id => (rack?.filter(row => row.tool === id).length ?? 0) > MAX_RACK_COPIES)) fail(path, 'invalid tool rack')
+  if (tool) {
+    const copies = rack?.filter(row => row.tool === tool.tool) ?? []
+    const valid = tool.fromTier === undefined ? save.tools[tool.tool] === tool.tier - 1
+      : tool.fromTier === 1 ? copies.length < MAX_RACK_COPIES : copies.some(row => row.tier === tool.fromTier)
+    if (!valid) fail(path, 'expected available tool source')
+  }
+  const rackPin = data.rackGoal === undefined ? undefined : object(data.rackGoal, path, ['tool', 'fromTier'])
+  const rackGoal = rackPin ? { tool: oneOf(rackPin.tool, path, TOOL_IDS), fromTier: int(rackPin.fromTier, path, 1, 4) as 1 | 2 | 3 | 4 } : undefined
   const installed = list(data.installed, path, 0, TOOL_IDS.length).map(readTool)
-  if (new Set(installed.map(row => row.tool)).size !== installed.length || installed.some(row => row.due > today || save.tools[row.tool] !== row.tier)) fail(path, 'invalid installed tools')
+  if (new Set(installed.map(row => row.tool)).size !== installed.length || installed.some(row => row.fromTier !== undefined || row.due > today || save.tools[row.tool] !== row.tier)) fail(path, 'invalid installed tools')
   const heirlooms = list(data.heirlooms, path, 0, spouses.size * HEIRLOOM_IDS.length).map((value): HeirloomOrder => {
     const row = object(value, path, ['recipient', 'piece', 'ordered', 'due', 'ready', 'gifted', 'assistant'])
     const recipient = member(row.recipient, path, spouses)
@@ -50,12 +62,20 @@ export function parseForge(value: unknown, path: string, save: FarmSave): ForgeS
   const pending = data.ringOrder === undefined ? null : object(data.ringOrder, `${path}.ringOrder`, ['grade', 'due'])
   const ringOrder = pending ? { grade: int(pending.grade, path, 1, 10), due: int(pending.due, path, today + 1, today + 2) } : null
   return { bench: bool(data.bench, path), legacyLooks, ...(tool ? { tool } : {}), installed, heirlooms, ...(tracked ? { tracked } : {}),
-    ...(ringOrder ? { ringOrder } : {}) }
+    ...(ringOrder ? { ringOrder } : {}), ...(rack ? { rack } : {}), ...(rackGoal ? { rackGoal } : {}),
+    ...(data.crewGoal === undefined ? {} : { crewGoal: key(data.crewGoal, path) }) }
 }
 
 export function parseForgeHelper(value: unknown, path: string, roster: ReadonlySet<string>): NonNullable<TodayV4['forgeHelper']> {
   const data = object(value, path, ['id', 'tier'])
   return { id: member(data.id, path, roster), tier: int(data.tier, path, 2, 5) as UpgradeTier }
+}
+
+export function parseRackCharges(value: unknown, path: string): NonNullable<TodayV4['rackCharges']> {
+  return Object.fromEntries(Object.entries(record(value, path)).map(([slot, count]) => {
+    if (!/^(0|[1-9][0-9]{0,2})$/.test(slot) || Number(slot) >= MAX_RACK_COPIES * TOOL_IDS.length) fail(path, 'invalid rack slot')
+    return [slot, int(count, path, 1, 4)]
+  }))
 }
 
 export function parseToolCharges(value: unknown, path: string): Partial<Record<ToolId, number>> {
