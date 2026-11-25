@@ -111,7 +111,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
           <h3 className="text-micro">Opens now</h3>
           <ul className="space-y-1" data-opens>
             {stageOpens(stage, perkLineOf(pack, id), {
-              ring: love.ring ?? null, wed: love.wed ?? null, clock: save?.calendar,
+              ring: love.ring ?? null, wed: love.wed ?? null, weddingDay: love.weddingDay ?? null, today: save?.calendar.day, clock: save?.calendar,
               ...(stage === 'married' && save ? { house: love.house === undefined ? null : save.homestead.houses[love.house]?.name ?? null } : {}),
             }).map((line) => <li key={line}>· {line}</li>)}
           </ul>
@@ -122,9 +122,12 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
           {save?.longGame ? `Married ${married.married}/${married.met}${married.married < 50 ? ` · Celebration at ${Math.floor(married.married / 5 + 1) * 5}` : ''}`
             : marriedWords(married.married, married.met)}
         </p>}
-        {(stage === 'romance' || stage === 'engaged') &&
+        {stage === 'romance' && <p className="text-[13px] text-ink-soft" data-romance-milestones>
+          You’re at Romance 0. The Ring Bench opens the morning after Romance 8. After Romance 10, bring a ring for the proposal the next day. You can schedule the wedding once you’re engaged.
+        </p>}
+        {stage === 'engaged' &&
           <Link to={`/?sheet=calendar&weddingPlan=${id}`} replace className="flex min-h-11 items-center justify-center rounded-md border border-hairline font-semibold text-accent" data-action="plan-wedding">
-            {love.weddingDay ? 'View wedding plan' : 'Pick a wedding day'} ›
+            {love.weddingDay ? 'Review wedding date' : 'Schedule wedding'} ›
           </Link>}
         {stage === 'married' && save && <RoomStep save={save} id={id} />}
         {stage === 'married' && save && celebrationReached(save, 'cohort:50') && save.longGame?.weddings[49] === id && !save.longGame.celebrations['cohort:50']

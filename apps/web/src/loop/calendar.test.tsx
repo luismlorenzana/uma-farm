@@ -211,10 +211,18 @@ describe('the calendar', () => {
     expect(save().today.crew).toBeDefined()
   })
 
-  it('picks a wedding date in a later year and returns to today without losing the plan', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm(3, 0, { [ONE]: { stage: 'romance' } }) })
+  it('does not offer wedding dates during romance, even with an old plan and a direct link', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(3, 0, { [ONE]: { stage: 'romance', weddingDay: 5 } }) })
     await render(<p>Farm</p>, `/?sheet=calendar&weddingPlan=${ONE}`)
-    await find('[data-wedding-planner]')
+    await find('[data-calendar]')
+    expect($('[data-wedding-planner]')).toBeNull()
+    expect($('[data-day="5"]')?.dataset.weddings).toBeUndefined()
+  })
+
+  it('picks a wedding date after the proposal and returns to today without losing the plan', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(3, 0, { [ONE]: { stage: 'wedding', level: 10, ring: 1 } }) })
+    await render(<p>Farm</p>, `/?sheet=calendar&weddingPlan=${ONE}`)
+    expect((await find('[data-wedding-planner]')).textContent).toContain('Wedding date')
     expect($('[data-day-panel]')?.dataset.dayPanel).toBe('4')
     await click($('[aria-label="Next year"]'))
     expect($('[data-calendar-year]')?.textContent).toBe('Spring · Year 2')
@@ -226,6 +234,10 @@ describe('the calendar', () => {
     expect($('[data-calendar-year]')?.textContent).toBe('Spring · Year 1')
     expect($('[data-day-panel]')?.dataset.dayPanel).toBe('3')
     expect($('[data-planned-date]')?.textContent).toBe('Spring 5 · Year 2')
+    await click($('[aria-label="Next year"]'))
+    await click($('[data-day="125"]'))
+    expect($('[data-day="125"]')?.getAttribute('title')).toBe('Wedding')
+    expect($(`[data-day-panel] [data-face="${ONE}"]`)?.textContent).toContain('Wedding planned')
   })
 
   it('opens from the bar’s date over everything: the season’s 30 days, the festival, a birthday and the faces', async () => {

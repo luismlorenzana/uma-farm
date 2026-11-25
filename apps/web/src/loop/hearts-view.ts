@@ -30,6 +30,7 @@ import {
   type Bar, type Festival, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type TieKind, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
+import { PEOPLE_FILTERS, peopleFilters, type PeopleFilter } from './people-filters'
 
 /** The pack as the tab reads it. */
 export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted' | 'pairs'> & Partial<Pick<StoryPack, 'world' | 'town' | 'master'>>
@@ -109,22 +110,14 @@ export function levelShort(love: Pick<Love, 'stage' | 'level'>): string | null {
 
 // --- The rows, the sort and the filters ------------------------------------------------------------
 
-export type HeartFilter = 'ready' | 'friends' | 'partners' | 'married' | 'away' | 'farmhands' | 'acquaintances'
+export type HeartFilter = PeopleFilter | 'ready' | 'friends' | 'away'
 interface FilterChip { key: HeartFilter; label: string; full?: string }
-export const HEART_FILTERS: readonly FilterChip[] = [
-  { key: 'married', label: 'Married' }, { key: 'partners', label: 'Romance', full: 'Relationship' },
-  { key: 'farmhands', label: 'Hands', full: 'Farmhands' }, { key: 'acquaintances', label: 'Met', full: 'Acquaintances' },
-]
+export const HEART_FILTERS: readonly FilterChip[] = PEOPLE_FILTERS
 export const EXTRA_HEART_FILTERS: readonly FilterChip[] = [
   { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'away', label: 'In town' },
 ]
 export const isHeartFilter = (value: string | null): value is HeartFilter =>
   [...HEART_FILTERS, ...EXTRA_HEART_FILTERS].some(f => f.key === value)
-/** Friends: friendship and her confession's wait; Partners: romance, the proposal's and the wedding's; Married: spouse. */
-const STAGE_FILTER: Readonly<Record<LoveStage, HeartFilter>> = {
-  friendship: 'friends', confession: 'friends', romance: 'partners', proposal: 'partners', wedding: 'partners', spouse: 'married',
-}
-
 export interface HeartRow {
   id: string
   name: string
@@ -172,14 +165,14 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
     const now = bar(love)
     // On the farm today: a spouse in her room, or a farmhand on her farm day; anyone else is in town.
     const home = onFarmToday(save, pack, id)
-    const farmhand = save.roster[id]?.farmhand !== undefined
+    const friends = love.stage === 'friendship' || love.stage === 'confession'
     return {
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
       // On the farm today: nothing to find.
       note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf, festivalsOf(pack)) ?? roomNote(save, pack, id),
-      filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const]),
-        ...(farmhand ? ['farmhands' as const] : STAGE_FILTER[love.stage] === 'friends' ? ['acquaintances' as const] : [])],
+      filters: [...peopleFilters(save, id), ...(state.ready ? ['ready' as const] : []), ...(friends ? ['friends' as const] : []),
+        ...(home ? [] : ['away' as const])],
       chapter: chapterGlance(save, pack, id),
     }
   })

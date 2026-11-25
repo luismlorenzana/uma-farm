@@ -145,7 +145,7 @@ function WeddingPath({ save }: { save: FarmSave }) {
         : `Commission a Copper Ring for ${gold(STANDARD_RING_COST)} or save ${gold(RING_DEPOSIT)} for the deposit.`}{' '}
         {bench && <Action to="/?sheet=bench">Ring Bench</Action>}</li>
       <li>After Romance 10, propose with any ring. Confirm a wedding date and play the wedding on that day.
-        {candidate?.[1].weddingDay !== undefined && <> Scheduled · {dateWords(candidate[1].weddingDay, save.calendar)}.</>}
+        {candidate?.[1].stage === 'wedding' && candidate[1].weddingDay !== undefined && <> Scheduled · {dateWords(candidate[1].weddingDay, save.calendar)}.</>}
       </li>
     </ol>
     <p className="text-[13px] text-ink-soft">The smith supplies the starter commission’s metal and gemstone. The Farmhouse has room for the wedding.</p>

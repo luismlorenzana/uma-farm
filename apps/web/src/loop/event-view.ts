@@ -10,6 +10,7 @@ import {
 } from '@farm/domain'
 import { placeWords } from './hearts-view'
 import { WORK_PLACE } from './love-words'
+import { dateWords } from './words'
 
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -144,7 +145,7 @@ export const perkLineWords = (perk: PerkId | null, line: PerkLine | null): strin
 
 /** The facts a stage-up screen lists beyond the ladder: her ring's grade and her wedding's day; her room's house
  * (its name, or null when none was free). */
-export interface StageFacts { ring?: number | null; wed?: number | null; house?: string | null; clock?: FarmClock }
+export interface StageFacts { ring?: number | null; wed?: number | null; weddingDay?: number | null; today?: number | undefined; house?: string | null; clock?: FarmClock }
 
 /** What a stage opens, for its stage-up screen: the ladder, then each perk that opens a kind or a chat set, by rung; the
  * proposal's wedding and ring; the wedding's spouse ladder, ring, evenings and anniversary. */
@@ -163,7 +164,9 @@ export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFa
       perk('r9', 'date-footrace'),
     ]
     case 'engaged': return [
-      'Your wedding: tomorrow, whenever you’re ready',
+      facts.weddingDay && facts.weddingDay > (facts.today ?? 0)
+        ? `Wedding scheduled for ${dateWords(facts.weddingDay, facts.clock)}`
+        : 'Your wedding: tomorrow, whenever you’re ready',
       ...(ring ? [`Her ring: ${ringName(ring)} · +${ringPercent(ring)}% at ${place} once you’re married`] : []),
       'A better ring any day, from her profile',
     ]

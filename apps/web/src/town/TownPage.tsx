@@ -3,7 +3,8 @@
 // Town conversations, shop sheets and authored location links use the same URL and story pack.
 import { CAST, HARBOUR_INN, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Tabs } from '@luismlorenzana/uma-kit/ui'
+import { Chip, Tabs } from '@luismlorenzana/uma-kit/ui'
+import { PEOPLE_FILTERS, peopleFilters, type PeopleFilter } from '../loop/people-filters'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { talentsFor } from '../loop/talents'
@@ -266,10 +267,18 @@ function Place({ view, save, pack, nameOf, onOpen }: { view: LocationView; save:
 // --- People -----------------------------------------------------------------------------------------------------------
 
 function People({ save, pack, day, nameOf, onOpen }: { save: SaveV4; pack: StoryPack; day: TownDay; nameOf: NameOf; onOpen: (id: string, at: string | null) => void }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const selected = params.get('filter')
+  const filter = PEOPLE_FILTERS.find(chip => chip.key === selected)?.key
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<PeopleSort>('relationship')
   const all = useMemo(() => peopleRows(save, pack, day, nameOf), [save, pack, day, nameOf])
-  const rows = useMemo(() => sortPeople(findPeople(all, query), sort, save), [all, query, sort, save])
+  const matching = useMemo(() => findPeople(all, query).map(row => ({ ...row, filters: peopleFilters(save, row.id) })), [all, query, save])
+  const rows = useMemo(() => sortPeople(filter ? matching.filter(row => row.filters.includes(filter)) : matching, sort, save), [filter, matching, sort, save])
+  const pickFilter = (key: PeopleFilter) => navigate(withParam(location, 'filter', key !== filter ? key : null),
+    { replace: true, state: location.state })
   return (
     <div className="@container space-y-2" data-people={all.length}>
       <div className="flex items-center gap-2">
@@ -277,8 +286,17 @@ function People({ save, pack, day, nameOf, onOpen }: { save: SaveV4; pack: Story
           className="h-11 min-w-0 flex-1 rounded-md border border-hairline bg-panel px-3 text-[16px] text-ink placeholder:text-ink-faint" data-search />
         <Tabs label="Sort" value={sort} onChange={setSort} options={PEOPLE_SORTS} />
       </div>
-      <p className="text-[12px] text-ink-soft tabular-nums" data-found={rows.length}>{query.trim() ? `${rows.length} of ${all.length}` : `${all.length} people`}</p>
-      {rows.length === 0 ? <p className="text-[14px] text-ink-soft" data-none>No one by that name.</p> : (
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Relationship filters" data-town-people-filters>
+        {PEOPLE_FILTERS.map(({ key, label, full }) => {
+          const count = matching.filter(row => row.filters.includes(key)).length
+          return <Chip key={key} selected={filter === key} aria-label={full + ', ' + count} data-filter={key}
+            className="min-h-11! shrink-0 px-2.5!" onClick={() => pickFilter(key)}>
+            {label}{count > 0 && <span className="tabular-nums">{count}</span>}
+          </Chip>
+        })}
+      </div>
+      <p className="text-[12px] text-ink-soft tabular-nums" data-found={rows.length}>{query.trim() || filter ? `${rows.length} of ${all.length}` : `${all.length} people`}</p>
+      {rows.length === 0 ? <p className="text-[14px] text-ink-soft" data-none>{filter ? 'No one matches this filter.' : 'No one by that name.'}</p> : (
         <ul className="grid gap-x-4 border-t border-hairline @xl:grid-cols-2">
           {rows.map((r) => (
             <li key={r.id} className="border-b border-hairline">

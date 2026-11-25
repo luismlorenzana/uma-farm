@@ -22,6 +22,7 @@ import { isBirthday } from './days'
 import { isAnniversary } from './love'
 import { occasionPlayed, occasionsOn, type Occasion } from './occasions'
 import { readiness } from './ready'
+import { canPlanWedding } from './wedding'
 import { anniversaryOffer, birthdayOffer, nightAvailable } from './long-game'
 import { worksOn } from '../town/town'
 import { awayOn } from '../expeditions/presence'
@@ -87,7 +88,10 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
   const met = metInOrder(save, pack)
   const birthdays = met.filter((id) => isBirthday(days.birthdays, id, day, save.calendar))
   const anniversaries = met.filter((id) => save.love[id] !== undefined && isAnniversary(save.love[id]!, day, save.calendar))
-  const weddings = met.filter(id => (save.love[id]?.wed ?? save.love[id]?.weddingDay) === day)
+  const weddings = met.filter(id => {
+    const love = save.love[id]
+    return (love?.wed ?? (canPlanWedding(love) ? love?.weddingDay : undefined)) === day
+  })
   const celebrations = CELEBRATIONS.filter(id => celebrationDate(save, id) === day)
   const trips = [...save.expeditions, ...(save.expeditionLog ?? [])].flatMap((trip): CalendarDay['trips'] => day === trip.left || day === trip.back
     ? [{ region: trip.region, party: trip.party, direction: day === trip.left ? 'leaving' : 'returning' }] : [])

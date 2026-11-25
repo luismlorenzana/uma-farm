@@ -43,7 +43,7 @@ function datesFor(save: FarmSave, pack: StoryPack, days: SpecialDays, id: string
   const dates = [
     { title: 'Birthday', day: lookAhead(day => isBirthday(days.birthdays, id, day, save.calendar)) },
     { title: 'Anniversary', day: lookAhead(day => isAnniversary(love, day, save.calendar)) },
-    { title: 'Planned wedding', day: love.weddingDay !== undefined && love.weddingDay >= today ? love.weddingDay : null },
+    { title: 'Scheduled wedding', day: canPlanWedding(love) && love.weddingDay !== undefined && love.weddingDay >= today ? love.weddingDay : null },
     { title: 'Expedition returns', day: save.expeditions.find(trip => trip.party.includes(id))?.back ?? null },
   ]
   const upcoming = dates.flatMap(({ title, day }) => day === null ? [] : [{ title, day }])

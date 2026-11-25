@@ -112,7 +112,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       {(!atHome(save, id) || pack.town?.professions?.length || awayOn(save, id, save.calendar.day)) && <TownCard save={save} pack={pack} id={id} />}
       {side === 'hearts' && canPlanWedding(love) && <Link to={`/?sheet=calendar&weddingPlan=${id}`} state={{ back: true }}
         className="mb-3 flex min-h-11 items-center justify-center rounded-md border border-hairline font-semibold text-accent" data-action="plan-wedding">
-        {love.weddingDay ? 'View wedding plan' : 'Pick a wedding day'} ›
+        {love.weddingDay ? 'Review wedding date' : 'Schedule wedding'} ›
       </Link>}
       {side === 'work'
         ? row && <WorkSide row={row} />

@@ -385,6 +385,43 @@ describe('the town', () => {
     expect($('[data-none]')?.textContent).toBe('No one by that name.')
   })
 
+  it('filters the Town People list by relationship and farm membership, including after opening a conversation', async () => {
+    const base = farm()
+    useGame.setState({ uid: 'u1', status: 'ready', save: {
+      ...base,
+      roster: { '90001': { ...newRosterUma(1), farmhand: 1 }, [SISTER]: newRosterUma(1) },
+      love: {
+        '90001': { ...newLove(), stage: 'spouse', level: 1, wed: 4, house: 0 },
+        [SISTER]: { ...newLove(), stage: 'romance', level: 1 },
+      },
+    } })
+    await render(<TownPage />, '/town')
+    const people = $$('[aria-label="Town controls"] button').find(button => button.textContent === 'People')
+    await click(people ?? null)
+    await find('[data-town-people-filters]')
+    const filter = (key: string) => $('[data-town-people-filters] [data-filter="' + key + '"]')
+    const rows = () => $$('[data-person-row]').map(row => row.dataset.personRow)
+    await click(filter('married'))
+    expect(rows()).toEqual(['90001'])
+    await click(filter('farmhands'))
+    expect(rows()).toEqual(['90001'])
+    await click(filter('partners'))
+    expect(rows()).toEqual([SISTER])
+    await click($(`[data-person-row="${SISTER}"]`))
+    await click(await find('[data-her-menu] [data-action="back"]'))
+    expect(path).toBe('/town?view=people&filter=partners')
+    expect(rows()).toEqual([SISTER])
+    await click(filter('acquaintances'))
+    expect(rows()).toEqual([])
+    const current = save()
+    await act(async () => useGame.setState({ save: { ...current, love: { ...current.love, [SISTER]: newLove() } } }))
+    expect(rows()).toEqual([SISTER])
+    await type($('[data-search]'), 'aster')
+    expect(rows()).toEqual([])
+    await click(filter('acquaintances'))
+    expect(rows()).toEqual(['90001'])
+  })
+
   it('her profile talks and gifts only where you meet her, and says where to find her', async () => {
     const love = { stage: 'friendship' as const, level: 3, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] }
     const met: SaveV4 = { ...farm(), roster: { 90001: newRosterUma(1) }, love: { 90001: love }, arrivals: ['90001'], today: { ...farm().today, town: false } }
