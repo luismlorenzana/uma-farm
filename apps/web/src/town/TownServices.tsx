@@ -19,6 +19,13 @@ const directLinks: Readonly<Record<string, readonly [string, string][]>> = {
   track: [['Festival entries', 'festival']],
 }
 
+export function roomTownService(at: string, location: Parameters<typeof withParam>[0]) {
+  const direct = directLinks[at]?.[0]
+  if (direct) return { label: direct[0], to: withParam(location, 'sheet', direct[1]) }
+  const id = (Object.keys(TOWN_SERVICES) as ServiceId[]).find(id => TOWN_SERVICES[id].at === at)
+  return id ? { label: TOWN_SERVICES[id].title, to: withParam(location, 'service', id) } : undefined
+}
+
 export function TownServices({ at, pack, save, nameOf }: {
   at: string; pack: StoryPack; save: SaveV4; nameOf: (id: string) => string
 }) {

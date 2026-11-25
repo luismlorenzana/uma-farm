@@ -152,9 +152,6 @@ export class FieldPondRenderer {
     this.stage.stop()
     this.stage.onFrame = null
     this.run = null
-    this.stage.key.shadow.dispose()
-    for (const pass of this.stage.post.composer.passes) pass.dispose()
-    this.stage.post.composer.dispose()
     this.stage.dispose()
     this.scene = null
   }

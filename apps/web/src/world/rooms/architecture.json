@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "bytes": 8560,
+  "sha256": "19dfda19362f915f8d37098e21aa0fa1bb2d6765378ad5b24f3ed9d7099ec90c",
+  "models": [
+    "post",
+    "window",
+    "lantern",
+    "counter-sign"
+  ]
+}

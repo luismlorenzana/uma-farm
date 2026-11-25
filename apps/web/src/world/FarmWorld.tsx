@@ -146,7 +146,8 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
         <div className="relative flex min-h-0 min-w-0 overflow-hidden rounded-lg bg-sunken">
           {!covered && (!actor || !found) && (selected
             ? <WorldPlate save={save} place={selected.plate!} cast={cast.map(person => ({...person,name:name(person.id)}))} open={open}
-                roomNumber={region === 'living' ? Number(selected.id.split(':')[1]) : 0} />
+                roomNumber={region === 'living' ? Number(selected.id.split(':')[1]) : 0}
+                service={{ to: withinRegion(selected.to, region, selected.id), label: region === 'living' ? 'Manage rooms' : 'Use ' + selected.name }} />
             : <SectionScene region={region} save={save} entrances={entrances} cast={region === 'living' ? [] : cast} name={name} open={open} night={!period}
                 pose={camera[region] ?? START_POSE} setPose={pose => {
                   lastFarmCamera[region] = pose

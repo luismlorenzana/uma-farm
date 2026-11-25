@@ -1,4 +1,5 @@
 import { ANIMAL_HOME, HOME_ROOM, type Animal, type RanchHome } from '@farm/domain'
+import { atlasFigure } from '@luismlorenzana/uma-stage/look'
 import { CircleGeometry, Group, Mesh, MeshBasicMaterial, type Object3D } from 'three'
 import { ANIMAL_CELL, ANIMAL_FOOT, ANIMAL_PAGE, animalAtlas, animalFrame, animalSize, type AnimalFacing } from './animal-atlas'
 import { pixelBillboard } from './pixel-billboard'
@@ -31,7 +32,7 @@ export function roomAnimals(animals: readonly Animal[], clear: (point: FloorPoin
   return animals.flatMap((animal, i) => marks[i] ? [{ ...marks[i]!, animal, radius }] : [])
 }
 
-export function mountAnimals(root: Object3D, actors: readonly RanchActor[], night: boolean) {
+export function mountAnimals(root: Object3D, actors: readonly RanchActor[], night: boolean, lit = false) {
   const geometry = new CircleGeometry(1, 16)
   const shadow = new MeshBasicMaterial({ color: '#42382d', opacity: .33, transparent: true, depthWrite: false })
   const fed = new MeshBasicMaterial({ color: '#82c77b', toneMapped: false })
@@ -46,13 +47,20 @@ export function mountAnimals(root: Object3D, actors: readonly RanchActor[], nigh
   const herd = actors.map(({ animal, x, z, radius }, index) => {
     const group = new Group()
     const size = animalSize(animal.kind)
-    const billboard = pixelBillboard(animalAtlas(animal.kind), ANIMAL_CELL, ANIMAL_PAGE, ANIMAL_FOOT, size, night)
+    const image = animalAtlas(animal.kind)
+    const interior = lit ? atlasFigure(image, ANIMAL_CELL, ANIMAL_PAGE, ANIMAL_FOOT, size) : null
+    const billboard = interior ? {
+      sprite: interior.sprite,
+      frame(at: { x: number; y: number }, mirror: boolean) { interior.sprite.scale.x = mirror ? -1 : 1; interior.frame(at) },
+      dispose: interior.dispose,
+    } : pixelBillboard(image, ANIMAL_CELL, ANIMAL_PAGE, ANIMAL_FOOT, size, night)
     group.add(billboard.sprite)
     const shade = dot(size * .34, size * .20, shadow)
     shade.position.y = .035
     const feed = dot(.061, .061, animal.fed ? fed : hungry)
     feed.position.set(-.095, .042, size * .3)
-    group.add(shade, feed)
+    group.add(feed)
+    if (!lit) group.add(shade)
     if (animal.ready) {
       const produce = dot(.072, .072, ready)
       produce.position.set(.095, .044, size * .3)

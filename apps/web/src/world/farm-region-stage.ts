@@ -1,9 +1,10 @@
 import { CROPS, cropLook, dateOf, FIELD_COLUMNS, FIELD_ROWS, placeBuilt, type FarmSave } from '@farm/domain'
-import { LookStage, type LookAssets, type LookScene } from '@luismlorenzana/uma-stage/look'
+import { LookStage, type LookAssets, type LookScene, type TierName } from '@luismlorenzana/uma-stage/look'
 import {
   BoxGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry,
   InstancedMesh, Matrix4, MeshStandardMaterial, Object3D, Plane, Raycaster, Vector2, Vector3,
 } from 'three'
+import type { FloorPoint } from './room-walk'
 import { bandLight } from '../hd2d/field-pond-scene'
 import type { FarmEntrance, FarmRegion } from './farm-regions'
 import { drawPlotCrop } from './plot-crops'
@@ -22,6 +23,8 @@ export interface RegionScene {
   detailedPlot?: boolean
   ranch?: readonly RanchActor[]
   night?: boolean
+  roomQuality?: TierName
+  heightAt?(point: FloorPoint): number
 }
 
 const EMPTY: LookAssets = {
@@ -198,39 +201,53 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
 }
 
 export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
-  const stage = new LookStage({ canvas, assets: EMPTY })
+  let stage: LookStage
+  try { stage = new LookStage({ canvas, assets: EMPTY }) }
+  catch (error) { layout.scene.dispose(); throw error }
   try {
-    stage.current = layout.scene
-    stage.scene.add(layout.scene.root)
-    const light = layout.scene.light
-    stage.scene.background = new Color(light.sky[0])
-    stage.key.color.set(light.key.colour)
-    stage.key.intensity = light.key.intensity
-    stage.key.position.set(...light.key.from)
-    stage.key.target.position.set(...light.key.to)
-    stage.hemi.color.set(light.hemi.sky)
-    stage.hemi.groundColor.set(light.hemi.ground)
-    stage.hemi.intensity = light.hemi.intensity
-    stage.renderer.toneMappingExposure = light.exposure
-    stage.useCamera('front')
-    stage.useTier('saver')
-    stage.life.sway = false
-    stage.life.shadowMap = 512
-    Object.assign(stage.look, { ao:false, dof:false, bloom:false })
-    stage.apply()
+    if (layout.roomQuality) {
+      stage.mount(layout.scene, { tier: layout.roomQuality,
+        life: { sway: false, ...(layout.roomQuality === 'saver' ? { shadowMap: 512 } : {}) },
+        look: { ao: false },
+      })
+    } else {
+      stage.current = layout.scene
+      stage.scene.add(layout.scene.root)
+      const light = layout.scene.light
+      stage.scene.background = new Color(light.sky[0])
+      stage.key.color.set(light.key.colour)
+      stage.key.intensity = light.key.intensity
+      stage.key.position.set(...light.key.from)
+      stage.key.target.position.set(...light.key.to)
+      stage.hemi.color.set(light.hemi.sky)
+      stage.hemi.groundColor.set(light.hemi.ground)
+      stage.hemi.intensity = light.hemi.intensity
+      stage.renderer.toneMappingExposure = light.exposure
+      stage.useCamera('front')
+      stage.useTier('saver')
+      stage.life.sway = false
+      stage.life.shadowMap = 512
+      Object.assign(stage.look, { ao:false, dof:false, bloom:false })
+      stage.apply()
+    }
   } catch (error) {
     stage.dispose()
     throw error
   }
-  const ranch = layout.ranch?.length ? mountAnimals(layout.scene.root, layout.ranch, Boolean(layout.night)) : null
+  const ranch = layout.ranch?.length ? mountAnimals(layout.scene.root, layout.ranch, Boolean(layout.night), Boolean(layout.roomQuality)) : null
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
   let projected = false
   let destroyed = false
   const start = performance.now()
   function render() {
+    const started = performance.now()
     ranch?.draw(performance.now() - start, motion.matches)
     stage.frame(0)
     stage.render()
+    if (layout.roomQuality) {
+      canvas.dataset.frameMs = (performance.now() - started).toFixed(1)
+      canvas.dataset.draws = String(stage.renderer.info.render.calls)
+    }
   }
   function redraw() {
     if (!destroyed && projected && !document.hidden && canvas.clientWidth > 0 && canvas.clientHeight > 0
@@ -247,14 +264,16 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
     stage.target.set(pose.x,layout.targetY ?? 0,pose.z)
     stage.placeCamera()
     stage.camera.updateMatrixWorld()
-    const points = new Map([...layout.anchors].map(([id, at]) => {
-      const point = new Vector3(...at).project(stage.camera)
-      return [id,{x:(point.x + 1) / 2,y:(1 - point.y) / 2}] as const
-    }))
+    if (layout.roomQuality) stage.post.focus(stage.view.distance)
+    const points = new Map([...layout.anchors].map(([id, at]) => [id, screenPoint(at)] as const))
     prepare?.(points)
     projected = true
     render()
     return points
+  }
+  function screenPoint(at: GroundPoint): ScenePoint {
+    const point = new Vector3(...at).project(stage.camera)
+    return { x: (point.x + 1) / 2, y: (1 - point.y) / 2 }
   }
   const ray = new Raycaster()
   const floor = new Plane(new Vector3(0, 1, 0))
@@ -262,19 +281,22 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
   return {
     project,
     redraw,
+    screenPoint,
     floorPoint(x: number, y: number) {
       ray.setFromCamera(new Vector2(x * 2 - 1, 1 - y * 2), stage.camera)
-      return ray.ray.intersectPlane(floor, hit) ? { x: hit.x, z: hit.z } : null
+      floor.constant = 0
+      if (!ray.ray.intersectPlane(floor, hit)) return null
+      if (layout.heightAt) for (let i = 0; i < 4; i++) {
+        floor.constant = -layout.heightAt(hit)
+        if (!ray.ray.intersectPlane(floor, hit)) return null
+      }
+      return { x: hit.x, z: hit.z }
     },
     dispose() {
       destroyed = true
       window.clearInterval(timer)
       motion.removeEventListener('change', redraw)
       ranch?.dispose()
-      stage.stop()
-      stage.key.shadow.dispose()
-      for (const pass of stage.post.composer.passes) pass.dispose()
-      stage.post.composer.dispose()
       stage.dispose()
     },
   }

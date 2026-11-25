@@ -292,6 +292,12 @@ Check this list against `ROOMS` and the Town and Farm route maps before each wav
 - [ ] Delivery includes package checks for affected shared components, Farm type checks, tests and production build, the existing entry size check, verified manifest and hosted revision, local landscape walkthroughs, and the standalone iPhone review.
 - [ ] Runtime documentation explains the player-facing view modes and recovery behavior. The handoff points to the final capture and measurement locations without committing private imagery.
 
+## Implementation status
+
+- The shared Stage 0.9.0 release owns the scene mount, framing, lighting, post-processing and alpha-tested sprite color, depth and shadow passes. Farm routes every modeled interior through it. The Library has new shelf, reading and service areas. The room geometry uses a small original shared model kit with a procedural fallback and gives the Mine and Quarry a walkable rear platform. Indoor AO is off across the profiles to avoid halos. Projected contact shading and room lighting provide the ground cues.
+- `Character Sprites` accepts approved native 64 × 88, 96 × 132 and 128 × 176 source cells. Synthetic packaging proofs cover all three. The runtime continues to use the current approved 64 × 88 release. The larger native redraws need artist approval and a private A/B/C plus enlarged-control comparison before selecting or promoting a new density.
+- The installed iPhone review still needs a signed-in walkthrough, measured frame intervals, thermal behavior and an offline return. Chromium landscape results do not supply those numbers.
+
 ## Deliver
 
 Keep the packet branch focused on the planned changes. When implementing the packet, use the repo's standard branch and pull request workflow and deliver reusable Stage and data changes through their normal package releases. Update Farm's mechanics and generated documentation for each shipped user-facing behavior. Coordinate environment assets and approved sprite waves through the existing content release path. Attach test receipts and a short per-room checklist to each implementation PR.

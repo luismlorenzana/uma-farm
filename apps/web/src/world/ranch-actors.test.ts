@@ -12,7 +12,7 @@ describe('modeled ranch animals', () => {
   it.each(['coop', 'barn'] as const)('fits every owned animal in a full %s without putting them in furniture', home => {
     const animalList = ranchAnimals(stock, home)
     expect(animalList).toHaveLength(HOME_ROOM)
-    const room = buildRoom(home, false, 0, false)
+    const room = buildRoom(home, 'morning', 0, false)
     const indoor = roomAnimals(animalList, room.clear)
     const outdoor = penAnimals(animalList, 0, 0)
     try {

@@ -22,9 +22,13 @@ describe('the locked travel camera', () => {
   })
 
   it('follows the walking point smoothly and recenters in the whole-room view', () => {
-    const centered = roomCamera({ x: 4, z: -3 }, true)
-    const close = roomCamera({ x: 4, z: -3 }, false)
-    expect(centered).toEqual({ x: 0, z: 0, zoom: 1 })
+    const centered = roomCamera({ x: 4, z: -3 }, 'whole')
+    const close = roomCamera({ x: 4, z: -3 }, 'close')
+    expect(centered).toEqual({ x: 0, z: -.12, zoom: .86 })
+    const walk = roomCamera({ x: 4, z: -3 }, 'walk')
+    expect(walk.zoom).toBeGreaterThan(centered.zoom)
+    expect(walk.zoom).toBeLessThan(close.zoom)
+    expect(walk.x).toBeLessThan(close.x)
     expect(close.x).toBeGreaterThan(0)
     expect(close.z).toBeLessThan(0)
     expect(close.zoom).toBeGreaterThan(1.3)

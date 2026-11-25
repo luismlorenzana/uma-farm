@@ -1,12 +1,14 @@
 import {
-  BoxGeometry, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, InstancedMesh, MeshStandardMaterial, Object3D,
+  BoxGeometry, Mesh, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, InstancedMesh, MeshStandardMaterial, Object3D,
   type Matrix4,
 } from 'three'
 import { bandLight } from '../hd2d/field-pond-scene'
 import type { GroundPoint, RegionScene } from './farm-region-stage'
 import type { FloorPoint } from './room-walk'
+import type { ScenePhase } from '../dialogue/scene-context'
+import { roomLights } from './room-light'
 import { roomSpec, type Furnishing, type RoomId } from './room-specs'
-import { ROOM_FOV, TRAVEL_AZIMUTH, TRAVEL_ELEVATION } from './travel-camera'
+import { ROOM_ELEVATION, ROOM_FOV, TRAVEL_AZIMUTH } from './travel-camera'
 
 const palettes = {
   home: ['#ae8262','#ddd0b2','#854b55','#854e3b'],
@@ -33,7 +35,10 @@ const footprint = {
   easel: [1.03, .46], ore: [1.4, 1.06],
 } as Partial<Record<Furnishing, readonly [number, number]>>
 
-export function buildRoom(place: RoomId, night: boolean, roomNumber: number, expanded: boolean): RegionScene & { clear(point: FloorPoint): boolean } {
+export function buildRoom(place: RoomId, phase: ScenePhase, roomNumber: number, expanded: boolean): RegionScene & { clear(point: FloorPoint): boolean; service: GroundPoint } {
+  const night = phase === 'night'
+  const raised = place === 'mine' || place === 'quarry'
+  const heightAt = ({ z }: FloorPoint) => raised ? Math.min(.28, Math.max(0, (-z - 1.4) * .28 / 1.2)) : 0
   const spec = roomSpec(place)
   const [floor,wall,accent,wood] = palettes[spec.theme]
   const root = new Group()
@@ -59,6 +64,11 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
     box(floor,(seam-6)/2,-.036,z,seam+5.97,.072,.48)
     box(floor,(seam+6)/2,-.035,z,5.97-seam,.072,.48)
     if (Math.round(z*2)%3===0) box(wood,3.8,.003,z+.12,1,.004,.024)
+    if (place === 'library') {
+      const line = Math.round((z + 4) * 2)
+      box('#a47859', -4.65 + (line % 5) * 2.25, .003, z - .12, .4 + (line % 3) * .23, .004, .021)
+      box('#b9926f', 4.4 - (line % 7) * 1.32, .003, z + .10, .68 + (line % 4) * .18, .004, .017)
+    }
   }
   box(wall,0,1.47,-4.06,12.18,2.95,.23)
   box(wall,-6.07,.88,-2.06,.21,1.77,3.86)
@@ -83,7 +93,7 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
     const size = footprint[kind]
     if (size) furniture.push({ x, z, width: size[0], depth: size[1], turn })
     function part(color:string,dx:number,y:number,dz:number,w:number,h:number,d:number,s:keyof typeof objects='box',tilt=0) {
-      mark(s,color,x+dx*Math.cos(turn)+dz*Math.sin(turn),y,z+dz*Math.cos(turn)-dx*Math.sin(turn),w,h,d,turn,tilt)
+      mark(s,color,x+dx*Math.cos(turn)+dz*Math.sin(turn),y+heightAt({ x, z }),z+dz*Math.cos(turn)-dx*Math.sin(turn),w,h,d,turn,tilt)
     }
     const top = (y:number,w:number,d:number,c:string=wood) => part(c,0,y,0,w,.13,d)
     const legs = (w:number,d:number,h:number) => {
@@ -247,8 +257,12 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
       return Math.abs(dx * Math.cos(prop.turn) - dz * Math.sin(prop.turn)) < prop.width / 2 + .16
         && Math.abs(dx * Math.sin(prop.turn) + dz * Math.cos(prop.turn)) < prop.depth / 2 + .16
     })
+  box(wood, -5.8, 1.08, 2.91, .19, 2.18, .22)
+  box(wood, 5.8, 1.08, 2.91, .19, 2.18, .22)
+  box(cream, -5.85, .25, 2.92, .31, .48, .38)
+  box(cream, 5.85, .25, 2.92, .31, .48, .38)
   const clearFeet = feet.filter(([x,z]) => clear({ x, z }))
-  for (const [i,[x,z]] of clearFeet.entries()) anchors.set(String(i),[x,.035,z])
+  for (const [i,[x,z]] of clearFeet.entries()) anchors.set(String(i),[x,heightAt({ x,z }) + .025,z])
 
   const materials = new Map<string,MeshStandardMaterial>()
   for (const {shape,color,matrices} of batches.values()){
@@ -260,21 +274,33 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
     mesh.castShadow = true
     root.add(mesh)
   }
-  const frame = {label:place,target:[0,.59,0] as GroundPoint,elevation:TRAVEL_ELEVATION, azimuth:TRAVEL_AZIMUTH, distance:22, fov:ROOM_FOV}
-  const light = bandLight(night)
+  const counter = spec.furniture.find(([kind]) => kind === 'counter')
+    ?? spec.furniture.find(([kind]) => kind === 'desk' || kind === 'stove' || kind === 'anvil')
+  const service: GroundPoint = counter ? [counter[1], heightAt({ x: counter[1], z: counter[2] }) + 1.26, counter[2]] : [3.4,1.1,-.68]
+  const frame = {label:place,target:[0,.82,0] as GroundPoint,elevation:ROOM_ELEVATION, azimuth:TRAVEL_AZIMUTH, distance:22, fov:ROOM_FOV}
+  const light = roomLights(place, phase, bandLight(night))
+  const deck = new MeshStandardMaterial({ color: floor, roughness: .93 })
+  const deckGeometry = new BoxGeometry(11.95, .16, 1.4)
+  const rampGeometry = new BoxGeometry(11.94, .14, Math.hypot(1.2,.28))
+  if (raised) {
+    const raisedDeck = new Mesh(deckGeometry, deck)
+    raisedDeck.position.set(0,.20,-3.29)
+    const ramp = new Mesh(rampGeometry, deck)
+    ramp.rotation.x = Math.atan2(-.28, -1.2) + Math.PI
+    ramp.position.set(0,.07,-2)
+    raisedDeck.receiveShadow = ramp.receiveShadow = true
+    root.add(raisedDeck, ramp)
+  }
   return {
-    width:width+1.2,depth:depth+2.1,targetY:.68,anchors,clear,
+    width:width+1.2,depth:depth+2.1,targetY:.82,anchors,clear,heightAt,service,
     scene:{id:place,title:place,root,figures:[],layers:{},cameras:{front:frame,tactics:frame,high:frame},
-      light: {
-        ...light,
-        sky: night ? ['#28324a', '#31394b'] : ['#b6a392', '#cbb498'],
-        key: { ...light.key, box: 20, to: [0,0,0], ...(night ? { colour: '#ffcf96', intensity: 2.1, from: [-7, 14, 11] as GroundPoint } : {}) },
-        hemi: night ? { sky: '#b7c9ef', ground: '#b78e6e', intensity: 1.45 } : light.hemi,
-        exposure: night ? 1.22 : 1.06,
-      },
+      light,
       update() {},
       dispose() {
-        for(const mesh of root.children) (mesh as InstancedMesh).dispose()
+        for(const mesh of root.children) if (mesh instanceof InstancedMesh) mesh.dispose()
+        deck.dispose()
+        deckGeometry.dispose()
+        rampGeometry.dispose()
         for(const geometry of Object.values(objects)) geometry.dispose()
         for(const material of materials.values()) material.dispose()
         root.clear()
