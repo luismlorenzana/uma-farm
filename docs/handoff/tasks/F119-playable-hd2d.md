@@ -35,6 +35,16 @@ and feet near y=275. This is why the Farm travel view keeps the exploration fram
 movement and uses the existing separate dialogue engine for conversation.
 [Square Enix Field Commands clip](https://www.jp.square-enix.com/octopathtraveler2/assets/mp4/system01.mp4)
 
+The official Guild clip provides the indoor comparison. In the 600 × 338 samples around
+1.5 and 2.5 seconds, the room's front-right floor edge moves from x≈540 to x≈423 as the
+party walks, about 20% of the screen width. Its front floor edge stays within a few pixels
+of y=262 and level throughout the pan. In the second sample the room spans about 322 px
+(54% of frame width), and the foreground sprites stand about 36–44 px tall (11–13%).
+The preceding entry shot places the floor edge near y=213. The room follows travel on both
+screen axes with a stable bearing. Our room view uses that same movement principle, with
+stronger relative zoom because the iPhone also reserves space for room actions.
+[Square Enix Guild clip](https://www.jp.square-enix.com/octopathtraveler2/assets/mp4/system08.mp4)
+
 | Camera property | Uma Farm target |
 | --- | --- |
 | Bearing | Zero yaw, straight horizontal lanes, locked orientation while moving |
