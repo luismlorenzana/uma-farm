@@ -29,13 +29,19 @@ and paving and façades recede with depth. In the camp shot (screenshot 3), the 
 traveler is about 44 px tall (13%) and their feet are near y=236 (70%). Those are approximate
 screen measurements of the published frames. [Official screenshots](https://store.steampowered.com/app/1971650/OCTOPATH_TRAVELER_II/)
 
+The official Field Commands clip shows two town sprites about 35–38 px tall with their feet
+near y=205 in a 600 × 338 sample at 1–2 seconds. At 4 seconds, the battle cut has a lower view
+and feet near y=275. This is why the Farm travel view keeps the exploration framing through
+movement and uses the existing separate dialogue engine for conversation.
+[Square Enix Field Commands clip](https://www.jp.square-enix.com/octopathtraveler2/assets/mp4/system01.mp4)
+
 | Camera property | Uma Farm target |
 | --- | --- |
 | Bearing | Zero yaw, straight horizontal lanes, locked orientation while moving |
 | Elevation | A shared 41° starting point for Farm exploration and rooms |
 | Perspective | 30° vertical FOV in the field, 29° indoors |
 | Plot framing | Fit the 8 × 5 working surface, raised crops and the left row tabs to the available viewport |
-| Room framing | Extra scale by default, with a Whole room view and an Entrance control |
+| Room framing | Close view at 1.36× the fitting scale, with Whole room and Entrance controls |
 | Follow | Ease camera translation toward the walking point, with motion reduction and no yaw change |
 | Interactions | Keep scene dialogue on its own screen with the existing portraits and background art |
 
@@ -53,7 +59,7 @@ published travel footage to check lead/lag, room edges and space ahead of the pl
 2. **Travel camera and rooms.** Keep orientation consistent across Farm, Town rooms and field
    views. Use the existing floor raycast and collision-aware walk path. Verify close framing,
    moving the walking point, recentering, and selecting an Uma across smaller and larger rooms.
-3. **Field art and crew.** Use the farm's own crop assets for recognizable per-species growth
+3. **Field art and crew.** Build on the crop icons pinned to the 3D plants and use the farm's own assets for per-species growth
    stages and test dense mature orchards for occlusion. Add working Umas from the existing
    day-and-plot job receipts and walking sprite release. Prefer a small number of actors at
    real job locations that leave crop targets clear. Use the area's existing presence roster

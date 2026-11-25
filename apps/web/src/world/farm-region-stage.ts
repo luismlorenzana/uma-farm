@@ -96,7 +96,15 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
       const woody = CROPS[tile.crop].woody
       if (woody && look !== 'seed' && look !== 'sprout') {
         tree(x,z,look === 'ripe' ? .58 : .43)
-        if (look === 'ripe') stamp('round','#cb7140',[x+.14,.78,z+.12],[.18,.18,.18])
+        if (look === 'ripe') {
+          if (detailedPlot) anchors.set('crop:' + i, [x + .18, .82, z + .24])
+          else stamp('round','#cb7140',[x+.14,.78,z+.12],[.18,.18,.18])
+        }
+      } else if (detailedPlot && look !== 'seed') {
+        const height = look === 'sprout' ? .21 : .3
+        stamp('box', '#436132', [x, .1 + height / 2, z], [.033, height, .035])
+        for (const side of [-1, 1]) stamp('round', leaf, [x + side * .13, .11 + height, z], [.23, .12, .17], side * .39)
+        if (look !== 'sprout') anchors.set('crop:' + i, [x, .21 + height, z])
       } else {
         const size = look === 'seed' ? .11 : look === 'sprout' ? .24 : look === 'ripe' ? .49 : .36
         stamp('round', look === 'ripe' ? '#d6a74c' : lightLeaf, [x,size*.57+.1,z], [size,size,size])

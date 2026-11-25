@@ -16,6 +16,7 @@ import { GuideButton } from '../guide/Guide'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
+import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { DayActions } from '../shell/Bars'
@@ -203,7 +204,7 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
         {at.tile !== null && <Side label={tileView(save, fieldIndex(at.plot, at.tile)).title} onClose={close} data={{ 'data-tile-sheet': fieldIndex(at.plot, at.tile) }}>
           <TilePanel save={save} index={fieldIndex(at.plot, at.tile)} />
         </Side>}
-        {at.row !== null && <Side label={`Row ${at.row + 1}`} onClose={close} data={{ 'data-row-sheet': at.row + 1 }}>
+        {at.row !== null && <Side label={ow ${at.row + 1}`} onClose={close} data={{ 'data-row-sheet': at.row + 1 }}>
           <RowPanel save={save} plot={at.plot} row={at.row} />
         </Side>}
       </div>
@@ -267,7 +268,7 @@ function PlotGrid({ save, plot, tile, row, size, state, points }: {
         style={points ? undefined : { gridTemplateColumns: `${TAB}px repeat(${FIELD_COLUMNS}, ${size}px)`, gridAutoRows: `${size}px` }}>
         {Array.from({ length: FIELD_ROWS }, (_, r) => {
           const hands = rowHands(save, plot, r, talents.of)
-          const label = `Row ${r + 1}${hands.length > 0 ? `: ${[...new Set(hands.map((h) => nameOf(h.id)))].join(', ')} ${hands.length === 1 ? 'works' : 'work'} it` : ''}`
+          const label = ow ${r + 1}${hands.length > 0 ? `: ${[...new Set(hands.map((h) => nameOf(h.id)))].join(', ')} ${hands.length === 1 ? 'works' : 'work'} it` : ''}`
           return (
             <div key={r} role="row" className="contents">
               <Link to={fieldPath(plot, { row: r })} replace state={state} aria-label={label} aria-current={row === r ? 'true' : undefined}
@@ -289,7 +290,7 @@ function PlotGrid({ save, plot, tile, row, size, state, points }: {
                 return (
                   <div key={i} role="gridcell" className={points ? 'absolute' : 'p-[2px]'} style={points ? projectedCell(points, r, c) : undefined}>
                     <Link to={fieldPath(plot, { tile: i })} replace state={state} aria-label={tileLabel(save, index)} aria-current={tile === i ? 'true' : undefined}
-                      className={`relative block size-full rounded-[4px] ${points ? 'hover:bg-white/15 focus-visible:bg-white/25' : ''} ${tile === i ? (points ? 'bg-white/30' : 'z-10 outline-[3px] outline-offset-1 outline-white outline-solid') : ''}`}
+                      className={elative block size-full rounded-[4px] ${points ? 'hover:bg-white/15 focus-visible:bg-white/25' : ''} ${tile === i ? (points ? 'bg-white/30' : 'z-10 outline-[3px] outline-offset-1 outline-white outline-solid') : ''}`}
                       data-tile={i} data-crop={t.crop ?? undefined} data-ready={t.ready || undefined} data-grade={t.grade}>
                       {!points && <TileArt tile={t} cell={size} />}
                       {t.grade && <span aria-hidden className="absolute right-0 bottom-0 rounded-tl-sm bg-panel px-0.5 text-[10px] leading-tight font-bold">G{t.grade}</span>}
@@ -301,6 +302,14 @@ function PlotGrid({ save, plot, tile, row, size, state, points }: {
           )
         })}
       </div>
+      {points && tiles.map((tile, index) => {
+        const point = points.get('crop:' + index)
+        return point && tile.crop && <span key={index} aria-hidden
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 drop-shadow-sm" data-plot-crop={tile.crop}
+          style={{ left: point.x * 100 + '%', top: point.y * 100 + '%' }}>
+          <ItemIcon id={tile.crop} size={Math.round(size * (tile.ready ? .47 : .33))} />
+        </span>
+      })}
     </div>
   )
 }
@@ -371,7 +380,7 @@ function RowPanel({ save, plot, row }: { save: FarmSave; plot: number; row: numb
   const forecast = rowPlan(save, plot, row, today) ? rowCounts(handsTonight(save, save, talents.of, story).save, plot, row) : null
   return (
     <div className="space-y-2.5 p-4" data-row-panel={row + 1}>
-      <p className="text-[12px] text-ink-faint">{tileWhere(save, { plot, where: `Row ${row + 1}` })}</p>
+      <p className="text-[12px] text-ink-faint">{tileWhere(save, { plot, where: ow ${row + 1}` })}</p>
       <p className="text-[15px]" data-row-counts>{counts.length > 0 ? counts.join(' · ') : 'Nothing due'}</p>
       <RowPlanEditor key={`${plot}:${row}`} save={save} plot={plot} row={row} today={today} />
       {forecast && (
