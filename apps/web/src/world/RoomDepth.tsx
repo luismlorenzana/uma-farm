@@ -57,12 +57,17 @@ function serviceMark(desk: ScenePoint, people: ReadonlyMap<string, ScenePoint>, 
   const deskX = desk.x * width
   const deskY = desk.y * height
   if (deskX < 0 || deskX > width || deskY < 0 || deskY > height * .72) return null
-  const x = Math.max(SERVICE_WIDTH / 2 + 4, Math.min(width - SERVICE_WIDTH / 2 - 4, deskX))
-  for (const y of [deskY - SERVICE_HEIGHT - 6, deskY - 6, deskY + 18]) {
-    if (y < 4 || y + SERVICE_HEIGHT > height - 52) continue
-    const overlaps = [...people.values()].some(person => Math.abs(person.x * width - x) < (HIT_WIDTH + SERVICE_WIDTH) / 2 + 4
-      && y < person.y * height + 4 && y + SERVICE_HEIGHT > person.y * height - HIT_HEIGHT - 4)
-    if (!overlaps) return { x: x / width, y: y / height }
+  const margin = SERVICE_WIDTH / 2 + 4
+  const clampX = (x: number) => Math.max(margin, Math.min(width - margin, x))
+  const x = clampX(deskX)
+  const above = deskY - SERVICE_HEIGHT - 6
+  const spots = [[x, above], [x, deskY - 6], [x, deskY + 18], [x, above - SERVICE_HEIGHT],
+    [clampX(x + 36), above], [clampX(x - 36), above]] as const
+  for (const [left, top] of spots) {
+    if (top < 4 || top + SERVICE_HEIGHT > height - 52) continue
+    const overlaps = [...people.values()].some(person => Math.abs(person.x * width - left) < (HIT_WIDTH + SERVICE_WIDTH) / 2 + 4
+      && top < person.y * height + 4 && top + SERVICE_HEIGHT > person.y * height - HIT_HEIGHT - 4)
+    if (!overlaps) return { x: left / width, y: top / height }
   }
   return null
 }
