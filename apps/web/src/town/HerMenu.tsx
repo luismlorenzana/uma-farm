@@ -70,7 +70,7 @@ export function HerMenu({ id, save, pack, master, day, nameOf, onClose, farmSett
   return (
     <SceneLookProvider value={{ day: save.calendar.day, leads: [id] }}>
       <div className="fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={`${name} ${farmSetting ? 'on the farm' : 'in town'}`} data-her-menu={id} data-at={at ?? undefined}>
-        <header className="flex min-h-11 items-center justify-between gap-2 px-4">
+        <header className="flex shrink-0 items-center justify-between gap-2 pl-4 pr-[calc(1.75rem+env(safe-area-inset-right))] pt-[calc(0.5rem+env(safe-area-inset-top))]">
           <p className="text-micro truncate text-ink-soft" data-her-where>{where ?? 'Not in town now'}</p>
           <button type="button" onClick={onClose} className="min-h-11 rounded-full px-4 text-[15px] font-semibold text-ink-soft" data-action="back">Back</button>
         </header>
