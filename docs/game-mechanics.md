@@ -3777,6 +3777,8 @@ detailed editor still handles exact seeds, individual rows, collection targets a
 animals and authorizing construction are farmer decisions. An automatic worker can buy fodder for animals the farm
 already owns. The farmer can take discovered stairs by hand at any open dig.
 
+At Farm Rank 3, auto-workers gather and keep the logs needed to build the Sawmill. Once it is built, they chop logs and queue Sawmill loads for a tracked lumber project or the next available plank project, including the next rank's project. They protect the project's logs and planks from surplus shipping. Feeding, watering, cooking and harvest come first, and a crew goal you assigned takes priority over the automatic lumber goal. You still order each build yourself.
+
 **Mill loads** with unreserved input enter Auto Work even without a production target. Auto Work schedules one
 unplanned load per day, after essential work and before surplus shipping. A specific production target still uses the
 set recipe and counts output already held or queued.
@@ -4393,6 +4395,8 @@ Your life with the Umas opens the homestead and the town:
 #### What Next?
 
 Open **What Next?** beside Work or in the menu. **Focus now** shows one action for today. Expand Crew and fields for the shift’s shortfalls, starter goals, restocking and the Work Calendar. Money and credit estimates tonight’s cash after food, upkeep and loan repayments. The remaining sections link to buildings, housing, ranching, recipes, the Tool Rack, relationships, jewelry, and town services.
+
+**Project lumber** shows how many logs the Sawmill still needs, then how many planks the next project needs, with separate counts for stock and overnight loads. The card links directly to the Woods, Sawmill and project.
 
 Track a build, tool, heirloom or Restaurant recipe at its screen to keep supplies in stock. What Next? shows what is still missing and where it comes from. Choose **Assign crew to this goal** to let available auto-workers gather materials or fill an additional station target. The crew keeps its existing orders and daily work priorities. Gold goals use standard surplus shipping. Some ingredients still need you to choose a crop, buy an animal, use a catch mode, or cook a dish. The weekly crew forecast uses today's crops and stock.
 
