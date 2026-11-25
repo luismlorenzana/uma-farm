@@ -4,6 +4,9 @@ export const TRAVEL_ELEVATION = 41
 export const TRAVEL_AZIMUTH = 0
 export const PLOT_FOV = 30
 export const ROOM_FOV = 29
+export const ROOM_ELEVATION = 36
+export const ROOM_VIEWS = ['walk', 'close', 'whole'] as const
+export type RoomView = typeof ROOM_VIEWS[number]
 
 export interface CameraPose { x: number; z: number; zoom: number }
 
@@ -12,8 +15,11 @@ export const PLOT_CAMERA: CameraPose = { x: 0, z: 0, zoom: 1 }
 const clamp = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value))
 
 /** Hold the bearing and translate the focus with the walking marker. */
-export function roomCamera(at: FloorPoint, fit: boolean): CameraPose {
-  return fit ? PLOT_CAMERA : { x: clamp(at.x * .65, 3.3), z: clamp(at.z * .48, 1.6), zoom: 1.36 }
+export function roomCamera(at: FloorPoint, mode: RoomView): CameraPose {
+  if (mode === 'whole') return { x: 0, z: -.12, zoom: .86 }
+  const close = mode === 'close'
+  return { x: clamp(at.x * (close ? .69 : .44), close ? 3.1 : 2.15),
+    z: clamp((at.z - .5) * (close ? .45 : .31), close ? 1.55 : 1.12), zoom: close ? 1.39 : 1.06 }
 }
 
 export function followCamera(previous: CameraPose, next: CameraPose, elapsed: number): CameraPose {

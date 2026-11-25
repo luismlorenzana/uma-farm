@@ -79,8 +79,8 @@ export default defineConfig(({ mode }) => {
           navigateFallbackDenylist: [/^\/api\//, /^\/__\//],
           runtimeCaching: [
             {
-              // Conversation plates and ring details are fetched only when their scene opens.
-              urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/assets\/[\w-]+\.webp$/.test(url.pathname),
+              // Scene paintings and room models load on demand and remain available on cached visits.
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/assets\/[\w-]+\.(?:webp|glb)$/.test(url.pathname),
               handler: 'CacheFirst',
               options: { cacheName: 'farm-scene-art', expiration: { maxEntries: 70, maxAgeSeconds: 30 * 86400 } },
             },
@@ -107,7 +107,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       // uma-kit's peers resolve to this app's copies (also when the kit is linked from uma-platform).
-      dedupe: ['react', 'react-dom', 'react-router', 'motion'],
+      dedupe: ['react', 'react-dom', 'react-router', 'motion', 'three'],
     },
     server: {
       port: 5194,

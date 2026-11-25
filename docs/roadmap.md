@@ -175,7 +175,7 @@ How each workshop is built:
 |---|---|
 | 3.2 **Animation** | The farm-work animations from the sprite pipeline, and the items' flights |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
-| 3.7 **Map appearance** | [F115](handoff/tasks/F115-hd2d-map-navigation.md) starts at painted overviews, with HD-2D farm sections, town district paintings, building doors and full-screen conversations from a person tap. The [F103 device review](handoff/tasks/F103-hd2d-farm.md) sets the exterior budget. [F120](handoff/tasks/F120-hd2d-interior-renderer.md) specifies the indoor renderer follow-up, starting with the Library and a native sprite density pilot. |
+| 3.7 **Map appearance** | [F115](handoff/tasks/F115-hd2d-map-navigation.md) starts at painted overviews, with HD-2D farm sections, town district paintings, building doors and full-screen conversations from a person tap. The [F103 device review](handoff/tasks/F103-hd2d-farm.md) sets the exterior budget. [F120](handoff/tasks/F120-hd2d-interior-renderer.md) adds the fixed-facing interior camera, room lighting and lit sprite pipeline. Native redraw approval and installed iPhone measurements remain open. |
 
 ### Phase 4: Steady
 

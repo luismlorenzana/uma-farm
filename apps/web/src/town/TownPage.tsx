@@ -23,7 +23,7 @@ import { currentTownDay, townRoom } from '../world/town-places'
 import { sceneCoversWorld } from '../world/scene-cover'
 import innLobby from './art/inn-lobby.jpg'
 import { TownMap } from './TownMap'
-import { ServiceSheet, TownServices } from './TownServices'
+import { roomTownService, ServiceSheet, TownServices } from './TownServices'
 
 const ExpeditionSheet = lazy(() => import('./ExpeditionSheet'))
 const MayorSheet = lazy(() => import('./MayorSheet'))
@@ -122,6 +122,7 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
   const district = TOWN_DISTRICTS.find(entry => entry.id === chosenDistrict) ?? (at ? districtOf(at) : undefined)
   const here = views.find((v) => v.loc.id === at)
   const room = here ? townRoom(here.loc) : undefined
+  const service = here ? roomTownService(here.loc.id, location) : undefined
   const candidate = params.get('uma') ?? params.get('talk')
   const uma = candidate && (pack.cast.umas.some(member => member.characterId === candidate) || townOf(pack).byId.has(candidate)) ? candidate : null
   // Walking between places is free: replacing keeps Back's way to the farm.
@@ -146,7 +147,7 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
               <button type="button" onClick={() => goDistrict(null)} className="min-h-11 px-2 text-xs font-semibold" data-town-overview>All town</button>
             </div>
             <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,2.9fr)_minmax(150px,1fr)] gap-2" data-town-destination={here.loc.id} data-place-kind={room ? 'interior' : 'outdoor'}>
-              <WorldPlate active={!params.has('sheet')&&!params.has('service')} save={save} place={here.loc.id} room={room} {...(here.loc.id === HARBOUR_INN ? { art:innLobby } : {})}
+              <WorldPlate active={!params.has('sheet')&&!params.has('service')} save={save} place={here.loc.id} room={room} service={service} {...(here.loc.id === HARBOUR_INN ? { art:innLobby } : {})}
                 cast={[...new Set([...here.here,...(here.keeper ? [here.keeper.characterId] : [])])].map(id => ({ id, name:nameOf(id), outfit:'spring' }))}
                 open={id => open(id)} />
               <Place key={here.loc.id} view={here} save={save} pack={pack} nameOf={nameOf} onOpen={id => open(id)} />

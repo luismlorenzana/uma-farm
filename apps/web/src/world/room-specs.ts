@@ -15,9 +15,9 @@ export const ROOMS = {
     ['stool',3.7,.75],['plant',5,2.4],['portrait',-3.2,-3.93],['bed',-4.25,1.85,QUARTER],
   ]},
   library: { theme:'home', furniture:[
-    ['bookcase',-4,-3.1],['bookcase',-1.35,-3.1],['bookcase',1.3,-3.1],['bookcase',3.95,-3.1],
-    ['bookcase',-5.35,.05,QUARTER],['rug',-.5,.3],['table',-1.45,-.5],['stool',-2.7,.05],['stool',-.3,.05],
-    ['desk',3.8,-.65],['lamp',5.1,1.45],['plant',-5.15,2.8],
+    ['bookcase',-4.2,-3.18],['shelf',-1.65,-3.22],['desk',1.48,-3.1],['bookcase',4.03,-3.18],
+    ['bookcase',-5.35,-.1,QUARTER],['rug',-1.85,.28],['table',-2.05,-.62],['chair',-3.45,-.08,QUARTER],['stool',-1.12,.19],
+    ['counter',3.8,-.65],['lamp',5.1,1.45],['plant',-5.15,2.8],
   ]},
   cafe: { theme:'hearth', furniture:[
     ['counter',.8,-1.95],['display',-2,-2.2],['shelf',1.6,-3.25],['stove',3.6,-2.75],['barrel',-4.75,-2.5],
