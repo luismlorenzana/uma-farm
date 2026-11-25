@@ -35,7 +35,8 @@ export function WorldPlate({ save, place, art, cast, open, room = isRoom(place) 
     {active && (room && typeof WebGL2RenderingContext !== 'undefined'
       ? <Suspense fallback={fallback}>
           <RoomDepth place={room} night={scene.phase==='night'} roomNumber={roomNumber}
-            expanded={!!save.homestead.houses[roomNumber]?.extended} cast={cast} open={open} fallback={fallback} />
+            expanded={!!save.homestead.houses[roomNumber]?.extended} cast={cast} open={open} fallback={fallback}
+            animals={save.ranch.animals} />
         </Suspense>
       : fallback)}
   </div>

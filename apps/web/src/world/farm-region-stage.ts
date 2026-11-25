@@ -1,4 +1,4 @@
-import { ANIMAL_HOME, CROPS, cropLook, dateOf, FIELD_COLUMNS, FIELD_ROWS, placeBuilt, type FarmSave } from '@farm/domain'
+import { CROPS, cropLook, dateOf, FIELD_COLUMNS, FIELD_ROWS, placeBuilt, type FarmSave } from '@farm/domain'
 import { LookStage, type LookAssets, type LookScene } from '@luismlorenzana/uma-stage/look'
 import {
   BoxGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry,
@@ -6,6 +6,8 @@ import {
 } from 'three'
 import { bandLight } from '../hd2d/field-pond-scene'
 import type { FarmEntrance, FarmRegion } from './farm-regions'
+import { drawPlotCrop } from './plot-crops'
+import { mountAnimals, penAnimals, ranchAnimals, type RanchActor } from './ranch-actors'
 import { PLOT_FOV, TRAVEL_AZIMUTH, TRAVEL_ELEVATION, plotDistance, type CameraPose } from './travel-camera'
 
 export type GroundPoint = readonly [number, number, number]
@@ -18,6 +20,8 @@ export interface RegionScene {
   depth: number
   targetY?: number
   detailedPlot?: boolean
+  ranch?: readonly RanchActor[]
+  night?: boolean
 }
 
 const EMPTY: LookAssets = {
@@ -38,6 +42,7 @@ export function buildPlot(save: FarmSave, plot: number, night: boolean): RegionS
 export function buildRegion(region: FarmRegion, save: FarmSave, entrances: readonly FarmEntrance[], night: boolean, detailedPlot = false): RegionScene {
   const root = new Group()
   const anchors = new Map<string, GroundPoint>()
+  const ranch: RanchActor[] = []
   const [grass, leaf, lightLeaf] = tones[dateOf(save.calendar.day, save.calendar).season]
   const shapes = {
     box: new BoxGeometry(), roof: new CylinderGeometry(.5, .5, 1, 3),
@@ -93,18 +98,15 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
       if (tile.ground === 'weeds') stamp('cone', leaf, [x,.22,z],[.42,.34,.42])
       const look = cropLook(tile)
       if (!look || !tile.crop) continue
+      if (detailedPlot) {
+        const marker = drawPlotCrop(stamp, tile.crop, look, x, z)
+        if (marker !== null) anchors.set('crop:' + i, [x, marker, z + .22])
+        continue
+      }
       const woody = CROPS[tile.crop].woody
       if (woody && look !== 'seed' && look !== 'sprout') {
         tree(x,z,look === 'ripe' ? .58 : .43)
-        if (look === 'ripe') {
-          if (detailedPlot) anchors.set('crop:' + i, [x + .18, .82, z + .24])
-          else stamp('round','#cb7140',[x+.14,.78,z+.12],[.18,.18,.18])
-        }
-      } else if (detailedPlot && look !== 'seed') {
-        const height = look === 'sprout' ? .21 : .3
-        stamp('box', '#436132', [x, .1 + height / 2, z], [.033, height, .035])
-        for (const side of [-1, 1]) stamp('round', leaf, [x + side * .13, .11 + height, z], [.23, .12, .17], side * .39)
-        if (look !== 'sprout') anchors.set('crop:' + i, [x, .21 + height, z])
+        if (look === 'ripe') stamp('round','#cb7140',[x+.14,.78,z+.12],[.18,.18,.18])
       } else {
         const size = look === 'seed' ? .11 : look === 'sprout' ? .24 : look === 'ripe' ? .49 : .36
         stamp('round', look === 'ripe' ? '#d6a74c' : lightLeaf, [x,size*.57+.1,z], [size,size,size])
@@ -114,7 +116,7 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
   const width = detailedPlot ? 8.3 : region === 'farm' ? 28 : 24
   const columns = detailedPlot ? 1 : region === 'farm' ? 3 : 4
   const rows = Math.max(1, Math.ceil(entrances.length / columns))
-  const depth = detailedPlot ? 5.55 : Math.max(14, rows * 6 + 3)
+  const depth = detailedPlot ? 6.15 : Math.max(14, rows * 6 + 3)
   const cell = (width - 3) / columns
   stamp('box', grass, [0,-.2,0], [width,.4,depth])
   stamp('box', '#d6b383', [0,.012,depth / 2-1.2], [width-.8,.025,1.7])
@@ -159,17 +161,12 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
       }
       stamp('box','#9b7650',[x-1.52,.18,z+1.58],[.83,.25,.4])
       stamp('box','#779ba2',[x+1.53,.17,z+1.58],[.82,.25,.42])
-      const animals = save.ranch.animals.filter(animal => ANIMAL_HOME[animal.kind] === entrance.id)
-      animals.slice(0,8).forEach((animal,index) => {
-        const px = x-2.5+(index%4)*.53
-        const pz = z+1.37+Math.floor(index/4)*.61
-        const poultry = entrance.id === 'coop'
-        const color = ['cow','chicken'].includes(animal.kind) ? '#efdfc2' : '#b59774'
-        stamp('round',color,[px,poultry ? .25 : .39,pz],[.37,poultry ? .36 : .48,poultry ? .45 : .6])
-        stamp('round',color,[px+.15,poultry ? .39 : .65,pz+.18],[.24,.24,.24])
-        if (animal.ready) stamp('round','#e4bc68',[px,.12,pz+.31],[.13,.18,.13])
-        if (animal.fed) stamp('box','#b3934d',[px-.1,.06,pz+.37],[.18,.09,.11])
-      })
+      stamp('box','#9b8554',[x,.023,z+2.52],[3.82,.043,1.9])
+      for (const side of [-1, 1]) {
+        stamp('box','#9b7650',[x+side*1.91,.34,z+2.52],[.10,.14,1.86])
+        for (const offset of [1.61,3.43]) stamp('box','#805e43',[x+side*1.91,.30,z+offset],[.125,.59,.125])
+      }
+      ranch.push(...penAnimals(ranchAnimals(save.ranch.animals, entrance.id), x, z))
     }
   }
   for (let i=0;i<(detailedPlot ? 0 : 12);i++) tree((i%6-2.5)*(width/6),i<6 ? -depth/2+.55 : depth/2-.32,.72+(i%3)*.18,region==='forest')
@@ -185,7 +182,7 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
   const camera = { label:region, target:[0,targetY,0] as GroundPoint, elevation:TRAVEL_ELEVATION, azimuth:TRAVEL_AZIMUTH,
     distance:42, fov:detailedPlot ? PLOT_FOV : 31 }
   return {
-    anchors, width, depth, targetY, detailedPlot,
+    anchors, width, depth, targetY, detailedPlot, ranch, night,
     scene: {
       id:region,title:region,root,figures:[],layers:{},cameras:{front:camera,tactics:camera,high:camera},
       light:{ ...bandLight(night), key:{ ...bandLight(night).key, to:[0,0,0], box:Math.max(width,depth) } },
@@ -225,6 +222,22 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
     stage.dispose()
     throw error
   }
+  const ranch = layout.ranch?.length ? mountAnimals(layout.scene.root, layout.ranch, Boolean(layout.night)) : null
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  let projected = false
+  let destroyed = false
+  const start = performance.now()
+  function render() {
+    ranch?.draw(performance.now() - start, motion.matches)
+    stage.frame(0)
+    stage.render()
+  }
+  function redraw() {
+    if (!destroyed && projected && !document.hidden && canvas.clientWidth > 0 && canvas.clientHeight > 0
+      && !stage.renderer.getContext().isContextLost()) render()
+  }
+  const timer = ranch ? window.setInterval(() => { if (!motion.matches) redraw() }, 125) : undefined
+  if (ranch) motion.addEventListener('change', redraw)
   function project(pose: CameraPose, prepare?: (points: ReadonlyMap<string, ScenePoint>) => void) {
     stage.resize()
     const aspect = Math.max(.1, canvas.clientWidth / Math.max(1,canvas.clientHeight))
@@ -239,8 +252,8 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
       return [id,{x:(point.x + 1) / 2,y:(1 - point.y) / 2}] as const
     }))
     prepare?.(points)
-    stage.frame(0)
-    stage.render()
+    projected = true
+    render()
     return points
   }
   const ray = new Raycaster()
@@ -248,11 +261,16 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
   const hit = new Vector3()
   return {
     project,
+    redraw,
     floorPoint(x: number, y: number) {
       ray.setFromCamera(new Vector2(x * 2 - 1, 1 - y * 2), stage.camera)
       return ray.ray.intersectPlane(floor, hit) ? { x: hit.x, z: hit.z } : null
     },
     dispose() {
+      destroyed = true
+      window.clearInterval(timer)
+      motion.removeEventListener('change', redraw)
+      ranch?.dispose()
       stage.stop()
       stage.key.shadow.dispose()
       for (const pass of stage.post.composer.passes) pass.dispose()

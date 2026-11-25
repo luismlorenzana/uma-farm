@@ -28,6 +28,7 @@ export default function FarmRegionDepth({ region, save, entrances, night, pose, 
     try { stage = mountRegion(node,layout) }
     catch { layout.scene.dispose(); setFailed(true); return }
     renderer.current = stage
+    node.dataset.ranchAnimals = (layout.ranch ?? []).map(({ animal }) => animal.kind).join(' ')
     const draw = () => {
       if (document.hidden || !node.clientWidth || !node.clientHeight) return
       try { setPoints(stage.project(current.current)) } catch { setFailed(true) }
