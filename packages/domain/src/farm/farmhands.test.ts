@@ -142,6 +142,46 @@ describe('automatic crew work', () => {
     expect(fieldTiles(shift.save).slice(0, FIELD_COLUMNS).every(tile => tile.crop === 'carrot' && tile.watered)).toBe(true)
   })
 
+  it('queues the first eligible Mill load without a production target and respects input reserves', () => {
+    const base = farm()
+    const save = setAutoWork({
+      ...base, buildings: { ...base.buildings, mill: 2 },
+      items: { ...base.items, wheat: [8, 0, 0, 0, 0] },
+      farm: { ...base.farm, reserves: { wheat: 4 } },
+    }, [A, B], true)
+    const forecast = handsTonight(save, save, talentsD, null)
+    expect(forecast.save.loads.mill).toEqual([{ item: 'wheat-flour@1', count: 3 }])
+    expect(goodCount(forecast.save.items, 'wheat')).toBe(4)
+    expect(forecast.jobs?.filter(row => row.key === 'load:mill').map(row => row.actions)).toEqual([1])
+    expect(save.loads.mill).toBeUndefined()
+    expect(settleCrewShift(save, talentsD, null).loads.mill).toEqual(forecast.save.loads.mill)
+  })
+
+  it('buys only the hungry animals’ feed with crew actions and records the expense once', () => {
+    const base = farm()
+    const animals = [
+      { id: 'hen-1', kind: 'chicken' as const, fed: false, cared: false, ready: false, fondness: 0 },
+      { id: 'cow-1', kind: 'cow' as const, fed: false, cared: false, ready: false, fondness: 0 },
+    ]
+    const save = setAutoWork({
+      ...base, gold: 22, buildings: { ...base.buildings, coop: 1, barn: 1 },
+      fields: { plots: [{ tiles: fieldTiles(base).map(() => bareTile('clear')) }] },
+      ranch: { silo: 0, animals },
+    }, [A, B], true)
+    const forecast = handsTonight(save, save, talentsD, null)
+    expect(forecast.save.ranch.animals.every(animal => animal.fed)).toBe(true)
+    expect(forecast.save.ranch.silo).toBe(0)
+    expect(forecast.save.gold).toBe(2)
+    expect(forecast.save.today.town).toBe(false)
+    expect(forecast.save.farm.financeLog?.filter(row => row.title === 'Fodder · crew')).toHaveLength(1)
+    expect(save.gold).toBe(22)
+    const settled = settleCrewShift(save, talentsD, null)
+    expect(settleCrewShift(settled, talentsD, null)).toBe(settled)
+    const short = handsTonight({ ...save, gold: 9 }, save, talentsD, null)
+    expect(short.save.gold).toBe(9)
+    expect(short.save.ranch.animals.some(animal => animal.fed)).toBe(false)
+  })
+
   it('collects eggs and starts an available planned station load before expanding the planted field', () => {
     const base = farm()
     const save = setAutoWork({

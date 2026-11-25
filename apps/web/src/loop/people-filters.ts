@@ -1,23 +1,21 @@
-import type { SaveV4 } from '@farm/domain'
+import { greaterLoveOf, TRUE_LOVE, type SaveV4 } from '@farm/domain'
 
 export const PEOPLE_FILTERS = [
+  { key: 'true-love', label: 'True Love', full: 'True Love' },
   { key: 'married', label: 'Married', full: 'Married' },
   { key: 'partners', label: 'Romance', full: 'Relationship' },
-  { key: 'farmhands', label: 'Hands', full: 'Farmhands' },
-  { key: 'acquaintances', label: 'Met', full: 'Acquaintances' },
+  { key: 'farmhands', label: 'Hands', full: 'Farmhands · Friendship 3–10' },
+  { key: 'acquaintances', label: 'Met', full: 'Acquaintances · Friendship 0–2' },
 ] as const
 
 export type PeopleFilter = typeof PEOPLE_FILTERS[number]['key']
 
-/** Farmhand membership is independent of romance and stays with her after marriage. */
-export function peopleFilters(save: Pick<SaveV4, 'love' | 'roster'>, id: string): PeopleFilter[] {
-  const uma = save.roster[id]
-  if (!uma) return []
-  const stage = save.love[id]?.stage ?? 'friendship'
-  const filters: PeopleFilter[] = []
-  if (stage === 'spouse') filters.push('married')
-  if (stage === 'romance' || stage === 'proposal' || stage === 'wedding') filters.push('partners')
-  if (uma.farmhand !== undefined) filters.push('farmhands')
-  else if (stage === 'friendship' || stage === 'confession') filters.push('acquaintances')
-  return filters
+/** The relationship chips are exclusive. Actual crew membership lives on the Work board. */
+export function peopleFilters(save: Pick<SaveV4, 'love' | 'roster' | 'longGame'>, id: string): PeopleFilter[] {
+  if (!save.roster[id]) return []
+  const love = save.love[id]
+  if (love?.stage === 'spouse') return [greaterLoveOf(save, id).points >= TRUE_LOVE ? 'true-love' : 'married']
+  if (love?.stage === 'romance' || love?.stage === 'proposal' || love?.stage === 'wedding') return ['partners']
+  if (love?.stage === 'confession' || (love?.level ?? 0) >= 3) return ['farmhands']
+  return ['acquaintances']
 }

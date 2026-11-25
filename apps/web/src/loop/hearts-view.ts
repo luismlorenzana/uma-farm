@@ -180,7 +180,7 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
 
 /** Each filter's count, for its chip ("Ready 2"). */
 export function filterCounts(rows: readonly Pick<HeartRow, 'filters'>[]): Record<HeartFilter, number> {
-  const counts: Record<HeartFilter, number> = { ready: 0, friends: 0, partners: 0, married: 0, away: 0, farmhands: 0, acquaintances: 0 }
+  const counts: Record<HeartFilter, number> = { 'true-love': 0, ready: 0, friends: 0, partners: 0, married: 0, away: 0, farmhands: 0, acquaintances: 0 }
   for (const row of rows) for (const f of row.filters) counts[f]++
   return counts
 }

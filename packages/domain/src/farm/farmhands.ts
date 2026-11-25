@@ -46,7 +46,7 @@ import { brushCapacity, copyCharges, tillCapacity, waterTargets } from '../forge
 import { digFloorLock, dugCount, FACE_FINDS, faceAt, stairsLock, takeStairs } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
 import { gatherQuality, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
-import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
+import { animalsIn, buyCrewFodder, careAt, collectAt, crewFodderOrder, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
 import { LOAD_SIZE, loadAt, loadsToday, nextStationLoad } from '../gathering/stations'
 import { canSaveCropSeed, cropBaseGrade, cropGoodId, cropSeedId, goodOf, isCropId, type CropId } from '../goods/ids'
 import { goodCount, parseStockKey, stockKey } from '../save/warehouse'
@@ -495,9 +495,10 @@ function digger(save: FarmSave, id: string, dig: DigId, level: number, fed: bool
 }
 
 /** The animals' care, one action: a hungry animal fed (two from Animal care 3) while the silo holds feed, else grass cut
- * on a weeds tile for it; then the building's goods collected, at her aptitude's quality and her keepsake there; then an
+ * on a weeds tile for it. An automatic worker can buy feed if both sources run out. Then the building's goods are
+ * collected, at her aptitude's quality and her keepsake there, followed by care for an
  * animal cared for (two from Animal care 5), +1 fondness a level above 1. Null once all are fed, collected and cared for. */
-function careStep(save: FarmSave, id: string, { home, feedOnly }: Extract<FarmTask, { kind: 'care' }>, level: number, story: PerkPack | null): Step | null {
+function careStep(save: FarmSave, id: string, { home, feedOnly }: Extract<FarmTask, { kind: 'care' }>, level: number, story: PerkPack | null, automatic: boolean): Step | null {
   if (!homeBuilt(save, home)) return null
   const animals = animalsIn(save, home)
   const hungry = animals.filter((a) => !a.fed)
@@ -506,6 +507,10 @@ function careStep(save: FarmSave, id: string, { home, feedOnly }: Extract<FarmTa
     return { save: noteCupWork(some.reduce((s, a) => feedAt(s, a.id), save), id, 'ranch'), n: some.length, items: [], events: [] }
   }
   if (hungry.length > 0 && grassLock(save) === null && fieldTiles(save).some((t) => t.ground === 'weeds')) return { save: grassAt(save).save, n: 0, items: [], events: [] }
+  if (automatic && hungry.length > 0) {
+    const count = crewFodderOrder(save)
+    if (count > 0) return { save: buyCrewFodder(save, count), n: 0, items: [], events: [] }
+  }
   if (feedOnly) return null
   if (readyIn(save, home) > 0) {
     const done = collectAt(save, home, round6(aptitudeQuality(level) + keepsakeAt(save, story, id, home)), level)
@@ -519,7 +524,7 @@ function careStep(save: FarmSave, id: string, { home, feedOnly }: Extract<FarmTa
 }
 
 /** One action of a task, or null when it has nothing to do (or can't be worked tonight). */
-function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null, equipped: number | null): Step | null {
+function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null, equipped: number | null, automatic: boolean): Step | null {
   // Her tiles as field indices, on a plot the farm has (a plot not cleared has none).
   const tiles = isTileTask(task) ? taskTiles(task).filter((i) => tileOf(save, i) !== undefined) : []
   const at = (i: number) => tileOf(save, i)!
@@ -620,7 +625,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       const done = fishAt(save, task.spot, by, mode, level, false, equipped)
       return { save: done.caught.length ? noteCupWork(done.save, id, 'fish') : done.save, n: done.caught.length, items: done.haul.items, events: [{ activity: 'fishing', event: { kind: 'catch', spot: task.spot as FishingSpotId, fish: done.caught.length } }] }
     }
-    case 'care': return careStep(save, id, task, level, story)
+    case 'care': return careStep(save, id, task, level, story, automatic)
     case 'ship-surplus': {
       const done = shipSurplus(save)
       return done ? { save: done.save, n: done.count, items: [], events: [] } : null
@@ -733,7 +738,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       const tier = slot === undefined ? undefined : start.forge?.rack?.[slot]?.tier
       const handTool = tool === 'hoe' || tool === 'watering-can' || tool === 'brush'
       const working = handTool && tier ? { ...start, tools: { ...start.tools, [tool]: tier } } : start
-      const step = stepOf(working, id, task, level, start.roster[id]!.wellFed > 0, talentOf, story, slot ?? null)
+      const step = stepOf(working, id, task, level, start.roster[id]!.wellFed > 0, talentOf, story, slot ?? null, automaticJob)
       if (!step) return false
       if (tool && slot !== undefined) {
         equipped.set(tool, slot)

@@ -1,7 +1,7 @@
 import { type FarmSave, DIGS, RANCH_HOMES, type FarmTask, type RanchHome, type TaskKind, type TileTaskKind, fieldIndex, fieldTiles, isOvergrown } from '../save/v4'
 import type { FarmhandLine } from '../night/summary'
 import { dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR } from './calendar'
-import { animalsIn, grassLock } from '../ranch/ranch'
+import { animalsIn, crewFodderOrder, FODDER_PRICE, grassLock } from '../ranch/ranch'
 import { harvestGrade, plantingPlan, seedOutput, SEED_BATCH } from '../fields/production'
 import { nightsLeft, seedsInSeason } from '../fields/fields'
 import { CROPS, growsIn } from '../fields/crops'
@@ -69,7 +69,9 @@ export function workNeeds(save: FarmSave, pack: SchedulePack | null, includeOpti
     const task = { kind: 'care', home } as const
     if (taskLock(save, task)) continue
     const { hungry, canFeed, care } = ranchGaps(save, home)
-    if (hungry) add(task, 0, hungry, hungry + ' to feed' + (canFeed ? '' : ' · needs fodder'), !canFeed && care === 0)
+    const order = hungry && !canFeed ? crewFodderOrder(save) : 0
+    if (hungry) add(task, 0, hungry, hungry + ' to feed' + (canFeed ? '' : order
+      ? ` · crew can buy ${order} fodder for ${order * FODDER_PRICE}g` : ' · needs fodder'), !canFeed && order === 0 && care === 0)
     else add(task, 4, care, care + ' to tend or collect from')
   }
   const meals = mealsNeeded(save, pack) - pantryMeals(save)
@@ -114,7 +116,10 @@ export function workNeeds(save: FarmSave, pack: SchedulePack | null, includeOpti
       target > goodCount(save.items, output) + loadsToday(save, station)
         .filter(row => parseStockKey(row.item)?.id === output).reduce((sum, row) => sum + row.count, 0)).length ?? 0
     if (missing) add(task, 7, missing, load ? 'Production targets need another load' : 'Production targets need ingredients', !load)
-    else if (load?.batches) add(task, 11, 1, 'Inputs ready for a load', false, true)
+    else if (load?.batches) {
+      const mill = station === 'mill' && loadsToday(save, station).length === 0
+      add(task, mill ? 3.5 : 11, 1, 'Inputs ready for a load', false, !mill)
+    }
   }
 
   const seedOrders = new Map(Object.values(save.roster).flatMap(uma => uma.tasks ?? [])
