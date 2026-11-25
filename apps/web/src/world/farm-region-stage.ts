@@ -6,9 +6,10 @@ import {
 } from 'three'
 import { bandLight } from '../hd2d/field-pond-scene'
 import type { FarmEntrance, FarmRegion } from './farm-regions'
+import { PLOT_FOV, TRAVEL_AZIMUTH, TRAVEL_ELEVATION, plotDistance, type CameraPose } from './travel-camera'
 
 export type GroundPoint = readonly [number, number, number]
-export interface CameraPose { x: number; z: number; zoom: number }
+export type { CameraPose } from './travel-camera'
 export interface ScenePoint { x: number; y: number }
 export interface RegionScene {
   scene: LookScene
@@ -16,6 +17,7 @@ export interface RegionScene {
   width: number
   depth: number
   targetY?: number
+  detailedPlot?: boolean
 }
 
 const EMPTY: LookAssets = {
@@ -29,7 +31,11 @@ const tones = {
 } as const
 
 /** A small local kit, batched by shape and finish. Scene inputs are saved state and existing entrances. */
-export function buildRegion(region: FarmRegion, save: FarmSave, entrances: readonly FarmEntrance[], night: boolean): RegionScene {
+export function buildPlot(save: FarmSave, plot: number, night: boolean): RegionScene {
+  return buildRegion('farm', save, [{ id: 'fields:' + plot, name: 'Plot ' + (plot + 1), to: '/field' }], night, true)
+}
+
+export function buildRegion(region: FarmRegion, save: FarmSave, entrances: readonly FarmEntrance[], night: boolean, detailedPlot = false): RegionScene {
   const root = new Group()
   const anchors = new Map<string, GroundPoint>()
   const [grass, leaf, lightLeaf] = tones[dateOf(save.calendar.day, save.calendar).season]
@@ -68,10 +74,20 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
   }
   function field(centerX: number, centerZ: number, plot: number) {
     const tiles = save.fields.plots[plot]?.tiles ?? []
+    const stepX = .79
+    const stepZ = detailedPlot ? 1.02 : .68
+    if (detailedPlot) {
+      for (let row = 0; row <= FIELD_ROWS; row++) for (let col = -1; col <= FIELD_COLUMNS; col++) {
+        anchors.set(`tile:${row}:${col}`, [centerX + (col - FIELD_COLUMNS / 2) * stepX, .105, centerZ + (row - FIELD_ROWS / 2) * stepZ])
+      }
+    }
     for (const [i,tile] of tiles.entries()) {
-      const x = centerX + (i % FIELD_COLUMNS - (FIELD_COLUMNS - 1) / 2) * .79
-      const z = centerZ + (Math.floor(i / FIELD_COLUMNS) - (FIELD_ROWS - 1) / 2) * .68
-      stamp('box', tile.ground === 'tilled' ? (tile.watered ? '#69493a' : '#a37852') : grass, [x,.05,z], [.75,.1,.64])
+      const x = centerX + (i % FIELD_COLUMNS - (FIELD_COLUMNS - 1) / 2) * stepX
+      const z = centerZ + (Math.floor(i / FIELD_COLUMNS) - (FIELD_ROWS - 1) / 2) * stepZ
+      stamp('box', tile.ground === 'tilled' ? (tile.watered ? '#69493a' : '#a37852') : tile.ground === 'clear' ? '#b89967' : grass, [x,.05,z], [.75,.1,stepZ - .04])
+      if (detailedPlot && tile.ground === 'tilled') for (const offset of [-.23, 0, .23]) {
+        stamp('box', tile.watered ? '#513629' : '#885e3c', [x,.106,z + offset], [.66,.012,.06])
+      }
       if (tile.ground === 'stone') stamp('round', '#8a9384', [x,.24,z],[.43,.38,.41])
       if (tile.ground === 'stump') stamp('box', '#78573f', [x,.19,z],[.42,.38,.39])
       if (tile.ground === 'weeds') stamp('cone', leaf, [x,.22,z],[.42,.34,.42])
@@ -87,10 +103,10 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
       }
     }
   }
-  const width = region === 'farm' ? 28 : 24
-  const columns = region === 'farm' ? 3 : 4
+  const width = detailedPlot ? 8.3 : region === 'farm' ? 28 : 24
+  const columns = detailedPlot ? 1 : region === 'farm' ? 3 : 4
   const rows = Math.max(1, Math.ceil(entrances.length / columns))
-  const depth = Math.max(14, rows * 6 + 3)
+  const depth = detailedPlot ? 5.55 : Math.max(14, rows * 6 + 3)
   const cell = (width - 3) / columns
   stamp('box', grass, [0,-.2,0], [width,.4,depth])
   stamp('box', '#d6b383', [0,.012,depth / 2-1.2], [width-.8,.025,1.7])
@@ -148,7 +164,7 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
       })
     }
   }
-  for (let i=0;i<12;i++) tree((i%6-2.5)*(width/6),i<6 ? -depth/2+.55 : depth/2-.32,.72+(i%3)*.18,region==='forest')
+  for (let i=0;i<(detailedPlot ? 0 : 12);i++) tree((i%6-2.5)*(width/6),i<6 ? -depth/2+.55 : depth/2-.32,.72+(i%3)*.18,region==='forest')
   for (const [key, matrices] of batches) {
     const [shape,color] = key.split(':') as [keyof typeof shapes,string]
     const mesh = new InstancedMesh(shapes[shape],palette.get(color)!,matrices.length)
@@ -157,9 +173,11 @@ export function buildRegion(region: FarmRegion, save: FarmSave, entrances: reado
     mesh.receiveShadow = true
     root.add(mesh)
   }
-  const camera = { label:region, target:[0,0,0] as GroundPoint, elevation:41, azimuth:0, distance:42, fov:31 }
+  const targetY = detailedPlot ? .27 : 0
+  const camera = { label:region, target:[0,targetY,0] as GroundPoint, elevation:TRAVEL_ELEVATION, azimuth:TRAVEL_AZIMUTH,
+    distance:42, fov:detailedPlot ? PLOT_FOV : 31 }
   return {
-    anchors, width, depth,
+    anchors, width, depth, targetY, detailedPlot,
     scene: {
       id:region,title:region,root,figures:[],layers:{},cameras:{front:camera,tactics:camera,high:camera},
       light:{ ...bandLight(night), key:{ ...bandLight(night).key, to:[0,0,0], box:Math.max(width,depth) } },
@@ -201,8 +219,10 @@ export function mountRegion(canvas: HTMLCanvasElement, layout: RegionScene) {
   }
   function project(pose: CameraPose, prepare?: (points: ReadonlyMap<string, ScenePoint>) => void) {
     stage.resize()
-    const aspect = Math.max(1, canvas.clientWidth / Math.max(1,canvas.clientHeight))
-    stage.view.distance = Math.max(layout.width / aspect, layout.depth * .77) * 2.12 / pose.zoom
+    const aspect = Math.max(.1, canvas.clientWidth / Math.max(1,canvas.clientHeight))
+    stage.view.distance = layout.detailedPlot
+      ? plotDistance(aspect, layout.width, layout.depth, layout.targetY ?? 0)
+      : Math.max(layout.width / Math.max(1, aspect), layout.depth * .77) * 2.12 / pose.zoom
     stage.target.set(pose.x,layout.targetY ?? 0,pose.z)
     stage.placeCamera()
     stage.camera.updateMatrixWorld()

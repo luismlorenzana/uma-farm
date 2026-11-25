@@ -13,7 +13,7 @@ import {
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, CloseIcon, LockedIcon } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
@@ -26,6 +26,9 @@ import { plotPages, rowCounts, rowHands, type PlotPage } from './field-view'
 import { Notes, TilePanel, useAct } from './FarmPanels'
 import { useTalents } from './talents'
 import { useStory } from '../story/story'
+import type { ScenePoint } from '../world/farm-region-stage'
+
+const PlotDepth = lazy(() => import('../world/PlotDepth').catch(() => ({ default: ({ fallback }: { fallback: ReactNode }) => <>{fallback}</> })))
 
 /** The page's params: the plot's index, its tile and its row, each checked against the save; null where absent. */
 interface FieldAt { plot: number; tile: number | null; row: number | null }
@@ -113,6 +116,9 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   const panel = at.tile !== null || at.row !== null
   const [area, tileSize] = useTileSize(!panel)
   const [note, setNote] = useState<string | null>(null)
+  const [gridView, setGridView] = useState(false)
+  const canDraw = typeof WebGL2RenderingContext !== 'undefined'
+  const grid = <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} />
   const pages = plotPages(save)
   const page = pages[at.plot]!
   const tally = plotCounts(save, at.plot)
@@ -174,6 +180,8 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
         </div>
         <PageDots pages={pages} plot={at.plot} onPick={(p) => { setNote(null); go(fieldPath(p)) }} />
         <span className="flex-1" />
+        {page.cleared && canDraw && <button type="button" className="min-h-11 shrink-0 rounded-md border border-hairline px-2 text-[13px] font-semibold"
+          data-action="plot-view" onClick={() => setGridView(value => !value)}>{gridView ? 'HD-2D' : 'Grid'}</button>}
         <FieldHelp />
         <DayActions />
       </header>
@@ -182,7 +190,12 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
           onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { swipe.current = null }} onClickCapture={onClickCapture} data-plot-area>
           {note && <p role="status" className="absolute inset-x-0 top-1 z-10 mx-auto w-fit rounded-full bg-success px-3 py-0.5 text-[13px] font-semibold text-ink-on-dark shadow-2" data-plot-note>{note}</p>}
           {page.cleared
-            ? <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} />
+            ? canDraw && !gridView
+              ? <Suspense fallback={grid}><PlotDepth key={at.plot} plot={at.plot} save={save} fallback={grid}
+                className={panel ? 'absolute inset-0' : 'absolute inset-y-0 inset-x-11'}>
+                {points => <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} points={points} />}
+              </PlotDepth></Suspense>
+              : grid
             : <LockedPlot save={save} page={page} size={tileSize} onCleared={(words) => setNote(words)} />}
           {!panel && prev && <Arrow side="left" page={prev} onClick={() => turn(-1)} />}
           {!panel && next && <Arrow side="right" page={next} onClick={() => turn(1)} />}
@@ -230,22 +243,36 @@ function Arrow({ side, page, onClick }: { side: 'left' | 'right'; page: PlotPage
 }
 
 /** A plot's page: its rows, each with its tab at the left, then its eight tiles, a tap each. */
-function PlotGrid({ save, plot, tile, row, size, state }: { save: FarmSave; plot: number; tile: number | null; row: number | null; size: number; state: unknown }) {
+function projectedCell(points: ReadonlyMap<string, ScenePoint>, row: number, col: number): CSSProperties {
+  const corners = [[row, col], [row, col + 1], [row + 1, col + 1], [row + 1, col]].map(([r, c]) => points.get('tile:' + r + ':' + c)!)
+  const x = Math.min(...corners.map(point => point.x))
+  const y = Math.min(...corners.map(point => point.y))
+  const width = Math.max(...corners.map(point => point.x)) - x
+  const height = Math.max(...corners.map(point => point.y)) - y
+  const shape = corners.map(point => ((point.x - x) / width * 100) + '% ' + ((point.y - y) / height * 100) + '%')
+  return { left: x * 100 + '%', top: y * 100 + '%', width: width * 100 + '%', height: height * 100 + '%', clipPath: 'polygon(' + shape.join(',') + ')' }
+}
+
+function PlotGrid({ save, plot, tile, row, size, state, points }: {
+  save: FarmSave; plot: number; tile: number | null; row: number | null; size: number; state: unknown
+  points?: ReadonlyMap<string, ScenePoint>
+}) {
   const talents = useTalents()
   const master = useMaster()
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const tiles = save.fields.plots[plot]!.tiles
   return (
     <div className="absolute inset-0 grid place-items-center" data-plot={plot + 1}>
-      <div role="grid" aria-label={plotName(plot)} className="grid rounded-[6px] bg-[#6b4a2b]/30 p-1 shadow-2"
-        style={{ gridTemplateColumns: `${TAB}px repeat(${FIELD_COLUMNS}, ${size}px)`, gridAutoRows: `${size}px` }}>
+      <div role="grid" aria-label={plotName(plot)} className={points ? 'absolute inset-0' : 'grid rounded-[6px] bg-[#6b4a2b]/30 p-1 shadow-2'}
+        style={points ? undefined : { gridTemplateColumns: `${TAB}px repeat(${FIELD_COLUMNS}, ${size}px)`, gridAutoRows: `${size}px` }}>
         {Array.from({ length: FIELD_ROWS }, (_, r) => {
           const hands = rowHands(save, plot, r, talents.of)
           const label = `Row ${r + 1}${hands.length > 0 ? `: ${[...new Set(hands.map((h) => nameOf(h.id)))].join(', ')} ${hands.length === 1 ? 'works' : 'work'} it` : ''}`
           return (
             <div key={r} role="row" className="contents">
               <Link to={fieldPath(plot, { row: r })} replace state={state} aria-label={label} aria-current={row === r ? 'true' : undefined}
-                className={`mr-1 flex flex-col items-center justify-center gap-0.5 rounded-[4px] text-[12px] font-bold ${row === r ? 'bg-panel text-ink' : 'bg-panel/70 text-ink-soft'}`}
+                className={`flex flex-col items-center justify-center gap-0.5 rounded-[4px] text-[12px] font-bold ${points ? 'absolute border-2 border-transparent bg-clip-padding' : 'mr-1'} ${row === r ? 'bg-panel text-ink' : 'bg-panel/70 text-ink-soft'}`}
+                style={points ? projectedCell(points, r, -1) : undefined}
                 data-row-tab={r + 1} data-row-hands={hands.length || undefined}>
                 <span aria-hidden>{r + 1}</span>
                 {hands[0] && <span aria-hidden className="w-[20px]"><Avatar id={hands[0].id} size={20} label="" /></span>}
@@ -260,11 +287,11 @@ function PlotGrid({ save, plot, tile, row, size, state }: { save: FarmSave; plot
                 const t = tiles[i]!
                 const index = fieldIndex(plot, i)
                 return (
-                  <div key={i} role="gridcell" className="p-[2px]">
+                  <div key={i} role="gridcell" className={points ? 'absolute' : 'p-[2px]'} style={points ? projectedCell(points, r, c) : undefined}>
                     <Link to={fieldPath(plot, { tile: i })} replace state={state} aria-label={tileLabel(save, index)} aria-current={tile === i ? 'true' : undefined}
-                      className={`relative block size-full rounded-[4px] ${tile === i ? 'z-10 outline-[3px] outline-offset-1 outline-white outline-solid' : ''}`}
+                      className={`relative block size-full rounded-[4px] ${points ? 'hover:bg-white/15 focus-visible:bg-white/25' : ''} ${tile === i ? (points ? 'bg-white/30' : 'z-10 outline-[3px] outline-offset-1 outline-white outline-solid') : ''}`}
                       data-tile={i} data-crop={t.crop ?? undefined} data-ready={t.ready || undefined} data-grade={t.grade}>
-                      <TileArt tile={t} cell={size} />
+                      {!points && <TileArt tile={t} cell={size} />}
                       {t.grade && <span aria-hidden className="absolute right-0 bottom-0 rounded-tl-sm bg-panel px-0.5 text-[10px] leading-tight font-bold">G{t.grade}</span>}
                     </Link>
                   </div>

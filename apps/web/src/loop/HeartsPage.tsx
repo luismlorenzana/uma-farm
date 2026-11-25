@@ -23,7 +23,7 @@ import { useStory } from '../story/story'
 import { EVENING_HELP, headerMarks } from './evening-view'
 import { AwayChip, FillingHeart, HeartSegments, InviteChip, ReadyChip } from './HeartMarks'
 import { HeartProfile, type ProfileSide } from './HeartProfile'
-import { filterCounts, glanceWords, HEART_FILTERS, heartRows, isHeartFilter, levelShort, marriedOf, type HeartRow, type HeartsPack } from './hearts-view'
+import { EXTRA_HEART_FILTERS, filterCounts, glanceWords, HEART_FILTERS, heartRows, isHeartFilter, levelShort, marriedOf, type HeartRow, type HeartsPack } from './hearts-view'
 import { RosterAlbum, useRosterRows } from './RosterAlbum'
 import { SEASON_COLOR } from './words'
 
@@ -146,16 +146,22 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
   const filter = isHeartFilter(raw) ? raw : null
   const counts = filterCounts(rows)
   const shown = filter ? rows.filter((r) => r.filters.includes(filter)) : rows
+  const chip = (f: typeof HEART_FILTERS[number]) => (
+    <Chip key={f.key} selected={filter === f.key} className="min-h-11! shrink-0 px-2.5!" data-filter={f.key}
+      data-count={counts[f.key]} aria-label={`${f.full ?? f.label}, ${counts[f.key]}`}
+      onClick={() => navigate(withParam(location, 'filter', filter === f.key ? null : f.key), { replace: true, state: location.state })}>
+      {f.label}{counts[f.key] > 0 && <span className="tabular-nums">{counts[f.key]}</span>}
+    </Chip>
+  )
   return (
     <>
       <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filters" data-heart-filters>
-        {HEART_FILTERS.map((f) => (
-          <Chip key={f.key} selected={filter === f.key} className="min-h-11! px-2.5!" data-filter={f.key} data-count={counts[f.key]} aria-label={`${f.label}, ${counts[f.key]}`}
-            onClick={() => navigate(withParam(location, 'filter', filter === f.key ? null : f.key), { replace: true, state: location.state })}>
-            {f.label}{counts[f.key] > 0 && <span className="tabular-nums">{counts[f.key]}</span>}
-          </Chip>
-        ))}
+        {HEART_FILTERS.map(chip)}
       </div>
+      <details className="mb-2" open={EXTRA_HEART_FILTERS.some(f => f.key === filter) || undefined}>
+        <summary className="min-h-8 cursor-pointer text-[12px] font-semibold text-ink-soft">More filters</summary>
+        <div role="group" aria-label="More filters" className="flex flex-wrap gap-1">{EXTRA_HEART_FILTERS.map(chip)}</div>
+      </details>
       {shown.length === 0 && (
         <p className="py-4 text-[14px] text-ink-soft" data-hearts-empty>
           {rows.length === 0 ? <>No one yet. Go into <Link to="/town" className="font-semibold text-accent-strong underline">town</Link> and introduce yourself.</> : 'No one here yet.'}

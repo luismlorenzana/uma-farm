@@ -132,7 +132,7 @@ describe('the Hearts view', () => {
     expect($(`[data-heart-row="${TWO}"] [data-note]`)?.textContent).toBe('Lives in town: find her there')
     expect($('[data-married]')?.textContent).toBe('Married 0/3')
     expect(Object.fromEntries($$('[data-filter]').map((c) => [c.dataset.filter, c.textContent]))).toEqual({
-      ready: 'Ready1', friends: 'Friends3', partners: 'Partners', married: 'Married', away: 'In town3',
+      ready: 'Ready1', friends: 'Friends3', partners: 'Romance', married: 'Married', away: 'In town3', farmhands: 'Hands', acquaintances: 'Met3',
     })
   })
 
