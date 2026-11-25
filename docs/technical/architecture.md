@@ -533,3 +533,10 @@ Lists in the mechanics document that come straight from the rules are rendered f
 ### Outfit-specific cast art
 
 Dialogue portraits and illustrations resolve a sister’s `s<outfitId>` through the neutral outfits set. The release client requests her `outfit:<outfitId>` family entry and validates both IDs. Original numeric character entries remain separate. A missing sister entry uses the existing blank-bust fallback.
+
+## App branding
+
+The approved golden horseshoe and carrot icon shares the Cyberpunk logo's proportions. Versioned `uma-farm-v2` URLs
+serve the favicon, 180 px Apple touch icon, 192/512 px PWA icons and a separately padded maskable icon. Earlier icon
+URLs serve matching exports. Full-resolution authoring masters stay private; only app branding exports ship here.
+The large 512 px installation icons load on demand. Existing iPhone installations may retain the icon selected at install.
