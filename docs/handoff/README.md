@@ -154,6 +154,7 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 |---|---|---|
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
 | [F115](tasks/F115-hd2d-map-navigation.md) | Painted maps, HD-2D sections and doors, and F116’s modeled interiors with in-scene sprites | Physical iPhone review open. |
+| [F120](tasks/F120-hd2d-interior-renderer.md) | Layered HD-2D rooms, fixed-facing travel camera, lighting, and the native sprite density pilot | Authoring packet ready for review. |
 
 [F114](tasks/F114-hd2d-actors.md) shipped the ten Tier 1 walking wardrobes. Its sprite delivery and the F103 device review support the new packet.
 
