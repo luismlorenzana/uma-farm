@@ -31,7 +31,7 @@ import { activeContest, CONTESTS, type CupCategory } from './state'
 const AT = '2026-11-19T12:00:00.000Z'
 const ROTATION: Record<Season, CropId> = { spring: 'carrot', summer: 'tomato', autumn: 'wheat', winter: 'oats' }
 const TILES = START_CLEAR.slice(0, 7)
-type Crew = 0 | 10 | 20 | 50
+type Crew = 0 | 10 | 20 | 30 | 50
 const roundTrip = (save: FarmSave) => parseSaveV6(JSON.parse(JSON.stringify(save)))
 
 function setup(size: Crew) {
