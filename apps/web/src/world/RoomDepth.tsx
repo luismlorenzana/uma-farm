@@ -15,7 +15,7 @@ import { ranchAnimals, roomAnimals } from './ranch-actors'
 import { ENTRANCE, walkPath, type FloorPoint } from './room-walk'
 import type { RoomId } from './room-specs'
 import type { RoomActor, RoomService } from './WorldPlate'
-import { followCamera, roomCamera, ROOM_VIEWS, type RoomView } from './travel-camera'
+import { followCamera, roomCamera, ROOM_SPRITE_PITCH, ROOM_VIEWS, type RoomView } from './travel-camera'
 
 const MAX_SPRITES = 6
 const lastRoom = new Map<string, { position: FloorPoint; view: RoomView }>()
@@ -257,6 +257,7 @@ export default function RoomDepth({ place, phase, roomNumber, expanded, cast, op
         if (!art || !alive) return
         const { cell, page, foot, standing } = art.sprite
         const figure = atlasFigure(art.image, cell, page, foot, 1.62)
+        figure.actor.rotation.x = ROOM_SPRITE_PITCH
         const name = anchors?.get(id)
         const mark = name ? room.anchors.get(name) : undefined
         const from = mark ? { x: mark[0], z: mark[2] + .54 } : undefined

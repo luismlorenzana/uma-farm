@@ -1,6 +1,6 @@
 import { PerspectiveCamera, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
-import { followCamera, PLOT_FOV, plotDistance, roomCamera, TRAVEL_AZIMUTH, TRAVEL_ELEVATION } from './travel-camera'
+import { followCamera, PLOT_FOV, plotDistance, roomCamera, ROOM_ELEVATION, ROOM_FOV, ROOM_SPRITE_PITCH, TRAVEL_AZIMUTH, TRAVEL_ELEVATION } from './travel-camera'
 
 describe('the locked travel camera', () => {
   it('fits the plot and raised crops at both landscape sizes and beside an action panel', () => {
@@ -17,6 +17,26 @@ describe('the locked travel camera', () => {
         const point = new Vector3(x, y, z).project(camera)
         expect(Math.abs(point.x)).toBeLessThan(.941)
         expect(Math.abs(point.y)).toBeLessThan(.901)
+      }
+    }
+  })
+
+  it('keeps room sprites square to the screen and anchored to the floor', () => {
+    const pitch = ROOM_ELEVATION * Math.PI / 180
+    expect(ROOM_ELEVATION).toBeLessThan(30)
+    const xAxis = new Vector3(1, 0, 0)
+    for (const aspect of [557 / 330, 422 / 315]) {
+      const camera = new PerspectiveCamera(ROOM_FOV, aspect, .1, 100)
+      camera.position.set(0, .82 + 20 * Math.sin(pitch), 20 * Math.cos(pitch))
+      camera.lookAt(0, .82, 0)
+      camera.updateMatrixWorld()
+      for (const foot of [new Vector3(0, .025, 3.15), new Vector3(3, .305, -3)]) {
+        const origin = foot.clone().project(camera)
+        const up = new Vector3(0, 1, 0).applyAxisAngle(xAxis, ROOM_SPRITE_PITCH)
+        const right = foot.clone().add(xAxis).project(camera).x - origin.x
+        const height = foot.clone().add(up).project(camera).y - origin.y
+        expect(height).toBeCloseTo(right * aspect, 8)
+        expect(up.dot(camera.getWorldDirection(new Vector3()))).toBeCloseTo(0, 8)
       }
     }
   })

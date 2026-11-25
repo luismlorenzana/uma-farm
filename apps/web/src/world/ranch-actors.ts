@@ -4,6 +4,7 @@ import { CircleGeometry, Group, Mesh, MeshBasicMaterial, type Object3D } from 't
 import { ANIMAL_CELL, ANIMAL_FOOT, ANIMAL_PAGE, animalAtlas, animalFrame, animalSize, type AnimalFacing } from './animal-atlas'
 import { pixelBillboard } from './pixel-billboard'
 import { ENTRANCE, type FloorPoint } from './room-walk'
+import { ROOM_SPRITE_PITCH } from './travel-camera'
 
 export interface RanchActor extends FloorPoint { animal: Animal; radius: number }
 
@@ -49,6 +50,7 @@ export function mountAnimals(root: Object3D, actors: readonly RanchActor[], nigh
     const size = animalSize(animal.kind)
     const image = animalAtlas(animal.kind)
     const interior = lit ? atlasFigure(image, ANIMAL_CELL, ANIMAL_PAGE, ANIMAL_FOOT, size) : null
+    if (interior) interior.actor.rotation.x = ROOM_SPRITE_PITCH
     const billboard = interior ? {
       sprite: interior.sprite,
       frame(at: { x: number; y: number }, mirror: boolean) { interior.sprite.scale.x = mirror ? -1 : 1; interior.frame(at) },
