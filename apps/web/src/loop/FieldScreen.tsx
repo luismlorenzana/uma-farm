@@ -80,14 +80,14 @@ const fieldPath = (plot: number, extra: { tile?: number; row?: number } = {}): s
  * they show), 36 to 88 points. */
 const ARROW = 44
 const TAB = 30
-function useTileSize(arrows: boolean): [React.RefObject<HTMLDivElement | null>, number] {
+function useTileSize(arrows: boolean, reserved: number, covered: boolean): [React.RefObject<HTMLDivElement | null>, number] {
   const ref = useRef<HTMLDivElement | null>(null)
   const [size, setSize] = useState(56)
   useEffect(() => {
     const el = ref.current
-    if (!el || typeof ResizeObserver === 'undefined') return
+    if (covered || !el || typeof ResizeObserver === 'undefined') return
     const fit = () => {
-      const byHeight = (el.clientHeight - 16) / FIELD_ROWS
+      const byHeight = (el.clientHeight - 16 - reserved) / FIELD_ROWS
       const byWidth = (el.clientWidth - (arrows ? 2 * ARROW : 0) - TAB - 16) / FIELD_COLUMNS
       setSize(Math.max(36, Math.min(88, Math.floor(Math.min(byHeight, byWidth)))))
     }
@@ -95,7 +95,7 @@ function useTileSize(arrows: boolean): [React.RefObject<HTMLDivElement | null>, 
     const observer = new ResizeObserver(fit)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [arrows])
+  }, [arrows, reserved, covered])
   return [ref, size]
 }
 
@@ -118,9 +118,9 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   const leave = useLeave()
   // The arrows step aside while a panel is open, so the plot keeps its size beside it; the dots and a swipe still turn.
   const panel = at.tile !== null || at.row !== null
-  const [area, tileSize] = useTileSize(!panel)
   const [note, setNote] = useState<string | null>(null)
   const [gridView, setGridView] = useState(false)
+  const [opened, setOpened] = useState<string>()
   const [params] = useSearchParams()
   const master = useMaster()
   const pack = useStory()
@@ -130,15 +130,21 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   const canTalk = Boolean(pack && master.status === 'ready')
   const crew = canTalk ? [...presence.values()].filter(actor => actor.door === 'fields:' + at.plot)
     .slice(0, 3).map(actor => ({ ...actor, name: nameOf(actor.id) })) : []
-  const speaker = crew.find(actor => actor.id === params.get('fieldUma'))?.id
+  const requested = params.get('fieldUma')
+  const speaker = requested && (requested === opened || crew.some(actor => actor.id === requested)) ? requested : null
+  const reserve = crew.length ? 44 : 0
+  const [area, tileSize] = useTileSize(!panel, reserve, Boolean(speaker))
   const open = (id: string) => {
+    setOpened(id)
     const next = new URLSearchParams(params)
     next.set('fieldUma', id)
     navigate(location.pathname + '?' + next.toString(), { state: { back: true } })
   }
   const canDraw = typeof WebGL2RenderingContext !== 'undefined'
   const grid = <>
-    <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} />
+    <div className="absolute inset-x-0 bottom-0" style={{ top: reserve }}>
+      <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} />
+    </div>
     {crew.length > 0 && <div className="absolute top-0 left-2 z-10 flex gap-1" aria-label="Farm crew">
       {crew.map(({ id, name, detail }) => <button key={id} type="button" title={detail} aria-label={'Talk to ' + name}
         data-plot-worker={id} className="flex min-h-11 min-w-11 items-center justify-center rounded-full bg-panel/90" onClick={() => open(id)}>
@@ -199,7 +205,7 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   if (speaker && pack && master.status === 'ready') {
     const back = fieldPath(at.plot, at.tile !== null ? { tile: at.tile } : at.row !== null ? { row: at.row } : {})
     return <HerMenu id={speaker} save={save} pack={pack} master={master.view} day={townDay(save, pack)}
-      nameOf={nameOf} farmSetting="fields" onClose={() => leave(back)} />
+      nameOf={nameOf} farmSetting="fields" onClose={() => { setOpened(undefined); leave(back) }} />
   }
   return (
     <div className="pl-safe pr-safe pb-safe absolute inset-0 flex flex-col bg-[#9cc27a]" data-field-screen data-plot-page={at.plot + 1}>
@@ -339,7 +345,7 @@ function PlotGrid({ save, plot, tile, row, size, state, points }: {
         return point && tile.crop && <span key={index} aria-hidden
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 drop-shadow-sm" data-plot-crop={tile.crop}
           style={{ left: point.x * 100 + '%', top: point.y * 100 + '%' }}>
-          <ItemIcon id={tile.crop} size={Math.round(size * (tile.ready ? .47 : .33))} />
+          <ItemIcon id={tile.crop} size={Math.max(11, Math.min(19, Math.round(size * .34)))} />
         </span>
       })}
     </div>
