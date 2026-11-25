@@ -51,7 +51,7 @@ describe('the night', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2030-01-01T00:00:00Z'))
     expect(night(save)).toEqual(once)
-    expect(Object.keys(once).sort()).toEqual(SAVE_V5_KEYS.filter((key) => !['expeditionLog', 'library', 'longGame', 'forge'].includes(key)).sort())
+    expect(Object.keys(once).sort()).toEqual(SAVE_V5_KEYS.filter((key) => !['expeditionLog', 'library', 'longGame', 'forge', 'eventJournal'].includes(key)).sort())
     expect(parseSaveV6(json(once))).toEqual(once)
   })
 

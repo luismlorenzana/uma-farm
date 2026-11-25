@@ -245,7 +245,7 @@ describe('a year of farm contests through normal farm actions', () => {
         expect(card.place).not.toBeNull()
         expect(save.gold - before.gold).toBe(card.gold)
         expect(save.today.eventFunding?.contest).toBe(3)
-        expect(save.eventJournal?.results?.at(-1)).toMatchObject({ day, id: event, gold: card.gold, score: card.score })
+        expect(save.eventJournal?.results?.at(-1)).toMatchObject({ day: card.day, id: event, gold: card.gold, score: card.score })
         const activity = event === 'flower-show' ? 'farming' : event === 'animal-show' ? 'ranch' : 'fishing'
         for (const id of ids) {
           expect(save.roster[id]!.ranks[activity].challenge - before.roster[id]!.ranks[activity].challenge).toBe(card.credit.includes(id) ? 1 : 0)
