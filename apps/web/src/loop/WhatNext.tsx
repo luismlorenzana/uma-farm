@@ -4,7 +4,7 @@ import {
   creditLeft, buildOrders, pinSupplyProject, RING_DEPOSIT, STANDARD_RING_COST, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
   animalLock, extensionCost, handsTonight, houseOpensWords, HOUSE_COSTS, nextLot, readyTiles, roomsInAll, rungName, STATION_LEVELS, STATIONS, umaMilestones, workKey,
   eatTonight, festivalsOf, NO_BIRTHDAYS, payTownOrders, knownRestaurantRecipes, longGameEnabled, NIGHT_VISITS, nightVisits, setCrewSupplyGoal, settleAccounts,
-  supplyGoals, supplySource, type SupplyGoal,
+  automaticLumberGoal, lumberGoal, supplyGoals, supplySource, type SupplyGoal,
   type BuildPlace, type BuildNeed, type FarmSave, type FarmPlaceId,
 } from '@farm/domain'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -267,6 +267,34 @@ function FocusDetails({ label, note, children }: { label: string; note?: string;
   </details>
 }
 
+function Lumber({ save }: { save: FarmSave }) {
+  const goal = lumberGoal(save)
+  if (!goal) return null
+  const automated = Boolean(automaticLumberGoal(save))
+  const sawmill = goal.project.id === 'sawmill'
+  return <section className="space-y-1.5 rounded-lg border border-hairline bg-panel p-3" aria-label="Project lumber" data-next-lumber={goal.project.id}>
+    <h3 className="font-display text-base font-bold">{sawmill ? 'Build the Sawmill to make planks' : 'Lumber for the ' + goal.title}</h3>
+    {goal.lines.map(line => {
+      const missing = Math.max(0, line.count - line.held - line.queued)
+      return <div key={line.id}>
+        <p className="text-sm">{line.name[0]?.toUpperCase()}{line.name.slice(1)}
+          {' · ' + (missing ? missing + ' more needed' : line.held >= line.count ? 'ready' : 'last batch queued')}
+          {line.queued > 0 && ' · ' + line.queued + ' finishing overnight'}</p>
+        <GoalBar label={line.name} have={line.held} target={line.count} />
+      </div>
+    })}
+    {sawmill ? <p className="text-[13px] text-ink-soft">{buildCostWords(goal.project)}. The Sawmill opens the next morning after you build it.</p>
+      : <p className="text-[13px] text-ink-soft">{goal.project.name} opens at Farm Rank {goal.project.opens.rank}. The Sawmill turns logs into planks overnight.</p>}
+    {automated && goal.lines.some(line => line.held + line.queued < line.count) &&
+      <p className="text-[13px] text-ink-soft">Auto-work prioritizes missing lumber after feeding, watering, cooking and harvest.</p>}
+    <div className="flex flex-wrap gap-x-3 text-sm">
+      <Action to={peek('forest')}>Chop logs</Action>
+      <Action to={peek('sawmill')}>{sawmill ? 'View Sawmill build' : 'Make planks at the Sawmill'}</Action>
+      {!sawmill && <Action to={goal.to}>View {goal.title} build</Action>}
+    </div>
+  </section>
+}
+
 function Focus({ save }: { save: FarmSave }) {
   const pack = useStory()
   const master = useMaster()
@@ -320,6 +348,7 @@ function Focus({ save }: { save: FarmSave }) {
       </div>
       <p className="max-w-prose text-sm text-ink-soft">{suggestion.detail}</p>
     </section>
+    <Lumber save={save} />
     {active && <TrackedGoal save={save} goal={active} nightGold={picked.gold} />}
     <div className="grid grid-cols-1 items-start gap-2 min-[650px]:grid-cols-2">
       <FocusDetails label="Crew and fields" note={staffed ? `${staffed} on shift · ${dry ? dry + ' dry tiles left' : missingWork ? missingWork + ' jobs open' : 'essentials covered'}` : 'Solo today'}>

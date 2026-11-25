@@ -1,5 +1,6 @@
-import { buildGoodsWords, buildNeeds } from './builds'
-import { farmPlace, isBuildPlace, placeBuilt } from './places'
+import { buildGoodsWords, buildNeeds, type BuildNeed } from './builds'
+import { farmRankOf } from './farm'
+import { BUILD_PLACES, farmPlace, isBuildPlace, placeBuilt, type BuildPlace } from './places'
 import { dateOf } from './calendar'
 import { digFloor, digFloorLock, floorRank, gradeAt, reachFloor } from '../gathering/digs'
 import { FULL_HAULS, haulsToday, reachList, reachLock } from '../gathering/hauls'
@@ -34,6 +35,44 @@ function queued(save: FarmSave, id: string) {
     parseStockKey(load.item)?.id === id ? sum + load.count : sum, 0)
 }
 
+const woods = GOODS.filter(good => good.family === 'woods')
+const plankRecipes = woods.filter(good => good.refined && good.input)
+
+function buildLine(save: FarmSave, { goods, have }: BuildNeed): SupplyLine[] {
+  const plank = goods.family === 'woods' && goods.refined
+  const preferred = plank ? plankRecipes.find(({ id, input }) => input
+    && stationJobLevel(id) <= (save.buildings.sawmill ?? 1)
+    && goodCount(save.items, input) > (save.farm.reserves?.[input] ?? 0)) : undefined
+  const id = preferred?.id ?? GOODS.find(good => good.family === goods.family && good.refined === goods.refined)?.id
+  if (!id) return []
+  const exactQueue = queued(save, id)
+  const inProcess = plank ? plankRecipes.reduce((total, recipe) => total + queued(save, recipe.id), 0) : exactQueue
+  return [{ id, name: buildGoodsWords(goods), count: goods.count, held: have,
+    target: goodCount(save.items, id) + exactQueue + Math.max(0, goods.count - have - inProcess), queued: inProcess }]
+}
+
+export function lumberGoal(save: FarmSave): (SupplyGoal & { project: BuildPlace }) | undefined {
+  const rank = farmRankOf(save.farm.points)
+  const sawmill = BUILD_PLACES.find(project => project.id === 'sawmill')!
+  if (rank < sawmill.opens.rank) return undefined
+  const remaining = (project: BuildPlace) => !placeBuilt(save, project.id) && !save.farm.builds.includes(project.id)
+  if (save.farm.builds.includes(sawmill.id)) return undefined
+  const pinned = BUILD_PLACES.find(project => project.id === save.farm.projectPin && remaining(project)
+    && project.opens.cost.goods.some(line => line.family === 'woods'))
+  const next = BUILD_PLACES.find(project => project.opens.game && project.opens.rank <= rank + 1 && remaining(project)
+    && (!project.opens.after || placeBuilt(save, project.opens.after))
+    && project.opens.cost.goods.some(line => line.family === 'woods' && line.refined))
+  const project = !placeBuilt(save, sawmill.id) ? sawmill : pinned ?? next
+  if (!project) return undefined
+  return { project, key: 'build:' + project.id, title: project.name, to: '/?peek=' + project.id,
+    gold: project.opens.cost.gold, lines: buildNeeds(save, project).filter(line => line.goods.family === 'woods').flatMap(line => buildLine(save, line)) }
+}
+
+export function automaticLumberGoal(save: FarmSave) {
+  if (!Object.values(save.roster).some(uma => uma.farmhand && uma.autoWork) || selectedSupplyGoal(save)) return undefined
+  return lumberGoal(save)
+}
+
 export function supplyGoals(save: FarmSave): SupplyGoal[] {
   const goals: SupplyGoal[] = []
   const exact = (materials: readonly ForgeMaterial[]): SupplyLine[] => materials.map(row => ({
@@ -42,11 +81,7 @@ export function supplyGoals(save: FarmSave): SupplyGoal[] {
   const pin = farmPlace(save.farm.projectPin ?? '')
   if (isBuildPlace(pin) && !placeBuilt(save, pin.id) && !save.farm.builds.includes(pin.id)) {
     goals.push({ key: 'build:' + pin.id, title: pin.name, to: '/?peek=' + pin.id, gold: pin.opens.cost.gold,
-      lines: buildNeeds(save, pin).flatMap(({ goods, have }) => {
-        const id = GOODS.find(good => good.family === goods.family && good.refined === goods.refined)?.id
-        return id ? [{ id, name: buildGoodsWords(goods), count: goods.count, held: have,
-          target: goodCount(save.items, id) + Math.max(0, goods.count - have), queued: queued(save, id) }] : []
-      }),
+      lines: buildNeeds(save, pin).flatMap(line => buildLine(save, line)),
     })
   }
   const rack = save.forge?.rackGoal
@@ -76,7 +111,12 @@ export function setCrewSupplyGoal<S extends FarmSave>(save: S, key: string): S {
   return { ...save, forge: crewGoal === key ? forge : { ...forge, crewGoal: key } }
 }
 
-const assignedGoal = (save: FarmSave) => save.forge?.crewGoal && supplyGoals(save).find(goal => goal.key === save.forge?.crewGoal)
+function selectedSupplyGoal(save: FarmSave) {
+  const key = save.forge?.crewGoal
+  return key ? supplyGoals(save).find(goal => goal.key === key) : undefined
+}
+
+const assignedGoal = (save: FarmSave) => selectedSupplyGoal(save) ?? automaticLumberGoal(save)
 
 export function goalInputs(save: FarmSave): Record<string, number> {
   const goal = assignedGoal(save)
@@ -167,7 +207,7 @@ export function crewSupplyJobs(save: FarmSave): FarmTask[] {
     const { task } = supplySource(save, id, true)
     return task ? [task] : []
   })
-  if (!tasks.length && save.gold < goal.gold) {
+  if (!tasks.length && save.forge?.crewGoal === goal.key && save.gold < goal.gold) {
     const spot = reachList(save, 'fishery').filter(row => !row.lock && haulsToday(save, row.id) < FULL_HAULS)
       .sort((a, b) => b.rank - a.rank)[0]
     if (spot) tasks.push({ kind: 'fish', spot: spot.id as FishingSpotId })

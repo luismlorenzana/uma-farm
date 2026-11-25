@@ -5,7 +5,7 @@ import { HEIRLOOMS, TOOL_RECIPES, rackRecipe } from '../forge/catalogue'
 import { nextToolTier, releaseCrewGoal } from '../forge/state'
 import { stationJobUnits } from '../gathering/ids'
 import { LOAD_SIZE } from '../gathering/stations'
-import { goalInputs } from './supply-goals'
+import { automaticLumberGoal, goalInputs } from './supply-goals'
 import { heldFor, pickFor } from './builds'
 import { farmPlace, isBuildPlace, placeBuilt, type FarmPlaceId } from './places'
 import { MAX_PRODUCTION_TARGET, MAX_SURPLUS } from '../goods/production-catalogue'
@@ -106,6 +106,14 @@ function hardSurplusFloors(save: FarmSave): Record<string, number> {
   const pin = farmPlace(save.farm.projectPin ?? '')
   if (isBuildPlace(pin) && !placeBuilt(save, pin.id) && !save.farm.builds.includes(pin.id)) {
     for (const line of pin.opens.cost.goods) {
+      for (const row of pickFor(save.items, { ...line, count: Math.min(line.count, heldFor(save.items, line)) }) ?? []) {
+        protect(row.id, row.count)
+      }
+    }
+  }
+  const lumber = automaticLumberGoal(save)
+  if (lumber && lumber.project.id !== save.farm.projectPin) {
+    for (const line of lumber.project.opens.cost.goods.filter(row => row.family === 'woods')) {
       for (const row of pickFor(save.items, { ...line, count: Math.min(line.count, heldFor(save.items, line)) }) ?? []) {
         protect(row.id, row.count)
       }
