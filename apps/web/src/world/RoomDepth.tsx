@@ -10,7 +10,8 @@ import { Avatar } from '../dialogue/Avatar'
 import { acquireWalkingArt } from '../hd2d/character-art'
 import { mountRegion, type ScenePoint } from './farm-region-stage'
 import { buildRoom } from './room-kit'
-import { mountPracticalLights, ROOM_QUALITY, roomQuality, type RoomQuality } from './room-light'
+import { readRoomQuality, ROOM_QUALITY, saveRoomQuality, type RoomQuality } from './room-graphics'
+import { mountPracticalLights } from './room-light'
 import { ranchAnimals, roomAnimals } from './ranch-actors'
 import { ENTRANCE, walkPath, type FloorPoint } from './room-walk'
 import type { RoomId } from './room-specs'
@@ -19,7 +20,6 @@ import { followCamera, roomCamera, ROOM_SPRITE_PITCH, ROOM_VIEWS, type RoomView 
 
 const MAX_SPRITES = 6
 const lastRoom = new Map<string, { position: FloorPoint; view: RoomView }>()
-let chosenQuality: RoomQuality | undefined
 const viewNames: Record<RoomView, string> = { walk: 'Walk', close: 'Close', whole: 'Whole room' }
 const qualityNames: Record<RoomQuality, string> = { saver: 'Saver', medium: 'Balanced', high: 'High' }
 const HIT_WIDTH = 44
@@ -84,7 +84,7 @@ export default function RoomDepth({ place, phase, roomNumber, expanded, cast, op
   const changeView = useRef<((view: RoomView) => void) | undefined>(undefined)
   const view = useRef<RoomView>(lastRoom.get(key)?.view ?? 'walk')
   const [mode, setMode] = useState(view.current)
-  const [quality, setQuality] = useState<RoomQuality>(() => chosenQuality ?? roomQuality())
+  const [quality, setQuality] = useState(readRoomQuality)
   const [servicePoint, setServicePoint] = useState<ScenePoint | null>(null)
   const [points, setPoints] = useState<ReadonlyMap<string, ScenePoint> | null>(null)
   const [drawn, setDrawn] = useState<ReadonlySet<string>>(new Set())
@@ -328,7 +328,11 @@ export default function RoomDepth({ place, phase, roomNumber, expanded, cast, op
         {ROOM_VIEWS.map(mode => <option key={mode} value={mode}>{viewNames[mode]}</option>)}
       </select>
       <select aria-label="Room graphics" className="min-h-11 rounded bg-black/75 px-1 text-[12px] text-white" value={quality}
-        onChange={event => { chosenQuality = event.target.value as RoomQuality; setQuality(chosenQuality) }}>
+        onChange={event => {
+          const next = event.target.value as RoomQuality
+          saveRoomQuality(next)
+          setQuality(next)
+        }}>
         {ROOM_QUALITY.map(quality => <option key={quality} value={quality}>{qualityNames[quality]}</option>)}
       </select>
       <button type="button" className="min-h-11 rounded bg-black/70 px-2 text-[12px] font-semibold text-white" onClick={() => goToEntrance.current?.()} aria-label="Walk to the entrance">Entrance</button>

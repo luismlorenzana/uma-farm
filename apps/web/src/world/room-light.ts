@@ -4,12 +4,6 @@ import type { ScenePhase } from '../dialogue/scene-context'
 import type { GroundPoint } from './farm-region-stage'
 import type { RoomId } from './room-specs'
 
-export type RoomQuality = 'saver' | 'medium' | 'high'
-export const ROOM_QUALITY: readonly RoomQuality[] = ['saver', 'medium', 'high']
-export function roomQuality(): RoomQuality {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches || /iPhone|iPod/.test(navigator.userAgent) ? 'saver' : 'medium'
-}
-
 const heat = new Set<RoomId>(['forge', 'smelter', 'smith', 'smokehouse'])
 const rock = new Set<RoomId>(['mine', 'quarry'])
 export function roomLights(place: RoomId, phase: ScenePhase, base: SceneLight): SceneLight {
