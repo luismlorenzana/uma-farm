@@ -192,7 +192,7 @@ function cupYear(save: FarmSave, ids: string[], context: ContestContext) {
 }
 
 describe('a year of farm contests through normal farm actions', () => {
-  it.each([0, 10, 20, 50] as const)('plays all four contests with %i Umas', async (size) => {
+  it.each([0, 10, 20, 30, 50] as const)('plays all four contests with %i Umas', async (size) => {
     const { save: initial, ids, story } = setup(size)
     const context = { days: GAME_DAYS, story, talentOf: talentsD }
     let save = initial
@@ -244,7 +244,8 @@ describe('a year of farm contests through normal farm actions', () => {
         const card = festivalResult(save, event)!
         expect(card.place).not.toBeNull()
         expect(save.gold - before.gold).toBe(card.gold)
-        expect(save.today.eventActions - before.today.eventActions).toBe(3)
+        expect(save.today.eventFunding?.contest).toBe(3)
+        expect(save.eventJournal?.results?.at(-1)).toMatchObject({ day, id: event, gold: card.gold, score: card.score })
         const activity = event === 'flower-show' ? 'farming' : event === 'animal-show' ? 'ranch' : 'fishing'
         for (const id of ids) {
           expect(save.roster[id]!.ranks[activity].challenge - before.roster[id]!.ranks[activity].challenge).toBe(card.credit.includes(id) ? 1 : 0)

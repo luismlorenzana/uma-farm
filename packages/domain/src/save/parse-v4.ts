@@ -19,6 +19,7 @@ import { FISH_MODES } from '../goods/production-catalogue'
 import { isStockId, parseStockKey } from './warehouse'
 import { checkFestivalSave } from './parse-festivals'
 import { parseLibrary } from './parse-library'
+import { parseEventFunding, parseEventJournal } from './parse-event-journal'
 import type { CrewReceipt } from '../farm/farmhands'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
@@ -43,7 +44,7 @@ import { MAX_LODGE_WINGS } from './long-game'
 
 export const SAVE_V5_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'fields', 'loads', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library', 'longGame', 'forge',
+  'buildings', 'tools', 'workshops', 'expeditions', 'expeditionLog', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town', 'library', 'longGame', 'forge', 'eventJournal',
 ] as const
 
 /** The most actions a day can hold: well past any budget the farm grows to. */
@@ -250,7 +251,7 @@ const OCCASION_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
 /** Today's occasions played: each `<her id>:<occasion id>`, or her id alone (the old form: the day's one occasion), once
  * each; at most three a roster Uma (the old form, the day's and the night's). */
 function parseOccasions(value: unknown, path: string, roster: ReadonlySet<string>): string[] {
-  return unique(list(value, path, 0, roster.size * 3).map((v, i) => {
+  return unique(list(value, path, 0, roster.size + MAX_DAY_ACTIONS).map((v, i) => {
     const at = `${path}.${i}`
     if (typeof v !== 'string') return fail(at, 'expected an occasion')
     const [id, occasion, ...rest] = v.split(':')
@@ -305,7 +306,7 @@ function parseCrew(value: unknown, path: string, roster: ReadonlySet<string>): C
 }
 
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server', 'forgeHelper', 'toolCharges', 'rackCharges'])
+  const o = object(value, path, ['dayParts', 'crew', 'actions', 'eventActions', 'eventFunding', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook', 'server', 'forgeHelper', 'toolCharges', 'rackCharges'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + (o.dayParts === true ? 2 : 1)).map((v, i) => {
@@ -323,6 +324,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     ...(o.dayParts === undefined ? {} : o.dayParts === true ? { dayParts: true as const } : fail(`${path}.dayParts`, 'expected true')),
     ...(o.crew === undefined ? {} : o.dayParts === true ? { crew: parseCrew(o.crew, `${path}.crew`, roster) } : fail(`${path}.crew`, 'expected day parts')),
     actions: int(o.actions, `${path}.actions`, 0, MAX_DAY_ACTIONS), eventActions: int(o.eventActions, `${path}.eventActions`, 0, MAX_DAY_ACTIONS),
+    ...(o.eventFunding === undefined ? {} : { eventFunding: parseEventFunding(o.eventFunding, path + '.eventFunding', roster) }),
     town: bool(o.town, `${path}.town`),
     gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length).map((v, i) => oneOf(v, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
@@ -655,6 +657,7 @@ function parseFarmSave(value: unknown, path: string, version: 5 | 6): SaveV6 {
     board: parseBoard(o.board, `${path}.board`),
     diary: parseDiary(o.diary, `${path}.diary`),
     farm: parseFarm(o.farm, `${path}.farm`, today),
+    ...(o.eventJournal === undefined ? {} : { eventJournal: parseEventJournal(o.eventJournal, path + '.eventJournal', ids, today) }),
     homestead,
     memories: parseMemories(o.memories, `${path}.memories`, ids),
     arrivals,

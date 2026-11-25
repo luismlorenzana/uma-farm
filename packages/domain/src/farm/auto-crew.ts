@@ -53,6 +53,8 @@ export function autoJobs(save: FarmSave, pack: SchedulePack | null, budget: Shif
   const projectLock = project ? buildLock(save, project.id) : null
   const needLogs = projectLock?.by === 'short' && projectLock.goods.some(line => line.goods.family === 'woods' && !line.goods.refined)
   const firstJob = (save.calendar.day + 2) % GATHERING_ORDER.length
+  const eventPlan = save.eventJournal?.plan
+  const festivalSoon = eventPlan && eventPlan.day >= save.calendar.day && eventPlan.day - save.calendar.day <= 7 ? eventPlan.id : null
   const needs = workNeeds(save, pack, canGather)
   const batching = budget.canBatchWater ? seedRow(save, needs) : undefined
   const jobs = needs.flatMap(({ task, priority, blocked, optional, count }): AutoJob[] => {
@@ -60,7 +62,7 @@ export function autoJobs(save: FarmSave, pack: SchedulePack | null, budget: Shif
     if (task.kind === 'care') {
       return [...(animalsIn(save, task.home).some(animal => !animal.fed)
         ? [{ task: { ...task, feedOnly: true as const }, priority: 0 }] : []),
-        { task, priority: readyIn(save, task.home) > 0 ? .75 : 5 }]
+        { task, priority: readyIn(save, task.home) > 0 ? .75 : festivalSoon === 'animal-show' ? 4.5 : 5 }]
     }
     if (task.kind === 'water') {
       if (batching?.plot === (task.plot ?? 0)) {
@@ -93,7 +95,10 @@ export function autoJobs(save: FarmSave, pack: SchedulePack | null, budget: Shif
     const completed = budget.done[task.kind]
     const turn = (GATHERING_ORDER.indexOf(task.kind) - firstJob + GATHERING_ORDER.length) % GATHERING_ORDER.length
     const pinnedLogs = needLogs && task.kind === 'chop'
-    const score = base + completed / 100 + turn / 1000 - (pinnedLogs ? .004 : 0)
+    const eventFish = festivalSoon === 'fishing-derby' && task.kind === 'fish' && completed === 0
+    const cupHaul = festivalSoon === 'harvest-cup' && (eventPlan?.stock.length ?? 0) < 3
+      && (task.kind === 'fish' || task.kind === 'forage') && completed === 0
+    const score = base + completed / 100 + turn / 1000 - (pinnedLogs ? .004 : 0) - (eventFish || cupHaul ? .006 : 0)
     if (task.kind === 'mine') return [{ task, priority: score, areaUse: haulsToday(save, task.dig), areaOrder: save.farm.counts[dugCount(task.dig)] ?? 0 }]
     if (task.kind === 'fish') return [{ task, priority: score, areaUse: haulsToday(save, task.spot), areaOrder: fishOrder?.get(task.spot) ?? 0 }]
     return [{ task, priority: score, areaUse: haulsToday(save, task.area), areaOrder: woodsOrder?.get(task.area) ?? 0 }]

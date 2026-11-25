@@ -27,7 +27,7 @@ export const TOWN_SERVICES = {
   carpenter: { at: 'estate-office', also: 'smith', title: 'Building materials', greeting: 'Show me the project you have in mind.', to: '/?sheet=next', link: 'See farm projects' },
   librarian: { at: 'library', title: 'Cookbook', greeting: 'What would you like to learn to cook?', to: '/?sheet=kitchen', link: 'Open Kitchen' },
   archivist: { at: 'library', title: 'Recipe discoveries', greeting: 'Let’s follow that recipe back to the farm.', to: '/?sheet=restaurant', link: 'Open Restaurant' },
-  'bell-keeper': { at: 'plaza', title: 'Upcoming festivals', greeting: 'I’ve put the upcoming dates on the noticeboard.', to: '/?sheet=calendar', link: 'Open Calendar' },
+  'bell-keeper': { at: 'plaza', title: 'Upcoming festivals', greeting: 'I’ve put the upcoming dates on the noticeboard.', to: '/?sheet=events', link: 'Festival noticeboard' },
   'animal-nurse': { at: 'rancher', title: 'Ranch check', greeting: 'Let’s look in on the animals and their feeding plan.', to: '/book?view=work&workCalendar=1', link: 'Review Work Calendar' },
   'orchard-keeper': { at: 'market', title: 'Orchard guide', greeting: 'How are the trees coming along?', to: '/field', link: 'Open Fields' },
   'woodland-guide': { at: 'track', title: 'Trail notes', greeting: 'Which part of the Forest are you headed to?', to: '/?peek=forest', link: 'Open Forest' },

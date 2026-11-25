@@ -70,7 +70,7 @@ describe('the night', () => {
     expect(actionsLeft(save)).toBe(5)
     const morning = night(save)
     expect(actionsLeft(morning)).toBe(10)
-    expect(morning.today).toEqual(newTodayV4())
+    expect(morning.today).toEqual({ ...newTodayV4(), eventFunding: {} })
     expect(fieldTiles(morning)[START_CLEAR[0]!]).toMatchObject({ crop: 'carrot', growth: 1, watered: false })
     expect(morning.items['wheat-flour']).toEqual([5, 0, 0, 0, 0])
     expect(morning.loads).toEqual({})
@@ -105,7 +105,7 @@ describe('the calendar turns', () => {
 
   it('clears the whole of today: the actions, the town, chats, gifts and the rest', () => {
     const save: SaveV4 = { ...goToTown(farm()), today: { ...goToTown(farm()).today, chats: ['101'], gifts: ['202'], praised: ['101'], gathered: ['woods'] } }
-    expect(night(save).today).toEqual(newTodayV4())
+    expect(night(save).today).toEqual({ ...newTodayV4(), eventFunding: {} })
   })
 })
 

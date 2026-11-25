@@ -2,15 +2,16 @@ import { byRelationship } from './relationship-order'
 import {
   bestToolTier,
   activeContest, animalPreview, animalName, ANIMALS, aptitudeOf, castDerby, CONTESTS, contestCutoffs, contestDate, CROP_IDS, CUE_WORDS, cupCategory, cupPreview, cupWorkDay,
-  dateDayOf, dateOf, derbyMeet, DERBY_TURN_MS, enterAnimal, enterCup, enterDerby, enterFlower, farmRankOf, festivalEntryLock, festivalHandLock, festivalResult,
+  dateDayOf, dateOf, derbyMeet, DERBY_TURN_MS, enterAnimal, enterCup, enterDerby, enterFlower, farmRankOf, festivalEntryLock, festivalEntryStock, festivalHandLock, festivalResult,
   festivalsOf, FESTIVAL_ACTION_COST, FESTIVAL_CONTESTS, festivalStock, fieldTiles, FIELD_TILES, FISHING_SPOTS, flowerMarkLock, flowerPreview,
   goodName, goodOf, isFarmContest, markFlowerTile, NO_BIRTHDAYS, answerAnimal, parseStockKey, reachLock, recipeOf, releaseFlower, restaurantGrade, settleFestival, sharesOn,
   SHOW_CUES, SPOT_NAMES, stockKey, touched, type ActiveContest, type ContestCard, type ContestContext, type CropId,
-  type CupEntry, type FarmContest, type FarmSave, type FishingSpotId, type ShowCue,
+  type CupEntry, type EventStock, type FarmContest, type FarmSave, type FishingSpotId, type ShowCue,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
+import { FestivalImpact } from '../book/FestivalCrew'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
@@ -100,14 +101,15 @@ export default function FestivalSheet() {
             </GuideButton>
           </div>
           {last && <Result id={id} result={last} nameOf={nameOf} save={save} />}
-          {last?.day !== day && <Entry key={id} id={id} save={save} context={context} act={act} nameOf={nameOf} />}
+          {last?.day !== day && <Entry key={id} id={id} save={festivalEntryStock(save, id)} context={context} act={act} nameOf={nameOf}
+            protectedStock={save.eventJournal?.plan?.id === id && save.eventJournal.plan.day === day ? save.eventJournal.plan.stock : undefined} />}
         </div>}
       {note && <p className="py-2 text-[13px] text-danger" role="status">{note}</p>}
     </Sheet>
   )
 }
 
-interface EntryProps { save: FarmSave; context: ContestContext; act: Act; nameOf: (id: string | null) => string }
+interface EntryProps { protectedStock?: readonly EventStock[]; save: FarmSave; context: ContestContext; act: Act; nameOf: (id: string | null) => string }
 type FormProps = EntryProps & { lock: string | null }
 
 function Entry({ id, ...props }: EntryProps & { id: FarmContest }) {
@@ -140,9 +142,9 @@ function lots(save: FarmSave, fits: (key: string) => boolean): string[] {
   }))
 }
 
-function Flower({ save, context, act, nameOf, lock }: FormProps) {
+function Flower({ save, context, act, nameOf, lock, protectedStock }: FormProps) {
   const state = save.workshops.festival
-  const [stock, setStock] = useState('')
+  const [stock, setStock] = useState(protectedStock?.[0]?.key ?? '')
   const [grower, setGrower] = useState('')
   const [tile, setTile] = useState(state?.mark?.tile ?? -1)
   const [crop, setCrop] = useState<CropId>(state?.mark?.crop ?? 'carrot')
@@ -239,6 +241,7 @@ function Derby(props: FormProps) {
         })}
       </div>
     </div>
+    <FestivalImpact save={save} crew={crew} />
     <Submit lock={lock ?? reachLock(save, 'fishery', spot) ?? crew.reduce<string | null>((why, id) => why ?? (id ? festivalHandLock(save, id, context.story) : null), null)}
       use={crew.some(Boolean) ? 'Each Uma commits one work action.' : 'Three casts by the farmer.'}
       onEnter={() => act((live) => enterDerby(live, spot, crew.map((id) => id || null), context))} />
@@ -277,15 +280,16 @@ function Animal({ save, context, act, nameOf, lock }: FormProps) {
         {practice && <p>{CUE_WORDS.walk} {practice === 'cue' ? <Button variant="secondary" onClick={() => setPractice('done')}>Walk</Button> : 'Correct.'}</p>}
       </div>
     </div>
+    <FestivalImpact save={save} crew={handler ? [caretaker] : []} />
     <Submit lock={lock ?? (!preview ? 'Choose an owned animal.' : handler ? handLock : null)} use={handler ? 'Handler commits one work action.' : 'Farmer presents the animal.'}
       onEnter={() => act((live) => enterAnimal(live, selected, caretaker || null, handler, context))} />
   </div>
 }
 
 function Cup(props: FormProps) {
-  const { save, context, act, lock } = props
+  const { save, context, act, lock, protectedStock } = props
   const stock = lots(save, (key) => cupCategory(parseStockKey(key)!.id) !== null && festivalStock(save, key) > 0)
-  const [entries, setEntries] = useState<CupEntry[]>(Array.from({ length: 3 }, () => ({ key: '', by: null })))
+  const [entries, setEntries] = useState<CupEntry[]>(Array.from({ length: 3 }, (_, i) => ({ key: protectedStock?.[i]?.key ?? '', by: null })))
   const category = (key: string) => cupCategory(parseStockKey(key)?.id ?? '')
   const update = (index: number, entry: CupEntry) => setEntries((rows) => rows.map((other, at) => index === at ? entry : other))
   const preview = cupPreview(save, entries, context.story)
@@ -307,6 +311,7 @@ function Cup(props: FormProps) {
       })}
     </div>
     {!preview.block && <><p className="text-[13px] font-semibold">Score {preview.score}</p><Parts id="harvest-cup" values={preview.parts} /></>}
+    <FestivalImpact save={save} crew={entries.flatMap(entry => entry.by ? [entry.by] : [])} />
     <Submit lock={lock ?? preview.block} use="Donates three goods. Each Uma commits one work action."
       onEnter={() => act((live) => enterCup(live, entries, context))} />
   </div>

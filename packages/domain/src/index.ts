@@ -99,6 +99,8 @@ export * from './restaurant/recipes'
 export * from './restaurant/restaurant'
 export * from './festivals/state'
 export * from './festivals/contests'
+export * from './festivals/journal'
+export * from './festivals/agenda'
 // Farmhands: her day's actions on her farm days, the work board's tasks, her aptitudes and their tricks, and the
 // night's run of their work.
 export * from './farm/farmhands'

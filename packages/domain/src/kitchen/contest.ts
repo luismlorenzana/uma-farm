@@ -28,6 +28,7 @@ import { farmRankOf } from '../farm/farm'
 import { handDay, handActionsLeft } from '../farm/farmhands'
 import { worksOn, type SchedulePack } from '../town/town'
 import { FESTIVAL_PLACE_POINTS } from '../farm/milestones'
+import { recordFestivalReceipt, type EventStock } from '../festivals/journal'
 import { bookedForExpedition } from '../expeditions/presence'
 import { activeContest, festivalBooked } from '../festivals/state'
 import { countChallenge } from '../farm/rank-rules'
@@ -190,7 +191,7 @@ export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEn
   if (contestEntered(save) || save.farm.festivals.some(result => result.id === CONTEST_ID
     && dateOf(result.day, save.calendar).year === dateOf(save.calendar.day, save.calendar).year)) return 'One entry a Contest.'
   if (save.workshops.current || save.workshops.restaurant?.shift || activeContest(save)) return 'A play is under way.'
-  if (!canSpendForEvent(save, CONTEST_ACTIONS, days)) return `Entering takes ${CONTEST_ACTIONS} actions.`
+  if (!canSpendForEvent(save, CONTEST_ACTIONS, days, 'contest')) return `Entering takes ${CONTEST_ACTIONS} actions.`
   if (!entry) return 'Choose a recipe.'
   const recipe = recipeOf(entry.dish)
   if (!recipe || !knowsRecipe(save, entry.dish)) return 'You don’t know that recipe.'
@@ -212,7 +213,7 @@ export function contestBlock(save: FarmSave, days: SpecialDays, entry: ContestEn
  * into `farm.festivals` and the best score into `diary.records`; the cook (on the roster) counts `won` on a 1st and gets a
  * festival together's +50. The Farm Rank's points come at night. Never stamps.
  */
-export function judgeContest<S extends FarmSave>(save: S, day: number, stars: number, play: number, cook: string | null): { save: S; board: ContestBoard } {
+export function judgeContest<S extends FarmSave>(save: S, day: number, stars: number, play: number, cook: string | null, stock: EventStock[] = []): { save: S; board: ContestBoard } {
   const board = contestBoard(save, day, contestScore(stars, play))
   const paid = earnGold(save, board.gold)
   const result: FestivalResult = { id: CONTEST_ID, day, score: board.score, place: board.place }
@@ -224,5 +225,8 @@ export function judgeContest<S extends FarmSave>(save: S, day: number, stars: nu
     next = recordLibrary(next, cook, `festival:${CONTEST_ID}:cook:${board.place}${board.place === 1 ? ':won' : ''}`,
       { day, activity: `festival:${CONTEST_ID}`, score: board.score })
   }
+  next = recordFestivalReceipt(next, { id: CONTEST_ID, day, score: board.score, place: board.place,
+    rivals: board.rivals.map(rival => rival.score), gold: board.gold, points: board.points,
+    stock, staff: cook ? [cook] : [], credit: cook && board.place === 1 ? [cook] : [] })
   return { save: next, board }
 }

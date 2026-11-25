@@ -13,7 +13,7 @@
 // is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
 // gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
-  actionCost, calendarDay, canSpendForEvent, contestBlock, contestDefault, CONTEST_ID, eventActionsLeft,
+  actionCost, agendaLink, calendarDay, canSpendForEvent, contestBlock, contestDefault, CONTEST_ID, eventActionsLeft,
   festivalEntryLock, festivalsOf, householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack,
   benchOpen, HEIRLOOMS, TOOL_NAMES, toolTierName, chapterTitle, farmPlace, fieldCounts, FIELD_COLUMNS, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt,
   type BuildPlace, type FarmPlace, type FarmSave,
@@ -375,11 +375,11 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
       : rule && isFarmContest(rule) ? festivalEntryLock(save, rule, days) : null
     const to = rule === CONTEST_ID ? '/?sheet=contest'
       : rule && isFarmContest(rule) ? `/?sheet=festival&contest=${rule}` : calendar
-    events.unshift({ key: 'morning-festival', to, text: festival.name,
-      tag: rule ? block ? 'Details' : 'Contest · 3 actions' : 'Calendar' })
+    events.unshift({ key: 'morning-festival', to: save.today.eventFunding ? agendaLink(save.calendar.day) : to, text: festival.name,
+      tag: save.today.eventFunding ? 'View event' : rule ? block ? 'Details' : 'Contest · 3 actions' : 'Calendar' })
   } else {
     const next = nextFestival(save.calendar.day, days.festivals, save.calendar)
-    if (next.inDays <= 2) events.push({ key: 'morning-next-festival', to: calendar + '&calendarDay=' + next.day,
+    if (next.inDays <= 2) events.push({ key: 'morning-next-festival', to: agendaLink(next.day),
       text: `${next.festival.name} · ${shortDate(next.day, save.calendar)}`, tag: 'Plan' })
   }
   const occasions = today.faces.filter(face => face.occasions.length > 0 || face.night
@@ -389,10 +389,10 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
     const label = first.reasons.includes('birthday') ? `${nameOf(first.id)}’s birthday`
       : first.reasons.includes('anniversary') ? `${nameOf(first.id)}’s anniversary`
       : `${nameOf(first.id)} · ${first.occasions[0]?.name ?? 'Special night visit'}`
-    events.push({ key: 'morning-occasions', to: calendar, text: label + (occasions.length > 1 ? ` · +${occasions.length - 1} more` : ''), tag: 'Calendar' })
+    events.push({ key: 'morning-occasions', to: agendaLink(save.calendar.day), text: label + (occasions.length > 1 ? ` · +${occasions.length - 1} more` : ''), tag: 'Calendar' })
   }
   if ((today.newYear && today.date.year > 1) || (today.celebrations.length > 0 && !householdReady(save).length)) {
-    events.push({ key: 'morning-special', to: calendar, text: today.newYear ? 'New Year’s Day' : 'Household celebration', tag: 'Calendar' })
+    events.push({ key: 'morning-special', to: agendaLink(save.calendar.day), text: today.newYear ? 'New Year’s Day' : 'Household celebration', tag: 'Calendar' })
   }
   const report = parts.map(part => ({ ...part, lines: part.lines.filter(line => !active(line)) })).filter(part => part.lines.length)
   const bonus = eventActionsLeft(save, days)

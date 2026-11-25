@@ -9,9 +9,9 @@
 // today it closes; with no action left it says so before it plays. Portaled above the kit's sheets (z-60). Loaded on
 // demand.
 import {
-  actionCost, canSpendForEvent, GAME_DAYS, illustrationAt, occasionWith, sceneSteps, type Occasion, type PlayedEvent, type SaveV4, type Step,
+  actionCost, canSpendForEvent, GAME_DAYS, illustrationAt, occasionFund, occasionWith, sceneSteps, type Occasion, type PlayedEvent, type SaveV4, type Step,
 } from '@farm/domain'
-import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
+import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -34,7 +34,13 @@ export default function OccasionPlayer({ id }: { id: string }) {
   const special = useSpecialDays()
   const location = useLocation()
   const leave = useLeave()
-  const close = () => leave(withParam(location, 'occasion', null))
+  const requested = new URLSearchParams(location.search).get('occasionId') ?? undefined
+  const close = () => {
+    const query = new URLSearchParams(location.search)
+    query.delete('occasion')
+    query.delete('occasionId')
+    leave(location.pathname + (query.size ? '?' + query : ''))
+  }
   // Settled once, as it starts: playing it ends today's occasion with her.
   const [occasion, setOccasion] = useState<Occasion | null | 'none' | 'spent'>(null)
   const [event, setEvent] = useState<PlayedEvent | null>(null)
@@ -43,10 +49,10 @@ export default function OccasionPlayer({ id }: { id: string }) {
   useEffect(() => {
     if (occasion !== null || !save || !story) return
     const days = special ?? GAME_DAYS
-    const today = occasionWith(save, story, days, id)
+    const today = occasionWith(save, story, days, id, requested)
     if (!today) return setOccasion('none')
-    setOccasion(canSpendForEvent(save, actionCost('event'), days) ? today : 'spent')
-  }, [occasion, save, story, special, id])
+    setOccasion(canSpendForEvent(save, actionCost('event'), days, occasionFund(today, id, days)) ? today : 'spent')
+  }, [occasion, save, story, special, id, requested])
   useEffect(() => {
     if (occasion === 'none') close()
   }, [occasion]) // eslint-disable-line react-hooks/exhaustive-deps

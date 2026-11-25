@@ -140,7 +140,7 @@ export const LADDER_COLOURS: Readonly<Record<LadderName, string>> = { friendship
 // --- Points ---------------------------------------------------------------------
 
 /** What paid points into her bar: each act of the points table. */
-export type LoveSource = 'chat' | 'gift' | 'praise' | 'line' | 'festival' | 'arrival' | 'event' | 'evening' | 'invite' | 'house' | 'meal'
+export type LoveSource = 'chat' | 'gift' | 'praise' | 'line' | 'festival' | 'arrival' | 'event' | 'evening' | 'birthday' | 'invite' | 'house' | 'meal'
 
 /** A gift on her birthday pays ×3. */
 export const BIRTHDAY_GIFT = 3
@@ -154,7 +154,7 @@ export const isAnniversary = (love: Pick<Love, 'wed'>, day: number, clock?: Farm
 /** The day's factor on an act: a gift ×3 on her birthday; on her anniversary every act ×2 except the evening.
  * Each multiplies once. */
 export function dayFactor(love: Pick<Love, 'wed'>, day: number, source: LoveSource, birthday = false, clock?: FarmClock): number {
-  return (source === 'gift' && birthday ? BIRTHDAY_GIFT : 1) * (source !== 'evening' && isAnniversary(love, day, clock) ? ANNIVERSARY_POINTS : 1)
+  return (source === 'gift' && birthday ? BIRTHDAY_GIFT : 1) * (source !== 'evening' && source !== 'birthday' && isAnniversary(love, day, clock) ? ANNIVERSARY_POINTS : 1)
 }
 
 /** Points are whole: each pay rounds once, half up, after its factors. */

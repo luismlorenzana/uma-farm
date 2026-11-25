@@ -32,6 +32,7 @@ const SyncWarning = lazy(() => import('./SyncWarning').then(module => ({ default
 const OutOfActions = lazy(() => import('./OutOfActions'))
 const RequestsSheet = lazy(() => import('../town/RequestsSheet'))
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
+const EventAgenda = lazy(() => import('../loop/EventAgenda'))
 const ScenePlayer = lazy(() => import('../loop/ScenePlayer'))
 const NameSheet = lazy(() => import('../loop/NameSheet'))
 const PairPlayer = lazy(() => import('../loop/PairPlayer'))
@@ -108,7 +109,7 @@ export function Shell() {
           {sheet === 'homestead' && free && <Suspense fallback={null}><HomesteadSheet /></Suspense>}
           {level && free && !read && !playing && <Suspense fallback={null}><NightLevel key={level} value={level} /></Suspense>}
           {household && free && !read && !playing && <Suspense fallback={null}><HouseholdPlayer key={household} value={household} replay={search.get('replay') === '1'} /></Suspense>}
-          {occasion && free && !read && !playing && <Suspense fallback={null}><OccasionPlayer key={occasion} id={occasion} /></Suspense>}
+          {occasion && free && !read && !playing && <Suspense fallback={null}><OccasionPlayer key={occasion + ':' + (search.get('occasionId') ?? '')} id={occasion} /></Suspense>}
           {life && free && !read && !playing && <Suspense fallback={null}><LifePlayer key={life} value={life} /></Suspense>}
           {(visits || visitReplay || visitMorning) && free && !read && !playing && <Suspense fallback={null}>
             <NightVisits key={visitReplay ?? (visitMorning ? 'morning' : 'tonight')} replay={visitReplay} morning={visitMorning} />
@@ -117,6 +118,7 @@ export function Shell() {
           {sheet === 'kitchen' && free && <Suspense fallback={null}><KitchenSheet /></Suspense>}
           {sheet === 'requests' && free && <Suspense fallback={null}><RequestsSheet /></Suspense>}
           {sheet === 'restaurant' && free && <Suspense fallback={null}><RestaurantSheet /></Suspense>}
+          {sheet === 'events' && free && <Suspense fallback={null}><EventAgenda key={search.get('eventDay') ?? 'today'} /></Suspense>}
           {sheet === 'contest' && free && <Suspense fallback={null}><ContestSheet /></Suspense>}
           {sheet === 'festival' && free && <Suspense fallback={null}><FestivalSheet /></Suspense>}
           {stove && free && <Suspense fallback={null}><StovePlayer key={stove} /></Suspense>}

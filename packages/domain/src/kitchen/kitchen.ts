@@ -27,6 +27,7 @@
 // account's, the day's and the farm's count of plays (`farm.counts.plays`), so every play differs and a replay is the
 // same. Pure; never stamps.
 import { actionCost, actionsLeft, spend, spendForEvent, type SpecialDays } from '../farm/actions'
+import { festivalEntryStock } from '../festivals/journal'
 import { discoverOutput } from '../goods/discovery'
 import { noteCupWork } from '../festivals/evidence'
 import { activeContest, festivalBooked } from '../festivals/state'
@@ -131,13 +132,14 @@ export function startStoveBatch<S extends FarmSave>(save: S, picks: readonly str
  * (`not-ready`), no Kitchen (`locked`), entered or a play under way (`busy`), actions short (`no-actions`), an ingredient
  * short (`no-items`), the recipe or the cook (`bad-job`). Never stamps. */
 export function enterContest<S extends FarmSave>(save: S, entry: ContestEntry, days: SpecialDays, pack: SchedulePack | null = null): S {
+  save = festivalEntryStock(save, 'cooking-contest')
   const block = contestBlock(save, days, entry, pack)
   if (block) {
     const reason = block === 'No contest today.' ? 'not-ready' : block.startsWith('Build') ? 'locked' : block === 'One entry a Contest.' || block === 'A play is under way.' ? 'busy'
       : block.startsWith('Entering') ? 'no-actions' : block.startsWith('Short') ? 'no-items' : 'bad-job'
     throw new SaveRuleError(reason, block)
   }
-  const spent = spendForEvent(save, CONTEST_ACTIONS, days)
+  const spent = spendForEvent(save, CONTEST_ACTIONS, days, 'contest')
   const main = parseStockKey(entry.main)!
   const side = parseStockKey(entry.side)!
   const items = takeGoods(takeGoods(spent.items, main.id, main.stars, MAINS_A_DISH), side.id, side.stars, SIDES_A_DISH)
@@ -448,7 +450,10 @@ function finishContest<S extends FarmSave>(save: S, play: PlayInProgress, score:
     const uma = next.roster[cook]!
     next = { ...next, roster: { ...next.roster, [cook]: { ...uma, practice: { ...uma.practice, cook: (uma.practice?.cook ?? 0) + 1 } } } }
   }
-  const judged = judgeContest(next, play.day, stars, score, cook)
+  const stock = 'main' in line ? line.main === line.side
+    ? [{ key: line.main, count: MAINS_A_DISH + SIDES_A_DISH }]
+    : [{ key: line.main, count: MAINS_A_DISH }, { key: line.side, count: SIDES_A_DISH }] : []
+  const judged = judgeContest(next, play.day, stars, score, cook, stock)
   return { save: judged.save, result: { play: 'contest', score, grade: tier.grade, stopped, meals: 0, stars: 0, dishes: [{ dish: line.dish, stars, count: 1 }], contest: judged.board } }
 }
 

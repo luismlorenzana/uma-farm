@@ -92,7 +92,7 @@ export function herMenu(save: SaveV4, pack: MenuPack, id: string, days: SpecialD
   const ready = readiness(save, pack, id)
   return [
     item('talk', actionCost('talk'), talked ? 'Talked today ✓' : afford('talk'), talked),
-    item('gift', actionCost('gift'), gifted ? 'Gift given today ✓' : afford('gift') ?? (hasGifts(save) ? null : 'Nothing in the Warehouse to give'), gifted),
+    item('gift', actionCost('gift'), gifted ? 'Gift given today ✓' : (save.today.eventFunding ? !canSpendForEvent(save, actionCost('gift'), days, `birthday:${id}`) : left < actionCost('gift')) ? 'No actions left today.' : (hasGifts(save) ? null : 'Nothing in the Warehouse to give'), gifted),
     item('evening', eveningCost(), evening, evening === EVENING_SPENT),
     item('work', actionCost('invite'), work, isFarmhand(save, id)),
     ...(ready.ready ? [item('event', actionCost('event'), canSpendForEvent(save, actionCost('event'), days) ? null : 'No actions left today.')] : []),

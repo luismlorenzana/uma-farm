@@ -160,20 +160,56 @@ export const GAME_DAYS: SpecialDays = { festivals: FESTIVALS, birthdays: new Map
 /** A day's event actions in all (today's, or another `day`'s with today's roster). */
 export const eventActionsOn = (save: Pick<FarmSave, 'calendar' | 'roster'>, days: SpecialDays, day = save.calendar.day): number =>
   eventGrants(save, days, day).reduce((n, g) => n + g.actions, 0)
-/** The day's event actions left. */
-export const eventActionsLeft = (save: Pick<FarmSave, 'calendar' | 'roster' | 'today'>, days: SpecialDays): number =>
-  Math.max(0, eventActionsOn(save, days) - save.today.eventActions)
+type EventActionSave = Pick<FarmSave, 'calendar' | 'roster' | 'today'>
+export type EventFund = 'contest' | 'newYear' | 'festival' | 'social' | `birthday:${string}`
 
-/** Whether an event's `n` actions can be paid today: the event actions left and the day's together. */
-export const canSpendForEvent = (save: Pick<FarmSave, 'calendar' | 'roster' | 'today'>, n: number, days: SpecialDays): boolean =>
-  actionsLeft(save) + eventActionsLeft(save, days) >= n
+function fundOf(grant: EventGrant, days: SpecialDays): EventFund {
+  switch (grant.kind) {
+    case 'new-year': return 'newYear'
+    case 'birthday': return `birthday:${grant.id!}`
+    case 'festival': return days.festivals.find(festival => festival.id === grant.id)?.rule ? 'contest' : 'festival'
+  }
+}
 
-/** Spends an event's actions: the day's event actions first, then its own. Refused (`no-actions`) when both together
- * are short. */
-export function spendForEvent<S extends Pick<FarmSave, 'calendar' | 'roster' | 'today'>>(save: S, n: number, days: SpecialDays): S {
-  const fromEvents = Math.min(n, eventActionsLeft(save, days))
-  const spent = { ...save, today: { ...save.today, eventActions: save.today.eventActions + fromEvents } }
-  return spendActions(spent, n - fromEvents)
+export function eventBudget(save: EventActionSave, days: SpecialDays) {
+  const funding = save.today.eventFunding
+  const grants = eventGrants(save, days)
+  if (!funding) return [{ fund: 'legacy' as const, left: Math.max(0, grants.reduce((total, grant) => total + grant.actions, 0) - save.today.eventActions) }]
+  const budgets = grants.map(grant => {
+    const fund = fundOf(grant, days)
+    const used = fund === 'contest' || fund === 'newYear' || fund === 'festival' || fund === 'social'
+      ? funding[fund] ?? 0
+      : Number(funding.birthdays?.includes(fund.slice(9)) ?? false)
+    return { fund, left: Math.max(0, grant.actions - used) }
+  })
+  if (budgets.some(row => row.fund === 'contest')) budgets.push({ fund: 'social', left: Math.max(0, 1 - (funding.social ?? 0)) })
+  return budgets
+}
+
+/** Total grants for summary displays. Use a fund to quote a specific action. */
+export function eventActionsLeft(save: EventActionSave, days: SpecialDays, fund?: EventFund): number {
+  return eventBudget(save, days).reduce((sum, row) => sum + (fund === undefined || row.fund === fund || row.fund === 'legacy' ? row.left : 0), 0)
+}
+
+function eligibleEventActions(save: EventActionSave, days: SpecialDays, fund?: EventFund): number {
+  return save.today.eventFunding && !fund ? 0 : eventActionsLeft(save, days, fund)
+}
+
+export const canSpendForEvent = (save: EventActionSave, n: number, days: SpecialDays, fund?: EventFund): boolean =>
+  actionsLeft(save) + eligibleEventActions(save, days, fund) >= n
+
+/** Charges a matching grant before regular actions. A day from an older save keeps its shared pool until night. */
+export function spendForEvent<S extends EventActionSave>(save: S, n: number, days: SpecialDays, fund?: EventFund): S {
+  const used = Math.min(n, eligibleEventActions(save, days, fund))
+  const paid = spendActions(save, n - used)
+  if (!used) return paid
+  const funding = paid.today.eventFunding
+  if (!funding) return { ...paid, today: { ...paid.today, eventActions: paid.today.eventActions + used } }
+  if (!fund) return paid
+  const eventFunding = fund === 'contest' || fund === 'newYear' || fund === 'festival' || fund === 'social'
+    ? { ...funding, [fund]: (funding[fund] ?? 0) + used }
+    : { ...funding, birthdays: [...funding.birthdays ?? [], fund.slice(9)] }
+  return { ...paid, today: { ...paid.today, eventFunding } }
 }
 
 // --- Going into town ---------------------------------------------------------------------------------------------

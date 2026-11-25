@@ -22,7 +22,7 @@
 //
 // It isn't her heart event: it neither needs her Ready nor stops her event today. Pure.
 import { recordLibrary } from '../library/receipts'
-import { actionCost, spendForEvent, type SpecialDays } from '../farm/actions'
+import { actionCost, spendForEvent, type EventFund, type SpecialDays } from '../farm/actions'
 import { dateOf, festivalOn, FESTIVALS, isNewYear, NEW_YEAR_NAME, type FestivalId } from '../farm/calendar'
 import { SaveRuleError } from '../save/rules'
 import type { SaveV4 } from '../save/v4'
@@ -31,6 +31,7 @@ import { momentOutfit, type Moment } from '../story/look'
 import type { StoryPack } from '../story/pack'
 import { storyDaysOn } from '../story/placeholders'
 import { isBirthday } from './days'
+import { celebrateBirthday } from './acts'
 import { isAnniversary } from './love'
 
 /** The kinds of occasion, in the day's order (the night is its own slot). */
@@ -119,12 +120,13 @@ export function occasionsOn(save: OccasionSave, pack: OccasionPack, days: Specia
   ]
   const played = (c: Candidate | undefined): Occasion[] => {
     if (!c) return []
-    const event = sceneFor(pack, id, c.ids)
+    const event = sceneFor(pack, id, c.ids) ?? (c.kind === 'birthday' && save.today.eventFunding ? 'birthday' : null)
     return event === null ? [] : [{ id: c.id, kind: c.kind, event, slot: c.slot, name: c.name, moments: c.moments }]
   }
-  const daySlot = candidates.map((c) => played(c)[0]).find((o) => o !== undefined)
+  const dayScenes = candidates.flatMap(played)
+  const daySlots = save.today.eventFunding ? dayScenes : dayScenes.slice(0, 1)
   const night = rule ? played(one('festival-night', FESTIVAL_NIGHTS[rule][0]!, FESTIVAL_NIGHTS[rule], `${festival!.name} night`, 'night')) : []
-  return [...(daySlot ? [daySlot] : []), ...night]
+  return [...daySlots, ...night]
 }
 
 /** An occasion's entry in `today.occasions`: her id and the occasion's. */
@@ -147,8 +149,19 @@ export const occasionsLeft = (save: OccasionSave, pack: OccasionPack, days: Spec
 
 /** Today's next occasion with her, or null: she's met, today holds one of hers, and she hasn't played it yet. The night
  * comes after the day's. */
-export const occasionWith = (save: OccasionSave, pack: OccasionPack, days: SpecialDays, id: string): Occasion | null =>
-  occasionsLeft(save, pack, days, id)[0] ?? null
+export function occasionWith(save: OccasionSave, pack: OccasionPack, days: SpecialDays, id: string, requested?: string): Occasion | null {
+  const choices = occasionsLeft(save, pack, days, id)
+  const first = choices[0] ?? null
+  if (!requested) return first
+  if (!save.today.eventFunding) return first?.id === requested ? first : null
+  return choices.find(scene => scene.id === requested) ?? null
+}
+
+export function occasionFund(occasion: Occasion, id: string, days: SpecialDays): EventFund | undefined {
+  if (occasion.kind === 'birthday') return `birthday:${id}`
+  if (occasion.kind === 'new-year') return 'newYear'
+  if (occasion.kind === 'festival') return days.festivals.some(festival => festival.rule === occasion.id) ? 'social' : 'festival'
+}
 
 /**
  * Her next occasion today, played to its end: one action, the day's event actions first, and `<her id>:<occasion>` into
@@ -159,9 +172,10 @@ export const occasionWith = (save: OccasionSave, pack: OccasionPack, days: Speci
 export function playOccasion(save: SaveV4, pack: OccasionPack, id: string, days: SpecialDays, expected?: string): SaveV4 {
   if (!save.roster[id]) throw new SaveRuleError('not-owned', 'You haven’t met her yet.')
   if (occasionsOn(save, pack, days, id).length === 0) throw new SaveRuleError('not-ready', 'No occasion today.')
-  const next = occasionWith(save, pack, days, id)
-  if (!next || (expected !== undefined && next.id !== expected)) throw new SaveRuleError('busy', 'You’ve spent today’s occasion with her.')
-  const spent = spendForEvent(save, actionCost('event'), days)
-  return recordLibrary({ ...spent, today: { ...spent.today, occasions: [...(spent.today.occasions ?? []), occasionKey(id, next.id)] } },
+  const next = occasionWith(save, pack, days, id, expected)
+  if (!next) throw new SaveRuleError('busy', 'You’ve spent today’s occasion with her.')
+  const spent = spendForEvent(save, actionCost('event'), days, occasionFund(next, id, days))
+  const celebrated = next.kind === 'birthday' && save.today.eventFunding ? celebrateBirthday(spent, id).save : spent
+  return recordLibrary({ ...celebrated, today: { ...spent.today, occasions: [...(spent.today.occasions ?? []), occasionKey(id, next.id)] } },
     id, `occasion:${next.slot}:${next.id}:${next.event}:${next.kind}`, { activity: `occasion:${next.slot}:${next.id}` })
 }

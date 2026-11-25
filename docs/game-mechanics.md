@@ -166,9 +166,30 @@ festival night, and `festival` triggers and gates.
 A festival day opens a festival night. After the household holds the Greater Festival, the Festival of Vows
 returns on its scheduled date each year.
 
+##### Festival agenda
+
+Open **Festivals & occasions** from Start Day, a marked Calendar date, the map, the Bell Keeper, or Town Requests.
+**Today** shows venue, host, free attendance, entry requirements, and personal scenes. **Coming up** lists dates and
+lets you pin one contest. **Results** keeps season-by-season scores, ribbons, rival scores, prizes, exhibit value,
+and eligible Uma credit. Older result records keep their original date and score. Visit free records attendance
+once on the event date. You can visit even when you cannot enter.
+
+A ranked date has three actions for its own contest and one action for a social scene. Birthdays each supply their
+own Uma's action and New Year's has its own pool. A suitable scene or birthday gift uses its own action first.
+The first birthday scene or gift that year can add up to 25 relationship points on top of any regular gift points.
+The day's normal ten actions and five Night Visits keep their own limits. A day already in progress on the old
+version keeps its old shared event pool until night.
+
+A pinned plan appears in What Next, Requests, and the Work Calendar. Use **Protect these lots** to set aside exact
+grade and star quantities. Protected goods leave available Warehouse stock and return when the plan is released,
+the entry opens and is submitted, or the date passes. The contest uses only the stock it consumes. The Flower Show's
+marked-crop box keeps its separate tending evidence. On an imminent Animal Show, Derby, or Harvest Cup, the automatic
+crew can favor useful spare jobs. Assigning a caster, handler, presenter, or cook stays voluntary. The entry and Work
+Calendar can preview which jobs lose actions before you confirm.
+
 ##### Festival contests
 
-Each entry costs three farmer actions. The game spends event actions first. The Festival ground shows what the
+Each entry costs three actions. The game uses its reserved contest actions first, then regular actions if needed. The Festival ground shows what the
 farm can enter, the two rival scores and the latest result. The Farm Rank from the morning's settlement fixes
 the rival scores and prize when the entry starts. A tie goes to the player.
 

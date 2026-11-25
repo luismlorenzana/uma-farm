@@ -1,5 +1,5 @@
 import {
-  dateOf, DAYS_PER_SEASON, TOOL_NAMES, toolTierName, SEASON_NAMES, SEASONS, TASK_NAMES, turnOnDate, weekdayOf, weekdayShort,
+  agendaLink, dateOf, DAYS_PER_SEASON, TOOL_NAMES, toolTierName, SEASON_NAMES, SEASONS, TASK_NAMES, turnOnDate, weekdayOf, weekdayShort,
   workDayRecord, type FarmSave, type Season, type StoryPack, type TalentOf, type WorkDayRecord, type WorkTotals,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -17,6 +17,7 @@ import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { nightWords } from './board-words'
 import { forecastCrewOn, plannedWorkDay, workRows } from './work-plan'
+import { FestivalImpact } from './FestivalCrew'
 import { JobList } from './JobList'
 
 const LAST_PAGE = Math.ceil(DAYS_PER_SEASON / CALENDAR_PAGE_SIZE) - 1
@@ -63,6 +64,8 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
   const chosenNumber = selected.day > first && selected.day <= first + days.length ? selected.day : first + 1
   const chosen = days[chosenNumber - first - 1]!
   const rows = chosen.live ? workRows(chosen.live.snapshot, chosen.live, chosen.live.needs) : []
+  const plan = save.eventJournal?.plan
+  const previewCrew = (new URLSearchParams(location.search).get('festivalCrew') ?? '').split(',').filter(id => save.roster[id]).slice(0, 3)
   const budget = chosen.live?.lines.reduce((sum, line) => sum + line.actions, 0) ?? 0
   const spent = chosen.live?.lines.reduce((sum, line) => sum + line.spent, 0) ?? 0
   const isToday = chosen.day === today
@@ -127,6 +130,10 @@ export default function WorkCalendar({ save }: { save: FarmSave }) {
         <p className="text-ink-soft">{recorded ? 'End-of-day record' : actual ? 'Morning shift complete' : isToday ? 'Today’s shift forecast' : chosen.day === null ? 'Date added later' : 'Forecast using current crops, stock and orders'}</p>
         {[...save.forge?.installed ?? [], ...save.forge?.rack ?? [], ...save.forge?.tool ? [save.forge.tool] : []].filter(order => order.due === chosen.day).map(order =>
           <Link key={order.tool} className="flex min-h-11 items-center font-semibold" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} ready ›</Link>)}
+        {plan && chosen.day === plan.day && <Link to={agendaLink(plan.day)} state={{ back: true }} className="flex min-h-11 items-center font-semibold text-accent">
+          {plan.stock.length ? 'Protected entry' : 'Working toward entry'} · Festival plan ›
+        </Link>}
+        {isToday && <FestivalImpact save={save} crew={previewCrew} calendar={false} />}
         {chosen.record ? <WorkDetails record={chosen.record} /> : <p className="py-2">No shift recorded.</p>}
         {chosen.live && <>
           <p className="mb-2" data-calendar-action-budget>{plural(lines.length, 'worker')} · {spent}/{budget} actions {actual ? 'used' : 'forecast'} · {budget - spent} free</p>

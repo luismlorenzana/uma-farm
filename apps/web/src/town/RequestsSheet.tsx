@@ -1,5 +1,5 @@
 import {
-  acceptRequest, boardOpen, CAFE_TUTORIAL, cancelRequest, dateOf, deliverRequest, FISHERY, FISHING_SPOTS,
+  acceptRequest, boardOpen, festivalsOf, NO_BIRTHDAYS, CAFE_TUTORIAL, cancelRequest, dateOf, deliverRequest, FISHERY, FISHING_SPOTS,
   FOREST, FOREST_AREAS, goodName, goodOf, ingredientSources, requestCards, requestDeliveryLock, STATION_JOBS,
   stationJobOf, taskLock, workKey, type FarmSave, type FarmTask, type RequestCard,
 } from '@farm/domain'
@@ -12,7 +12,8 @@ import { changeHomestead } from '../loop/homestead-actions'
 import { gold } from '../loop/money-words'
 import { shortDate } from '../loop/words'
 import { useLoopSave } from '../save/game'
-import { useStory } from '../story/story'
+import { useSpecialDays, useStory } from '../story/story'
+import { FestivalNotice } from '../loop/EventAgenda'
 import { orderLink } from '../book/work-plan'
 import { MasterGate } from '../master/MasterGate'
 import { namer } from '../story/people'
@@ -33,6 +34,7 @@ const SLOT_NAMES = { food: 'Food', makers: 'Makers', town: 'Town' }
 export default function RequestsSheet() {
   const save = useLoopSave()
   const pack = useStory()
+  const days = useSpecialDays() ?? { festivals: festivalsOf(pack), birthdays: NO_BIRTHDAYS }
   const location = useLocation()
   const leave = useLeave()
   const [busy, setBusy] = useState(false)
@@ -55,6 +57,7 @@ export default function RequestsSheet() {
   return (
     <Sheet open size="wide" title="Town requests" label="Town requests" onClose={() => leave(withParam(location, 'sheet', null))}>
       <div className="space-y-2" data-requests>
+        <FestivalNotice save={save} days={days} story={pack} />
         {message && <p role="status" className="rounded-md bg-panel p-2 text-sm">{message}</p>}
         {(save.farm.requests?.pending ?? 0) > 0 && <p className="text-sm font-semibold">{gold(save.farm.requests!.pending)} due tonight</p>}
         {!boardOpen(save) ? <p className="text-sm">Meet five Umas to open the board · {Object.keys(save.roster).length}/5</p> : (

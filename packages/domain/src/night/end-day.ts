@@ -44,6 +44,7 @@ import { payBin } from '../save/bin'
 import { settleRestaurant } from '../restaurant/restaurant'
 import { closeFlowerWindow, festivalResult, settleFestival } from '../festivals/contests'
 import { CONTESTS } from '../festivals/state'
+import { expireFestivalPlan } from '../festivals/journal'
 import { knownRestaurantRecipes } from '../restaurant/recipes'
 import { marketNight } from '../goods/market'
 import type { LoopPlaceId } from '../save/parse-v4'
@@ -367,7 +368,10 @@ export const witherCrops: NightStep = (night) => {
  * already withered crops out of season.
  */
 export const turnCalendar: NightStep = (night) =>
-  ({ ...night, save: setOrchardFruit({ ...night.save, calendar: { ...night.save.calendar, day: night.save.calendar.day + 1 }, today: { ...newTodayV4(), ...(night.before.today.dayParts ? { dayParts: true as const } : {}) } }) })
+  ({ ...night, save: expireFestivalPlan(setOrchardFruit({
+    ...night.save, calendar: { ...night.save.calendar, day: night.save.calendar.day + 1 },
+    today: { ...newTodayV4(), eventFunding: {}, ...(night.before.today.dayParts ? { dayParts: true as const } : {}) },
+  }), { festivals: festivalsOf(night.context.story), birthdays: NO_BIRTHDAYS }) })
 
 /** Step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and the morning says so. */
 export const raiseBuildings: NightStep = (night) => {
