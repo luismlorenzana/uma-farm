@@ -216,7 +216,12 @@ describe('the Uma Library', () => {
     })
     expect(covers()).toEqual([ONE, TWO, THREE])
     await click($(`[data-book-cover="${THREE}"]`))
-    expect($('[data-relationship-date="Planned wedding"]')?.getAttribute('href')).toContain('calendarDay=61')
+    expect($('[data-relationship-date="Scheduled wedding"]')).toBeNull()
+    const before = save()
+    await act(async () => useGame.setState({ save: { ...before, love: {
+      ...before.love, [THREE]: { ...before.love[THREE]!, stage: 'wedding', level: 10, ring: 1, weddingDay: 64 },
+    } } }))
+    expect($('[data-relationship-date="Scheduled wedding"]')?.getAttribute('href')).toContain('calendarDay=64')
   })
 })
 

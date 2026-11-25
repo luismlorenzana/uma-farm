@@ -278,10 +278,10 @@ it. The days are read live from the save as it stands and the story's year, neve
   under it ("Played today: …"). Her birthday or her anniversary said by its occasion isn't said twice.
 - **Night ›** opens the spouse's Night visits when a birthday or anniversary visit is available. The daytime occasion
   and the night visit have separate costs and receipts.
-- **Wedding planner.** After accepting the confession, open **Pick a wedding day** on the relationship stage card or
-  her profile. Choose a future date and save it. Move or clear it from the same calendar. The proposal and ceremony's
-  usual requirements still apply. The booking panel marks the other scheduled events on the selected date. A missed
-  plan stays visible until the ceremony or a new choice.
+- **Wedding planner.** After accepting the proposal, choose **Schedule wedding** on the stage card or her profile.
+  If you set a date, the ceremony can play on or after it. You can move or clear the date. With no date selected,
+  the ceremony opens the day after the proposal. Dates saved before the proposal by older versions are cleared at
+  engagement. The day panel also shows other events on the selected date.
 
 **A day holds:**
 
@@ -293,7 +293,7 @@ it. The days are read live from the save as it stands and the story's year, neve
 | Her occasion scenes | New Year's from the second year, each festival's day and its night, her birthday, her anniversary, the story's days | Her route's scene for it, else the default story's for three of them ([occasion scenes](#occasion-scenes)) |
 | Birthdays | Each met Uma's balanced farm birthday | The full launch cast's spread across all four seasons ([birthdays](#birthdays-and-anniversaries)) |
 | Anniversaries | Each spouse's wedding day of the year, from the second year | Her wedding's day |
-| Weddings and celebrations | A planned or held wedding, each five-marriage celebration and the Greater Festival | The save |
+| Weddings and celebrations | A scheduled or held wedding, each five-marriage celebration and the Greater Festival | The save |
 | Expedition trips | Departure and return dates from active and recently logged trips | The expedition post |
 | Event actions | New Year's from the second year, a festival, each met Uma's birthday | [The day's budget](#a-day-ten-actions) |
 
@@ -3616,7 +3616,7 @@ occasion** either: her birthday, a festival's day and night and the story's days
   Café today", "At the Bakery, at work today", "At home · out Spring 7" with her next day out, "On the farm" for a
   spouse in her room, "On the farm today" for a farmhand on her farm day, "At the Café, most days" for a keeper, "In
   town"), and **Met** for
-  anyone you’ve met. **Find by name** handles case and accents. **Relationship** puts closer Umas first. **Name** is alphabetical. A tap goes to her: to her place and her menu when she's out, else her
+  anyone you’ve met. **Find by name** handles case and accents. **Relationship** puts closer Umas first. **Name** is alphabetical. Use **Married**, **Romance**, **Hands** or **Met** to narrow the list while searching. **Met** shows acquaintances and friends who have not joined the crew. A tap goes to her: to her place and her menu when she's out, else her
   menu ("At home today").
 - **Lean:** faces load as they scroll into view.
 

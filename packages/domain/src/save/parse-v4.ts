@@ -177,6 +177,7 @@ function parseLove(value: unknown, path: string, clock: FarmClock, houses: numbe
     if (stage !== 'wedding' && stage !== 'spouse') fail(`${path}.ring`, 'only from the proposal on')
     love.ring = int(o.ring, `${path}.ring`, 1, 10)
   }
+  // Keep reading legacy pre-proposal plans. The proposal clears them before the wedding can be scheduled.
   if (o.weddingDay !== undefined) {
     if (stage !== 'romance' && stage !== 'proposal' && stage !== 'wedding') fail(`${path}.weddingDay`, 'only after confession and before marriage')
     love.weddingDay = day(o.weddingDay, `${path}.weddingDay`)

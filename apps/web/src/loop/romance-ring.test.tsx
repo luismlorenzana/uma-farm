@@ -239,6 +239,7 @@ describe('the proposal', () => {
     expect($$('[data-opens] li').map((l) => l.textContent)).toEqual([
       '· Your wedding: tomorrow, whenever you’re ready', '· Her ring: Iron Ring · +3% at the Fields once you’re married', '· A better ring any day, from her profile',
     ])
+    expect($('[data-action="plan-wedding"]')?.textContent).toContain('Schedule wedding')
     await click($('[data-action="continue"]'))
     await until(() => !$('[data-event-player]'))
   })

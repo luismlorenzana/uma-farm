@@ -14,8 +14,9 @@ import { eventOf, householdOf, storyDaysOf } from '../story/placeholders'
 import { professionShift, WEEKDAYS } from '../town/professions'
 import { innResidents } from '../town/town'
 import { playEvent } from './events'
-import { birthdaysOf, dayOfYear } from './days'
+import { birthdaysOf, dayOfYear, NO_BIRTHDAYS } from './days'
 import { planWedding } from './wedding'
+import { calendarDay } from './calendar-days'
 import { readiness } from './ready'
 import { LAUNCH_CAST } from '../story/launch'
 import { spendDuoEvening } from './evening'
@@ -75,25 +76,36 @@ describe('marriages and the festival calendar', () => {
     for (const [id, date] of launch) expect(expanded.get(id)).toBe(date)
   })
 
-  it('keeps an early wedding plan through the proposal, opens on the date, and stores the real ceremony date', async () => {
+  it('books a wedding only after the proposal and clears legacy dates picked during romance', async () => {
     const base = newFarm()
-    expect(() => planWedding(base, a, 53)).toThrow('after the confession')
+    expect(() => planWedding(base, a, 53)).toThrow('after the proposal')
     const accepted = { ...base, love: { ...base.love, [a]: { ...base.love[a]!, stage: 'romance' as const } } }
-    const planned = planWedding(accepted, a, 53)
-    expect(parseSaveV6(planned).love[a]?.weddingDay).toBe(53)
-    expect(planWedding(planned, a, null).love[a]?.weddingDay).toBeUndefined()
-    const proposal = moveDay({ ...planned, love: { ...planned.love, [a]: { ...planned.love[a]!, stage: 'proposal', level: 10 } } }, 50)
+    expect(() => planWedding(accepted, a, 53)).toThrow('after the proposal')
+    const legacy = parseSaveV6({ ...accepted, love: { ...accepted.love, [a]: { ...accepted.love[a]!, weddingDay: 53 } } })
+    const days = { festivals: FESTIVALS, birthdays: NO_BIRTHDAYS }
+    expect(calendarDay(legacy, pack, days, 53).weddings).not.toContain(a)
+    expect(readiness(moveDay(legacy, 53), pack, a)).toMatchObject({ rung: 'r1', ready: false })
+    const proposal = moveDay({ ...legacy, love: { ...legacy.love, [a]: { ...legacy.love[a]!, stage: 'proposal', level: 10 } } }, 50)
+    expect(() => planWedding(proposal, a, 53)).toThrow('after the proposal')
+    expect(readiness(proposal, pack, a).waits).toEqual({ kind: 'ring' })
     const event = await eventOf(pack, a, 'proposal')
     const paid = playEvent({ ...proposal, items: addGoods(proposal.items, 'ring-g3', 1, 1) }, pack, a, {
       event, picks: event.steps.flatMap(step => 'choice' in step ? [0] : []), plays: [], ring: 'ring-g3',
     })
     const engaged = paid.save
-    expect(engaged.love[a]?.weddingDay).toBe(53)
-    expect(readiness(moveDay(engaged, 52), pack, a).waits).toEqual({ kind: 'wedding-day', day: 53 })
-    expect(readiness(moveDay(engaged, 53), pack, a).ready).toBe(true)
-    const married = await wed(moveDay(engaged, 54), a)
+    expect(engaged.love[a]).toMatchObject({ stage: 'wedding', ring: 3 })
+    expect(engaged.love[a]?.weddingDay).toBeUndefined()
+    expect(readiness(moveDay(engaged, 51), pack, a).ready).toBe(true)
+    const scheduled = planWedding(engaged, a, 53)
+    expect(parseSaveV6(scheduled).love[a]?.weddingDay).toBe(53)
+    expect(planWedding(scheduled, a, null).love[a]?.weddingDay).toBeUndefined()
+    expect(calendarDay(scheduled, pack, days, 53).weddings).toContain(a)
+    expect(readiness(moveDay(scheduled, 52), pack, a).waits).toEqual({ kind: 'wedding-day', day: 53 })
+    expect(readiness(moveDay(scheduled, 53), pack, a).ready).toBe(true)
+    const married = await wed(moveDay(scheduled, 54), a)
     expect(parseSaveV6(married).love[a]?.wed).toBe(54)
     expect(married.love[a]?.weddingDay).toBeUndefined()
+    expect(calendarDay(married, pack, days, 54).weddings).toContain(a)
     expect(anniversaryOffer(moveDay(married, 53 + DAYS_PER_YEAR), a)).toBeNull()
     expect(anniversaryOffer(moveDay(married, 54 + DAYS_PER_YEAR), a)).toBe(1)
   })

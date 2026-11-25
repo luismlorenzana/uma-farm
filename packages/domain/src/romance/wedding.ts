@@ -22,12 +22,12 @@ import { castOrder, type StoryPack } from '../story/pack'
 import { homeOrHoused } from './perk-terms'
 
 export const canPlanWedding = (love: Love | undefined): boolean =>
-  love?.stage === 'romance' || love?.stage === 'proposal' || love?.stage === 'wedding'
+  love?.stage === 'wedding'
 
 /** Save or clear a plan. The proposal and ceremony still play through their usual rules. */
 export function planWedding(save: SaveV4, id: string, day: number | null): SaveV4 {
   const love = save.love[id]
-  if (!save.roster[id] || !love || !canPlanWedding(love)) throw new SaveRuleError('not-ready', 'Plan a date after the confession.')
+  if (!save.roster[id] || !love || !canPlanWedding(love)) throw new SaveRuleError('not-ready', 'Plan the wedding after the proposal is accepted.')
   if (day !== null && (!Number.isSafeInteger(day) || day <= save.calendar.day)) {
     throw new SaveRuleError('bad-count', 'Pick a future farm day.')
   }

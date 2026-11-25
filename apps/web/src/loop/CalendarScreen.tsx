@@ -303,13 +303,14 @@ function WeddingPlanner({ save, date, id, nameOf }: { save: FarmSave; date: Cale
     finally { setBusy(false) }
   }
   return <section className="my-2 space-y-1.5 rounded-md border border-hairline bg-sunken/40 p-2" aria-label="Wedding planner" data-wedding-planner>
-    <p className="font-semibold">{nameOf(id)} · Wedding plan</p>
+    <p className="font-semibold">{nameOf(id)} · Wedding date</p>
     {planned && <p className="text-[13px] text-ink-soft" data-planned-date>{shortDate(planned, save.calendar)} · Year {dateOf(planned, save.calendar).year}</p>}
-    <p className="text-[12px] text-ink-soft">{save.love[id]?.stage === 'wedding' ? 'The ceremony opens on the planned day.' : 'Finish the proposal to hold the ceremony.'}</p>
+    <p className="text-[12px] text-ink-soft">{planned ? 'The ceremony can play on or after the saved date. You can move or clear it here.'
+      : 'Pick a day or leave it open. The ceremony can play from the day after the proposal.'}</p>
     {conflicts.length > 0 && <p className="text-[12px] text-warning" data-wedding-conflicts>Also that day · {conflicts.join(' · ')}</p>}
     <div className="flex flex-wrap gap-1">
       <Button disabled={busy || day <= save.calendar.day || day === planned} onClick={() => void setDay(day)} data-action="save-wedding-date">
-        {day === planned ? 'Date saved' : 'Save this date'}
+        {day === planned ? 'Date saved' : 'Schedule this date'}
       </Button>
       {planned && <Button variant="secondary" disabled={busy} onClick={() => void setDay(null)}>Clear</Button>}
     </div>

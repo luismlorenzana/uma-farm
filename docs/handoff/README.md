@@ -24,7 +24,7 @@ screen and give examples for the farm’s main systems. Uma books open to Relati
 upcoming dates that open the calendar, and relationship ranking on the shelves.
 
 Birthday and anniversary nights use the shared formal wardrobe. The calendar carries the evenly spread birthdays,
-travel and crew schedules, and wedding dates chosen after confession. The [approved expression
+travel and crew schedules, and wedding dates chosen after the proposal. The [approved expression
 packet](../design/her-look.md#approved-expression-authoring-packet) covers each face and the review steps for numbered looks.
 
 **Farm Duo story sync** (F105) uses the approved story roster by default, preserves explicit custom lists, and gives

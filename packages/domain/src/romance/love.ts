@@ -87,7 +87,11 @@ export function advance(love: Love, day: number): Love {
     case 'friendship': return love.level >= 9 ? { ...next, stage: 'confession', level: 10 } : { ...next, level: love.level + 1 }
     case 'confession': return { ...next, stage: 'romance', level: 0 }
     case 'romance': return love.level >= 9 ? { ...next, stage: 'proposal', level: 10 } : counted(love.level + 1)
-    case 'proposal': return { ...next, stage: 'wedding', level: 10 }
+    case 'proposal': {
+      // Older saves could pick a date during romance. Start the engagement without that booking.
+      const { weddingDay: _, ...engaged } = next
+      return { ...engaged, stage: 'wedding', level: 10 }
+    }
     case 'wedding': {
       const { weddingDay: _, ...married } = next
       return { ...married, stage: 'spouse', level: 0, wed: day }
