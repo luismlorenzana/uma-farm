@@ -173,7 +173,7 @@ export default function RoomDepth({ place, phase, roomNumber, expanded, cast, op
             const half = HIT_WIDTH / (2 * width)
             if (point.x >= half && point.x <= 1 - half && point.y >= HIT_HEIGHT / height && point.y <= 1) targets.set(id, point)
           })
-          const desk = hasService && serviceMark(stage.screenPoint(room.service), targets, width, height)
+          const desk = hasService ? serviceMark(stage.screenPoint(room.service), targets, width, height) : null
           setServicePoint(old => old && desk && Math.abs(old.x - desk.x) < .001 && Math.abs(old.y - desk.y) < .001 ? old : desk ?? null)
           setPoints(previous => previous && previous.size === targets.size && [...targets].every(([id, point]) => {
             const old = previous.get(id)
