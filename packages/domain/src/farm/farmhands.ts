@@ -674,7 +674,7 @@ function toolForWork(save: FarmSave, task: FarmTask): ToolId | undefined {
   }
 }
 
-export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 'today' | 'farm'>, talentOf: TalentOf, story: PerkPack | null): HandsTonight {
+export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 'today' | 'farm'>, talentOf: TalentOf, story: PerkPack | null, previewBookings?: ReadonlySet<string>): HandsTonight {
   if (save.today.crew) return crewWithBookings(save, save.today.crew)
   let next = save
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
@@ -694,7 +694,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   for (const [id, orders] of rosterTasks) {
     const hand = handDay(day, id) ?? handDay(save, id)!
     // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
-    const festival = festivalBooked(save, id) ? 1 : 0
+    const festival = festivalBooked(save, id) || previewBookings?.has(id) ? 1 : 0
     const helper = save.today.forgeHelper?.id === id ? save.today.forgeHelper : undefined
     let left = Math.max(0, hand.actions - hand.kitchen - (hand.restaurant ?? 0) - festival - (helper ? 1 : 0))
     if (helper) next = countChallenge(next, id, 'forging', { kind: 'forge-piece', tier: helper.tier })

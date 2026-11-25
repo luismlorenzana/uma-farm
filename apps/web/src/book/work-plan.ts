@@ -4,16 +4,29 @@ import {
 } from '@farm/domain'
 import { taskWords } from './board-words'
 
-export function forecastCrewOn(save: FarmSave, day: number, pack: StoryPack | null, talents: TalentOf) {
+export function forecastCrewOn(save: FarmSave, day: number, pack: StoryPack | null, talents: TalentOf, previewBookings?: ReadonlySet<string>) {
   const snapshot = day === save.calendar.day ? save : deliverForge({
     ...save, calendar: { ...save.calendar, day }, today: newTodayV4(),
     fields: { plots: save.fields.plots.map(plot => ({ ...plot, tiles: plot.tiles.map(tile => ({ ...tile, watered: false })) })) },
     ranch: { ...save.ranch, animals: save.ranch.animals.map(animal => ({ ...animal, fed: false, cared: false })) },
     farm: { ...save.farm, pantry: save.farm.pantry.filter(lot => day - lot.day < MEAL_KEEPS) },
   })
-  const forecast = handsTonight(snapshot, snapshot, talents, pack)
+  const forecast = handsTonight(snapshot, snapshot, talents, pack, previewBookings)
   const needs = workNeeds(forecast.save, pack, true)
   return { ...forecast, snapshot, needs }
+}
+
+export function droppedOrders(before: HandsTonight, after: HandsTonight): { key: string; actions: number }[] {
+  const tally = (shift: HandsTonight) => {
+    const counts = new Map<string, number>()
+    for (const row of shift.jobs ?? []) counts.set(row.key, (counts.get(row.key) ?? 0) + row.actions)
+    return counts
+  }
+  const actual = tally(after)
+  return [...tally(before)].flatMap(([key, count]) => {
+    const actions = count - (actual.get(key) ?? 0)
+    return actions > 0 ? [{ key, actions }] : []
+  })
 }
 
 export type JobPreset = { key: string; task: FarmTask; label: string }

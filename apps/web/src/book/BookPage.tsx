@@ -79,6 +79,10 @@ function Book({ save }: { save: FarmSave }) {
         </GuideButton>
       </div>
       {!workOnly && <Money save={save} />}
+      {!workOnly && (save.eventJournal?.results?.length ?? 0) > 0 && <Link to="/book?sheet=events&eventView=results" state={{ back: true }}
+        className="flex min-h-11 items-center justify-between rounded-md border border-hairline bg-panel px-3 text-[13px] font-semibold">
+        Festival prizes <span>{gold(save.eventJournal!.results!.reduce((sum, row) => sum + row.gold, 0))} ›</span>
+      </Link>}
       <WorkBoard save={save} />
       {new URLSearchParams(location.search).has('workCalendar') && <Suspense fallback={null}><WorkCalendar save={save} /></Suspense>}
       {!workOnly && <ul className="grid gap-2 @lg:grid-cols-2 @3xl:grid-cols-3" data-book-cards>

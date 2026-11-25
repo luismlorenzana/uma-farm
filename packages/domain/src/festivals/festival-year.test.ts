@@ -31,7 +31,7 @@ import { activeContest, CONTESTS, type CupCategory } from './state'
 const AT = '2026-11-19T12:00:00.000Z'
 const ROTATION: Record<Season, CropId> = { spring: 'carrot', summer: 'tomato', autumn: 'wheat', winter: 'oats' }
 const TILES = START_CLEAR.slice(0, 7)
-type Crew = 0 | 10 | 20 | 50
+type Crew = 0 | 10 | 20 | 30 | 50
 const roundTrip = (save: FarmSave) => parseSaveV6(JSON.parse(JSON.stringify(save)))
 
 function setup(size: Crew) {
@@ -192,7 +192,7 @@ function cupYear(save: FarmSave, ids: string[], context: ContestContext) {
 }
 
 describe('a year of farm contests through normal farm actions', () => {
-  it.each([0, 10, 20, 50] as const)('plays all four contests with %i Umas', async (size) => {
+  it.each([0, 10, 20, 30, 50] as const)('plays all four contests with %i Umas', async (size) => {
     const { save: initial, ids, story } = setup(size)
     const context = { days: GAME_DAYS, story, talentOf: talentsD }
     let save = initial
@@ -244,7 +244,8 @@ describe('a year of farm contests through normal farm actions', () => {
         const card = festivalResult(save, event)!
         expect(card.place).not.toBeNull()
         expect(save.gold - before.gold).toBe(card.gold)
-        expect(save.today.eventActions - before.today.eventActions).toBe(3)
+        expect(save.today.eventFunding?.contest).toBe(3)
+        expect(save.eventJournal?.results?.at(-1)).toMatchObject({ day: card.day, id: event, gold: card.gold, score: card.score })
         const activity = event === 'flower-show' ? 'farming' : event === 'animal-show' ? 'ranch' : 'fishing'
         for (const id of ids) {
           expect(save.roster[id]!.ranks[activity].challenge - before.roster[id]!.ranks[activity].challenge).toBe(card.credit.includes(id) ? 1 : 0)

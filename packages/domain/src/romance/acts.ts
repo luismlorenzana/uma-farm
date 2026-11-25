@@ -10,7 +10,8 @@
 //
 // Loaded with the romance's screens and the night.
 import { recordLibrary } from '../library/receipts'
-import { spend } from '../farm/actions'
+import { actionCost, GAME_DAYS, spend, spendForEvent } from '../farm/actions'
+import { dateOf } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import type { Taste } from './chats'
 import type { FestivalId } from '../farm/calendar'
@@ -122,6 +123,16 @@ export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<
   return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day, save.calendar))
 }
 
+export const BIRTHDAY_CELEBRATION_POINTS = 25
+
+export function celebrateBirthday(save: SaveV4, id: string): LovePaid {
+  const year = dateOf(save.calendar.day, save.calendar).year
+  if (save.eventJournal?.birthdays?.[id] === year) return { save, paid: 0 }
+  const paid = addLove(save, id, BIRTHDAY_CELEBRATION_POINTS, 'birthday')
+  return { ...paid, save: { ...paid.save, eventJournal: { ...paid.save.eventJournal,
+    birthdays: { ...paid.save.eventJournal?.birthdays, [id]: year } } } }
+}
+
 /** A gift: one action, and one good (or a dish) from the Warehouse at the stars you choose, once a day each, on the farm or in town.
  * Her town record keeps the day. Seeds aren't gifts. Her taste (`tasteOf`) sets the points; the good's taste is learnt. Disliked pays 0, never a loss. */
 export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string, item: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): LovePaid & { taste: Taste } {
@@ -132,10 +143,15 @@ export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string
   const items = takeGoods(save.items, item, stars, 1)
   const taste = tasteOf(pack, id, item)
   const learnt: Love = love.known.includes(item) ? love : { ...love, known: [...love.known, item] }
-  const spent = markDay(spend(save, 'gift'), id, 'gift')
+  const birthday = isBirthday(birthdays, id, save.calendar.day, save.calendar)
+  const action = birthday && save.today.eventFunding
+    ? spendForEvent(save, actionCost('gift'), { ...GAME_DAYS, birthdays }, `birthday:${id}`)
+    : spend(save, 'gift')
+  const spent = markDay(action, id, 'gift')
   const given: SaveV4 = { ...spent, items, today: { ...spent.today, gifts: [...spent.today.gifts, id] }, love: { ...spent.love, [id]: learnt } }
-  const paid = addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day, save.calendar))
-  return { ...paid, save: learnt === love || taste === 'neutral' ? paid.save : recordLibrary(paid.save, id, `fact:gift:${item}`), taste }
+  const paid = addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', birthday)
+  const extra = birthday && save.today.eventFunding ? celebrateBirthday(paid.save, id) : { save: paid.save, paid: 0 }
+  return { paid: paid.paid + extra.paid, save: learnt === love || taste === 'neutral' ? extra.save : recordLibrary(extra.save, id, `fact:gift:${item}`), taste }
 }
 
 // --- Praise -----------------------------------------------------------------------------------------------

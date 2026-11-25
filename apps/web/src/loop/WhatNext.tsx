@@ -3,7 +3,7 @@ import {
   BUILD_PLACES, EXPEDITION_REGIONS, farmPlace, farmRankOf, farmRankOpens, FARM_RANK_POINTS, FIELD_PLOTS,
   creditLeft, buildOrders, pinSupplyProject, RING_DEPOSIT, STANDARD_RING_COST, heldRings, KITCHEN_LEVELS, nextFarmRank, placeBuilt, plotLock, plotLockWords, plotName, readiness,
   animalLock, extensionCost, handsTonight, houseOpensWords, HOUSE_COSTS, nextLot, readyTiles, roomsInAll, rungName, STATION_LEVELS, STATIONS, umaMilestones, workKey,
-  eatTonight, festivalsOf, payTownOrders, knownRestaurantRecipes, longGameEnabled, NIGHT_VISITS, nightVisits, setCrewSupplyGoal, settleAccounts,
+  eatTonight, festivalsOf, NO_BIRTHDAYS, payTownOrders, knownRestaurantRecipes, longGameEnabled, NIGHT_VISITS, nightVisits, setCrewSupplyGoal, settleAccounts,
   supplyGoals, supplySource, type SupplyGoal,
   type BuildPlace, type BuildNeed, type FarmSave, type FarmPlaceId,
 } from '@farm/domain'
@@ -12,7 +12,8 @@ import { Link } from 'react-router'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
-import { useStory } from '../story/story'
+import { useSpecialDays, useStory } from '../story/story'
+import { FestivalNotice } from './EventAgenda'
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { placeLink } from './farm-map'
@@ -464,6 +465,8 @@ function FarmPath({ save }: { save: FarmSave }) {
 }
 
 export default function WhatNext({ onClose }: { onClose: () => void }) {
+  const story = useStory()
+  const days = useSpecialDays() ?? { festivals: festivalsOf(story), birthdays: NO_BIRTHDAYS }
   const save = useLoopSave()
   const [view, setView] = useState<'today' | 'ranch' | 'path'>('today')
   const top = useRef<HTMLDivElement>(null)
@@ -475,6 +478,7 @@ export default function WhatNext({ onClose }: { onClose: () => void }) {
   return <Sheet open onClose={onClose} size="wide" title="What Next?" label="What Next?" >
     <div ref={top} className="space-y-3 pb-2">
       {view === 'today' ? <>
+        <FestivalNotice save={save} days={days} story={story} within={7} dismissible />
         <Focus save={save} />
         <div className="flex flex-wrap gap-1" role="group" aria-label="Farm guides">
           <Button size="md" variant="secondary" onClick={() => go('ranch')}>Ranch &amp; homes</Button>

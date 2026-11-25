@@ -468,6 +468,7 @@ export interface TodayV4 {
   actions: number
   /** A special day's event actions spent: only events spend them. */
   eventActions: number
+  eventFunding?: { contest?: number; newYear?: number; festival?: number; social?: number; birthdays?: CharacterId[] }
   /** Gone into town today: the town and its shop are open for the rest of the day. */
   town: boolean
   /** The forest areas and fishing spots worked today, each once, in order: the Diary's depth milestones read them at
@@ -737,6 +738,7 @@ export interface SaveV6 {
   /** Dated receipts for the Library. Older v5 saves read their existing route and art evidence directly. */
   library?: Record<CharacterId, import('../library/receipts').LibraryReceipts>
   longGame?: import('./long-game').LongGame
+  eventJournal?: import('../festivals/journal').EventJournal
   summary: MorningSummary | null
   /** You and each Uma, by character: her talks so far, the last day you talked and the last you gave her a gift. An
    * older v4 has none. */

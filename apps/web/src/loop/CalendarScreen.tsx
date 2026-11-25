@@ -12,15 +12,15 @@
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import { byRelationship } from './relationship-order'
 import {
-  actionCost, actionsLeft, canPlanWedding, canSpendForEvent, celebrationDate, celebrationTitle, CONTEST_ID, dateDayOf, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
-  householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, NIGHT_VISITS, nightVisits, planWedding, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
+  actionCost, actionsLeft, agendaLink, canPlanWedding, canSpendForEvent, celebrationDate, celebrationTitle, CONTEST_ID, dateDayOf, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
+  householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, NIGHT_VISITS, nightVisits, occasionFund, planWedding, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, ChevronLeftIcon, ChevronRightIcon, CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import { GuideButton } from '../guide/Guide'
 import { useMaster } from '../master/master'
@@ -39,6 +39,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   const special = useSpecialDays()
   const master = useMaster()
   const location = useLocation()
+  const navigate = useNavigate()
   const query = new URLSearchParams(location.search)
   const request = query.get('weddingPlan')
   const planner = request && canPlanWedding(save?.love[request]) ? request : null
@@ -73,7 +74,11 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
   if (!save) return null
   const nameOf = namer(master.status === 'ready' ? master.view : null, story)
   const chosen = list.find((d): d is CalendarDay => d.day !== null && d.day === selected)!
-  const chooseDay = (day: number) => { setBrowsingPage(null); setPicked(day) }
+  const chooseDay = (day: number) => {
+    setBrowsingPage(null)
+    setPicked(day)
+    navigate(withParam(location, 'calendarDay', day === today ? null : String(day)), { replace: true, state: location.state })
+  }
   const pick = (s: Season, y = year) => {
     const now = dateOf(today, save.calendar)
     chooseDay(s === now.season && y === now.year ? today : farmDay({ year: y, season: s, day: 1 }, save.calendar))
@@ -227,6 +232,8 @@ function DayPanel({ save, pack, days, day, nameOf, planner, focus, previous, nex
       </div>
       <div key={day.day} className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-3 pb-3" data-day-scroll>
       {planner && <WeddingPlanner save={save} date={day} id={planner} nameOf={nameOf} />}
+      {(day.festival || day.newYear && day.date.year > 1 || day.faces.some(face => face.reasons.some(reason => reason !== 'ready')) || day.celebrations.length > 0) &&
+        <Link className="flex min-h-11 items-center font-semibold text-accent" to={agendaLink(day.day)} state={{ back: true }} data-calendar-agenda>Event details ›</Link>}
       {events && <div className="space-y-0.5 pt-1">
         <p className="flex items-center gap-1 text-[13px] font-semibold text-[#c2385e]" data-day-events><HeartIcon size={14} />{events}</p>
         {day.when === 'today' && <p className="text-[12px] text-ink-soft">Scenes and contests spend bonus actions first, then regular actions.</p>}
@@ -369,8 +376,11 @@ function FaceRow({ face, day, save, days, name, focused }: {
   const next = face.occasions[0] ?? null
   const now = day.when === 'today'
   const cost = actionCost('event')
-  const can = canSpendForEvent(save, cost, days)
-  const funding = eventActionsLeft(save, days) >= cost ? 'bonus' : 'regular'
+  const fund = next ? occasionFund(next, face.id, days) : undefined
+  const can = canSpendForEvent(save, cost, days, fund)
+  const canReady = canSpendForEvent(save, cost, days)
+  const funding = (!save.today.eventFunding || fund) && eventActionsLeft(save, days, fund) >= cost ? 'bonus' : 'regular'
+  const readyFunding = !save.today.eventFunding && eventActionsLeft(save, days) >= cost ? 'bonus' : 'regular'
   const canVisit = now && face.night && nightVisits(save).length < NIGHT_VISITS
   return (
     <li className={`flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 py-1 ${focused ? 'rounded-sm bg-accent/10 px-1' : ''}`}
@@ -390,9 +400,9 @@ function FaceRow({ face, day, save, days, name, focused }: {
           ? <Link to={withParam(location, 'occasion', face.id)} state={{ back: true }} aria-label={`Play ${next?.name ?? 'the occasion'} with ${name} · 1 ${funding} action`} data-action="play-occasion" data-occasion={next?.id} data-funding={funding}
             className="grid min-h-11 shrink-0 place-items-center rounded-sm bg-[#c2385e] px-2.5 text-[13px] font-bold text-white">Play · {funding === 'bonus' ? '♥1' : '1'}</Link>
           : <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
-        {face.reasons.includes('ready') && (can
-          ? <Link to={withParam(location, 'event', face.id)} state={{ back: true }} aria-label={`Play ${name}’s event · 1 ${funding} action`} data-action="play-event" data-funding={funding}
-            className="grid min-h-11 shrink-0 place-items-center rounded-sm border-2 border-[#c2385e] px-2 text-[13px] font-bold text-[#c2385e]">Event · {funding === 'bonus' ? '♥1' : '1'}</Link>
+        {face.reasons.includes('ready') && (canReady
+          ? <Link to={withParam(location, 'event', face.id)} state={{ back: true }} aria-label={`Play ${name}’s event · 1 ${readyFunding} action`} data-action="play-event" data-funding={readyFunding}
+            className="grid min-h-11 shrink-0 place-items-center rounded-sm border-2 border-[#c2385e] px-2 text-[13px] font-bold text-[#c2385e]">Event · {readyFunding === 'bonus' ? '♥1' : '1'}</Link>
           : !next && <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
         {canVisit && <Link to={`/?visits=${face.id}`} state={{ back: true }} aria-label={`Night visits with ${name}`}
           className="grid min-h-11 shrink-0 place-items-center rounded-sm border border-hairline-strong px-2 text-[13px] font-bold text-accent">Night ›</Link>}

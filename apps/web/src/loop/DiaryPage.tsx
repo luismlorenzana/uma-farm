@@ -5,7 +5,7 @@
 // offers; and the milestones with the Umas, each with how far along you are. Below, the Farm Rank (opening its sheet)
 // and the milestones paid so far; each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations**
 // (loaded apart). Loaded on demand.
-import { buildCostWords, buildLockWords, CONTESTS, diaryEntries, farmProjects, festivalNameOf, festivalResult, festivalsOf, type BuildPlace, type FarmSave, type Project } from '@farm/domain'
+import { agendaLink, buildCostWords, buildLockWords, CONTESTS, diaryEntries, farmProjects, festivalNameOf, festivalResult, festivalsOf, type BuildPlace, type FarmSave, type Project } from '@farm/domain'
 import { Panel } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
 import { lazy, Suspense } from 'react'
@@ -39,6 +39,7 @@ export default function DiaryPage() {
       {/* Its panels sit in two columns where they fit. */}
       <div className="space-y-3 @xl:columns-2 @xl:gap-3 [&>*]:break-inside-avoid">
         <WorldPages save={save} />
+        <Link to={agendaLink(undefined, '/diary') + '&eventView=results'} state={{ back: true }} className="flex min-h-11 items-center rounded-md border border-hairline bg-panel px-3 font-semibold text-accent">Festival seasons &amp; ribbons ›</Link>
         <Projects save={save} />
         <Link to="/diary?sheet=rank" className="flex min-h-11 items-center justify-between rounded-md border border-hairline bg-panel px-3 text-[15px]" data-rank-link>
           <span className="font-semibold">Farm Rank</span>

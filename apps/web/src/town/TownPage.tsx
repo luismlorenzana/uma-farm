@@ -1,7 +1,7 @@
 // The illustrated town and its People list. Walking and entering town are free.
 // Doors open a distinct destination with its services and the people on site.
 // Town conversations, shop sheets and authored location links use the same URL and story pack.
-import { CAST, HARBOUR_INN, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
+import { agendaLink, CAST, festivalOn, festivalsOf, HARBOUR_INN, districtOf, placeBuilt, placeNameOf, publicTownPlace, TOWN_DISTRICTS, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, Tabs } from '@luismlorenzana/uma-kit/ui'
 import { PEOPLE_FILTERS, peopleFilters, type PeopleFilter } from '../loop/people-filters'
@@ -108,6 +108,7 @@ function About() {
 }
 
 function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; master: MasterView; view: View }) {
+  const festival = festivalOn(save.calendar.day, festivalsOf(pack), save.calendar)
   const [params] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
@@ -141,6 +142,7 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
             <div className="flex min-h-11 shrink-0 items-center gap-2">
               <button type="button" onClick={() => goDistrict(district?.id ?? null)} className="min-h-11 rounded-md border border-hairline px-2 text-xs font-semibold" data-town-district-back>‹ {district?.label ?? 'Town map'}</button>
               <h2 className="font-display min-w-0 flex-1 truncate text-lg font-bold" data-place-name>{here.loc.name}</h2>
+              {festival && <Link to={agendaLink(save.calendar.day, '/town')} state={{ back: true }} className="min-h-11 inline-flex items-center px-1 text-sm font-semibold text-accent" data-town-festival>🏆 {festival.name}</Link>}
               <button type="button" onClick={() => goDistrict(null)} className="min-h-11 px-2 text-xs font-semibold" data-town-overview>All town</button>
             </div>
             <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,2.9fr)_minmax(150px,1fr)] gap-2" data-town-destination={here.loc.id} data-place-kind={room ? 'interior' : 'outdoor'}>
@@ -149,7 +151,11 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
                 open={id => open(id)} />
               <Place key={here.loc.id} view={here} save={save} pack={pack} nameOf={nameOf} onOpen={id => open(id)} />
             </div>
-          </> : <TownMap district={district} views={views} onDistrict={goDistrict} onGo={go} />}
+          </> : <div className="relative h-full min-h-0">
+            <TownMap district={district} views={views} onDistrict={goDistrict} onGo={go} />
+            {festival && <Link to={agendaLink(save.calendar.day, '/town')} state={{ back: true }} data-town-festival
+              className="absolute bottom-2 right-2 inline-flex min-h-11 items-center rounded-md bg-panel px-2.5 text-sm font-semibold text-accent shadow-2">🏆 {festival.name} ›</Link>}
+          </div>}
         </div>
       )) : (
         <div className="h-full overflow-y-auto overscroll-contain px-4 pt-3 pb-6" hidden={Boolean(uma) || covered}>

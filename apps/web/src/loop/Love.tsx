@@ -55,6 +55,8 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const praise = canPraise(save, id)
   // A talk and a gift each take an action, with her in front of you.
   const out = actionsLeft(save) === 0 || !meet.here
+  const birthdayFund = save.today.eventFunding && isBirthday(birthdays, id, save.calendar.day, save.calendar)
+    && !save.today.eventFunding.birthdays?.includes(id)
   const chatBlocked = save.today.dayParts ? actionsLeft(save) === 0 || !!awayOn(save, id, save.calendar.day) : out
   const work = workBlock(save, id)
   const invite = farmInvitation(save, id)
@@ -89,7 +91,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
           }, fail)}>
           {talked ? 'Chat ✓' : 'Chat · 1'}
         </Button>
-        <Button variant="secondary" size="md" className="px-2!" disabled={gave || out} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift ✓' : 'Gift · 1'}</Button>
+        <Button variant="secondary" size="md" className="px-2!" disabled={gave || !meet.here || (out && !birthdayFund)} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift ✓' : 'Gift · 1'}</Button>
         {evening.open ? (
           <Link to={withParam(location, 'evening', id)} state={{ back: true }} data-action="evening"
             className="font-display inline-flex min-h-12 items-center justify-center gap-1 rounded-sm bg-[#c2385e] px-2 text-[15px] font-semibold tracking-tight text-white shadow-1">

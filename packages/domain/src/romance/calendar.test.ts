@@ -152,7 +152,7 @@ describe('occasion scenes', () => {
     expect(show.today.occasions).toBeUndefined()
     expect(parseSaveV6(json(show))).toEqual(show)
     const played = playOccasion(show, PACK, ONE, DAYS)
-    expect(runNight(played, { story: PACK }).today).toEqual(newTodayV4())
+    expect(runNight(played, { story: PACK }).today).toEqual({ ...newTodayV4(), eventFunding: {} })
   })
 })
 

@@ -2,6 +2,8 @@ import { recordLibrary } from '../library/receipts'
 import { availableDishes } from '../expeditions/stock'
 import { bookedForExpedition } from '../expeditions/presence'
 import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
+import { FESTIVAL_PLACE_POINTS } from '../farm/milestones'
+import { festivalEntryStock, recordFestivalReceipt } from './journal'
 import { dateDayOf, dateOf, festivalOn, turnOnDate } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
@@ -75,7 +77,7 @@ export function festivalEntryLock(save: FarmSave, id: FarmContest, days: Special
   if (last && dateOf(last.day, save.calendar).year === year || save.farm.festivals.some((r) => r.id === id && dateOf(r.day, save.calendar).year === year)) return 'Already entered this year.'
   if (CONTESTS.some((rule) => festivalResult(save, rule)?.day === day)) return 'Already entered a contest today.'
   if (activeContest(save) || save.workshops.current || save.workshops.restaurant?.shift) return 'A play is under way.'
-  if (!canSpendForEvent(save, FESTIVAL_ACTION_COST, days)) return 'Entering takes 3 actions.'
+  if (!canSpendForEvent(save, FESTIVAL_ACTION_COST, days, 'contest')) return 'Entering takes 3 actions.'
   return null
 }
 
@@ -101,6 +103,9 @@ function judge<S extends FarmSave>(save: S, id: FarmContest, entry: Omit<Contest
   const state = save.workshops.festival
   const { active: _active, ...rest } = state ?? {}
   let next = withFestival(save, { ...rest, last: { ...state?.last, [id]: card } })
+  next = recordFestivalReceipt(next, { id, day: entry.day, score: entry.score, place, gold,
+    points: place ? FESTIVAL_PLACE_POINTS[place] : 0, rivals: contestCutoffs(id, entry.rank),
+    stock: entry.exhibits.map(key => ({ key, count: 1 })), staff: [...new Set([...entry.staff, ...present, ...nominated])], credit })
   if (!place || entry.score === null) return next
   const key = `festival:${id}`
   next = earnGold({ ...next,
@@ -172,9 +177,10 @@ const sum = (values: readonly number[]) => values.reduce((total, n) => total + n
 
 export function enterFlower<S extends FarmSave>(save: S, key: string | null, grower: string | null, days: SpecialDays): S {
   requireOpen(festivalEntryLock(save, 'flower-show', days))
+  save = festivalEntryStock(save, 'flower-show')
   const entry = flowerPreview(save, key, grower, days)
   if (!entry?.valid) throw new SaveRuleError('bad-job', 'Choose an available crop and its grower.')
-  const spent = spendForEvent(save, FESTIVAL_ACTION_COST, days)
+  const spent = spendForEvent(save, FESTIVAL_ACTION_COST, days, 'contest')
   const items = key === null ? spent.items : takeGoods(spent.items, entry.id, entry.stars, 1)
   const { mark: _mark, box: _box, ...rest } = spent.workshops.festival ?? {}
   // Entering with Warehouse stock releases a different, unused boxed crop.
@@ -211,7 +217,7 @@ export function enterAnimal<S extends FarmSave>(save: S, animal: string, caretak
   if (new Set(play.cues).size === 1) play.cues[ANIMAL_TURNS - 1] = SHOW_CUES[(SHOW_CUES.indexOf(play.cues[0]!) + 1) % SHOW_CUES.length]!
   // Her opening cues are performed at entry. This transcript is already committed on reload.
   play.answers = play.cues.slice(0, auto).map(() => true)
-  return withFestival(spendForEvent(save, FESTIVAL_ACTION_COST, context.days), { ...save.workshops.festival, active: play })
+  return withFestival(spendForEvent(festivalEntryStock(save, play.id), FESTIVAL_ACTION_COST, context.days, 'contest'), { ...save.workshops.festival, active: play })
 }
 
 export function answerAnimal<S extends FarmSave>(save: S, slot: number, cue: ShowCue): S {
@@ -236,7 +242,7 @@ export function enterDerby<S extends FarmSave>(save: S, spot: FishingSpotId, cre
   }).map(({ by, q, skill, level, timing }) => ({ by, q, skill, level, timing }))
   const play: DerbyPlay = { id: 'fishing-derby', ...dayRank(save), seed: playSeed(save, 'fishing-derby'),
     spot, mode: save.farm.fishingModes?.[spot] ?? 'standard', casters, catches: [] }
-  return withFestival(spendForEvent(save, FESTIVAL_ACTION_COST, context.days), { ...save.workshops.festival, active: play })
+  return withFestival(spendForEvent(festivalEntryStock(save, play.id), FESTIVAL_ACTION_COST, context.days, 'contest'), { ...save.workshops.festival, active: play })
 }
 
 export const derbyMeet = (play: DerbyPlay, slot: number): number => castPlan((n) => seeded(play, 20 + n), 'evening').meets[slot]!
@@ -353,9 +359,10 @@ export function cupPreview(save: FarmSave, entries: readonly CupEntry[], story: 
 
 export function enterCup<S extends FarmSave>(save: S, entries: readonly CupEntry[], context: ContestContext): S {
   requireOpen(festivalEntryLock(save, 'harvest-cup', context.days))
+  save = festivalEntryStock(save, 'harvest-cup')
   const preview = cupPreview(save, entries, context.story)
   requireOpen(preview.block)
-  let next = spendForEvent(save, FESTIVAL_ACTION_COST, context.days)
+  let next = spendForEvent(save, FESTIVAL_ACTION_COST, context.days, 'contest')
   for (const { key } of entries) {
     const at = parseStockKey(key)!
     next = { ...next, items: takeGoods(next.items, at.id, at.stars, 1) }

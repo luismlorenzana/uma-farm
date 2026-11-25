@@ -5,10 +5,11 @@
 // judging (the rivals at today's Farm Rank, the score's rule, an optional cook: none, or a farmhand with an action
 // tonight), then **Enter · 3**, which opens the stove (`?stove=1`). The festival's name is the story's (a moved or renamed
 // Contest). Loaded on demand with the Kitchen's sheet.
+import { FestivalImpact } from '../book/FestivalCrew'
 import { byRelationship } from './relationship-order'
 import {
   actionsLeft, aptitudeOf, APTITUDE_NAMES, boardRows, CONTEST_ACTIONS, contestBlock, contestBoard, contestDefault, contestMains, contestOn, contestResult, contestSides, cookLock,
-  dishName, entryStars, eventActionsLeft, FESTIVALS, GAME_DAYS, handDay, handsInOrder, ingredientName, knownRecipes, placeWords, PLAY_TIERS, recipeWords, stoveSeed,
+  dishName, entryStars, eventActionsLeft, festivalEntryStock, FESTIVALS, GAME_DAYS, handDay, handsInOrder, ingredientName, knownRecipes, placeWords, PLAY_TIERS, recipeWords, stoveSeed,
   type ContestBoard, type ContestEntry, type SaveV4,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -107,7 +108,8 @@ export default function ContestSheet() {
   return <Entry save={save} onClose={() => leave(withParam(location, 'sheet', null))} />
 }
 
-function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
+function Entry({ save: held, onClose }: { save: SaveV4; onClose: () => void }) {
+  const save = festivalEntryStock(held, 'cooking-contest')
   const pack = useStory()
   const year = useStoryYear() ?? FESTIVALS
   const days = useSpecialDays() ?? GAME_DAYS
@@ -223,11 +225,12 @@ function Entry({ save, onClose }: { save: SaveV4; onClose: () => void }) {
               </div>
               {hands.length === 0 && <p className="text-[12px] text-ink-faint">A farmhand with an action tonight can cook for you.</p>}
             </div>
+            {entry?.cook && <FestivalImpact save={held} crew={[entry.cook]} />}
             <Button className="w-full" disabled={busy || why !== null} onClick={() => void enter()} data-action="contest-start" data-why={why ?? undefined}>
               {`Enter · ${CONTEST_ACTIONS}`}
             </Button>
             <p className="text-[12px] text-ink-faint" data-contest-entry-why>
-              {why ?? `Seed ${stoveSeed(save)} · ${plural(eventActionsLeft(save, days), 'action')} for events, ${actionsLeft(save)} of the day’s left`}
+              {why ?? `Seed ${stoveSeed(save)} · ${plural(eventActionsLeft(save, days, 'contest'), 'action')} for events, ${actionsLeft(save)} of the day’s left`}
             </p>
           </section>
         </div></div>

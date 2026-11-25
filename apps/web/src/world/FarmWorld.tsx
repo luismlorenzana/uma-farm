@@ -1,5 +1,5 @@
 import {
-  atHome, currentDatePeriod, fieldCounts, residentsOf, townDay, type FarmSave, type StoryPack, type TalentOf,
+  agendaLink, atHome, currentDatePeriod, fieldCounts, festivalOn, festivalsOf, residentsOf, townDay, type FarmSave, type StoryPack, type TalentOf,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import type { MasterView } from '../master/master'
@@ -24,7 +24,8 @@ const lastFarmCamera: Partial<Record<FarmRegion,CameraPose>> = {}
 const BACK = { back:true }
 const CONTROL = 'flex min-h-11 items-center gap-2 rounded-md border border-hairline bg-panel px-2 text-sm font-semibold'
 
-function Overview({ save }: { save: FarmSave }) {
+function Overview({ save, pack }: { save: FarmSave; pack: StoryPack | null }) {
+  const festival = festivalOn(save.calendar.day, festivalsOf(pack), save.calendar)
   const residents = Object.keys(save.love).filter(id => atHome(save,id)).length
   const details = {
     farm: `${save.fields.plots.length} ${save.fields.plots.length === 1 ? 'plot' : 'plots'}`,
@@ -46,6 +47,7 @@ function Overview({ save }: { save: FarmSave }) {
       <Link to="/town" state={BACK} className="farm-world-hotspot farm-world-road" data-world-road>To town ›</Link>
     </div>
     <nav className="farm-world-shortcuts" aria-label="Farm destinations">
+      {festival && <Link to={agendaLink(save.calendar.day)} state={BACK} data-farm-festival>🏆 {festival.name}</Link>}
       {REGIONS.map(region => <Link key={region} to={regionUrl(region)} state={BACK}>{FARM_REGIONS[region].label}</Link>)}
       <Link to="/town" state={BACK}>Town</Link>
     </nav>
@@ -108,7 +110,7 @@ export function FarmWorld({ save, pack, master, talentOf, region, covered }: {
   const presence = useMemo(() => region ? farmPresence(save,pack,talentOf) : null,[save,pack,talentOf,region])
   const allTown = useMemo(() => pack ? townDay(save,pack) : null,[save,pack])
   const name = master && pack ? namer(master,pack) : (id:string) => master?.album.get(id)?.name ?? 'An Uma'
-  if (!region) return <Overview save={save} />
+  if (!region) return <Overview save={save} pack={pack} />
   const period = currentDatePeriod(save)
   const selected = entrances.find(entrance => entrance.id === params.get('door') && !entrance.locked && entrance.plate)
   const actor = params.get('farmUma')
