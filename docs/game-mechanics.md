@@ -571,9 +571,10 @@ The steps as the game lists them:
 
 #### The morning summary
 
-After every night a card opens over the farm map, titled with the date ("Morning · Spring 3"). It holds what the night
-brought in sections, in order; an empty section is hidden, and a card with nothing in it says "A quiet night." Every
-line is a tap to its place.
+After every night a card opens over the farm map, titled with the date ("Morning · Spring 3"). Live Uma events,
+invites, household scenes, festival entry links and personal occasions appear at the top alongside the remaining
+bonus event actions. A festival within two days gets a planning link. The collapsed **Farm report** holds the night's
+work, earnings, deliveries and relationship news. Each line opens its place.
 
 - **Start the day**, the close button or a drag down puts the card away for good.
 - **A tap on a line** opens its place and keeps the card, which comes back on the farm map once no quick look or sheet
@@ -1432,7 +1433,9 @@ farm's own goods, on uma-art's items atlas from 2.30.0.
 hearts. The second needs nine hearts, or seven if the collector has Animal care 6. The cap chooses the highest grade
 the animal and collector qualify for. The panel shows the grade waiting for manual collection. Stars still use
 fondness and worker quality. A **Feed only** assignment covers feed and grass for the silo and leaves collection
-and care for another worker.
+and care for another worker. With an empty silo and no weeds to cut, an automatic worker can spend one action at
+10g per ration to buy enough fodder for the animals still hungry today, up to the cash and silo room available.
+The purchase appears under **Fodder · crew** in the Ledger. Feeding uses the crew's usual actions afterward.
 
 <!-- live:animals -->
 | Animal | Lives in | At the rancher’s | Opens at | Gives, each night it’s fed | ★1 | ★5 (10 hearts) | At the Mill |
@@ -2967,7 +2970,7 @@ the places pay gold and Farm Rank points at once.
 <!-- live:contest-rules -->
 | Rule |  |
 |---|---|
-| Its day | The festival whose rule is the Cooking Contest: the game’s Autumn 10, or wherever the story moves it (under the story’s name) |
+| Its day | The festival whose rule is the Cooking Contest: Autumn 22, or wherever the story moves it (under the story’s name) |
 | The entry | **Enter the Cooking Contest · 3**, at the Kitchen: 3 actions, the festival day’s event actions first, then the day’s own. The Kitchen built (“Build the Kitchen to enter.”); one entry a Contest; no play under way |
 | The dish | One known recipe, two of its main and one side at one good and one star each, out of the Warehouse at the entry; an optional cook, a farmhand with an action tonight (one of her actions tonight is the Contest’s) |
 | The play | 60 s at the stove on the play’s seed: one dish, its stars the Kitchen’s (its ingredients’ average, rounded down, + the tier’s lift, held to ★5), into the Warehouse after the judging |
@@ -2998,7 +3001,7 @@ The rivals at each Farm Rank, and the score you need for 1st (a tie is yours):
 | **2nd** | 900g | 1,800g | 2,700g | 75 |
 | **3rd** | 360g | 720g | 1,080g | 25 |
 
-On Autumn 10, the game’s day. A Contest the story moves takes its new season’s number: Spring 1, Summer 2, Autumn 3, Winter 4.
+On Autumn 22, the game’s day. A Contest the story moves takes its new season’s number: Spring 1, Summer 2, Autumn 3, Winter 4.
 <!-- /live -->
 
 - **The worked Contest:** Farm Rank 3, Carrot ★1 and Basil ★1, a play of 76 (Fine: a ★2 Carrot Salad): 20 + 38 =
@@ -3749,8 +3752,13 @@ chosen Uma’s farm shifts.
 **Jobs by place** includes the plots, all forage and chopping areas, fishing spots, mines, animals, station loads,
 cooking, seed saving and surplus shipping. **Show all jobs** also shows locked and idle locations. **Quick jobs** repeat
 each shift. **Combined plot orders** adds Harvest + water, Plant + water or the full crop routine in one step. The
-detailed editor still handles exact seeds, individual rows, collection targets and locations. Buying seeds, animals and
-fodder and constructing buildings are farmer decisions. The farmer can take discovered stairs by hand at any open dig.
+detailed editor still handles exact seeds, individual rows, collection targets and locations. Buying seeds, buying
+animals and authorizing construction are farmer decisions. An automatic worker can buy fodder for animals the farm
+already owns. The farmer can take discovered stairs by hand at any open dig.
+
+**Mill loads** with unreserved input enter Auto Work even without a production target. Auto Work schedules one
+unplanned load per day, after essential work and before surplus shipping. A specific production target still uses the
+set recipe and counts output already held or queued.
 
 The **Work calendar** uses the same job list for the selected day. Before a shift it shows the forecast and scheduled
 workers. Afterward it shows who used actions on each order when the shift has a detailed record. Free actions and jobs

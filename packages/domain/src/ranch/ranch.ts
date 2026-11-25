@@ -18,6 +18,7 @@ import { inTown, spend } from '../farm/actions'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
+import { recordPurchase } from '../farm/purchases'
 import { tileOf } from '../fields/fields'
 import { discoverOutput } from '../goods/discovery'
 import { gradeStepId } from '../goods/ids'
@@ -147,6 +148,22 @@ export function buyAnimal<S extends FarmSave>(save: S, kind: AnimalKind): { save
  * before the silo stands (`locked`), for a count outside 1–99 or past its room (`bad-count`), short of gold (`no-gold`). */
 export function buyFodder<S extends FarmSave>(save: S, count: number): S {
   if (!inTown(save)) throw new SaveRuleError('locked', 'The rancher’s is in town.')
+  return purchaseFodder(save, count)
+}
+
+/** An automatic shift buys at most the day's shortfall for existing animals, using cash on hand. */
+export function crewFodderOrder(save: Pick<FarmSave, 'buildings' | 'ranch' | 'gold'>): number {
+  if (!siloStands(save)) return 0
+  const hungry = save.ranch.animals.filter(animal => !animal.fed).length
+  return Math.max(0, Math.min(hungry - save.ranch.silo, siloRoom(save), MAX_FODDER, Math.floor(save.gold / FODDER_PRICE)))
+}
+
+export function buyCrewFodder<S extends FarmSave>(save: S, count: number): S {
+  if (count > crewFodderOrder(save)) throw new SaveRuleError('bad-count', 'Buy only the feed the animals need today.')
+  return recordPurchase(purchaseFodder(save, count), 'Fodder · crew', count * FODDER_PRICE)
+}
+
+function purchaseFodder<S extends FarmSave>(save: S, count: number): S {
   if (!siloStands(save)) throw new SaveRuleError('locked', 'Build the Coop or the Barn first: the silo stands with it.')
   if (!Number.isInteger(count) || count < 1 || count > MAX_FODDER) throw new SaveRuleError('bad-count', `Buy 1 to ${MAX_FODDER}.`)
   if (count > siloRoom(save)) throw new SaveRuleError('bad-count', siloRoom(save) === 0 ? 'The silo is full.' : `The silo has room for ${siloRoom(save)}.`)

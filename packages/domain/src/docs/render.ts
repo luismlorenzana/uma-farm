@@ -1349,7 +1349,7 @@ function contestRules(): string {
   const [orchard, ranch] = RIVALS
   const share = (p: ContestPlace) => (PRIZE_SHARE[p] === 1 ? `${g(FIRST_PRIZE)} × the season’s number (Spring 1, Summer 2, Autumn 3, Winter 4) × the year` : PRIZE_SHARE[p] === 0.5 ? 'Half of 1st’s' : 'A fifth of 1st’s')
   return table(['Rule', ''], [
-    ['Its day', 'The festival whose rule is the Cooking Contest: the game’s Autumn 10, or wherever the story moves it (under the story’s name)'],
+    ['Its day', `The festival whose rule is the Cooking Contest: ${cookingContestDateLabel()}, or wherever the story moves it (under the story’s name)`],
     ['The entry', `**Enter the Cooking Contest · ${CONTEST_ACTIONS}**, at the Kitchen: ${CONTEST_ACTIONS} actions, the festival day’s event actions first, then the day’s own. The Kitchen built (“Build the Kitchen to enter.”); one entry a Contest; no play under way`],
     ['The dish', 'One known recipe, two of its main and one side at one good and one star each, out of the Warehouse at the entry; an optional cook, a farmhand with an action tonight (one of her actions tonight is the Contest’s)'],
     ['The play', `${STOVE_SECONDS.contest} s at the stove on the play’s seed: one dish, its stars the Kitchen’s (its ingredients’ average, rounded down, + the tier’s lift, held to ★5), into the Warehouse after the judging`],
@@ -1370,12 +1370,15 @@ function contestRivals(): string {
     ['1st from', ...FARM_RANK_POINTS.map((_, i) => String(Math.max(...RIVALS.map((r) => rivalScore(r, i + 1)))))],
   ])
 }
-/** Each place's gold, the Contest on Autumn 10, years 1 to 3, and its Farm Rank points. */
+const defaultCookingContest = FESTIVALS.find(festival => festival.rule === 'cooking-contest')!
+const cookingContestDateLabel = () => `${SEASON_NAMES[defaultCookingContest.season]} ${defaultCookingContest.day}`
+
+/** Each place's gold at the default date, years 1 to 3, and its Farm Rank points. */
 function contestPrizes(): string {
-  const autumn10 = (year: number) => farmDay({ year, season: 'autumn', day: 10 })
+  const showDay = (year: number) => farmDay({ year, season: defaultCookingContest.season, day: defaultCookingContest.day })
   return table(['Place', 'Year 1', 'Year 2', 'Year 3', 'Farm Rank points'], PLACES.map((p) => [
-    `**${ordinal(p)}**`, ...[1, 2, 3].map((y) => g(contestPrize(autumn10(y), p))), String(FESTIVAL_PLACE_POINTS[p]),
-  ])) + '\n\nOn Autumn 10, the game’s day. A Contest the story moves takes its new season’s number: Spring 1, Summer 2, Autumn 3, Winter 4.'
+    `**${ordinal(p)}**`, ...[1, 2, 3].map((y) => g(contestPrize(showDay(y), p))), String(FESTIVAL_PLACE_POINTS[p]),
+  ])) + `\n\nOn ${cookingContestDateLabel()}, the game’s day. A Contest the story moves takes its new season’s number: Spring 1, Summer 2, Autumn 3, Winter 4.`
 }
 /** The judging's lines: the plates, her words by your place, the board. */
 function contestScene(): string {

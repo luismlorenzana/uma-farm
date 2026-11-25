@@ -5,6 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F121** puts Uma events and festival links first on Start Day, makes the five Town relationship filters exclusive, and lets Auto Work load the Mill and restock fodder for hungry animals. The [F122 festival packet](tasks/F122-seasonal-festivals.md) covers the wider event loop.
+
 **F119 is implemented.** The eight playable HD-2D plots show saved crop growth and morning crew. The Barn, Coop and their pens show all seven animal species. The fixed travel camera, close room view, Grid fallback and People filters are covered in the [game mechanics](../game-mechanics.md#the-fields-screen).
 
 **F118** adds the Tool Rack, the What's Next planner, the Library's Jewelry page, and floor navigation for modeled interiors. [Game mechanics](../game-mechanics.md#what-next) describe the planner and its crew priorities.
@@ -155,6 +157,7 @@ collect scenes, discoveries and personal histories. Farm-wide achievements are i
 | [F103](tasks/F103-hd2d-farm.md) | HD-2D farm, starting with the Field and Pond slice | Home uses Field and Pond on WebGL 2. The standalone iPhone measurements and look review are open. |
 | [F115](tasks/F115-hd2d-map-navigation.md) | Painted maps, HD-2D sections and doors, and F116’s modeled interiors with in-scene sprites | Physical iPhone review open. |
 | [F120](tasks/F120-hd2d-interior-renderer.md) | Layered HD-2D rooms, fixed-facing travel camera, lighting, and the native sprite density pilot | Authoring packet ready for review. |
+| [F122](tasks/F122-seasonal-festivals.md) | Seasonal festivals and personal occasions, preparation, farm work and rewards | Authoring packet ready for review. |
 
 [F114](tasks/F114-hd2d-actors.md) shipped the ten Tier 1 walking wardrobes. Its sprite delivery and the F103 device review support the new packet.
 

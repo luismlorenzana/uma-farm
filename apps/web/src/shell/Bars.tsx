@@ -7,7 +7,7 @@
 //   the day's last action is spent, End the day opens by itself ("Out of actions").
 // - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse …)
 //   keeps Farm lit.
-import { actionsLeft, crewShiftEnabled, MORNING_ACTIONS, dateOf, dayActions, daySetState, eventActionsLeft, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
+import { actionsLeft, crewShiftEnabled, MORNING_ACTIONS, dateOf, dayActions, daySetState, eventActionsLeft, festivalOn, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
 import { AccountBar, BottomBar, withParam, type AccountBarProps, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
 import {
   BookIcon, CarrotIcon, CoinIcon, HeartIcon, MoonIcon, StopwatchIcon, useReducedMotionSetting, VenueIcon,
@@ -98,10 +98,11 @@ export function FarmBar() {
   const set = save ? daySetState(save) : null
   const date = day === null ? null : dateOf(day, save?.calendar)
   const season = date?.season ?? 'spring'
+  const festival = day !== null && festivalOn(day, year, save?.calendar)
   const chips: CurrencyChip[] = [
     {
       key: 'date', mark: `season/${season}`, fallback: <SeasonDot season={season} />, value: date?.day ?? null,
-      extra: date ? ` ${SEASON_NAMES[date.season]}` : undefined,
+      extra: date ? ` ${SEASON_NAMES[date.season]}${festival ? ' 🏆' : ''}` : undefined,
       to: withParam(location, 'sheet', 'calendar'), label: day === null ? 'Calendar' : `Calendar: ${dateLabel(day, year, save?.calendar)}`,
     },
     {

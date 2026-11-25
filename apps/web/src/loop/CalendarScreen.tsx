@@ -12,7 +12,7 @@
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import { byRelationship } from './relationship-order'
 import {
-  actionCost, actionsLeft, canPlanWedding, canSpendForEvent, celebrationDate, celebrationTitle, dateDayOf, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
+  actionCost, actionsLeft, canPlanWedding, canSpendForEvent, celebrationDate, celebrationTitle, CONTEST_ID, dateDayOf, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, EXPEDITION_REGIONS, farmDay, festivalsOf,
   householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack, NIGHT_VISITS, nightVisits, planWedding, playedToday, SEASON_NAMES, SEASONS, seasonDays, weekdayOf, weekdayShort,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
@@ -242,8 +242,10 @@ function DayPanel({ save, pack, days, day, nameOf, planner, focus, previous, nex
           <li data-entry="festival" data-festival-row={day.festival.id}>
             <span className="flex items-center gap-2"><TrophyIcon size={16} /> {day.festival.name}</span>
             {day.festival.happens && <span className="block pl-6 text-[13px] text-ink-soft" data-festival-happens>{day.festival.happens}</span>}
+            {day.when === 'today' && day.festival.rule === CONTEST_ID && <Link className="flex min-h-11 items-center pl-6 font-semibold text-accent"
+              to="/?sheet=contest" state={{ back: true }}>Cooking Contest ›</Link>}
             {day.when === 'today' && day.festival.rule && isFarmContest(day.festival.rule) && <Link className="flex min-h-11 items-center pl-6 font-semibold text-accent"
-              to={`/?sheet=festival&contest=${day.festival.rule}`}>Contest ›</Link>}
+              to={`/?sheet=festival&contest=${day.festival.rule}`} state={{ back: true }}>Contest ›</Link>}
           </li>
         )}
         {day.storyDays.map((d) => (

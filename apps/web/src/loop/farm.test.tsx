@@ -92,6 +92,26 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
+describe('Start Day events', () => {
+  it('opens the festival entry from the visible morning card and keeps the farm report collapsed', async () => {
+    const base = farm()
+    const day = 19
+    const before: SaveV4 = {
+      ...base, calendar: { day },
+      summary: { day, bin: [], work: [], ranks: [], hearts: [], news: [], nudges: [], money: [{ kind: 'takeout', meals: 2, paid: 30, due: 30 }] },
+    }
+    useGame.setState({ uid: 'u1', status: 'ready', save: before })
+    await render(<FarmRoute />, '/?map=tiles')
+    await until(() => $('[data-section="events-today"]') !== null)
+    expect($('[data-section="events-today"]')?.textContent).toContain('3 bonus actions left')
+    const report = $('[data-morning-report]')?.closest('details') as HTMLDetailsElement
+    expect(report.open).toBe(false)
+    await click('[data-line="morning-festival"]')
+    expect(path).toBe('/?sheet=festival&contest=flower-show')
+    expect(save().summary?.day).toBe(day)
+  })
+})
+
 describe('the field\'s sign on the farm map', () => {
   it('draws the field as a sign a lot\'s size, with its counts, a tap to the field\'s screen; no tiles on the map', async () => {
     let s = withTile(farm(), 0, { ...bareTile('tilled'), crop: 'carrot', growth: 4, ready: true })

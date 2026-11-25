@@ -58,7 +58,7 @@ describe('the rows', () => {
     const rows = heartRows(save, ALL, nameOf)
     const of = (id: string) => new Set(rows.find((r) => r.id === id)!.filters)
     expect([of(ONE), of(TWO), of(THREE)]).toEqual([new Set(['ready', 'friends', 'away', 'acquaintances']), new Set(['partners', 'away']), new Set(['married'])])
-    expect(filterCounts(rows)).toEqual({ ready: 1, friends: 1, partners: 1, married: 1, away: 2, farmhands: 0, acquaintances: 1 })
+    expect(filterCounts(rows)).toEqual({ 'true-love': 0, ready: 1, friends: 1, partners: 1, married: 1, away: 2, farmhands: 0, acquaintances: 1 })
     // A spouse waiting for a room lives in town.
     const waiting = heartRows(farm({ [THREE]: { stage: 'spouse', level: 2, wed: 3 } }), ALL, nameOf)
     expect(waiting.find((r) => r.id === THREE)!.filters).toEqual(['married', 'away'])

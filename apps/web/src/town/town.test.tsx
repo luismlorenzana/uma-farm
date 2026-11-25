@@ -385,7 +385,7 @@ describe('the town', () => {
     expect($('[data-none]')?.textContent).toBe('No one by that name.')
   })
 
-  it('filters the Town People list by relationship and farm membership, including after opening a conversation', async () => {
+  it('keeps the Town People relationship filters exclusive, including after opening a conversation', async () => {
     const base = farm()
     useGame.setState({ uid: 'u1', status: 'ready', save: {
       ...base,
@@ -403,8 +403,25 @@ describe('the town', () => {
     const rows = () => $$('[data-person-row]').map(row => row.dataset.personRow)
     await click(filter('married'))
     expect(rows()).toEqual(['90001'])
-    await click(filter('farmhands'))
+    await click(filter('true-love'))
+    expect(rows()).toEqual([])
+    let current = save()
+    await act(async () => useGame.setState({ save: {
+      ...current,
+      longGame: { weddings: ['90001'], celebrations: {},
+        love: { '90001': { points: 120, pajamas: 0, anniversaries: 0, trueDay: 4, memories: [] } } },
+    } }))
     expect(rows()).toEqual(['90001'])
+    await click(filter('married'))
+    expect(rows()).toEqual([])
+    await click(filter('farmhands'))
+    expect(rows()).toEqual([])
+    current = save()
+    for (const level of [3, 10]) {
+      await act(async () => useGame.setState({ save: { ...current, love: { ...current.love, [SISTER]: { ...newLove(), level } } } }))
+      expect(rows()).toEqual([SISTER])
+    }
+    await act(async () => useGame.setState({ save: current }))
     await click(filter('partners'))
     expect(rows()).toEqual([SISTER])
     await click($(`[data-person-row="${SISTER}"]`))
@@ -413,8 +430,8 @@ describe('the town', () => {
     expect(rows()).toEqual([SISTER])
     await click(filter('acquaintances'))
     expect(rows()).toEqual([])
-    const current = save()
-    await act(async () => useGame.setState({ save: { ...current, love: { ...current.love, [SISTER]: newLove() } } }))
+    current = save()
+    await act(async () => useGame.setState({ save: { ...current, love: { ...current.love, [SISTER]: { ...newLove(), level: 2 } } } }))
     expect(rows()).toEqual([SISTER])
     await type($('[data-search]'), 'aster')
     expect(rows()).toEqual([])

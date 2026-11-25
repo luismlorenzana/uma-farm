@@ -13,6 +13,8 @@
 // is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
 // gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
+  actionCost, calendarDay, canSpendForEvent, contestBlock, contestDefault, CONTEST_ID, eventActionsLeft,
+  festivalEntryLock, festivalsOf, householdReady, isFarmContest, nextFestival, NO_BIRTHDAYS, noPack,
   benchOpen, HEIRLOOMS, TOOL_NAMES, toolTierName, chapterTitle, farmPlace, fieldCounts, FIELD_COLUMNS, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt,
   type BuildPlace, type FarmPlace, type FarmSave,
 } from '@farm/domain'
@@ -28,7 +30,7 @@ import type { FieldPondReviewProps } from '../hd2d/FieldPondReview'
 import { GuideContent } from '../guide/Guide'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
-import { useStory } from '../story/story'
+import { useSpecialDays, useStory } from '../story/story'
 import { dismissSummary } from './actions'
 import { RingArt } from '../items/RingArt'
 import { BuildingArt, FieldSignArt, Trees, Water } from './farm-art'
@@ -39,9 +41,9 @@ import { GatePeek } from './GatePeek'
 import { pairWords, readyLines } from './hearts-view'
 import { houseLot } from './homestead-map'
 import { homeWords } from './homestead-view'
-import { NO_HOME, NO_WORLD, summaryParts, worldWords, type ChapterOf, type NoteOf } from './summary-words'
+import { NO_HOME, NO_WORLD, summaryParts, worldWords, type ChapterOf, type NoteOf, type SummaryLine } from './summary-words'
 import { useTalents } from './talents'
-import { shortDate, theName } from './words'
+import { plural, shortDate, theName } from './words'
 
 const InviteAnswer = lazy(() => import('./InviteAnswer'))
 const BenchPeek = lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
@@ -336,6 +338,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const album = master.status === 'ready' ? master.view.album : null
   const ready = useReadyNow(save)
   const pack = useStory()
+  const special = useSpecialDays()
   const talents = useTalents()
   // Which bond lines have a conversation to Read, from the pack and what's been read.
   const pairs = useMemo(() => (pack ? pairWords(save, pack) : null), [save, pack])
@@ -356,7 +359,43 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   // The world's words: festivals' names, the season's line, the Town notes' titles and the town's name.
   const world = useMemo(() => (pack ? worldWords(pack) : NO_WORLD), [pack])
   const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf, noteOf, world) : []), [summary, nameOf, ready, pairs, home, chapterOf, noteOf, world])
-  if (!summary) return null
+  const days = useMemo(() => special ?? { festivals: festivalsOf(pack), birthdays: NO_BIRTHDAYS }, [special, pack])
+  const today = useMemo(() => summary ? calendarDay(save, pack ?? noPack(), days, save.calendar.day) : null, [summary, save, pack, days])
+  if (!summary || !today) return null
+  const calendar = '/?sheet=calendar'
+  const canPlay = canSpendForEvent(save, actionCost('event'), days)
+  const hearts = parts.find(part => part.section === 'hearts')?.lines ?? []
+  const active = (line: SummaryLine) => !!line.invite || line.key.startsWith('household:')
+    || canPlay && line.key.startsWith('ready:')
+  const events = hearts.filter(active)
+  const festival = today.festival
+  if (festival) {
+    const rule = festival.rule
+    const block = rule === CONTEST_ID ? contestBlock(save, days, contestDefault(save), pack)
+      : rule && isFarmContest(rule) ? festivalEntryLock(save, rule, days) : null
+    const to = rule === CONTEST_ID ? '/?sheet=contest'
+      : rule && isFarmContest(rule) ? `/?sheet=festival&contest=${rule}` : calendar
+    events.unshift({ key: 'morning-festival', to, text: festival.name,
+      tag: rule ? block ? 'Details' : 'Contest · 3 actions' : 'Calendar' })
+  } else {
+    const next = nextFestival(save.calendar.day, days.festivals, save.calendar)
+    if (next.inDays <= 2) events.push({ key: 'morning-next-festival', to: calendar + '&calendarDay=' + next.day,
+      text: `${next.festival.name} · ${shortDate(next.day, save.calendar)}`, tag: 'Plan' })
+  }
+  const occasions = today.faces.filter(face => face.occasions.length > 0 || face.night
+    || face.reasons.includes('birthday') || face.reasons.includes('anniversary'))
+  if (occasions.length) {
+    const first = occasions[0]!
+    const label = first.reasons.includes('birthday') ? `${nameOf(first.id)}’s birthday`
+      : first.reasons.includes('anniversary') ? `${nameOf(first.id)}’s anniversary`
+      : `${nameOf(first.id)} · ${first.occasions[0]?.name ?? 'Special night visit'}`
+    events.push({ key: 'morning-occasions', to: calendar, text: label + (occasions.length > 1 ? ` · +${occasions.length - 1} more` : ''), tag: 'Calendar' })
+  }
+  if ((today.newYear && today.date.year > 1) || (today.celebrations.length > 0 && !householdReady(save).length)) {
+    events.push({ key: 'morning-special', to: calendar, text: today.newYear ? 'New Year’s Day' : 'Household celebration', tag: 'Calendar' })
+  }
+  const report = parts.map(part => ({ ...part, lines: part.lines.filter(line => !active(line)) })).filter(part => part.lines.length)
+  const bonus = eventActionsLeft(save, days)
   const tools = [...save.forge?.installed ?? [], ...save.forge?.rack ?? []].filter(order => order.due === summary.day)
   const jewels = save.forge?.heirlooms.filter(order => order.ready === summary.day) ?? []
   return (
@@ -368,37 +407,44 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
       label="The morning summary"
       footer={<Button className="w-full" onClick={() => void dismissSummary()} data-action="start-day">Start the day</Button>}
     >
-      <div className="space-y-3 pb-1" data-summary={summary.day}>
-        {(tools.length > 0 || jewels.length > 0) && <section className="space-y-1" aria-label="Forge deliveries">
-          <h3 className="text-micro">Forge deliveries</h3>
-          {tools.map(order => <Link key={order.tool} className="block min-h-11" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} installed{order.assistant ? ` · Prepared with ${nameOf(order.assistant)}` : ''}</Link>)}
-          {jewels.map(order => <Link key={`${order.recipient}:${order.piece}`} className="block min-h-11" to={`/?sheet=forge&tab=heirlooms&recipient=${order.recipient}&piece=${order.piece}`}>{HEIRLOOMS[order.piece].name} for {nameOf(order.recipient)} · Ready to give</Link>)}
-        </section>}
-        {parts.length === 0 && tools.length === 0 && jewels.length === 0 && <p className="text-ink-soft">A quiet night.</p>}
-        {parts.map((part) => (
-          <section key={part.section} data-section={part.section} aria-label={part.title}>
-            <h3 className="text-micro pb-1">{part.title}</h3>
-            <ul className="divide-y divide-hairline rounded-md border border-hairline">
-              {part.lines.map((line) => (
-                <li key={line.key}>
-                  <Link to={line.to} state={{ back: true }} className="flex min-h-11 items-center gap-2 px-3 text-[15px]" data-line={line.key}>
-                    {line.ring && <RingArt id={line.ring} size={56} />}
-                    <span className="min-w-0 flex-1">{line.text}</span>
-                    {line.tag && (
-                      <span className={`shrink-0 rounded-full px-1.5 text-[11px] font-semibold ${line.warn ? 'bg-danger/15 text-danger' : 'bg-success/15 text-success'}`} data-tag data-warn={line.warn || undefined}>
-                        {line.tag}
-                      </span>
-                    )}
-                  </Link>
-                  {line.quote && <p className="px-3 pb-2 text-[13px] italic text-ink-soft" data-house-quote>{line.quote}</p>}
-                  {line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}
-                  {line.misses !== undefined && <Suspense fallback={null}><HouseAnswer house={line.misses} /></Suspense>}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+      <div className="space-y-2 pb-1" data-summary={summary.day}>
+        <section aria-label="Events today" data-section="events-today">
+          <h3 className="text-micro pb-1">Events today{bonus > 0 && ` · ${plural(bonus, 'bonus action')} left`}</h3>
+          {events.length ? <MorningLines lines={events} /> : <p className="text-[13px] text-ink-soft">No events ready. <Link to={calendar} className="font-semibold text-accent">Calendar ›</Link></p>}
+        </section>
+        {(report.length > 0 || tools.length > 0 || jewels.length > 0) && <details className="rounded-md border border-hairline px-2.5">
+          <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 font-semibold">
+            Farm report <span aria-hidden>⌄</span>
+          </summary>
+          <div className="space-y-2 pb-2" data-morning-report>
+            {(tools.length > 0 || jewels.length > 0) && <section className="space-y-1" aria-label="Forge deliveries">
+              <h3 className="text-micro">Forge deliveries</h3>
+              {tools.map(order => <Link key={order.tool} className="block min-h-11" to={`/?sheet=forge&tool=${order.tool}`}>{toolTierName(order.tier)} {TOOL_NAMES[order.tool]} installed{order.assistant ? ` · Prepared with ${nameOf(order.assistant)}` : ''}</Link>)}
+              {jewels.map(order => <Link key={`${order.recipient}:${order.piece}`} className="block min-h-11" to={`/?sheet=forge&tab=heirlooms&recipient=${order.recipient}&piece=${order.piece}`}>{HEIRLOOMS[order.piece].name} for {nameOf(order.recipient)} · Ready to give</Link>)}
+            </section>}
+            {report.map(part => <section key={part.section} data-section={part.section} aria-label={part.title}>
+              <h3 className="text-micro pb-1">{part.title}</h3>
+              <MorningLines lines={part.lines} />
+            </section>)}
+          </div>
+        </details>}
       </div>
     </Sheet>
   )
+}
+
+function MorningLines({ lines }: { lines: readonly SummaryLine[] }) {
+  return <ul className="divide-y divide-hairline rounded-md border border-hairline">
+    {lines.map(line => <li key={line.key}>
+      <Link to={line.to} state={{ back: true }} className="flex min-h-11 items-center gap-2 px-2.5 text-[14px]" data-line={line.key}>
+        {line.ring && <RingArt id={line.ring} size={56} />}
+        <span className="min-w-0 flex-1">{line.text}</span>
+        {line.tag && <span className={`shrink-0 rounded-full px-1.5 text-[11px] font-semibold ${line.warn ? 'bg-danger/15 text-danger' : 'bg-success/15 text-success'}`}
+          data-tag data-warn={line.warn || undefined}>{line.tag}</span>}
+      </Link>
+      {line.quote && <p className="px-3 pb-2 text-[13px] italic text-ink-soft" data-house-quote>{line.quote}</p>}
+      {line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}
+      {line.misses !== undefined && <Suspense fallback={null}><HouseAnswer house={line.misses} /></Suspense>}
+    </li>)}
+  </ul>
 }
