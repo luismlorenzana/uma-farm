@@ -7,10 +7,10 @@ import { buildRoom } from './room-kit'
 import { ENTRANCE, walkPath, type FloorPoint } from './room-walk'
 import type { RoomId } from './room-specs'
 import type { RoomActor } from './WorldPlate'
+import { followCamera, roomCamera } from './travel-camera'
 
 const MAX_SPRITES = 6
 const lastPosition = new Map<string, FloorPoint>()
-const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max))
 const HIT_WIDTH = 44
 const HIT_HEIGHT = 56
 
@@ -35,6 +35,9 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const goToEntrance = useRef<(() => void) | undefined>(undefined)
+  const changeView = useRef<(() => void) | undefined>(undefined)
+  const fitted = useRef(false)
+  const [fit, setFit] = useState(false)
   const [points, setPoints] = useState<ReadonlyMap<string, ScenePoint> | null>(null)
   const [drawn, setDrawn] = useState<ReadonlySet<string>>(new Set())
   const [failed, setFailed] = useState(false)
@@ -59,6 +62,8 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
     const key = place + ':' + roomNumber
     const saved = lastPosition.get(key)
     let position = saved && room.clear(saved) ? saved : ENTRANCE
+    let camera = roomCamera(position, fitted.current)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
     const marker = new Mesh(new RingGeometry(.12, .2, 16), new MeshBasicMaterial({ color: night ? '#ffce94' : '#fff0c3', toneMapped: false }))
     marker.rotation.x = -Math.PI / 2
     room.scene.root.add(marker)
@@ -71,7 +76,7 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
           anchors = new Map(actors.flatMap(({ id }, index) => marks[index] ? [[id, marks[index]![0]]] : []))
         })
         marker.position.set(position.x, .07, position.z)
-        stage.project({ x: clamp(position.x * .42, -1.85, 1.85), z: clamp(position.z * .38, -1.12, 1.08), zoom: 1.18 }, points => {
+        stage.project(camera, points => {
           const targets = new Map<string, ScenePoint>()
           actors.forEach(({ id }) => {
             const anchor = anchors?.get(id)
@@ -91,7 +96,8 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
       frame = 0
       if (!alive || lostContext) return
       if (document.hidden) { last = 0; return }
-      let move = (last ? Math.min(50, time - last) : 16) * .006
+      const elapsed = last ? Math.min(50, time - last) : 16
+      let move = elapsed * .006
       last = time
       while (path.length && move > 0) {
         const target = path[0]!
@@ -106,8 +112,11 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
         }
       }
       lastPosition.set(key, position)
+      const desired = roomCamera(position, fitted.current)
+      const settling = Math.abs(desired.x - camera.x) + Math.abs(desired.z - camera.z) + Math.abs(desired.zoom - camera.zoom) > .012
+      camera = settling && !reduced.matches ? followCamera(camera, desired, elapsed) : desired
       draw()
-      if (path.length) frame = requestAnimationFrame(tick)
+      if (path.length || (settling && !reduced.matches)) frame = requestAnimationFrame(tick)
       else last = 0
     }
     const go = (target: FloorPoint) => {
@@ -121,6 +130,11 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
       }
     }
     goToEntrance.current = () => go(ENTRANCE)
+    changeView.current = () => {
+      fitted.current = !fitted.current
+      setFit(fitted.current)
+      if (!frame) frame = requestAnimationFrame(tick)
+    }
     const tap = (event: PointerEvent) => {
       if (!event.isPrimary || event.button !== 0) return
       const rect = node.getBoundingClientRect()
@@ -136,7 +150,7 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
     }
     const visibility = () => {
       draw()
-      if (!document.hidden && path.length && !frame) frame = requestAnimationFrame(tick)
+      if (!document.hidden && !frame) frame = requestAnimationFrame(tick)
     }
     node.addEventListener('pointerup', tap)
     node.addEventListener('keydown', step)
@@ -185,6 +199,7 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
       alive = false
       cancelAnimationFrame(frame)
       goToEntrance.current = undefined
+      changeView.current = undefined
       marker.removeFromParent()
       marker.geometry.dispose()
       marker.material.dispose()
@@ -208,7 +223,10 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
   return <div className="absolute inset-0" data-room-depth={ready ? 'ready' : failed ? 'unavailable' : 'loading'}>
     <canvas ref={canvas} className="absolute inset-0 size-full touch-none" aria-label="Modeled interior. Tap the floor or use the arrow keys to walk." tabIndex={ready ? 0 : -1} />
     {ready && !walked && <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/65 px-2 py-1 text-[12px] text-white">Tap floor to walk</span>}
-    {ready && <button type="button" className="absolute bottom-1 right-1 z-20 min-h-11 rounded bg-black/70 px-2 text-[12px] font-semibold text-white" onClick={() => goToEntrance.current?.()} aria-label="Walk to the entrance">Entrance</button>}
+    {ready && <div className="absolute right-1 bottom-1 z-20 flex gap-1">
+      <button type="button" className="min-h-11 rounded bg-black/70 px-2 text-[12px] font-semibold text-white" onClick={() => changeView.current?.()}>{fit ? 'Close view' : 'Whole room'}</button>
+      <button type="button" className="min-h-11 rounded bg-black/70 px-2 text-[12px] font-semibold text-white" onClick={() => goToEntrance.current?.()} aria-label="Walk to the entrance">Entrance</button>
+    </div>}
     {!ready ? fallback : cast.slice(0, MAX_SPRITES).map(({ id, name }) => {
       const point = points?.get(id)
       if (!point) return null

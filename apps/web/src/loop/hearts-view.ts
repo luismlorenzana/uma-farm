@@ -109,12 +109,17 @@ export function levelShort(love: Pick<Love, 'stage' | 'level'>): string | null {
 
 // --- The rows, the sort and the filters ------------------------------------------------------------
 
-export type HeartFilter = 'ready' | 'friends' | 'partners' | 'married' | 'away'
-/** The filter chips, in order. */
-export const HEART_FILTERS: readonly { key: HeartFilter; label: string }[] = [
-  { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'partners', label: 'Partners' }, { key: 'married', label: 'Married' }, { key: 'away', label: 'In town' },
+export type HeartFilter = 'ready' | 'friends' | 'partners' | 'married' | 'away' | 'farmhands' | 'acquaintances'
+interface FilterChip { key: HeartFilter; label: string; full?: string }
+export const HEART_FILTERS: readonly FilterChip[] = [
+  { key: 'married', label: 'Married' }, { key: 'partners', label: 'Romance', full: 'Relationship' },
+  { key: 'farmhands', label: 'Hands', full: 'Farmhands' }, { key: 'acquaintances', label: 'Met', full: 'Acquaintances' },
 ]
-export const isHeartFilter = (value: string | null): value is HeartFilter => HEART_FILTERS.some((f) => f.key === value)
+export const EXTRA_HEART_FILTERS: readonly FilterChip[] = [
+  { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'away', label: 'In town' },
+]
+export const isHeartFilter = (value: string | null): value is HeartFilter =>
+  [...HEART_FILTERS, ...EXTRA_HEART_FILTERS].some(f => f.key === value)
 /** Friends: friendship and her confession's wait; Partners: romance, the proposal's and the wedding's; Married: spouse. */
 const STAGE_FILTER: Readonly<Record<LoveStage, HeartFilter>> = {
   friendship: 'friends', confession: 'friends', romance: 'partners', proposal: 'partners', wedding: 'partners', spouse: 'married',
@@ -167,12 +172,14 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
     const now = bar(love)
     // On the farm today: a spouse in her room, or a farmhand on her farm day; anyone else is in town.
     const home = onFarmToday(save, pack, id)
+    const farmhand = save.roster[id]?.farmhand !== undefined
     return {
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
       // On the farm today: nothing to find.
       note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf, festivalsOf(pack)) ?? roomNote(save, pack, id),
-      filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
+      filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const]),
+        ...(farmhand ? ['farmhands' as const] : STAGE_FILTER[love.stage] === 'friends' ? ['acquaintances' as const] : [])],
       chapter: chapterGlance(save, pack, id),
     }
   })
@@ -180,7 +187,7 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
 
 /** Each filter's count, for its chip ("Ready 2"). */
 export function filterCounts(rows: readonly Pick<HeartRow, 'filters'>[]): Record<HeartFilter, number> {
-  const counts: Record<HeartFilter, number> = { ready: 0, friends: 0, partners: 0, married: 0, away: 0 }
+  const counts: Record<HeartFilter, number> = { ready: 0, friends: 0, partners: 0, married: 0, away: 0, farmhands: 0, acquaintances: 0 }
   for (const row of rows) for (const f of row.filters) counts[f]++
   return counts
 }

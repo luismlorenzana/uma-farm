@@ -926,7 +926,7 @@ farm's biggest employer at scale ([the farm at scale](#the-farm-at-scale-10-20-a
 #### The field's screen
 
 A tap on the field's sign (or the Menu's Fields, or a morning line about the field) opens the field's own screen,
-`/field`, **full screen**: no rail and no bar, the plot as big as the phone allows.
+`/field`, **full screen**: no rail and no bar, the plot as big as the phone allows. A cleared plot opens in HD-2D when WebGL is available. Its tiles and row tabs open the same action panels. Choose **Grid** in the header to switch views. The field stays playable in Grid if the 3D view is unavailable.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
@@ -6205,7 +6205,7 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 #### The People page
 
 **People** (`/hearts`, the rail's third page) is the Umas' page: one row an Uma you've met, on the farm or in town, two to
-a row where they fit, a filter row, and her profile on a tap. It has no badge. Its two views ride in the URL: Hearts (the
+a row where they fit, a filter row, and her profile on a tap. Married, Romance, Hands and Met appear first. More filters contains Ready, Friends and In town. It has no badge. Its two views ride in the URL: Hearts (the
 default) and **Work**, the roster's album with **her level in words** ("F7", "R4", "S2") in each face's corner.
 `/roster` lands on the Work view.
 
@@ -6213,7 +6213,7 @@ default) and **Work**, the roster's album with **her level in words** ("F7", "R4
 ┌──────────────────────────────────────────┐
 │ People  Married 0/3  ☾ Evening ○     (i) │  ○ free, ● spent: a mark a slot today
 │ [ Hearts ]  Work                         │
-│ [Ready 1] [Friends 3] [Partners] [Married] [In town]
+│ [Married] [Romance] [Hands] [Met 3]
 ├──────────────────────────────────────────┤
 │ (face) Stand-in 1  Ch. 1 · Getting… ● Ready │  her chapter at a glance
 │        New friend ♥ ▣□□□□□□□□□  200/200  │  the ladder's hearts, the next filling

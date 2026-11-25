@@ -6,6 +6,7 @@ import { bandLight } from '../hd2d/field-pond-scene'
 import type { GroundPoint, RegionScene } from './farm-region-stage'
 import type { FloorPoint } from './room-walk'
 import { roomSpec, type Furnishing, type RoomId } from './room-specs'
+import { ROOM_FOV, TRAVEL_AZIMUTH, TRAVEL_ELEVATION } from './travel-camera'
 
 const palettes = {
   home: ['#ae8262','#ddd0b2','#854b55','#854e3b'],
@@ -259,7 +260,7 @@ export function buildRoom(place: RoomId, night: boolean, roomNumber: number, exp
     mesh.castShadow = true
     root.add(mesh)
   }
-  const frame = {label:place,target:[0,.59,0] as GroundPoint,elevation:40,azimuth:0,distance:22,fov:33}
+  const frame = {label:place,target:[0,.59,0] as GroundPoint,elevation:TRAVEL_ELEVATION, azimuth:TRAVEL_AZIMUTH, distance:22, fov:ROOM_FOV}
   const light = bandLight(night)
   return {
     width:width+1.2,depth:depth+2.1,targetY:.68,anchors,clear,

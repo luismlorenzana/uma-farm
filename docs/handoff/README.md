@@ -5,6 +5,8 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
+**F119** brings farm work into the playable HD-2D plot and tunes the locked travel camera. [Implementation packet](tasks/F119-playable-hd2d.md).
+
 **F118** adds the Tool Rack, the What's Next planner, the Library's Jewelry page, and floor navigation for modeled interiors. [Game mechanics](../game-mechanics.md#what-next) describe the planner and its crew priorities.
 
 **F117 tunes Auto Work.** [Four-season crew balance](../design/seasonal-crew-balance.md) records the plot limits and job ledger for 20, 30 and 50 Umas with the same ranch and production demand.
