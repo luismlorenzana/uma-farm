@@ -2,7 +2,7 @@
   container-type: size;
   position: relative;
   display: grid;
-  flex: 1;
+  height: 100%;
   min-height: 0;
   place-items: center;
   overflow: hidden;
