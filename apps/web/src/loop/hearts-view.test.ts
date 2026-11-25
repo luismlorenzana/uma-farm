@@ -56,8 +56,8 @@ describe('the rows', () => {
     // Only a spouse in her room lives on the farm: everyone else is away, in town.
     const save = farm({ [ONE]: { level: 1, points: 240 }, [TWO]: { stage: 'proposal', level: 10 }, [THREE]: { stage: 'spouse', level: 2, wed: 3, house: 0 } })
     const rows = heartRows(save, ALL, nameOf)
-    const of = (id: string) => rows.find((r) => r.id === id)!.filters
-    expect([of(ONE), of(TWO), of(THREE)]).toEqual([['ready', 'friends', 'away', 'acquaintances'], ['partners', 'away'], ['married']])
+    const of = (id: string) => new Set(rows.find((r) => r.id === id)!.filters)
+    expect([of(ONE), of(TWO), of(THREE)]).toEqual([new Set(['ready', 'friends', 'away', 'acquaintances']), new Set(['partners', 'away']), new Set(['married'])])
     expect(filterCounts(rows)).toEqual({ ready: 1, friends: 1, partners: 1, married: 1, away: 2, farmhands: 0, acquaintances: 1 })
     // A spouse waiting for a room lives in town.
     const waiting = heartRows(farm({ [THREE]: { stage: 'spouse', level: 2, wed: 3 } }), ALL, nameOf)
