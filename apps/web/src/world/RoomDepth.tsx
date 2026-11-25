@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Mesh, MeshBasicMaterial, NearestFilter, RingGeometry, Sprite, SpriteMaterial, SRGBColorSpace, Texture } from 'three'
+import type { Animal } from '@farm/domain'
+import { Mesh, MeshBasicMaterial, RingGeometry } from 'three'
 import { Avatar } from '../dialogue/Avatar'
 import { acquireWalkingArt } from '../hd2d/character-art'
 import { mountRegion, type ScenePoint } from './farm-region-stage'
 import { buildRoom } from './room-kit'
+import { pixelBillboard } from './pixel-billboard'
+import { ranchAnimals, roomAnimals } from './ranch-actors'
 import { ENTRANCE, walkPath, type FloorPoint } from './room-walk'
 import type { RoomId } from './room-specs'
 import type { RoomActor } from './WorldPlate'
@@ -29,9 +32,9 @@ function openMarks(points: ReadonlyMap<string, ScenePoint>, width: number, heigh
   return marks
 }
 
-export default function RoomDepth({ place, night, roomNumber, expanded, cast, open, fallback }: {
+export default function RoomDepth({ place, night, roomNumber, expanded, cast, open, fallback, animals }: {
   place: RoomId; night: boolean; roomNumber: number; expanded: boolean
-  cast: readonly RoomActor[]; open(id: string): void; fallback: ReactNode
+  cast: readonly RoomActor[]; open(id: string): void; fallback: ReactNode; animals: readonly Animal[]
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const goToEntrance = useRef<(() => void) | undefined>(undefined)
@@ -49,11 +52,14 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
     if (!node) return
     setDrawn(new Set())
     const room = buildRoom(place, night, roomNumber, expanded)
+    const ranch = place === 'barn' || place === 'coop' ? roomAnimals(ranchAnimals(animals, place), room.clear) : []
+    const layout = { ...room, ranch, night }
+    node.dataset.ranchAnimals = ranch.map(({ animal }) => animal.kind).join(' ')
     let stage: ReturnType<typeof mountRegion>
-    try { stage = mountRegion(node, room) }
+    try { stage = mountRegion(node, layout) }
     catch { room.scene.dispose(); setFailed(true); return }
     const actors = JSON.parse(signature) as Pick<RoomActor, 'id' | 'outfit'>[]
-    const sprites = new Map<string, Sprite>()
+    const sprites = new Map<string, ReturnType<typeof pixelBillboard>>()
     let alive = true
     let lostContext = false
     let frame = 0
@@ -72,7 +78,11 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
       if (!alive || lostContext || document.hidden || !node.clientWidth || !node.clientHeight) return
       try {
         if (!anchors) stage.project({ x: 0, z: 0, zoom: 1 }, points => {
-          const marks = openMarks(points, node.clientWidth, node.clientHeight)
+          const available = new Map([...points].filter(([id]) => {
+            const [x, , z] = room.anchors.get(id)!
+            return !ranch.some(animal => Math.hypot(x - animal.x, z - animal.z) < .68)
+          }))
+          const marks = openMarks(available, node.clientWidth, node.clientHeight)
           anchors = new Map(actors.flatMap(({ id }, index) => marks[index] ? [[id, marks[index]![0]]] : []))
         })
         marker.position.set(position.x, .07, position.z)
@@ -81,7 +91,7 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
           actors.forEach(({ id }) => {
             const anchor = anchors?.get(id)
             const point = anchor && points.get(anchor)
-            const sprite = sprites.get(id)
+            const sprite = sprites.get(id)?.sprite
             if (sprite) sprite.visible = Boolean(anchor)
             if (!anchor || !point) return
             if (sprite) sprite.position.set(...room.anchors.get(anchor)!)
@@ -159,21 +169,10 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
       void lease.ready.then(art => {
         if (!art || !alive) return
         const { cell, page, foot, standing } = art.sprite
-        const frame = standing.front
-        const texture = new Texture(art.image)
-        texture.minFilter = texture.magFilter = NearestFilter
-        texture.generateMipmaps = false
-        texture.colorSpace = SRGBColorSpace
-        texture.repeat.set(cell.width / page.width, cell.height / page.height)
-        texture.offset.set(frame.x / page.width, 1 - (frame.y + cell.height) / page.height)
-        texture.needsUpdate = true
-        const sprite = new Sprite(new SpriteMaterial({
-          map: texture, color: night ? '#d8d6ef' : '#fff9ee', alphaTest: .38, toneMapped: false,
-        }))
-        sprite.center.set(foot.x / cell.width, 1 - foot.y / cell.height)
-        sprite.scale.set(1.85 * cell.width / cell.height, 1.85, 1)
-        room.scene.root.add(sprite)
-        sprites.set(id, sprite)
+        const figure = pixelBillboard(art.image, cell, page, foot, 1.85, night)
+        figure.frame(standing.front)
+        room.scene.root.add(figure.sprite)
+        sprites.set(id, figure)
         setDrawn(previous => new Set(previous).add(id))
         draw()
       }).catch(() => undefined)
@@ -206,18 +205,14 @@ export default function RoomDepth({ place, night, roomNumber, expanded, cast, op
       node.removeEventListener('pointerup', tap)
       node.removeEventListener('keydown', step)
       for (const lease of leases) lease.release()
-      for (const sprite of sprites.values()) {
-        sprite.removeFromParent()
-        sprite.material.map?.dispose()
-        sprite.material.dispose()
-      }
+      for (const sprite of sprites.values()) sprite.dispose()
       resize?.disconnect()
       node.removeEventListener('webglcontextlost', lost)
       node.removeEventListener('webglcontextrestored', restored)
       document.removeEventListener('visibilitychange', visibility)
       stage.dispose()
     }
-  }, [place, night, roomNumber, expanded, signature, attempt])
+  }, [place, night, roomNumber, expanded, signature, attempt, animals])
 
   const ready = Boolean(points) && !failed
   return <div className="absolute inset-0" data-room-depth={ready ? 'ready' : failed ? 'unavailable' : 'loading'}>

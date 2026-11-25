@@ -5,7 +5,7 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
-**F119** brings farm work into the playable HD-2D plot and tunes the locked travel camera. [Implementation packet](tasks/F119-playable-hd2d.md).
+**F119 is implemented.** The eight playable HD-2D plots show saved crop growth and morning crew. The Barn, Coop and their pens show all seven animal species. The fixed travel camera, close room view, Grid fallback and People filters are covered in the [game mechanics](../game-mechanics.md#the-fields-screen).
 
 **F118** adds the Tool Rack, the What's Next planner, the Library's Jewelry page, and floor navigation for modeled interiors. [Game mechanics](../game-mechanics.md#what-next) describe the planner and its crew priorities.
 

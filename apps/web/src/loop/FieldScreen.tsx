@@ -8,12 +8,12 @@
 // inside the screen replaces the entry, so the strip's Farm button and Back both go to the farm. Loaded on demand.
 import {
   APTITUDE_NAMES, CROP_IDS, cropBaseGrade, cropGrades, dateOf, fieldIndex, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handsTonight, itemNameOf,
-  plantableIn, plotCounts, plotName, rowPlan, SEASONS, SEASON_NAMES, TASK_NAMES, type CropId, type FarmSave, type FieldPlan, type Season,
+  plantableIn, plotCounts, plotName, rowPlan, SEASONS, SEASON_NAMES, TASK_NAMES, townDay, type CropId, type FarmSave, type FieldPlan, type Season,
 } from '@farm/domain'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, CloseIcon, LockedIcon } from '@luismlorenzana/uma-kit/ui'
 import { GuideButton } from '../guide/Guide'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../dialogue/Avatar'
 import { ItemIcon } from '../items/ItemIcon'
@@ -27,6 +27,9 @@ import { plotPages, rowCounts, rowHands, type PlotPage } from './field-view'
 import { Notes, TilePanel, useAct } from './FarmPanels'
 import { useTalents } from './talents'
 import { useStory } from '../story/story'
+import { namer } from '../story/people'
+import { HerMenu } from '../town/HerMenu'
+import { farmPresence } from '../world/farm-presence'
 import type { ScenePoint } from '../world/farm-region-stage'
 
 const PlotDepth = lazy(() => import('../world/PlotDepth').catch(() => ({ default: ({ fallback }: { fallback: ReactNode }) => <>{fallback}</> })))
@@ -77,14 +80,14 @@ const fieldPath = (plot: number, extra: { tile?: number; row?: number } = {}): s
  * they show), 36 to 88 points. */
 const ARROW = 44
 const TAB = 30
-function useTileSize(arrows: boolean): [React.RefObject<HTMLDivElement | null>, number] {
+function useTileSize(arrows: boolean, reserved: number, covered: boolean): [React.RefObject<HTMLDivElement | null>, number] {
   const ref = useRef<HTMLDivElement | null>(null)
   const [size, setSize] = useState(56)
   useEffect(() => {
     const el = ref.current
-    if (!el || typeof ResizeObserver === 'undefined') return
+    if (covered || !el || typeof ResizeObserver === 'undefined') return
     const fit = () => {
-      const byHeight = (el.clientHeight - 16) / FIELD_ROWS
+      const byHeight = (el.clientHeight - 16 - reserved) / FIELD_ROWS
       const byWidth = (el.clientWidth - (arrows ? 2 * ARROW : 0) - TAB - 16) / FIELD_COLUMNS
       setSize(Math.max(36, Math.min(88, Math.floor(Math.min(byHeight, byWidth)))))
     }
@@ -92,7 +95,7 @@ function useTileSize(arrows: boolean): [React.RefObject<HTMLDivElement | null>, 
     const observer = new ResizeObserver(fit)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [arrows])
+  }, [arrows, reserved, covered])
   return [ref, size]
 }
 
@@ -115,11 +118,40 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   const leave = useLeave()
   // The arrows step aside while a panel is open, so the plot keeps its size beside it; the dots and a swipe still turn.
   const panel = at.tile !== null || at.row !== null
-  const [area, tileSize] = useTileSize(!panel)
   const [note, setNote] = useState<string | null>(null)
   const [gridView, setGridView] = useState(false)
+  const [opened, setOpened] = useState<string>()
+  const [params] = useSearchParams()
+  const master = useMaster()
+  const pack = useStory()
+  const { of } = useTalents()
+  const presence = useMemo(() => farmPresence(save, pack, of).actors, [save, pack, of])
+  const nameOf = namer(master.status === 'ready' ? master.view : null, pack)
+  const canTalk = Boolean(pack && master.status === 'ready')
+  const crew = canTalk ? [...presence.values()].filter(actor => actor.door === 'fields:' + at.plot)
+    .slice(0, 3).map(actor => ({ ...actor, name: nameOf(actor.id) })) : []
+  const requested = params.get('fieldUma')
+  const speaker = requested && (requested === opened || crew.some(actor => actor.id === requested)) ? requested : null
+  const reserve = crew.length ? 44 : 0
+  const [area, tileSize] = useTileSize(!panel, reserve, Boolean(speaker))
+  const open = (id: string) => {
+    setOpened(id)
+    const next = new URLSearchParams(params)
+    next.set('fieldUma', id)
+    navigate(location.pathname + '?' + next.toString(), { state: { back: true } })
+  }
   const canDraw = typeof WebGL2RenderingContext !== 'undefined'
-  const grid = <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} />
+  const grid = <>
+    <div className="absolute inset-x-0 bottom-0" style={{ top: reserve }}>
+      <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} />
+    </div>
+    {crew.length > 0 && <div className="absolute top-0 left-2 z-10 flex gap-1" aria-label="Farm crew">
+      {crew.map(({ id, name, detail }) => <button key={id} type="button" title={detail} aria-label={'Talk to ' + name}
+        data-plot-worker={id} className="flex min-h-11 min-w-11 items-center justify-center rounded-full bg-panel/90" onClick={() => open(id)}>
+        <Avatar id={id} size={28} label={name} />
+      </button>)}
+    </div>}
+  </>
   const pages = plotPages(save)
   const page = pages[at.plot]!
   const tally = plotCounts(save, at.plot)
@@ -138,6 +170,7 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   // The arrow keys turn the page; Escape closes a panel.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (speaker) return
       if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, [role="dialog"]')) return
       if (e.key === 'ArrowLeft') turn(-1)
       else if (e.key === 'ArrowRight') turn(1)
@@ -145,7 +178,7 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [turn, close, at.tile, at.row])
+  }, [turn, close, at.tile, at.row, speaker])
   // A swipe across the plot turns the page; the tap that ends it opens nothing.
   const swipe = useRef<{ x: number; y: number; id: number } | null>(null)
   const swiped = useRef(false)
@@ -169,6 +202,11 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
   }
   const prev = pages[at.plot - 1]
   const next = pages[at.plot + 1]
+  if (speaker && pack && master.status === 'ready') {
+    const back = fieldPath(at.plot, at.tile !== null ? { tile: at.tile } : at.row !== null ? { row: at.row } : {})
+    return <HerMenu id={speaker} save={save} pack={pack} master={master.view} day={townDay(save, pack)}
+      nameOf={nameOf} farmSetting="fields" onClose={() => { setOpened(undefined); leave(back) }} />
+  }
   return (
     <div className="pl-safe pr-safe pb-safe absolute inset-0 flex flex-col bg-[#9cc27a]" data-field-screen data-plot-page={at.plot + 1}>
       <header className="flex min-h-12 shrink-0 items-center gap-1 border-b border-hairline bg-panel/95 pr-1 shadow-1">
@@ -192,7 +230,7 @@ function FieldScreen({ save, at }: { save: FarmSave; at: FieldAt }) {
           {note && <p role="status" className="absolute inset-x-0 top-1 z-10 mx-auto w-fit rounded-full bg-success px-3 py-0.5 text-[13px] font-semibold text-ink-on-dark shadow-2" data-plot-note>{note}</p>}
           {page.cleared
             ? canDraw && !gridView
-              ? <Suspense fallback={grid}><PlotDepth key={at.plot} plot={at.plot} save={save} fallback={grid}
+              ? <Suspense fallback={grid}><PlotDepth key={at.plot} plot={at.plot} save={save} fallback={grid} crew={crew} open={open}
                 className={panel ? 'absolute inset-0' : 'absolute inset-y-0 inset-x-11'}>
                 {points => <PlotGrid save={save} plot={at.plot} tile={at.tile} row={at.row} size={tileSize} state={location.state} points={points} />}
               </PlotDepth></Suspense>
@@ -307,7 +345,7 @@ function PlotGrid({ save, plot, tile, row, size, state, points }: {
         return point && tile.crop && <span key={index} aria-hidden
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 drop-shadow-sm" data-plot-crop={tile.crop}
           style={{ left: point.x * 100 + '%', top: point.y * 100 + '%' }}>
-          <ItemIcon id={tile.crop} size={Math.round(size * (tile.ready ? .47 : .33))} />
+          <ItemIcon id={tile.crop} size={Math.max(11, Math.min(19, Math.round(size * .34)))} />
         </span>
       })}
     </div>
