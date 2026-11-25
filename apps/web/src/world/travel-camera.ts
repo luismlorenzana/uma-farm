@@ -4,7 +4,9 @@ export const TRAVEL_ELEVATION = 41
 export const TRAVEL_AZIMUTH = 0
 export const PLOT_FOV = 30
 export const ROOM_FOV = 29
-export const ROOM_ELEVATION = 36
+export const ROOM_ELEVATION = 24
+// Turn the sprite plane toward the screen while its separate floor shadow stays level.
+export const ROOM_SPRITE_PITCH = -ROOM_ELEVATION * Math.PI / 180
 export const ROOM_VIEWS = ['walk', 'close', 'whole'] as const
 export type RoomView = typeof ROOM_VIEWS[number]
 
