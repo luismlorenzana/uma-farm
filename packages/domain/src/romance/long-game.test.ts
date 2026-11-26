@@ -283,6 +283,15 @@ describe('married life', () => {
           expect(memory).toEqual(planned)
           const cues = visitBeats(pack, memory).flatMap(beat => beat.steps.flatMap(step => 'illustration' in step ? [step.illustration] : []))
           expect(cues).toEqual(['duo-' + who[1] + '-' + first, 'duo-' + who[0] + '-' + second])
+          const withCouch = { ...planVisit(after, pack, who, 'pajamas', noBirthday)!, duoArt, duoCouch: true as const }
+          const couchSave = parseSaveV6(completeVisit(after, pack, withCouch, 1, noBirthday))
+          expect(nightVisits(couchSave)[1]).toEqual(withCouch)
+          const stored = greaterLoveOf(couchSave, id).memories[1]!
+          expect(stored).toEqual(withCouch)
+          const replay = visitBeats(pack, stored).flatMap(beat => beat.steps.flatMap(step => 'illustration' in step ? [step.illustration] : []))
+          expect(replay).toEqual(['duo-' + who[1] + '-couch', 'duo-' + who[0] + '-couch', ...cues])
+          expect(() => completeVisit(save, pack, { ...planVisit(save, pack, [id], 'pajamas', noBirthday)!, duoCouch: true }, 0, noBirthday)).toThrow()
+
           expect(visitBeats(pack, memory, true).flatMap(beat => beat.steps).some(step => 'illustration' in step)).toBe(false)
         }
       }

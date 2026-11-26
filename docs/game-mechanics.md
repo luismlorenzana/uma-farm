@@ -7546,8 +7546,9 @@ once and uses one visit slot. Their default scene beats use neutral, tender and 
 expression for each beat. Numbered portraits load by slot, with the standard pajamas or wedding-night portrait as
 fallback. A published pajama look can show a couch and a bedside splash. Birthdays and anniversaries share a formal
 bedside splash for the host. Each illustration joins the Scene Gallery when it first appears. Married Life in the Uma
-Library shows the looks, earned memories and True Love date. A pajama duo visit with shared art plays one of the
-available bedtime sequences at random. Lying down leads to a goodnight kiss. Kneeling leads to a crawling goodnight kiss.
+Library shows the looks, earned memories and True Love date. A pajama duo visit has a shared couch conversation, followed by one of two bedtime sequences at random.
+Lying down leads to a goodnight kiss. Kneeling leads to a crawling goodnight kiss. Each illustration is earned in both books,
+and replay remembers the couch and the selected sequence.
 Each shared illustration joins both books when it appears. Replays keep their recorded sequence. Both books and the Diary can replay a shared visit and
 its morning after a stay. Replays keep the original participants, host and numbered looks. They cost no slots and grant
 no relationship points or visit rewards.

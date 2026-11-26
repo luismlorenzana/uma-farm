@@ -185,11 +185,13 @@ export function visitBeats(pack: LifePack, visit: Visit, morning = false) {
     // Each speaker's recorded look drives both live scenes and replays. A missing cue keeps her portrait on stage.
     const wardrobeArt = script.outfit || visit.duoArt ? undefined : wardrobe === 'pajamas' && beat === 'sitting' ? `night-pajamas-${slot}-couch`
       : beat === 'bedside' ? `night-${wardrobe}-${slot}-bed` : undefined
-    const shared = beat === 'bedside' && visit.kind === 'pajamas' && visit.who.length === 2 && visit.duoArt
-      ? duoNightSceneId(visit.who[i === 0 ? 1 : 0], DUO_NIGHT_SEQUENCES[visit.duoArt][i === 0 ? 0 : 1]) : undefined
+    const partner = visit.kind === 'pajamas' ? visit.who[i === 0 ? 1 : 0] : undefined
+    const pose = beat === 'sitting' && visit.duoCouch ? 'couch'
+      : beat === 'bedside' && visit.duoArt ? DUO_NIGHT_SEQUENCES[visit.duoArt][i === 0 ? 0 : 1] : undefined
+    const shared = partner && pose ? duoNightSceneId(partner, pose) : undefined
     const illustration = shared ?? authored ?? wardrobeArt
     if (illustration) steps.push({ illustration })
-    if (beat === 'bedside' && i === 0) steps.push({ narrate: shared ? 'You settle in together as the house grows quiet.' : 'You sit by the bedside as the house grows quiet.' })
+    if (beat === 'bedside' && i === 0) steps.push({ narrate: partner ? 'The three of you settle in together as the house grows quiet.' : 'You sit by the bedside as the house grows quiet.' })
     steps.push({ say: id, line: script[beat] ?? defaultNightScript(kind)[beat], emote: script.emotes?.[beat] ?? nightBeatFace(kind, beat) })
     return { id, beat, steps, outfit: script.outfit ?? (wardrobe === 'anniversary' ? 'wedding-night' as const : 'pajamas' as const),
       portrait: script.outfit ? undefined : visitPortraitKey(wardrobe, slot) }
@@ -235,8 +237,12 @@ export function completeVisit(save: SaveV4, pack: LifePack, visit: Visit, slot: 
   const next = activateLongGame(save, pack)
   const visits = nightVisits(next)
   const planned = planVisit(next, pack, visit.who, visit.kind, birthdayAlone, birthdays, visit.kind === 'pajamas' ? undefined : visit.looks[0])
-  const plan = planned && visit.duoArt && isDuoNightVariant(visit.duoArt) && visit.kind === 'pajamas' && visit.who.length === 2
-    ? { ...planned, duoArt: visit.duoArt } : planned
+  const shared = planned?.kind === 'pajamas' && planned.who.length === 2
+  const plan = planned && shared ? {
+    ...planned,
+    ...(isDuoNightVariant(visit.duoArt) ? { duoArt: visit.duoArt } : {}),
+    ...(visit.duoCouch === true ? { duoCouch: true as const } : {}),
+  } : planned
   if (!next.longGame || !plan || slot !== visits.length || visit.day !== plan.day || visit.anniversary !== plan.anniversary
     || visit.birthday !== plan.birthday || visitMemoryKey(visit) !== visitMemoryKey(plan)) throw new SaveRuleError('not-ready', 'Open a new visit for tonight.')
   const love = { ...next.longGame.love }
