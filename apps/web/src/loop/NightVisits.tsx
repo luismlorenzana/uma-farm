@@ -2,7 +2,7 @@ import { byRelationship } from './relationship-order'
 import {
   actionsLeft, crewShiftEnabled, passDayPart, anniversaryOffer, birthdayOffer, birthdaysOf, completeVisit, configuredDuos, duoKey, duoNightSceneId, DUO_NIGHT_SEQUENCES, duoReady, editDuo, formalLooks, greaterLoveOf, isBirthday, longGameEnabled, morningOfMemory,
   NIGHT_VISITS, nightAvailable, nightVisits, planVisit, setVisitStay, TRUE_LOVE, useStoryDuos, visitBeats, wantsBirthdayAlone,
-  type Birthdays, type Duo, type DuoNightVariant, type FarmSave, type VisitKind, type StoryPack, type Visit,
+  type Birthdays, type Duo, type DuoNightPose, type DuoNightVariant, type FarmSave, type VisitKind, type StoryPack, type Visit,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -102,10 +102,13 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
       <div className="flex flex-wrap gap-2" aria-label="Visit type">
         {(['solo', 'duo', 'editor'] as const).filter(value => value !== 'duo' || duos.length > 0).map(value =>
           <Button key={value} variant={mode === value ? 'primary' : 'secondary'} aria-pressed={mode === value} onClick={() => setMode(value)}>
-            {{ solo: 'Solo', duo: 'Duo', editor: 'Duo editor' }[value]}
+            {{ solo: 'Solo visit', duo: 'Duo visit', editor: 'Duo editor' }[value]}
           </Button>)}
       </div>
       {error && <p role="alert" className="text-danger">{error}</p>}
+      {!beforeNight && visits.length === NIGHT_VISITS - 1 && mode !== 'editor' && <p className="text-sm text-ink-soft">
+        Choose who to spend your last visit with. You can stay until morning after the visit.
+      </p>}
       {!beforeNight && !full && mode !== 'editor' && spouses.some(person => person.offers.length && formalLooks(save, person.id).length > 1) &&
         <details className="rounded-md border border-hairline px-2">
           <summary className="flex min-h-11 items-center font-semibold">Choose look</summary>
@@ -127,7 +130,7 @@ function Visits({ save, pack, birthdays, birthday, focus, nameOf, onClose }: {
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={onClose}>Say goodnight</Button>
             <Button disabled={busy || !!stay || (last.who.length === 2 ? !availableDuo(last.who) : !available(last.who[0]))} onClick={() => void run(s => setVisitStay(s, pack, last.day, id => birthday(s, id)))}>
-              {stay ? 'Staying tonight ✓' : 'Stay the night'}
+              {stay ? 'Staying tonight ✓' : last.who.length === 2 ? 'Spend the night together' : 'Spend the night with ' + nameOf(last.who[0])}
             </Button>
           </div>
         </div> : mode === 'duo' ? <ul className="grid gap-2 sm:grid-cols-2">
@@ -211,15 +214,21 @@ function NewVisitScene(props: NewVisitProps) {
   if (hostArt === 'loading' || partnerArt === 'loading') {
     return <Sheet open title="Night visit" onClose={onClose}><p role="status">Loading scene…</p></Sheet>
   }
-  const ready = partner && hostArt && partnerArt ? (Object.keys(DUO_NIGHT_SEQUENCES) as DuoNightVariant[]).filter(variant =>
-    DUO_NIGHT_SEQUENCES[variant].every(pose => hostArt.scenes.some(scene => scene.id === duoNightSceneId(partner, pose)) &&
-      partnerArt.scenes.some(scene => scene.id === duoNightSceneId(host, pose)))) : []
-  return <SelectedVisitScene {...props} choices={ready} />
+  const ready = (pose: DuoNightPose) => {
+    if (!partner || !hostArt || !partnerArt) return false
+    const hostScene = hostArt.scenes.find(scene => scene.id === duoNightSceneId(partner, pose))
+    const partnerScene = partnerArt.scenes.find(scene => scene.id === duoNightSceneId(host, pose))
+    return Boolean(hostScene && partnerScene && hostScene.path === partnerScene.path && hostScene.sha256 === partnerScene.sha256)
+  }
+  const options = (Object.keys(DUO_NIGHT_SEQUENCES) as DuoNightVariant[]).filter(variant => DUO_NIGHT_SEQUENCES[variant].every(ready))
+  return <SelectedVisitScene {...props} choices={options} couch={ready('couch')} />
 }
 
-function SelectedVisitScene({ choices, onDone, visit, ...props }: NewVisitProps & { choices: readonly DuoNightVariant[] }) {
-  const [duoArt] = useState(() => choices[Math.floor(Math.random() * choices.length)])
-  const played = duoArt ? { ...visit, duoArt } : visit
+function SelectedVisitScene({ choices, couch, onDone, visit, ...props }: NewVisitProps & { choices: readonly DuoNightVariant[]; couch: boolean }) {
+  const [played] = useState<Visit>(() => {
+    const duoArt = choices[Math.floor(Math.random() * choices.length)]
+    return { ...visit, ...(duoArt ? { duoArt } : {}), ...(couch ? { duoCouch: true } : {}) }
+  })
   return <VisitScene {...props} visit={played} onDone={() => onDone(played)} />
 }
 
@@ -235,7 +244,8 @@ function VisitScene({ save, pack, visit, morning, nameOf, busy = false, error, o
     : scene.beat === 'farewell' ? 'home-threshold' : visit.who.length > 1 ? 'sitting-duo' : 'sitting-solo'
   const recordArt = (owner: string, id: string) => {
     const partner = visit.who.find(person => person !== owner)
-    const pose = partner && visit.duoArt && DUO_NIGHT_SEQUENCES[visit.duoArt].find(pose => duoNightSceneId(partner, pose) === id)
+    const pose = partner && (visit.duoCouch && duoNightSceneId(partner, 'couch') === id ? 'couch'
+      : visit.duoArt && DUO_NIGHT_SEQUENCES[visit.duoArt].find(pose => duoNightSceneId(partner, pose) === id))
     return partner && pose
       ? seeIllustrationsOnce([[owner, id], [partner, duoNightSceneId(owner, pose)]])
       : seeIllustrationOnce(owner, id)
