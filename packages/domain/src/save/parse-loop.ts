@@ -452,7 +452,7 @@ function parseTownRequests(value: unknown, path: string, today: number): Request
     const status = oneOf(o.status, `${at}.status`, ['offered', 'accepted', 'cancelled', 'delivered'] as const)
     const order: RequestOrder = {
       id: key(o.id, `${at}.id`), title: financeTitle(o.title, `${at}.title`), from: key(o.from, `${at}.from`),
-      worker: o.worker === null ? null : typeof o.worker === 'string' && isRosterId(o.worker) ? o.worker : fail(`${at}.worker`, 'expected an Uma id'),
+      worker: o.worker === null ? null : outfit(o.worker, `${at}.worker`),
       item, count: int(o.count, `${at}.count`, 1, 99), stars: int(o.stars, `${at}.stars`, 1, MAX_STARS),
       posted, due: o.due === null ? null : int(o.due, `${at}.due`, posted, today + 6), status,
     }

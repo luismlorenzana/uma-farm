@@ -10,7 +10,7 @@ import { runNight } from '../night/end-day'
 import { finishArrival } from '../romance/love'
 import { introduce } from '../romance/meeting'
 import { GOLD_SHIPPED } from '../save/bin'
-import { parseSave } from '../save/save'
+import { parseSave, parseSavePut, parseStored } from '../save/save'
 import { isDishId, newRosterUma, newLove, newSave, type FarmSave } from '../save/v4'
 import { addGoods, goodCount } from '../save/warehouse'
 import { storyPackFrom } from '../story/pack'
@@ -86,6 +86,28 @@ describe('F113 town orders', () => {
     const expired = { ...accepted, calendar: { day: 10 } }
     expect(requestHolds(expired, 'pine-log').size).toBe(0)
     expect(() => deliverRequest(expired, pack, 'town', offered.id)).toThrow()
+  })
+
+  it('reopens and uploads a request posted by a sister Uma, even before meeting her', () => {
+    const worker = 's9702302'
+    const inn = storyPackFrom({
+      cast: { umas: [...IDS, worker].map(characterId => ({ characterId })) }, umas: {}, routes: {},
+      town: { professions: [{ id: 'innkeeper', name: 'Innkeeper', at: 'plaza', off: 'sunday', partners: [worker, IDS[0]!] }] },
+    })
+    const save = met()
+    const stocked = discoverOutput({
+      ...save, buildings: { ...save.buildings, barn: 1 }, items: addGoods(save.items, 'milk', 1, 4),
+    }, 'milk')
+    const offered = refreshTownRequests(stocked, inn)
+    expect(offered.farm.requests?.slots.town).toMatchObject({ id: 'inn-milk', worker, status: 'offered' })
+    expect(offered.roster[worker]).toBeUndefined()
+    for (const state of [offered, acceptRequest(offered, inn, 'town', 'inn-milk')]) {
+      const payload = JSON.parse(JSON.stringify({ baseRevision: 7, save: state })) as { baseRevision: number; save: FarmSave }
+      expect(parseStored(payload.save)).toEqual(state)
+      expect(parseSavePut(payload)).toEqual(payload)
+      payload.save.farm.requests!.slots.town!.worker = 's0'
+      expect(() => parseSavePut(payload)).toThrow('requests.slots.town.worker')
+    }
   })
 
   it('can deliver every launch order with its own Warehouse item and proof', () => {
