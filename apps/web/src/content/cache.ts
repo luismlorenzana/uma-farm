@@ -59,7 +59,10 @@ export function boundedContentCache(cache: Cache, budget = ART_BUDGET): ContentC
         await cache.put(key, new Response(blob))
       }
       const locks = globalThis.navigator?.locks
-      const write = queue.then(() => locks ? locks.request(CACHE_NAME, store) : store())
+      const write = queue.then(async () => {
+        if (locks) await locks.request(CACHE_NAME, store)
+        else await store()
+      })
       queue = write.catch(() => undefined)
       await write
     },
