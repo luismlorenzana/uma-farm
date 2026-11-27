@@ -12,7 +12,9 @@ async function isPicture(blob: Blob): Promise<boolean> {
     signature.slice(4) === 'ftypavif'
 }
 
-async function artEntries(cache: Cache): Promise<Map<string, number>> {
+type ContentDisk = Pick<Cache, 'keys' | 'match' | 'put' | 'delete'>
+
+async function artEntries(cache: ContentDisk): Promise<Map<string, number>> {
   const index = await cache.match(ART_INDEX)
   if (index) {
     try {
@@ -32,7 +34,7 @@ async function artEntries(cache: Cache): Promise<Map<string, number>> {
 }
 
 /** One verified copy per hash. Budget pictures by bytes and leave release and story JSON available offline. */
-export function boundedContentCache(cache: Cache, budget = ART_BUDGET): ContentCache {
+export function boundedContentCache(cache: ContentDisk, budget = ART_BUDGET): ContentCache {
   let queue: Promise<void> = Promise.resolve()
   return {
     match: key => cache.match(key),

@@ -20,7 +20,7 @@ it('reuses verified art, coalesces replacements, and evicts by bytes without rem
   const disk = testCache()
   await disk.put(key('verified-legacy-art'), art())
   await disk.put(key('master-data'), Response.json({ boot: true }))
-  const cache = boundedContentCache(disk as Cache, 24)
+  const cache = boundedContentCache(disk, 24)
 
   expect(await (await cache.match(key('verified-legacy-art')))?.text()).toBe('RIFF0000WEBP')
   await cache.put(key('newer-art'), art())
@@ -32,7 +32,7 @@ it('reuses verified art, coalesces replacements, and evicts by bytes without rem
   expect(await cache.match(key('latest-art'))).toBeDefined()
   expect(await (await cache.match(key('master-data')))?.json()).toEqual({ boot: true })
 
-  const restarted = boundedContentCache(disk as Cache, 24)
+  const restarted = boundedContentCache(disk, 24)
   await restarted.put(key('another-art'), art())
   expect(await restarted.match(key('newer-art'))).toBeUndefined()
   expect(await restarted.match(key('latest-art'))).toBeDefined()
