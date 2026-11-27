@@ -1,7 +1,8 @@
 // Her illustrations' source: master data's `illustrations` family, each Uma's full-screen scenes by character id (in the
 // art's order, each with its title, outfit and moment). Her manifest is read once, the first time a scene of hers cues
 // one or her gallery opens, through the content client (`client.illustrations`, checked against the release); each
-// picture then loads by its path only when its scene starts (or her gallery shows it), verified and cached on the device
+// full-size picture loads when its scene starts or its artwork is opened. The gallery reads a separate thumbnail.
+// Both are verified and cached on the device
 // by its hash. An Uma the art index doesn't list has none, known at once with nothing fetched, and her scenes play on her
 // bust. No title, path or picture of hers is in git. Loaded with the players and her profile.
 import type { Illustrations } from '@luismlorenzana/uma-data'

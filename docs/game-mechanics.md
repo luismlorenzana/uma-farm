@@ -3684,20 +3684,11 @@ Restaurant can assign only actions left after crew work and other bookings.
 
 A farmhand who is [away on an expedition](#expeditions) misses her farm shifts. Her jobs stay on the work board while she's away.
 
-A friend you invite to work is a **farmhand** ([the invitation to work](#the-invitation-to-work)). She keeps her life in
-town, and comes to the farm on her **farm days**: the days her town schedule (her routine, her part-time job, or the
-default schedule's spot) doesn't put her out in town. On a farm day she's on the farm by day, in front of you for talks,
-gifts and her evening, and off the town's map; she gives the farm a few actions on the tasks you set her on the **work
-board**, in the Book, works them just before Afternoon, and eats her two
-meals on the farm. On her **town days** she's at her place in town, by her schedule, and doesn't work, eat on the farm
-or cost anything. Nobody but a spouse in her room lives on the farm. Any Uma can do
-any task, and each task has an **aptitude**: a level for her that starts from her talents and rises with every action she
-spends on it, bringing more goods, better stars and new tricks. As the farmhands take the farm's work over, your own ten
-actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
+A friend you invite to work is a **farmhand** ([the invitation to work](#the-invitation-to-work)). Her profession sets three town shifts, three farm shifts and a separate day off. During the transition from Morning to Afternoon she runs the farm orders assigned to her. She eats two meals on her farm days. After marriage she moves into a farm room but keeps the same shifts. Aptitudes improve with practice, affecting yield, grade, and actions. The rules are `farm/farmhands.ts`.
 
 ```
- her farm days: the days her town schedule leaves free (20 of 30 on the default schedule; a season with none, the
-                default schedule's other eight); a spouse in her room, every day
+ her farm days: three per week by profession, with staggered days off.
+ Legacy roster entries without a profession use the town routine fallback.
  your day (5 + 5 actions)              at the start of Afternoon: each farmhand on her farm day, in invitation order
    invite her to work · 1 (a friend)     (on a town day she's in town: no work, no meals on the farm)
    the Book: the work board (free)       her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
@@ -3716,8 +3707,8 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 <!-- live:farmhand-day -->
 |  | Her actions |
 |---|---|
-| A farmhand’s farm day (she’s on the farm by day, and works her actions overnight; on a town day she doesn’t work) | 3 |
-| Settled in: from 12 days after you invited her (a season) | +1 |
+| A farmhand’s farm day (her shift runs before Afternoon) | 3 |
+| Settled in: from 12 days after you invited her | +1 |
 | Once she’s your spouse | +2 |
 | Well fed this morning: a ★2+ meal last night, a household meal the day before, a wedding’s reception, a spouse’s breakfast | +1 |
 | Half pace: from the second short night of upkeep in a row, until it’s paid | Half of them all, rounded down, never below 1 |
@@ -4466,7 +4457,7 @@ Run `src/farm/scale.test.ts` with `FARM_BALANCE_REPORT=1` and the `Phase 3.5` te
 
 #### The pacing
 
-The older economy examples below were recorded on the original 48-day calendar. The balance table above uses the current calendar.
+The reports below are historical. They use the original 48-day calendar and the work, credit and relationship rules in force at the time. The balance table above uses 30-day seasons. For today's work and relationship rules, see [Farmhands](#farmhands) and [The Uma loop](#the-uma-loop).
 
 A test (`packages/domain/src/farm/season.test.ts`) plays the first year on the game's own rules, the farmer working
 alone, by a plain bot, ten actions a day. Each morning it harvests what's ripe, waters what grows, plants the tilled soil
@@ -5309,10 +5300,7 @@ first she has of:
 
 #### Her illustrations
 
-At her big moments the scene opens onto **a full-screen illustration**. Master data's private `illustrations` family
-holds them, keyed by her character id: her scenes in the art's order, each with its title, its outfit and its moment
-(1672 × 941, from Uma Character Art's Farm Life universe). Twelve Umas' nine each are published. **An Uma without any
-plays every scene on her bust and face, exactly as before.**
+At her big moments the scene opens onto a **full-screen illustration**. Master data's private `illustrations` family holds it by character or sister identity. All 50 launch Umas have published illustrations. Each book references nine standard scene pictures, 25 numbered wardrobe pictures and 15 shared duo pictures. The full release has 2,075 distinct pictures because both partners share the same duo art. A beat without a painting uses the scene's dialogue portrait.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -5367,29 +5355,9 @@ The moments, in story order: `meeting`, `beach`, `confession`, `confession-yes`,
 
 #### Her gallery
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ ‹her name› · Gallery                                     3 of 9    ✕ │
-│ ┌────────────────┐  ┌────────────────┐  ┌────────────────┐           │
-│ │  (her picture) │  │ ░ silhouette ░ │  │  (her picture) │           │  16:9 tiles in the art's order
-│ └────────────────┘  └────────────────┘  └────────────────┘           │
-│ Its title           Its title, muted    Its title                    │
-│ ┌────────────────┐  ┌────────────────┐  ┌────────────────┐           │
-│ │ ░ silhouette ░ │  │ ░ silhouette ░ │  │ ░ silhouette ░ │           │  locked: an Uma's head and shoulders
-│ └────────────────┘  └────────────────┘  └────────────────┘           │  on a dark tile, and a lock
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-- **Unlocked for good:** each illustration shown in a scene joins her gallery, once, kept in the save (`gallery`: her
-  scenes' ids in the order first seen). A Memory replayed counts too: you've seen it.
-- **Her profile's Gallery** says "3 of 9" with **Open ›** (`?gallery=<id>`), for an Uma with illustrations only.
-- **The gallery** opens full screen on a dark page: her name, "3 of 9" and ✕; every scene of hers in the art's order,
-  three to a row (two on a narrow phone), each a 16:9 tile with its title under it. **A seen one** shows its picture;
-  **the rest** show a locked silhouette (an Uma's head and shoulders on a dark tile, with a lock) and their titles,
-  muted.
-- **A tap on a seen one** opens it full screen: the whole picture on black, its title and "1 / 3" at the foot, ‹ › (or
-  a swipe, or the arrow keys) to her other seen ones, ✕ (or Escape) back to the grid.
-- Titles and pictures are master data's, read at runtime; a seen one's picture comes from the phone's cache.
+- **Earn art by seeing it.** An illustration's first appearance records its id in the Uma's gallery. A story Memory can record art when it actually appears. Shared duo visits record what was seen in both partners' books.
+- **Browse** from the profile's Gallery or **Scenes → Illustrations** in the Uma Library. Locked tiles show silhouettes. Earned tiles load previews up to 320 pixels wide. Older releases without previews show placeholders until you open the image.
+- **Open** an earned tile to see the full-size picture. Move between earned art with the viewer's arrows or by swiping. Scene replays also use the full-size art for their recorded beats. Each file is checked against the private master release and reused from the device cache when available.
 
 ### The cast and the story pack
 
@@ -5997,7 +5965,7 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 - **Invite her to work · 1**, on her menu in town or her profile, once she's a friend and where you meet her; once.
 - She's a **farmhand** from today and keeps her life in town, and she's **on the farm on her farm days**, the days her
   town schedule leaves free: in front of you there for talks, gifts and her evening, and in town on her town days. On a
-  farm day she works the tasks you set her on the work board overnight and eats on the farm, and her aptitudes grow
+  farm day she works the orders before Afternoon and eats on the farm, and her aptitudes grow
   ([farmhands](#farmhands)). The flag is also her stage and her talks.
 - **Her scene** plays as soon as the action is spent, over her menu or her profile (`?life=invited-to-work:<id>`): her
   route's `invited-to-work`, else the default story's, a short scene at the farm gate in the day's outfit (her everyday
@@ -6621,7 +6589,7 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 #### Night chores
 
 - **1 from Friendship 6, 2 from Romance 7, 3 from Spouse 4,** never more, for an Uma on the farm that night (a spouse in
-  her room, or a farmhand on her farm day, who works the farm overnight) whose line's place is open. **One in town does
+  her room, or a farmhand on her farm day) whose line's place is open. **One in town does
   none** (a farmhand on a town day, a friend who isn't a farmhand, a spouse waiting for a room). Each chore is its own
   seeded pick.
 - **Farming** (at night, as crops grow): each chore waters one dry growing tile, a seeded pick, so it grows a stage

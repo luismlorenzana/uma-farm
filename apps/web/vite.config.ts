@@ -72,7 +72,7 @@ export default defineConfig(({ mode }) => {
           // Large install icons and the optional 3D renderer load on demand.
           globIgnores: ['**/node_modules/**/*', 'icons/*512.png', 'assets/field-pond-renderer-*.js'],
           // "Work done" notifications (copied from uma-rpg): the handlers live in public/push-sw.js.
-          importScripts: ['push-sw.js'],
+          importScripts: ['push-sw.js', 'content-cache-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           navigateFallback: '/index.html',
           // /__/ is Firebase Hosting's reserved space (the redirect sign-in handler): never answer it with the app shell.
@@ -90,10 +90,10 @@ export default defineConfig(({ mode }) => {
               options: { cacheName: 'farm-look-renderer', expiration: { maxEntries: 2 } },
             },
             {
-              // Master data files are named by hash: cached for good once downloaded.
-              urlPattern: ({ url }) => url.pathname.startsWith('/api/master/files/') || url.pathname.startsWith('/api/master/manifests/'),
+              // Keep release manifests available for offline startup. The content client owns verified immutable files.
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/master/manifests/'),
               handler: 'CacheFirst',
-              options: { cacheName: 'farm-master-files', expiration: { maxEntries: 4000 } },
+              options: { cacheName: 'farm-master-files', expiration: { maxEntries: 8 } },
             },
             {
               // The channel pointer moves with each release: the network first, the last one offline.

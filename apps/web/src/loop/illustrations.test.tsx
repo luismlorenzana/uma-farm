@@ -34,6 +34,7 @@ const { storyReady } = await import('../story/story')
 const { castLens } = await import('../story/load')
 const { Shell } = await import('../shell/Shell')
 const { default: HeartsPage } = await import('./HeartsPage')
+const { default: LibraryPage } = await import('../library/LibraryPage')
 const { setIllustrationSource } = await import('../dialogue/illustrations')
 const { moveSpouse } = await import('@farm/domain')
 
@@ -43,7 +44,10 @@ const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 /** Her synthetic illustrations: one per moment, each id its moment's. */
 const NIGHT_ART = ['night-pajamas-1-couch', 'night-pajamas-1-bed'] as const
 const ILLS = syntheticIllustrations(Number(ONE), [...ILLUSTRATION_MOMENTS])
-const ART = { artUrl: async (path: string) => `blob:${path}`, hold: () => () => undefined }
+for (const scene of ILLS.scenes) {
+  scene.thumbnail = { ...scene, path: scene.path.replace('.webp', '.thumb.webp'), width: 320, height: 180 }
+}
+const ART = { artUrl: vi.fn(async (path: string) => `blob:${path}`), hold: () => () => undefined }
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
 /** A named farm on day 21, the stand-in's three home and their arrivals played; 9000001 at `love`. */
@@ -283,6 +287,7 @@ describe('her big moments, full screen', () => {
 })
 
 describe('her gallery', () => {
+  beforeEach(() => { ART.artUrl.mockClear() })
   it('her profile counts it; the gallery shows the seen ones as pictures and the rest locked with their titles; a tap opens one full screen', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(), gallery: { [ONE]: ['confession', 'meeting'] } } })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
@@ -297,9 +302,14 @@ describe('her gallery', () => {
     expect($('[data-tile="beach"]')?.textContent).toBe('Scene beach')
     expect($('[data-tile="beach"] svg')?.getAttribute('aria-label')).toBe('Locked: Scene beach')
     await until(() => $('[data-tile="meeting"] img') !== null)
+    const meeting = ILLS.scenes.find(scene => scene.id === 'meeting')!
+    expect($('[data-tile="meeting"] img')?.getAttribute('src')).toBe(`blob:${meeting.thumbnail!.path}`)
+    expect(ART.artUrl).not.toHaveBeenCalledWith(meeting.path)
+    expect(ART.artUrl).not.toHaveBeenCalledWith(ILLS.scenes.find(scene => scene.id === 'beach')!.thumbnail!.path)
     await click($('[data-tile="meeting"]'))
     const viewer = await find('[data-viewer="meeting"]')
     await until(() => viewer.querySelector('img') !== null)
+    expect(viewer.querySelector('img')?.getAttribute('src')).toBe(`blob:${meeting.path}`)
     expect($('[data-viewer-title]')?.textContent).toBe('Scene meeting 1 / 2')
     expect($('[data-action="previous"]')).toBeNull()
     await click($('[data-action="next"]'))
@@ -308,6 +318,20 @@ describe('her gallery', () => {
     expect($('[data-viewer]')).toBeNull()
     await click($('[data-action="close-gallery"]'))
     await until(() => !$('[data-gallery]'))
+  })
+
+  it('keeps Library card downloads separate from the full-size viewer', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(), gallery: { [ONE]: ['meeting'] } } })
+    await render(<LibraryPage />, `/library?uma=${ONE}&page=scenes&group=art`)
+    const meeting = ILLS.scenes.find(scene => scene.id === 'meeting')!
+    await find('[data-library-art="meeting"] img')
+    expect(ART.artUrl).toHaveBeenCalledWith(meeting.thumbnail!.path)
+    expect(ART.artUrl).not.toHaveBeenCalledWith(meeting.path)
+    expect(ART.artUrl).not.toHaveBeenCalledWith(ILLS.scenes.find(scene => scene.id === 'beach')!.thumbnail!.path)
+
+    await click($('[data-library-art="meeting"]'))
+    await find('[data-viewer="meeting"] img')
+    expect(ART.artUrl).toHaveBeenCalledWith(meeting.path)
   })
 
   it('an Uma without illustrations has no gallery on her profile', async () => {

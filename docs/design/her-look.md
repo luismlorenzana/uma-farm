@@ -19,8 +19,7 @@ below. The page view is [her-look.html](../pages/her-look.html).
 | Chapters gated on builds (the Mine, the Quarry, the Cutter, the Kitchen, the Restaurant, the Forge), and ids for the dock and the boat | [Building](../game-mechanics.md#building): `dock` and `boat` are place ids a `built` gate can name | Shipped (F64) |
 | Group scenes for 10 families and 17 crews | [The roadmap's long game](../roadmap.md#phase-2-the-whole-farm) | Later, with Phase 2's long game |
 
-The story has a baseline for all 100 of the Ranker's characters: tags, a web of 257 ties, and 76 in the pack's cast with
-thin bibles.
+The original story requests above record the first games and packs. Today's 50 launch Umas share 25 town professions. The story release also holds material for later cast. [Current town schedule](../game-mechanics.md#town-professions-and-the-week)
 
 ### From the character art
 
@@ -30,17 +29,17 @@ uma-platform's **Uma Character Art** (https://uma-platform.web.app/art) holds, f
 - the full-body 3D render (`outfit-renders`, 768×1024);
 - the **universe looks**: ChatGPT's owner-approved pictures of an Uma in another world, Farm Life among them.
 
-Farm Life is where the farm's art comes from: **twelve Umas have their dialogue portraits** (12 outfits and 15 faces
-each) **and all nine of their illustrations**. Master data carries them to the game, with no farm release.
+Farm Life is the live art source for all 50 launch Umas. Each has dialogue portraits, scene illustrations and three 64×88-cell walking wardrobes. Every playbook includes the 10 numbered pajama outfits and five anniversary outfits, with 25 corresponding solo splashes. The 75 authored duos share 375 splash images across both partners' books.
 
 ### What the farm shows today
 
 | Where | Art | Expressions |
 |---|---|---|
 | Cards, lists, the town's sheets, her profile | Her face (`outfit-faces`) and her master-data bust | — |
-| Every scene (the dialogue engine) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, twelve Umas so far); else the blank bust: her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
-| Her big moments | Her illustration, full screen (master data's `illustrations`, twelve Umas' nine so far); else her bust | — |
-| Her profile's Gallery | Each illustration she's shown, kept for good; the rest locked, with their titles | — |
+| Every scene (the dialogue engine) | Her portrait in the scene's outfit (master data's `dialogue-portraits`); else the blank bust: her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
+| Her big moments | Her illustration, full screen (master data's `illustrations`); else her bust | — |
+| Library and profile galleries | The previews of seen art and silhouettes for locked art. The viewer and scene replays open the full-size painting. | — |
+| HD-2D rooms | Spring, pajama and farm-work walking wardrobes with 64×88 cells. | Four-direction walk cycles |
 
 ## Her wardrobe
 
@@ -162,7 +161,7 @@ sets the approval list for each outfit. [The art brief](#the-art-brief) describe
 |---|---|
 | Portrait bases | One neutral bust for each outfit used in dialogue, starting with the 12 standard outfits |
 | Shared face layers | One per expression needed by the scenes. Reuse it across outfits and preview the combinations in the matrix. |
-| Illustrations | One per big moment: 9 |
+| Illustrations | 9 standard scenes, 25 numbered night splashes and shared duo art in the current release |
 
 ## What's built
 
@@ -181,8 +180,7 @@ steps](../story-pack.md#steps)). The owner cross-references the outfits with the
 
 **For the character-art session (ChatGPT), standing guidance for each Uma's dialogue and big moments.**
 
-**Where it stands:** twelve Umas have their portraits (12 outfits and 15 faces each) and all nine of their
-illustrations. Until an Uma has hers, the game plays her on the blank bust, so nothing waits on the art.
+**Where it stands:** the 50 launch Umas have published art. Use the approved expression matrix when adding looks and confirm every new scene cue in the game. Earlier release manifests remain readable.
 
 ### What to draw
 
@@ -323,12 +321,10 @@ The story may name other scenes of hers for its own moments; these nine are the 
 
 ### The order
 
-1. **Done:** twelve Umas' portraits, 12 outfits and 15 faces each, and their nine illustrations each (master data
-   `00598e1d125e`, 2026-11-17). The six extra faces can follow for all twelve.
-2. **Next, in the Uma Ranker's order:** her spring outfit and the core faces first, then the romance faces, then the
-   other outfits, then her illustrations.
+1. Start a new Uma with Spring and the core face layers, then finish the outfits and scenes from her approved brief.
+2. Add her three walking wardrobes and check them in the applicable room and farm contexts.
+3. Verify every scene path in a candidate release. Confirm gallery previews and full-size scenes use their own verified files.
 
 ### Delivery
 
-Published to Uma Character Art's Farm Life universe, approved by the owner. Master data carries them to the game from
-there: no farm release.
+Publish the approved art to Uma Character Art's Farm Life universe. Run the private master-data release workflow, verify candidate identities, full-size files and preview hashes, and promote it. The gallery thumbnail is derived during packing at up to 320 pixels wide. Keep source art and drafts in ignored content folders and private storage. [Illustrations publishing](https://github.com/luismlorenzana/uma-platform/blob/main/docs/sprites/illustrations.md)

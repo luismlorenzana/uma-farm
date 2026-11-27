@@ -35,15 +35,16 @@ uma-platform, never in a copy here.
 |---|---|---|---|
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
 | `@luismlorenzana/uma-kit` | 0.20.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame with its left rail and top bar (0.20.0's landscape variants), its side panels (regular and wide) and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album |
-| `@luismlorenzana/uma-art` | 2.30.0 | web | The bar's, map's, item and emote art |
-| `@luismlorenzana/uma-data` | 1.10.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0, its profile pictures from 1.9.0); test fixtures from `/testing` |
+| `@luismlorenzana/uma-art` | 2.31.0 | web | The bar's, map's, item and emote art |
+| `@luismlorenzana/uma-data` | 1.12.0 web, 1.10.0 domain | web, domain | Master data, portrait and illustration manifests, walking sprites and gallery thumbnails. Synthetic fixtures from `/testing`. |
+| `@luismlorenzana/uma-stage` | 0.9.0 | web | Shared HD-2D rendering, fixed room cameras and walking sprite atlases |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The Warehouse's stock types (the work engine's screens are retired with the work board) |
 | `@luismlorenzana/uma-server` | 0.2.0 | api | The owner guard, the master data proxy, the private pack route |
 
 | Elsewhere | Versions |
 |---|---|
 | Workspace | Node 22 or later, pnpm 10.33.0, Turborepo ^2.10.13, TypeScript ~5.9.3, Vitest ^3.2.7 |
-| Web | react and react-dom ^19.3.0, react-router ^7.18.3, zustand ^5.0.15, dexie ^4.4.6, firebase ^12.19.0, motion ^12.43.0, workbox-window ^7.4.0; **phaser 4.2.1** pinned; vite ^7.3.6, vite-plugin-pwa ^1.3.0, tailwindcss ^4.3.3 |
+| Web | react and react-dom ^19.3.0, react-router ^7.18.3, zustand ^5.0.15, dexie ^4.4.6, firebase ^12.19.0, motion ^12.43.0, workbox-window ^7.4.0; **phaser 4.2.1** and **Three 0.187.0** pinned; vite ^7.3.6, vite-plugin-pwa ^1.3.0, tailwindcss ^4.3.3 |
 | API | @nestjs/common, core and platform-express ^11.2.4, @nestjs/config ^4.0.4, firebase-admin ^13.10.0, @google-cloud/storage ^7.22.0, google-auth-library ^11.2.0, web-push ^3.6.7 |
 
 ### The rules of the codebase
@@ -71,18 +72,21 @@ uma-platform, never in a copy here.
   beside them, so a boot that stopped still offers the new build; and, outside the stage, the upright card
   (`app/Upright.tsx`). It starts the sync triggers and turns the newer-save
   error into its own words (below). A production build without its sign-in config refuses to run.
-- **`src/app/router.tsx`:** every page inside the shell, and every page but Account loaded on demand.
+- **`src/app/router.tsx`:** pages inside the shell load on demand.
 
 | Path | Page |
 |---|---|
-| `/` | Home: the farm's tile map (`loop/FarmMap.tsx`; `?tile=<n>` a tile's panel) |
+| `/` | Painted Farm overview and section or room entry. Grid mode stays available. |
+| `/field` | Playable HD-2D plots and direct Grid view. |
+| `/library` | Uma Library shelves and books. Queries select the book, page, gallery or replay. |
+| `/guide` | Index of contextual Farm guides. |
 | `/warehouse` | The Warehouse; `?pick=bin` picks a crate to ship |
 | `/diary` | The Diary |
 | `/hearts` | People, the Umas' page (`?view=work` the roster's album, `?uma=<id>` her profile) |
 | `/roster` | Redirects to `/hearts?view=work`, keeping `?uma=` |
 | `/town` | The Town (`town/TownPage.tsx`; `?view=people` everyone in town, `?talk=<id>` a talk) |
-| `/book` | The farm's book (`book/BookPage.tsx`) |
-| `/account` | Account, in the main chunk |
+| `/book` | Ledger (`book/BookPage.tsx`) |
+| `/account` | Account and device safety copies |
 | anything else | Redirects to `/` |
 
 Sheets and scenes are query parameters on the page under them:
@@ -97,8 +101,9 @@ Sheets and scenes are query parameters on the page under them:
 | `src/app/` | Root and the start-over card, the upright card, the router, the build id, the Firebase config |
 | `src/shell/` | uma-kit's `AppFrame` as a rail and a bar: the rail (`BottomBar side="left"`: Farm · Town · Library · Ledger · Diary), the bar (`AccountBar landscape="bar"`: date, gold, sync chip, then actions left, End the day, Menu), the Menu's panel, the sync warning |
 | `src/library/` | Lazy portrait shelves and individual books, with scene and illustration viewers loaded on demand. The save holds dated proof and bounded outing receipts. Route scripts and art remain in their releases. |
-| `src/hd2d/` | Default Field and Pond Home view on WebGL 2. Pure save projection, original instanced scene, and a lazy shared `LookStage` adapter. The tile map remains available for all farm places and renderer fallback. |
-| `src/guide/` | Illustrated help topics shared by the contextual sheets and lazy `/guide` index. Topics carry three steps, a short rule, and optional reference details at the call site. |
+| `src/hd2d/` | Lazy WebGL 2 renderer and Field and Pond save projection. |
+| `src/world/` | Painted Farm overview, local regions, eight playable plots and modeled interiors. Fixed-facing indoor camera, Walk and Close views, and a 64×88-cell atlas pass. Balanced and Saver share the same atlases. |
+| `src/guide/` | Illustrated help topics shared by the contextual sheets and lazy `/guide` index. Topics use the steps, visuals, examples and reference details needed for the specific mechanic. |
 | `src/home/` | Account |
 | `src/book/` | The farm's book |
 | `src/town/` | The Town |
@@ -183,17 +188,19 @@ Database `uma-farm`, schema version 1, loaded on demand when device I/O starts.
 - **The manifest:** Uma Farm, standalone, landscape, `#0f1620`; the icons are drawn by `scripts/draw-icons.mjs`. iOS
   doesn't lock a Home Screen app's orientation, so the upright card covers the game while the phone is held upright.
 - **The precache:** `**/*.{js,css,html,svg,png,woff2}` up to 3 MB a file. Navigation falls back
-  to `/index.html`, but never for `/api/` or `/__/` (Firebase Hosting's sign-in handler). `push-sw.js` is imported into
-  the service worker.
+  to `/index.html`, but never for `/api/` or `/__/` (Firebase Hosting's sign-in handler). `push-sw.js` and `content-cache-sw.js` run inside the service worker. The large renderer, 512px
+  install icons, WebP backgrounds and room models load on demand.
 - **Runtime caches:**
 
 | Cache | Matches | Strategy |
 |---|---|---|
-| `farm-master-files` | `/api/master/files/`, `/api/master/manifests/` | Cache first, 4,000 entries |
-| `farm-master-channel` | `/api/master/channels/` | Network first, 4 s timeout |
+| `farm-master-files` | Versioned release manifests | Cache first, eight entries. On activation, remove legacy raw file copies. |
+| `farm-master-channel` | Master data channel pointer | Network first, four-second timeout. |
+| `farm-master` | Verified immutable master data and story files | One copy per hash. Private pictures share a 128 MiB oldest-first budget. Boot and story JSON stay available offline. |
+| `farm-scene-art` | Local WebP backgrounds and GLB models | On demand, up to 70 entries for 30 days. |
+| `farm-look-renderer` | The lazy Three renderer | On demand, up to two versions. |
 
-- uma-kit's content client also keeps the files it has verified by hash (master data's and the story pack's) in its own
-  Cache Storage, `farm-master`.
+The content client verifies SHA-256 and byte length before storing immutable files and after a disk hit. Browser HTTP caching is bypassed for authenticated master-file downloads. Existing verified entries remain reusable after the app update. If an image leaves the budget, opening it again fetches the same private, verified file. Gallery cards fetch up to 320-pixel previews. Full-screen art and replays read the original full-size paths.
 - **Hosting's headers** (`firebase.json`): `/assets/**` immutable for a year; `/`, extensionless paths, `index.html`,
   `sw.js`, `registerSW.js`, `manifest.webmanifest` and `workbox-*.js` no-cache.
 

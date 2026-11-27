@@ -30,7 +30,7 @@ function sceneArt(scene: BookScene, seen: readonly Illustration[]): Illustration
 }
 
 function Thumb({ picture, locked = false, owner }: { picture?: Illustration; locked?: boolean; owner?: string }) {
-  const { url } = usePicture(picture?.path ?? null)
+  const { url } = usePicture(locked ? null : picture?.thumbnail?.path ?? null)
   if (url) return <img className="lib-thumbnail" src={url} alt="" />
   if (locked) return <span className="lib-thumbnail lib-silhouette" aria-hidden="true" />
   return <span className="lib-thumbnail" aria-hidden="true">{owner ? <Avatar id={owner} size={38} label="" /> : '▤'}</span>

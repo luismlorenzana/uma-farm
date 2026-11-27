@@ -2,8 +2,7 @@
 // art's order, three to a row in landscape (two on a narrow phone), each a 16:9 tile with its title under it: the ones
 // you've seen show their picture, the rest a locked silhouette with the title. A tap on a seen one opens it full screen:
 // the whole picture on black, its title at the foot, ‹ › (or a swipe, or the arrow keys) to her other seen ones, ✕ (or
-// Escape) back to the grid. Her titles and pictures are master data's, read at runtime; a picture loads when its tile
-// shows, from the device once seen. Loaded on demand.
+// Escape) back to the grid. Earned tiles use small previews. Opening the viewer loads one full-size picture.
 import { galleryOf, galleryTiles } from '@farm/domain'
 import type { Illustration } from '@luismlorenzana/uma-data'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -47,7 +46,7 @@ export default function Gallery({ id }: { id: string }) {
         {ills && <span className="text-[14px] tabular-nums text-white/70" data-gallery-seen={seen.length}>{seen.length} of {tiles.length}</span>}
         <button type="button" onClick={close} aria-label="Close" className="grid size-11 place-items-center rounded-full text-[18px] text-white/85" data-action="close-gallery">✕</button>
       </header>
-      {!ills ? <p className="px-4 text-[15px] text-white/70" data-loading>…</p> : (
+      {shown >= 0 ? null : !ills ? <p className="px-4 text-[15px] text-white/70" data-loading>…</p> : (
         <ul className="grid min-h-0 flex-1 auto-rows-min grid-cols-3 gap-x-3 gap-y-4 overflow-y-auto px-4 pb-4 max-[560px]:grid-cols-2" data-tiles={tiles.length}>
           {tiles.map(({ scene, unlocked }) => (
             <li key={scene.id}>
@@ -66,7 +65,7 @@ export default function Gallery({ id }: { id: string }) {
 
 /** A seen one's tile: its picture at 16:9, its title under it. */
 function Tile({ scene }: { scene: Illustration }) {
-  const { url } = usePicture(scene.path)
+  const { url } = usePicture(scene.thumbnail?.path ?? null)
   return (
     <>
       <span className="block aspect-[16/9] overflow-hidden rounded-lg bg-white/8 shadow-2 ring-1 ring-white/10">
