@@ -26,7 +26,7 @@ reaches the game is the first part, [below](#how-the-story-reaches-the-game); ho
 
 The story session is free. It builds the world, the backgrounds and the characters however it wants, and much of it may
 never appear in the game: it informs the dialogue that does. There are no layers, waves, counts or required shapes. This
-part says how the story's work reaches the game; the rest of the page is the menu of what the game reads.
+part says how the story's work reaches the game. Live play uses the 50 launch identities and their profession schedules. The pack can also carry drafts and bibles for later release characters. [The launch cast](game-mechanics.md#the-launch-cast) · [Town professions](game-mechanics.md#town-professions-and-the-week)
 
 ### What's the story's
 
@@ -43,8 +43,7 @@ only the pack's files ([the files](#the-files)), and anything else there is your
 
 ### Reading it: the Farm Story Sandbox
 
-The Farm Story Sandbox is the story's reading tool, served on the machine where the story is written (`pnpm stories`,
-http://127.0.0.1:4321). It reads the pack with the game's own reader:
+Run `pnpm start` in the sibling `uma-story-authoring` checkout and open the Farm Story Sandbox at http://127.0.0.1:4322/farm/. It uses the game's pack reader:
 
 - **each character:** her story piece by piece, hers, the default and missing, as `pnpm story:status` shows it
   ([a complete Uma](#a-complete-uma)); what's written and what still plays the default story, her chapters, her route

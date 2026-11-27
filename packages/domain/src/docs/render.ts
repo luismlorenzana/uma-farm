@@ -560,8 +560,8 @@ function cookBatchBlock(): string {
 /** A farmhand's actions a day, by why, and half pace. */
 function farmhandDay(): string {
   return table(['', 'Her actions'], [
-    ['A farmhand’s farm day (she’s on the farm by day, and works her actions overnight; on a town day she doesn’t work)', String(HAND_ACTIONS)],
-    [`Settled in: from ${SETTLED_AFTER} days after you invited her (a season)`, `+${SETTLED_ACTIONS}`],
+    ['A farmhand’s farm day (her shift runs before Afternoon)', String(HAND_ACTIONS)],
+    [`Settled in: from ${SETTLED_AFTER} days after you invited her`, `+${SETTLED_ACTIONS}`],
     ['Once she’s your spouse', `+${SPOUSE_ACTIONS}`],
     [`Well fed this morning: a ★${WELL_FED_STARS}+ meal last night, a household meal the day before, a wedding’s reception, a spouse’s breakfast`, `+${FED_ACTIONS}`],
     [`Half pace: from the ${HALF_PACE_FROM === 2 ? 'second' : `${HALF_PACE_FROM}th`} short night of upkeep in a row, until it’s paid`, 'Half of them all, rounded down, never below 1'],
